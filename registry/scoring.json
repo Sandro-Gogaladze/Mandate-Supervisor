@@ -1,0 +1,9 @@
+{
+  "version": "2026.08.0",
+  "description": "Disposition tiers for the case risk score. The score itself is the sum of finding severity_weights (pipeline/scoring.py, a pure function); a case lands in the highest tier whose min_score it reaches. Rules-as-data: edit tiers here (and later via the policy sandbox, PLAN item 14), never in code.",
+  "tiers": [
+    { "tier": "escalate", "min_score": 2.0, "label": "Escalate", "guidance": "Serious or compounding breaches — supervisory action required." },
+    { "tier": "review", "min_score": 0.75, "label": "Review", "guidance": "Material signal — case officer attention before any approval." },
+    { "tier": "clear", "min_score": 0.0, "label": "Clear", "guidance": "No scored findings of consequence." }
+  ]
+}

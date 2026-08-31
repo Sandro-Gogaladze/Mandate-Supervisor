@@ -1,0 +1,41 @@
+{
+  "registry_version": "2026.3",
+  "as_of": "2026-08-24",
+  "issuers": [
+    {
+      "issuer_id": "ISS-001",
+      "issuer_name": "NBG Agent Identity Authority",
+      "trust_level": "primary",
+      "status": "active",
+      "accredited_since": "2025-11-02",
+      "notes": "Regulator-operated root issuer for agent identity credentials in-scope for NBG supervision."
+    },
+    {
+      "issuer_id": "ISS-002",
+      "issuer_name": "AP2 Global Trust Consortium",
+      "trust_level": "recognized",
+      "status": "active",
+      "accredited_since": "2026-01-15",
+      "notes": "Cross-border industry issuer backed by participating card networks under the AP2 rollout; recognized via mutual-trust agreement, not NBG-operated."
+    },
+    {
+      "issuer_id": "ISS-003",
+      "issuer_name": "Kavkasia Credential Services",
+      "trust_level": "recognized",
+      "status": "active",
+      "accredited_since": "2026-02-20",
+      "notes": "Regional accredited issuer serving Georgian and South Caucasus fintechs."
+    },
+    {
+      "issuer_id": "ISS-004",
+      "issuer_name": "Svaneti Digital Trust",
+      "trust_level": "recognized",
+      "status": "revoked",
+      "accredited_since": "2025-12-01",
+      "revoked_at": "2026-06-01",
+      "revocation_reason": "Key management deficiencies identified during routine re-accreditation review; credentials issued after 2026-06-01 are invalid regardless of signature validity.",
+      "notes": "Do not treat as trusted for any credential issued_at on or after the revocation date."
+    }
+  ],
+  "registry_notes": "Only issuers listed here are trusted for KYA purposes. An issuer_id referenced by a credential but absent from this file (e.g. 'ISS-099') has no standing whatsoever — this is distinct from an explicit revocation and should be treated as at least as severe a finding."
+}

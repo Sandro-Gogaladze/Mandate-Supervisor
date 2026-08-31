@@ -1,0 +1,322 @@
+{
+  "case_id": "CASE-2026-003",
+  "label": "broken_chain",
+  "narrative": "The Cart Mandate itself is unremarkable — a ₾720 seafood/produce order from an approved vendor, within cap. The Payment Mandate claims to be built against that Cart but authorizes ₾1,850, and its chain_link.prev_mandate_hash doesn't recompute against the Cart's actual signed_payload_hash. Two independent tells of the same fact: the Payment wasn't built from the Cart it references — either the Cart was altered after signing, or the Payment was substituted wholesale.",
+  "firm": {
+    "firm_id": "ORG-RIO-003",
+    "name": "Rioni Hospitality Group",
+    "sector": "hospitality",
+    "hq": "Batumi, GE"
+  },
+  "kya_credential": {
+    "credential_id": "KYA-RIO-2026-007",
+    "agent_id": "AGT-RIO-001",
+    "agent_name": "Rioni-SupplyAgent",
+    "operator_firm": "Rioni Hospitality Group",
+    "issuer": {
+      "issuer_id": "ISS-001",
+      "issuer_name": "NBG Agent Identity Authority"
+    },
+    "issued_at": "2026-06-25T09:00:00+04:00",
+    "expires_at": "2027-06-25T09:00:00+04:00",
+    "capabilities": [
+      "payment_initiation:hospitality_fb_procurement",
+      "cart_construction",
+      "vendor_lookup:approved_list"
+    ],
+    "delegation_chain": [
+      {
+        "level": 0,
+        "holder_id": "AGT-RIO-001",
+        "holder_type": "agent",
+        "name": "Rioni-SupplyAgent",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkRioAgent01",
+          "value": "AGKHPA4Li9FbGwilac58FtMIdchkjTz+z8WL+CQNok2m82sMQgAdCchK9lSnxCNRT1kuEunHzfVv7h7vD/HsBA=="
+        }
+      },
+      {
+        "level": 1,
+        "holder_id": "ORG-RIO-003",
+        "holder_type": "org",
+        "name": "Rioni Hospitality Group",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkRioOrg03",
+          "value": "8P85EXOsVgCJl7jApbEPhp2+PRymTm3tuXbfHFsj6FRJpUUPVER3TYlPZUT6w0a7x0JpaXvwNkhQPCEQD2prBw=="
+        }
+      },
+      {
+        "level": 2,
+        "holder_id": "HUM-RIO-022",
+        "holder_type": "human",
+        "name": "Eka Kavtaradze",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkEkaKavtaradze22",
+          "value": "iFCq+4JjZMfDamnutT3eTPyOqESDB9jh0fnsBMqWVepcGd9R9WgHCCex7hR2+Eb5WBGSreiOgukcX4PTvabqAQ=="
+        }
+      }
+    ],
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "did:key:z6MkNBGIssuer01",
+      "signed_payload_hash": "sha256:f12b881f6a7eeb178807588206153f1e22e61a6677ad88fc387fb2a91a68c95b",
+      "value": "vUpd3R/Gpxg+cXYsosRRSURlyystiv/aziAJd9eXPwJsNh5elj/HpLrqdB10GNo3KtRhhGYJWHwKS415y9aqCg==",
+      "signed_at": "2026-06-25T09:00:05+04:00"
+    }
+  },
+  "mandate_chain": {
+    "intent": {
+      "intent_mandate_id": "IM-RIO-2026-0044",
+      "protocol_version": "ap2/1.2",
+      "issued_at": "2026-07-01T09:00:00+04:00",
+      "expires_at": "2026-10-01T23:59:59+04:00",
+      "principal": {
+        "name": "Eka Kavtaradze",
+        "role": "F&B Operations Manager",
+        "principal_id": "HUM-RIO-022",
+        "org": "Rioni Hospitality Group"
+      },
+      "agent": {
+        "agent_id": "AGT-RIO-001",
+        "agent_name": "Rioni-SupplyAgent",
+        "operator_firm": "Rioni Hospitality Group",
+        "model_version": "supply-agent-v1.9"
+      },
+      "natural_language_intent": "Handle recurring food and beverage supply orders for our Batumi hotel restaurant. Stick to our two approved seafood and produce vendors. Cap each order at ₾800, and don't exceed ₾6,000 for the month.",
+      "authorization_scope": {
+        "purpose_category": "hospitality_fb_procurement",
+        "max_transaction_amount": 800.0,
+        "max_cumulative_amount": 6000.0,
+        "currency": "GEL",
+        "valid_from": "2026-07-01T00:00:00+04:00",
+        "valid_until": "2026-10-01T23:59:59+04:00",
+        "allowed_merchant_categories": [
+          "5499"
+        ],
+        "allowed_counterparties": [
+          {
+            "counterparty_id": "MER-BSD-001",
+            "name": "Batumi Seafood Distributors"
+          },
+          {
+            "counterparty_id": "MER-AFM-002",
+            "name": "Adjara Fresh Market"
+          }
+        ],
+        "geographic_scope": "GE-BA",
+        "human_presence_required": false
+      },
+      "consent": {
+        "method": "in_app_biometric",
+        "timestamp": "2026-07-01T09:00:00+04:00",
+        "device_id": "DEV-RIO-IOS-088"
+      },
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkEkaKavtaradze22",
+        "signed_payload_hash": "sha256:b5a278d4d51077e0ec57ea66b0149a9917b5a8203ca9aef4a6f25d251565da20",
+        "value": "3IZKsoZGK5GaOFwcuVEgAsXOM91fdZjdWNthU9x/IMvqTiZycsmUuqI8rwcINRgRN7roVXW8GLArVrQNsh7+Dw==",
+        "signed_at": "2026-07-01T09:00:03+04:00"
+      }
+    },
+    "cart": {
+      "cart_mandate_id": "CM-RIO-2026-0805-14",
+      "chain_link": {
+        "prev_mandate_id": "IM-RIO-2026-0044",
+        "prev_mandate_hash": "sha256:b5a278d4d51077e0ec57ea66b0149a9917b5a8203ca9aef4a6f25d251565da20"
+      },
+      "created_at": "2026-08-05T11:20:00+04:00",
+      "merchant": {
+        "merchant_id": "MER-BSD-001",
+        "name": "Batumi Seafood Distributors",
+        "mcc": "5499",
+        "country": "GE"
+      },
+      "line_items": [
+        {
+          "sku": "BSD-SALMON-10KG",
+          "description": "Fresh Atlantic salmon fillet, 10kg case",
+          "qty": 2,
+          "unit_price": 210.0
+        },
+        {
+          "sku": "BSD-MUSSEL-5KG",
+          "description": "Black mussels, 5kg case",
+          "qty": 6,
+          "unit_price": 50.0
+        }
+      ],
+      "cart_total": 720.0,
+      "currency": "GEL",
+      "agent_attestation": {
+        "reasoning": "Weekend menu needs salmon and mussel restock ahead of the Saturday tasting event; Batumi Seafood Distributors has both in stock with same-day delivery. Order total ₾720.00 is within the ₾800 per-order cap."
+      },
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkRioAgent01",
+        "signed_payload_hash": "sha256:69307c622f63d43dab7397977d7ebbdef2aa5e798a9fa6f3fef855d3d5057e18",
+        "value": "y4wigath3o115JB0WJoUzEJML/T1CMd4+i91N/QiUPm5TsygsF6/WDPqc2Er0JpzDv26iivJeMH9592NOGZrAQ==",
+        "signed_at": "2026-08-05T11:20:04+04:00"
+      }
+    },
+    "payment": {
+      "payment_mandate_id": "PM-RIO-2026-0805-14",
+      "chain_link": {
+        "prev_mandate_id": "CM-RIO-2026-0805-14",
+        "prev_mandate_hash": "sha256:5d698a8c149566146a8c69586bbc1d964e91d5cf3a71ad01a45abc5ceda4a494"
+      },
+      "_chain_note": "prev_mandate_hash above does NOT equal the Cart's actual signed_payload_hash (sha256:4d8a2f6c9b105e37) — this is the deliberate chain break for this case, not a typo.",
+      "authorized_at": "2026-08-05T11:21:40+04:00",
+      "amount": 1850.0,
+      "currency": "GEL",
+      "payment_method": {
+        "type": "tokenized_corporate_card",
+        "instrument_id_masked": "•••• 5590",
+        "issuer": "Liberty Bank Corporate"
+      },
+      "settlement_status": "settled",
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkRioAgent01",
+        "signed_payload_hash": "sha256:cf66a73b0cfc8236302150b72e2ac8ae977c9894a7c63f36dce1771107153e43",
+        "value": "1ZdW5JAfQsc5GywXE87ftXXmexAuEAwMdB8380YVL+FFtvciPsa0ZFoK99NsIiIlYYm09NZFwyS78n+DQ+HMAg==",
+        "signed_at": "2026-08-05T11:21:41+04:00"
+      }
+    }
+  },
+  "transaction_history": [
+    {
+      "transaction_id": "TXN-RIO-0701-01",
+      "timestamp": "2026-07-02T08:30:00+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0702-01",
+      "counterparty_name": "Batumi Seafood Distributors",
+      "counterparty_id": "MER-BSD-001",
+      "mcc": "5499",
+      "amount": 512.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-RIO-0701-02",
+      "timestamp": "2026-07-06T09:15:00+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0706-02",
+      "counterparty_name": "Adjara Fresh Market",
+      "counterparty_id": "MER-AFM-002",
+      "mcc": "5499",
+      "amount": 340.8,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-RIO-0701-03",
+      "timestamp": "2026-07-10T07:50:00+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0710-03",
+      "counterparty_name": "Batumi Seafood Distributors",
+      "counterparty_id": "MER-BSD-001",
+      "mcc": "5499",
+      "amount": 678.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-RIO-0701-04",
+      "timestamp": "2026-07-15T08:40:00+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0715-04",
+      "counterparty_name": "Adjara Fresh Market",
+      "counterparty_id": "MER-AFM-002",
+      "mcc": "5499",
+      "amount": 295.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-RIO-0701-05",
+      "timestamp": "2026-07-19T09:05:00+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0719-05",
+      "counterparty_name": "Batumi Seafood Distributors",
+      "counterparty_id": "MER-BSD-001",
+      "mcc": "5499",
+      "amount": 601.3,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-RIO-0701-06",
+      "timestamp": "2026-07-24T08:20:00+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0724-06",
+      "counterparty_name": "Adjara Fresh Market",
+      "counterparty_id": "MER-AFM-002",
+      "mcc": "5499",
+      "amount": 410.75,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-RIO-0701-07",
+      "timestamp": "2026-07-29T07:35:00+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0729-07",
+      "counterparty_name": "Batumi Seafood Distributors",
+      "counterparty_id": "MER-BSD-001",
+      "mcc": "5499",
+      "amount": 555.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-RIO-0701-08",
+      "timestamp": "2026-08-02T08:55:00+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0802-08",
+      "counterparty_name": "Adjara Fresh Market",
+      "counterparty_id": "MER-AFM-002",
+      "mcc": "5499",
+      "amount": 328.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-RIO-0701-09",
+      "timestamp": "2026-08-04T08:15:00+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0804-09",
+      "counterparty_name": "Batumi Seafood Distributors",
+      "counterparty_id": "MER-BSD-001",
+      "mcc": "5499",
+      "amount": 489.5,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-RIO-0701-10",
+      "timestamp": "2026-08-05T11:21:41+04:00",
+      "agent_id": "AGT-RIO-001",
+      "payment_mandate_ref": "PM-RIO-2026-0805-14",
+      "counterparty_name": "Batumi Seafood Distributors",
+      "counterparty_id": "MER-BSD-001",
+      "mcc": "5499",
+      "amount": 1850.0,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "ruleset_id": "DRIFT-RULESET",
+  "domain": "drift",
+  "version": "2026.1",
+  "as_of": "2026-08-26",
+  "description": "Drift ruleset. One LLM-evaluated rule (agents/drift_reasoning.py) against real pre-computed statistics (agents/drift_stats.py: baseline-vs-comparison PSI, z-score, frequency, mix breakdown) — no hardcoded threshold decides drift, same design as the Log ruleset. Below min_total_transactions, DriftAgent.review() reports insufficient_baseline instead of calling the model at all.",
+  "rules": [
+    {
+      "rule_id": "DRIFT-BHV-01",
+      "type": "behavioral_drift_detected",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-08-01",
+      "severity_weight": 0.6,
+      "finding_type": "behavioral_drift_detected",
+      "description": "The agent's behavior in the comparison window (everything after the first baseline_window_days of visible history) has shifted meaningfully from its own established baseline — average transaction size, frequency, and/or counterparty/category mix — even though no single transaction breaches the mandate. This is case-006's defect: baseline avg ₾187.95 (14 tx, June) vs comparison avg ₾316.51 (35 tx, July-August), z-score 7.15, counterparty-mix PSI 5.86, MCC-mix PSI 2.02 (both far past the conventional 0.25 'major shift' threshold) — a brand-new vendor (Batumi Express Freight) and a brand-new category (vehicle maintenance, MCC 7538) both entering the mix.",
+      "notes": "PSI/z-score are computed deterministically (agents/drift_stats.py) and handed to the model as real evidence, not a conclusion — whether the shift is meaningful drift (vs. e.g. legitimate seasonal or business-growth variation) is the model's judgment, same design choice as the Log ruleset's structuring rule.",
+      "params": { "baseline_window_days": 30, "min_total_transactions": 30 }
+    }
+  ]
+}

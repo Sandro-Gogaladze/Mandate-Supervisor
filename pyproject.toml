@@ -1,0 +1,30 @@
+[project]
+name = "mandate-supervisor"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "ag-ui-langgraph[fastapi]>=0.0.43",
+    "anthropic>=0.96.0,<1.0.0",
+    "copilotkit>=0.1.95",
+    "cryptography>=50.0.1",
+    "fastapi>=0.141.1",
+    "langchain-anthropic>=1.4.1",
+    "langchain-core>=1.6.0",
+    "langgraph>=1.2.11",
+    "pandas>=3.0.5",
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.3",
+    "python-multipart>=0.0.32",
+    "uvicorn[standard]>=0.52.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"

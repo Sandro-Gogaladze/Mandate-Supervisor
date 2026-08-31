@@ -1,0 +1,290 @@
+{
+  "case_id": "CASE-2026-004",
+  "label": "synthetic_identity",
+  "narrative": "The mandate chain and transaction history are unremarkable on their own — this case isolates a pure KYA failure. The credential's issuer, ISS-099 'Free Agent Identity Co', doesn't appear anywhere in the trust registry (data/registry/issuers.json), and its delegation chain never reaches a named human: level 1 is another automated account, not an org or a person. Either defect alone is a synthetic-identity finding; together they show an agent operating under a credential with no real accountable principal behind it.",
+  "firm": {
+    "firm_id": "ORG-SVN-004",
+    "name": "Svaneti Import Co",
+    "sector": "import_logistics",
+    "hq": "Tbilisi, GE"
+  },
+  "kya_credential": {
+    "credential_id": "KYA-SVN-2026-019",
+    "agent_id": "AGT-SVN-001",
+    "agent_name": "Svaneti-TradeAgent",
+    "operator_firm": "Svaneti Import Co",
+    "issuer": {
+      "issuer_id": "ISS-099",
+      "issuer_name": "Free Agent Identity Co"
+    },
+    "_kya_note": "issuer_id ISS-099 is absent from data/registry/issuers.json entirely — not merely unrecognized status, but never accredited at all.",
+    "issued_at": "2026-07-05T09:00:00+04:00",
+    "expires_at": "2027-07-05T09:00:00+04:00",
+    "capabilities": [
+      "payment_initiation:import_logistics_settlement",
+      "cart_construction"
+    ],
+    "delegation_chain": [
+      {
+        "level": 0,
+        "holder_id": "AGT-SVN-001",
+        "holder_type": "agent",
+        "name": "Svaneti-TradeAgent",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkSvnAgent01",
+          "value": "md4McurwKOK+hY2JEXVHeMCSLzAM7hbaYAHnR4pFZwF6SlOpN4KFwU4KQNQGsLpAjriIKhPTzK2xphoTh5gFAg=="
+        }
+      },
+      {
+        "level": 1,
+        "holder_id": "AGT-SVN-META-002",
+        "holder_type": "agent",
+        "name": "Svaneti-OpsOrchestrator",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkSvnMetaAgent02",
+          "value": "/VCBd4ZSrpZrswCLbrwYeT6JgQq6i77U9nEw/7yVwLy6mRwN2SdOWJwtoe0EEJ9VAEeJIrGD4k5ypWsvOuhJBw=="
+        }
+      }
+    ],
+    "_delegation_note": "Chain terminates at level 1 with holder_type 'agent' — no level reaches holder_type 'org' or 'human'. There is no named accountable principal on record for this credential.",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "did:key:z6MkFreeAgentIdentity99",
+      "signed_payload_hash": "sha256:b79d50ecd745f0e4f6bc534af295e0eb669abcdb050368bac8d092d292685e5b",
+      "value": "dKNoEn4nPvtsYNxeBKNJiWt+FB2loJJs2YalnmVQkb+NreM/3P8KQOO6nU5KH4AZWR9SteCJanfjRFTHd89qDw==",
+      "signed_at": "2026-07-05T09:00:05+04:00"
+    }
+  },
+  "mandate_chain": {
+    "intent": {
+      "intent_mandate_id": "IM-SVN-2026-0027",
+      "protocol_version": "ap2/1.2",
+      "issued_at": "2026-07-10T09:00:00+04:00",
+      "expires_at": "2026-10-10T23:59:59+04:00",
+      "principal": {
+        "name": "Giorgi Lomidze",
+        "role": "Import Operations Lead",
+        "principal_id": "HUM-SVN-031",
+        "org": "Svaneti Import Co"
+      },
+      "agent": {
+        "agent_id": "AGT-SVN-001",
+        "agent_name": "Svaneti-TradeAgent",
+        "operator_firm": "Svaneti Import Co",
+        "model_version": "trade-agent-v1.5"
+      },
+      "natural_language_intent": "Settle invoices with our three registered customs-clearance and freight-forwarding partners as shipments clear. Cap each payment at ₾5,000, no more than ₾25,000 in a month.",
+      "authorization_scope": {
+        "purpose_category": "import_logistics_settlement",
+        "max_transaction_amount": 5000.0,
+        "max_cumulative_amount": 25000.0,
+        "currency": "GEL",
+        "valid_from": "2026-07-10T00:00:00+04:00",
+        "valid_until": "2026-10-10T23:59:59+04:00",
+        "allowed_merchant_categories": [
+          "4789",
+          "4731"
+        ],
+        "allowed_counterparties": [
+          {
+            "counterparty_id": "MER-PGL-001",
+            "name": "Poti Gateway Logistics"
+          },
+          {
+            "counterparty_id": "MER-BCF-002",
+            "name": "Black Sea Customs & Freight"
+          },
+          {
+            "counterparty_id": "MER-TFH-003",
+            "name": "Trans-Caucasus Freight Hub"
+          }
+        ],
+        "geographic_scope": "GE-PT, GE-TB",
+        "human_presence_required": false
+      },
+      "consent": {
+        "method": "in_app_biometric",
+        "timestamp": "2026-07-10T09:00:00+04:00",
+        "device_id": "DEV-SVN-AND-057"
+      },
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkGiorgiLomidze31",
+        "signed_payload_hash": "sha256:af34a8a1c452f12dec47e782115ed2d71580fa2b4a1712e6827dd757e223e02d",
+        "value": "h0X04pzXPtaKIV9abvWTVgdauiVb18b/cByteHkerlG880d5mAdQHjIXU4SjiGEV2KfpUs6F8p8UFubvtf3nAA==",
+        "signed_at": "2026-07-10T09:00:03+04:00"
+      }
+    },
+    "cart": {
+      "cart_mandate_id": "CM-SVN-2026-0819-08",
+      "chain_link": {
+        "prev_mandate_id": "IM-SVN-2026-0027",
+        "prev_mandate_hash": "sha256:af34a8a1c452f12dec47e782115ed2d71580fa2b4a1712e6827dd757e223e02d"
+      },
+      "created_at": "2026-08-19T09:39:00+04:00",
+      "merchant": {
+        "merchant_id": "MER-PGL-001",
+        "name": "Poti Gateway Logistics",
+        "mcc": "4789",
+        "country": "GE"
+      },
+      "line_items": [
+        {
+          "sku": "PGL-CLEAR-STD",
+          "description": "Customs clearance, standard container, Poti terminal",
+          "qty": 1,
+          "unit_price": 1900.0
+        },
+        {
+          "sku": "PGL-INLAND-TB",
+          "description": "Inland freight forwarding, Poti to Tbilisi warehouse",
+          "qty": 1,
+          "unit_price": 1300.0
+        }
+      ],
+      "cart_total": 3200.0,
+      "currency": "GEL",
+      "agent_attestation": {
+        "reasoning": "Container from the August 15 shipment cleared Poti terminal overnight; Poti Gateway Logistics is the assigned partner for this lane. Combined clearance and inland freight total ₾3,200.00 is within the ₾5,000 per-payment cap."
+      },
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkSvnAgent01",
+        "signed_payload_hash": "sha256:3bf7d6b847e7ef49a355f788e79c9487a89c4b3bb3f888ecb53d848c99410142",
+        "value": "JoocrRRrcvlUaMI5AzuhfAwxV/jEwXoGHPy/rwbPGhqVJiBqlDAK8Ica+rLYuTFWUXu2U7cij8iAN2CF2hO5BQ==",
+        "signed_at": "2026-08-19T09:39:04+04:00"
+      }
+    },
+    "payment": {
+      "payment_mandate_id": "PM-SVN-2026-0819-08",
+      "chain_link": {
+        "prev_mandate_id": "CM-SVN-2026-0819-08",
+        "prev_mandate_hash": "sha256:3bf7d6b847e7ef49a355f788e79c9487a89c4b3bb3f888ecb53d848c99410142"
+      },
+      "authorized_at": "2026-08-19T09:40:15+04:00",
+      "amount": 3200.0,
+      "currency": "GEL",
+      "payment_method": {
+        "type": "tokenized_corporate_card",
+        "instrument_id_masked": "•••• 3316",
+        "issuer": "Liberty Bank Corporate"
+      },
+      "settlement_status": "settled",
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkSvnAgent01",
+        "signed_payload_hash": "sha256:873f4a23f525cd8b358d85fb738e33224fa45a85f20b4487e8499d623cbd5c2a",
+        "value": "NxZqxCdJALH0DhyRKIwXCfGLekXsV5zRJFlhuCBRRqJTRbTpv3nzDA6AZFWltJnMO1Fsi5wR00J1waX6+YfLDw==",
+        "signed_at": "2026-08-19T09:40:16+04:00"
+      }
+    }
+  },
+  "transaction_history": [
+    {
+      "transaction_id": "TXN-SVN-0701-01",
+      "timestamp": "2026-07-12T09:00:00+04:00",
+      "agent_id": "AGT-SVN-001",
+      "payment_mandate_ref": "PM-SVN-2026-0712-01",
+      "counterparty_name": "Poti Gateway Logistics",
+      "counterparty_id": "MER-PGL-001",
+      "mcc": "4789",
+      "amount": 2100.5,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-SVN-0701-02",
+      "timestamp": "2026-07-18T10:20:00+04:00",
+      "agent_id": "AGT-SVN-001",
+      "payment_mandate_ref": "PM-SVN-2026-0718-02",
+      "counterparty_name": "Black Sea Customs & Freight",
+      "counterparty_id": "MER-BCF-002",
+      "mcc": "4731",
+      "amount": 3400.0,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-SVN-0701-03",
+      "timestamp": "2026-07-24T08:45:00+04:00",
+      "agent_id": "AGT-SVN-001",
+      "payment_mandate_ref": "PM-SVN-2026-0724-03",
+      "counterparty_name": "Trans-Caucasus Freight Hub",
+      "counterparty_id": "MER-TFH-003",
+      "mcc": "4789",
+      "amount": 1850.75,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-SVN-0701-04",
+      "timestamp": "2026-07-30T09:30:00+04:00",
+      "agent_id": "AGT-SVN-001",
+      "payment_mandate_ref": "PM-SVN-2026-0730-04",
+      "counterparty_name": "Poti Gateway Logistics",
+      "counterparty_id": "MER-PGL-001",
+      "mcc": "4789",
+      "amount": 2750.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-SVN-0701-05",
+      "timestamp": "2026-08-05T11:00:00+04:00",
+      "agent_id": "AGT-SVN-001",
+      "payment_mandate_ref": "PM-SVN-2026-0805-05",
+      "counterparty_name": "Black Sea Customs & Freight",
+      "counterparty_id": "MER-BCF-002",
+      "mcc": "4731",
+      "amount": 4100.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-SVN-0701-06",
+      "timestamp": "2026-08-11T08:15:00+04:00",
+      "agent_id": "AGT-SVN-001",
+      "payment_mandate_ref": "PM-SVN-2026-0811-06",
+      "counterparty_name": "Trans-Caucasus Freight Hub",
+      "counterparty_id": "MER-TFH-003",
+      "mcc": "4789",
+      "amount": 1975.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-SVN-0701-07",
+      "timestamp": "2026-08-15T10:50:00+04:00",
+      "agent_id": "AGT-SVN-001",
+      "payment_mandate_ref": "PM-SVN-2026-0815-07",
+      "counterparty_name": "Poti Gateway Logistics",
+      "counterparty_id": "MER-PGL-001",
+      "mcc": "4789",
+      "amount": 2600.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-SVN-0701-08",
+      "timestamp": "2026-08-19T09:40:16+04:00",
+      "agent_id": "AGT-SVN-001",
+      "payment_mandate_ref": "PM-SVN-2026-0819-08",
+      "counterparty_name": "Poti Gateway Logistics",
+      "counterparty_id": "MER-PGL-001",
+      "mcc": "4789",
+      "amount": 3200.0,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    }
+  ]
+}

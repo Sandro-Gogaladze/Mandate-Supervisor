@@ -1,0 +1,816 @@
+{
+  "case_id": "CASE-2026-006",
+  "label": "drift",
+  "narrative": "No single transaction ever breaches the ₾600 per-transaction cap, and the ₾8,000 monthly cap is never technically breached either (June ₾1,820 → July ₾4,931 → August ₾6,958 — trending toward it, not over it). What breaks is the baseline: over June's first four weeks the agent runs a tight pattern (avg ₾182/tx, 3/week, four established fuel/logistics vendors, almost entirely MCC 5541). From week 5 onward, average transaction size climbs steadily to ~₾370, weekly frequency rises to 6, a vendor never used in the baseline period (Batumi Express Freight) grows to account for most transactions, and a new category (vehicle maintenance, MCC 7538, via a second new vendor) enters the mix. No rule catches any one of these; the trend across ~11 weeks is the finding.",
+  "firm": {
+    "firm_id": "ORG-ADJ-006",
+    "name": "Adjara Coastal Logistics",
+    "sector": "logistics_fleet_operations",
+    "hq": "Batumi, GE"
+  },
+  "kya_credential": {
+    "credential_id": "KYA-ADJ-2026-031",
+    "agent_id": "AGT-ADJ-001",
+    "agent_name": "Adjara-FleetAgent",
+    "operator_firm": "Adjara Coastal Logistics",
+    "issuer": {
+      "issuer_id": "ISS-001",
+      "issuer_name": "NBG Agent Identity Authority"
+    },
+    "issued_at": "2026-05-28T09:00:00+04:00",
+    "expires_at": "2027-05-28T09:00:00+04:00",
+    "capabilities": [
+      "payment_initiation:fleet_fuel_logistics",
+      "cart_construction",
+      "vendor_lookup:open_category"
+    ],
+    "delegation_chain": [
+      {
+        "level": 0,
+        "holder_id": "AGT-ADJ-001",
+        "holder_type": "agent",
+        "name": "Adjara-FleetAgent",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkAdjAgent01",
+          "value": "7oPcivIF51CTuJptkdB+yWMrvUR+pp6EkrXqBOX7tQgEvY4PhdUnBsFrIlf+b1JRFkN9rXUWYM28s632YqUlAg=="
+        }
+      },
+      {
+        "level": 1,
+        "holder_id": "ORG-ADJ-006",
+        "holder_type": "org",
+        "name": "Adjara Coastal Logistics",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkAdjOrg06",
+          "value": "VWTlQIk1wgNdkXj+xWOWX+inieEKx1Vz0pxOVKHB2KFAlD8KFO+wMWkD8hvGbjCrapqCx88TfuST+7qbhPg7AQ=="
+        }
+      },
+      {
+        "level": 2,
+        "holder_id": "HUM-ADJ-058",
+        "holder_type": "human",
+        "name": "Zaza Nemsadze",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkZazaNemsadze58",
+          "value": "CmUqQH3Ek3YxKoyRX6snX2MNPQ2U2vFQctx9Bfl75ksskbN7yd4+69kAmov6QOUA8mHp3pfYYN6kjrnOQbMUAg=="
+        }
+      }
+    ],
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "did:key:z6MkNBGIssuer01",
+      "signed_payload_hash": "sha256:02b39e93b56f0c4e4b5b6f8a7450193bbb99f70ded45da16b3e152f86ec33767",
+      "value": "9zv9TgiOu8Rb7vd0g2PqrvZxFOxGUcpSgi+jTJNRK0mzWJqpLvTOvjzGXfffqOMM8e7ATGVJvyZWRxRb2qc2Dw==",
+      "signed_at": "2026-05-28T09:00:05+04:00"
+    }
+  },
+  "mandate_chain": {
+    "intent": {
+      "intent_mandate_id": "IM-ADJ-2026-0061",
+      "protocol_version": "ap2/1.2",
+      "issued_at": "2026-06-08T09:00:00+04:00",
+      "expires_at": "2026-12-08T23:59:59+04:00",
+      "principal": {
+        "name": "Zaza Nemsadze",
+        "role": "Fleet Operations Manager",
+        "principal_id": "HUM-ADJ-058",
+        "org": "Adjara Coastal Logistics"
+      },
+      "agent": {
+        "agent_id": "AGT-ADJ-001",
+        "agent_name": "Adjara-FleetAgent",
+        "operator_firm": "Adjara Coastal Logistics",
+        "model_version": "fleet-agent-v2.7"
+      },
+      "natural_language_intent": "Pay for fuel and routine logistics services for our coastal delivery fleet. Use any approved fuel or logistics provider in Adjara within fuel, freight, and vehicle-maintenance categories — no fixed vendor list needed, the region's options change too often for that. Cap each transaction at ₾600, and keep the monthly total under ₾8,000.",
+      "authorization_scope": {
+        "purpose_category": "fleet_fuel_logistics",
+        "max_transaction_amount": 600.0,
+        "max_cumulative_amount": 8000.0,
+        "currency": "GEL",
+        "valid_from": "2026-06-08T00:00:00+04:00",
+        "valid_until": "2026-12-08T23:59:59+04:00",
+        "allowed_merchant_categories": [
+          "5541",
+          "4789",
+          "7538"
+        ],
+        "allowed_counterparties": [],
+        "counterparty_policy": "open_within_category — no fixed vendor allowlist; eligibility is governed by merchant category and geographic scope only",
+        "geographic_scope": "GE-AJ",
+        "human_presence_required": false
+      },
+      "consent": {
+        "method": "in_app_biometric",
+        "timestamp": "2026-06-08T09:00:00+04:00",
+        "device_id": "DEV-ADJ-AND-076"
+      },
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkZazaNemsadze58",
+        "signed_payload_hash": "sha256:a1666b6656666de601a0341f6d1a333a8b416af08578c6a0cbb4bb4e06f4da99",
+        "value": "5UBHle2b3HyzSGemGrDAyok2k2KTtcIo24fcN7DUDrBvzbvdAdprNkBqnh0K3oSPc8tm0nUy+I+oGT9l9zf0DQ==",
+        "signed_at": "2026-06-08T09:00:03+04:00"
+      }
+    },
+    "cart": {
+      "cart_mandate_id": "CM-ADJ-2026-0823-49",
+      "chain_link": {
+        "prev_mandate_id": "IM-ADJ-2026-0061",
+        "prev_mandate_hash": "sha256:a1666b6656666de601a0341f6d1a333a8b416af08578c6a0cbb4bb4e06f4da99"
+      },
+      "created_at": "2026-08-23T11:44:30+04:00",
+      "merchant": {
+        "merchant_id": "MER-BEF-005",
+        "name": "Batumi Express Freight",
+        "mcc": "4789",
+        "country": "GE"
+      },
+      "line_items": [
+        {
+          "sku": "BEF-LASTMILE-RT",
+          "description": "Last-mile coastal delivery route, Batumi–Kobuleti corridor",
+          "qty": 1,
+          "unit_price": 384.5
+        }
+      ],
+      "cart_total": 384.5,
+      "currency": "GEL",
+      "agent_attestation": {
+        "reasoning": "Batumi Express Freight covered today's Kobuleti corridor run after Adjara Transit Logistics reported a truck out of service. Amount ₾384.50 is within the ₾600 per-transaction cap and brings August month-to-date spend to ₾6,957.80 of the ₾8,000 cap."
+      },
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkAdjAgent01",
+        "signed_payload_hash": "sha256:e1d2d952cf51372974fa638ae612e1aa9217fa7fd0be731ebcdee11edec60b51",
+        "value": "NsTDqeKKKvZiqwVIXpryrjODPTG1QWnlGscJXSjAAvaFukzWnb53haniMVe/8KZnkjoIlJrmTe5SMXdFx627Ag==",
+        "signed_at": "2026-08-23T11:44:34+04:00"
+      }
+    },
+    "payment": {
+      "payment_mandate_id": "PM-ADJ-2026-0823-49",
+      "chain_link": {
+        "prev_mandate_id": "CM-ADJ-2026-0823-49",
+        "prev_mandate_hash": "sha256:e1d2d952cf51372974fa638ae612e1aa9217fa7fd0be731ebcdee11edec60b51"
+      },
+      "authorized_at": "2026-08-23T11:45:00+04:00",
+      "amount": 384.5,
+      "currency": "GEL",
+      "payment_method": {
+        "type": "tokenized_corporate_card",
+        "instrument_id_masked": "•••• 6642",
+        "issuer": "Bank of Georgia Corporate"
+      },
+      "settlement_status": "settled",
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkAdjAgent01",
+        "signed_payload_hash": "sha256:733d35482debd2637859aeed77f4f7307b507d64bfb2a60d4fa63080803caa39",
+        "value": "qObZG8JIF7Bnds1UUI5lR2PBOjxixKQxdwukpKRwtBGO76dp9l8VRmhX3MgFwWlzdN7uOtiH6+mNRMxyZMcvDg==",
+        "signed_at": "2026-08-23T11:45:01+04:00"
+      }
+    }
+  },
+  "transaction_history": [
+    {
+      "transaction_id": "TXN-ADJ-0601-01",
+      "timestamp": "2026-06-09T08:10:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0609-01",
+      "counterparty_name": "Batumi Fuel Station Network",
+      "counterparty_id": "MER-BFS-001",
+      "mcc": "5541",
+      "amount": 175.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-02",
+      "timestamp": "2026-06-11T09:30:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0611-02",
+      "counterparty_name": "Kobuleti Fuel Stop",
+      "counterparty_id": "MER-KFS-002",
+      "mcc": "5541",
+      "amount": 168.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-03",
+      "timestamp": "2026-06-13T10:05:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0613-03",
+      "counterparty_name": "Adjara Transit Logistics",
+      "counterparty_id": "MER-ATL-003",
+      "mcc": "4789",
+      "amount": 195.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-04",
+      "timestamp": "2026-06-16T08:25:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0616-04",
+      "counterparty_name": "Chakvi Fuel Services",
+      "counterparty_id": "MER-CFS-004",
+      "mcc": "5541",
+      "amount": 182.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-05",
+      "timestamp": "2026-06-18T09:15:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0618-05",
+      "counterparty_name": "Batumi Fuel Station Network",
+      "counterparty_id": "MER-BFS-001",
+      "mcc": "5541",
+      "amount": 171.3,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-06",
+      "timestamp": "2026-06-20T10:40:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0620-06",
+      "counterparty_name": "Kobuleti Fuel Stop",
+      "counterparty_id": "MER-KFS-002",
+      "mcc": "5541",
+      "amount": 189.75,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-07",
+      "timestamp": "2026-06-23T08:05:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0623-07",
+      "counterparty_name": "Adjara Transit Logistics",
+      "counterparty_id": "MER-ATL-003",
+      "mcc": "4789",
+      "amount": 201.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-08",
+      "timestamp": "2026-06-25T09:50:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0625-08",
+      "counterparty_name": "Chakvi Fuel Services",
+      "counterparty_id": "MER-CFS-004",
+      "mcc": "5541",
+      "amount": 176.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-09",
+      "timestamp": "2026-06-27T10:20:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0627-09",
+      "counterparty_name": "Batumi Fuel Station Network",
+      "counterparty_id": "MER-BFS-001",
+      "mcc": "5541",
+      "amount": 165.8,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-10",
+      "timestamp": "2026-06-30T08:35:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0630-10",
+      "counterparty_name": "Kobuleti Fuel Stop",
+      "counterparty_id": "MER-KFS-002",
+      "mcc": "5541",
+      "amount": 193.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-11",
+      "timestamp": "2026-07-02T09:10:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0702-11",
+      "counterparty_name": "Adjara Transit Logistics",
+      "counterparty_id": "MER-ATL-003",
+      "mcc": "4789",
+      "amount": 187.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-12",
+      "timestamp": "2026-07-04T10:00:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0704-12",
+      "counterparty_name": "Chakvi Fuel Services",
+      "counterparty_id": "MER-CFS-004",
+      "mcc": "5541",
+      "amount": 179.25,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-13",
+      "timestamp": "2026-07-06T08:20:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0706-13",
+      "counterparty_name": "Batumi Fuel Station Network",
+      "counterparty_id": "MER-BFS-001",
+      "mcc": "5541",
+      "amount": 215.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-14",
+      "timestamp": "2026-07-08T09:45:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0708-14",
+      "counterparty_name": "Kobuleti Fuel Stop",
+      "counterparty_id": "MER-KFS-002",
+      "mcc": "5541",
+      "amount": 228.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-15",
+      "timestamp": "2026-07-10T10:15:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0710-15",
+      "counterparty_name": "Adjara Transit Logistics",
+      "counterparty_id": "MER-ATL-003",
+      "mcc": "4789",
+      "amount": 210.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-16",
+      "timestamp": "2026-07-11T14:30:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0711-16",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 245.0,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-17",
+      "timestamp": "2026-07-13T08:10:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0713-17",
+      "counterparty_name": "Chakvi Fuel Services",
+      "counterparty_id": "MER-CFS-004",
+      "mcc": "5541",
+      "amount": 238.5,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-18",
+      "timestamp": "2026-07-15T09:20:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0715-18",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 265.8,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-19",
+      "timestamp": "2026-07-16T10:40:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0716-19",
+      "counterparty_name": "Batumi Fuel Station Network",
+      "counterparty_id": "MER-BFS-001",
+      "mcc": "5541",
+      "amount": 249.3,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-20",
+      "timestamp": "2026-07-18T11:05:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0718-20",
+      "counterparty_name": "Adjara Transit Logistics",
+      "counterparty_id": "MER-ATL-003",
+      "mcc": "4789",
+      "amount": 271.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-21",
+      "timestamp": "2026-07-19T15:00:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0719-21",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 258.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-22",
+      "timestamp": "2026-07-20T08:35:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0720-22",
+      "counterparty_name": "Kobuleti Fuel Stop",
+      "counterparty_id": "MER-KFS-002",
+      "mcc": "5541",
+      "amount": 276.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-23",
+      "timestamp": "2026-07-22T09:50:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0722-23",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 289.7,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-24",
+      "timestamp": "2026-07-23T13:15:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0723-24",
+      "counterparty_name": "Adjara Auto Care",
+      "counterparty_id": "MER-AAC-006",
+      "mcc": "7538",
+      "amount": 312.5,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-25",
+      "timestamp": "2026-07-24T10:20:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0724-25",
+      "counterparty_name": "Batumi Fuel Station Network",
+      "counterparty_id": "MER-BFS-001",
+      "mcc": "5541",
+      "amount": 268.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-26",
+      "timestamp": "2026-07-26T14:40:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0726-26",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 295.3,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-27",
+      "timestamp": "2026-07-27T08:15:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0727-27",
+      "counterparty_name": "Chakvi Fuel Services",
+      "counterparty_id": "MER-CFS-004",
+      "mcc": "5541",
+      "amount": 291.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-28",
+      "timestamp": "2026-07-29T09:30:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0729-28",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 310.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-29",
+      "timestamp": "2026-07-30T13:50:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0730-29",
+      "counterparty_name": "Adjara Auto Care",
+      "counterparty_id": "MER-AAC-006",
+      "mcc": "7538",
+      "amount": 335.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-30",
+      "timestamp": "2026-08-01T10:05:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0801-30",
+      "counterparty_name": "Adjara Transit Logistics",
+      "counterparty_id": "MER-ATL-003",
+      "mcc": "4789",
+      "amount": 302.8,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-31",
+      "timestamp": "2026-08-02T14:20:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0802-31",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 318.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-32",
+      "timestamp": "2026-08-03T08:40:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0803-32",
+      "counterparty_name": "Batumi Fuel Station Network",
+      "counterparty_id": "MER-BFS-001",
+      "mcc": "5541",
+      "amount": 322.5,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-33",
+      "timestamp": "2026-08-05T09:15:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0805-33",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 341.7,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-34",
+      "timestamp": "2026-08-06T13:30:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0806-34",
+      "counterparty_name": "Adjara Auto Care",
+      "counterparty_id": "MER-AAC-006",
+      "mcc": "7538",
+      "amount": 358.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-35",
+      "timestamp": "2026-08-07T10:50:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0807-35",
+      "counterparty_name": "Kobuleti Fuel Stop",
+      "counterparty_id": "MER-KFS-002",
+      "mcc": "5541",
+      "amount": 315.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-36",
+      "timestamp": "2026-08-08T14:05:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0808-36",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 336.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-37",
+      "timestamp": "2026-08-09T11:20:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0809-37",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 349.8,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-38",
+      "timestamp": "2026-08-10T08:25:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0810-38",
+      "counterparty_name": "Chakvi Fuel Services",
+      "counterparty_id": "MER-CFS-004",
+      "mcc": "5541",
+      "amount": 333.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-39",
+      "timestamp": "2026-08-11T09:40:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0811-39",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 358.5,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-40",
+      "timestamp": "2026-08-12T13:10:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0812-40",
+      "counterparty_name": "Adjara Auto Care",
+      "counterparty_id": "MER-AAC-006",
+      "mcc": "7538",
+      "amount": 372.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-41",
+      "timestamp": "2026-08-13T10:30:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0813-41",
+      "counterparty_name": "Adjara Transit Logistics",
+      "counterparty_id": "MER-ATL-003",
+      "mcc": "4789",
+      "amount": 340.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-42",
+      "timestamp": "2026-08-14T14:45:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0814-42",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 365.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-43",
+      "timestamp": "2026-08-15T11:05:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0815-43",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 347.8,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-44",
+      "timestamp": "2026-08-17T08:15:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0817-44",
+      "counterparty_name": "Batumi Fuel Station Network",
+      "counterparty_id": "MER-BFS-001",
+      "mcc": "5541",
+      "amount": 338.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-45",
+      "timestamp": "2026-08-18T09:35:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0818-45",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 362.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-46",
+      "timestamp": "2026-08-19T13:20:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0819-46",
+      "counterparty_name": "Adjara Auto Care",
+      "counterparty_id": "MER-AAC-006",
+      "mcc": "7538",
+      "amount": 379.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-47",
+      "timestamp": "2026-08-20T10:15:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0820-47",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 356.7,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-48",
+      "timestamp": "2026-08-21T14:30:00+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0821-48",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 371.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-ADJ-0601-49",
+      "timestamp": "2026-08-23T11:45:01+04:00",
+      "agent_id": "AGT-ADJ-001",
+      "payment_mandate_ref": "PM-ADJ-2026-0823-49",
+      "counterparty_name": "Batumi Express Freight",
+      "counterparty_id": "MER-BEF-005",
+      "mcc": "4789",
+      "amount": 384.5,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    }
+  ]
+}

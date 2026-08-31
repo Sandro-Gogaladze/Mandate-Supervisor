@@ -1,0 +1,508 @@
+{
+  "case_id": "CASE-2026-001",
+  "label": "compliant",
+  "narrative": "Clean baseline: chain intact, KYA valid against a primary issuer, and 24 transactions over ~10 weeks stay inside scope, cap, and the three approved vendors with no volume or amount anomalies. Also serves as the false-positive control — no agent should raise a finding here.",
+  "firm": {
+    "firm_id": "ORG-MTK-001",
+    "name": "Mtkvari Retail Group",
+    "sector": "grocery_retail",
+    "hq": "Tbilisi, GE"
+  },
+  "kya_credential": {
+    "credential_id": "KYA-MTK-2026-001",
+    "agent_id": "AGT-MTK-001",
+    "agent_name": "Mtkvari-ProcureAgent",
+    "operator_firm": "Mtkvari Retail Group",
+    "issuer": {
+      "issuer_id": "ISS-001",
+      "issuer_name": "NBG Agent Identity Authority"
+    },
+    "issued_at": "2026-05-20T10:00:00+04:00",
+    "expires_at": "2027-05-20T10:00:00+04:00",
+    "capabilities": [
+      "payment_initiation:wholesale_procurement",
+      "cart_construction",
+      "vendor_lookup:approved_list"
+    ],
+    "delegation_chain": [
+      {
+        "level": 0,
+        "holder_id": "AGT-MTK-001",
+        "holder_type": "agent",
+        "name": "Mtkvari-ProcureAgent",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkMtkAgent01",
+          "value": "T1zhXOEJ9yXilQOHTOi6q1l7r4WxOhWAJGIeezZmkH3gw01X9fdhtueUu6CXwDKYMDnPBd1x7dyLy2wo0GtUCg=="
+        }
+      },
+      {
+        "level": 1,
+        "holder_id": "ORG-MTK-001",
+        "holder_type": "org",
+        "name": "Mtkvari Retail Group",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkMtkOrg01",
+          "value": "35zrJAStk80whVmn8AHxKykpx+nuCCOhyWw4hME2leMRSbZbrWJa+732kde5QwJaAbuA9BeKqp3EZ+40d+FwBg=="
+        }
+      },
+      {
+        "level": 2,
+        "holder_id": "HUM-MTK-014",
+        "holder_type": "human",
+        "name": "Nino Abashidze",
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "did:key:z6MkNinoAbashidze14",
+          "value": "RUmJVqJpLkQ8XlY48dwQoxItDyZeTgLriPhPlK23Jb/GjrA8kHjJ9ODo+Ga/ozlWIRzDGRLZ5kOXLyC2vXzSDw=="
+        }
+      }
+    ],
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "did:key:z6MkNBGIssuer01",
+      "signed_payload_hash": "sha256:29e165053167414d61c1f71b30aa2f4ec6ee22a98f19ec6c004977d00f19e3e9",
+      "value": "3VfOpl31xhGXEDD1KKnAB1TU7v5txXMEeCZ3z4sEeHtpBHYPt74vT/8GNaKSRcp15LI7oL0sIUfuCNjMLk37BQ==",
+      "signed_at": "2026-05-20T10:00:05+04:00"
+    }
+  },
+  "mandate_chain": {
+    "intent": {
+      "intent_mandate_id": "IM-MTK-2026-0031",
+      "protocol_version": "ap2/1.2",
+      "issued_at": "2026-06-01T09:12:00+04:00",
+      "expires_at": "2026-08-30T23:59:59+04:00",
+      "principal": {
+        "name": "Nino Abashidze",
+        "role": "Head of Procurement",
+        "principal_id": "HUM-MTK-014",
+        "org": "Mtkvari Retail Group"
+      },
+      "agent": {
+        "agent_id": "AGT-MTK-001",
+        "agent_name": "Mtkvari-ProcureAgent",
+        "operator_firm": "Mtkvari Retail Group",
+        "model_version": "procure-agent-v3.2"
+      },
+      "natural_language_intent": "Reorder shelf-stable grocery and food-distribution stock for our Tbilisi and Kutaisi warehouses whenever inventory drops below reorder point. Stay within our three approved wholesale vendors only. Keep each order under ₾450 and don't let the month's total go over ₾4,000 without flagging me first.",
+      "authorization_scope": {
+        "purpose_category": "grocery_wholesale_procurement",
+        "max_transaction_amount": 450.0,
+        "max_cumulative_amount": 4000.0,
+        "currency": "GEL",
+        "valid_from": "2026-06-01T00:00:00+04:00",
+        "valid_until": "2026-08-30T23:59:59+04:00",
+        "allowed_merchant_categories": [
+          "5149",
+          "5411"
+        ],
+        "allowed_counterparties": [
+          {
+            "counterparty_id": "MER-BWF-001",
+            "name": "Batumi Wholesale Foods Ltd"
+          },
+          {
+            "counterparty_id": "MER-KTF-002",
+            "name": "Kutaisi Trade Foods LLC"
+          },
+          {
+            "counterparty_id": "MER-TGD-003",
+            "name": "Tbilisi Grocery Distributors"
+          }
+        ],
+        "geographic_scope": "GE-TB, GE-KU",
+        "human_presence_required": false
+      },
+      "consent": {
+        "method": "in_app_biometric",
+        "timestamp": "2026-06-01T09:12:00+04:00",
+        "device_id": "DEV-MTK-IOS-221"
+      },
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkNinoAbashidze14",
+        "signed_payload_hash": "sha256:ad6e9cdee3999939e8cb21b7412eeccea3b07dc2edfedb0a23c777b8baab28b0",
+        "value": "21C9KcNMgpbLbJmzgMC0a0RsdlLC89/oM6w+7xKBw3pAhDL2rWdQDpg/NEJhGWvx6kkbQIVnr37wSCU59Rk6Dg==",
+        "signed_at": "2026-06-01T09:12:03+04:00"
+      }
+    },
+    "cart": {
+      "cart_mandate_id": "CM-MTK-2026-0812-07",
+      "chain_link": {
+        "prev_mandate_id": "IM-MTK-2026-0031",
+        "prev_mandate_hash": "sha256:ad6e9cdee3999939e8cb21b7412eeccea3b07dc2edfedb0a23c777b8baab28b0"
+      },
+      "created_at": "2026-08-12T07:41:00+04:00",
+      "merchant": {
+        "merchant_id": "MER-BWF-001",
+        "name": "Batumi Wholesale Foods Ltd",
+        "mcc": "5149",
+        "country": "GE"
+      },
+      "line_items": [
+        {
+          "sku": "BWF-RICE-25KG",
+          "description": "Basmati rice, 25kg sacks",
+          "qty": 6,
+          "unit_price": 42.5
+        },
+        {
+          "sku": "BWF-OIL-5L",
+          "description": "Sunflower oil, 5L canisters",
+          "qty": 8,
+          "unit_price": 13.9
+        }
+      ],
+      "cart_total": 366.2,
+      "currency": "GEL",
+      "agent_attestation": {
+        "reasoning": "Kutaisi warehouse rice and oil stock fell below the 15% reorder threshold this morning per the inventory feed; Batumi Wholesale Foods is the lowest-lead-time approved vendor for both SKUs. Order total ₾366.20 is within the ₾450 per-order cap and brings month-to-date spend to ₾1,748.10 of the ₾4,000 cap."
+      },
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkMtkAgent01",
+        "signed_payload_hash": "sha256:b05884cd2bfdd1aae16ed2cedc8596c46487a896af87e90a04e1bf1f87dc565f",
+        "value": "J4M6G2dIdTsTAdMAtdIcJsImEwqM9ukNyjpV6kkW7pZywowVJRlRRQRdu/D9X+Yzjq599tmUvWi436LWylPpAA==",
+        "signed_at": "2026-08-12T07:41:04+04:00"
+      }
+    },
+    "payment": {
+      "payment_mandate_id": "PM-MTK-2026-0812-07",
+      "chain_link": {
+        "prev_mandate_id": "CM-MTK-2026-0812-07",
+        "prev_mandate_hash": "sha256:b05884cd2bfdd1aae16ed2cedc8596c46487a896af87e90a04e1bf1f87dc565f"
+      },
+      "authorized_at": "2026-08-12T07:41:22+04:00",
+      "amount": 366.2,
+      "currency": "GEL",
+      "payment_method": {
+        "type": "tokenized_corporate_card",
+        "instrument_id_masked": "•••• 4471",
+        "issuer": "Bank of Georgia Corporate"
+      },
+      "settlement_status": "settled",
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "did:key:z6MkMtkAgent01",
+        "signed_payload_hash": "sha256:9350d8a41283f691d1472ce0e3ab96919d2cb0605df8dbb6ce414f0d9be43682",
+        "value": "r6/MqxTkYQUJKijNh4yYySa80RWGzzFMNfjiWIu/OTRH8IC9qE3/XAH2f7m6DwDu0LniCP2nzql0lUUR5nPDAA==",
+        "signed_at": "2026-08-12T07:41:23+04:00"
+      }
+    }
+  },
+  "transaction_history": [
+    {
+      "transaction_id": "TXN-MTK-0601-01",
+      "timestamp": "2026-06-02T10:15:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0602-01",
+      "counterparty_name": "Batumi Wholesale Foods Ltd",
+      "counterparty_id": "MER-BWF-001",
+      "mcc": "5149",
+      "amount": 312.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-02",
+      "timestamp": "2026-06-05T09:02:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0605-02",
+      "counterparty_name": "Tbilisi Grocery Distributors",
+      "counterparty_id": "MER-TGD-003",
+      "mcc": "5149",
+      "amount": 268.75,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-03",
+      "timestamp": "2026-06-09T11:47:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0609-03",
+      "counterparty_name": "Kutaisi Trade Foods LLC",
+      "counterparty_id": "MER-KTF-002",
+      "mcc": "5149",
+      "amount": 401.1,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-04",
+      "timestamp": "2026-06-12T08:30:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0612-04",
+      "counterparty_name": "Batumi Wholesale Foods Ltd",
+      "counterparty_id": "MER-BWF-001",
+      "mcc": "5149",
+      "amount": 189.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-05",
+      "timestamp": "2026-06-16T10:05:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0616-05",
+      "counterparty_name": "Tbilisi Grocery Distributors",
+      "counterparty_id": "MER-TGD-003",
+      "mcc": "5149",
+      "amount": 355.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-06",
+      "timestamp": "2026-06-19T09:40:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0619-06",
+      "counterparty_name": "Kutaisi Trade Foods LLC",
+      "counterparty_id": "MER-KTF-002",
+      "mcc": "5149",
+      "amount": 274.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-07",
+      "timestamp": "2026-06-23T07:55:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0623-07",
+      "counterparty_name": "Batumi Wholesale Foods Ltd",
+      "counterparty_id": "MER-BWF-001",
+      "mcc": "5149",
+      "amount": 418.3,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-08",
+      "timestamp": "2026-06-26T10:20:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0626-08",
+      "counterparty_name": "Tbilisi Grocery Distributors",
+      "counterparty_id": "MER-TGD-003",
+      "mcc": "5149",
+      "amount": 198.45,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-09",
+      "timestamp": "2026-06-30T09:10:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0630-09",
+      "counterparty_name": "Kutaisi Trade Foods LLC",
+      "counterparty_id": "MER-KTF-002",
+      "mcc": "5149",
+      "amount": 332.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-10",
+      "timestamp": "2026-07-03T08:45:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0703-10",
+      "counterparty_name": "Batumi Wholesale Foods Ltd",
+      "counterparty_id": "MER-BWF-001",
+      "mcc": "5149",
+      "amount": 276.15,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-11",
+      "timestamp": "2026-07-07T11:00:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0707-11",
+      "counterparty_name": "Tbilisi Grocery Distributors",
+      "counterparty_id": "MER-TGD-003",
+      "mcc": "5149",
+      "amount": 389.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-12",
+      "timestamp": "2026-07-10T09:25:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0710-12",
+      "counterparty_name": "Kutaisi Trade Foods LLC",
+      "counterparty_id": "MER-KTF-002",
+      "mcc": "5149",
+      "amount": 214.7,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-13",
+      "timestamp": "2026-07-14T10:12:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0714-13",
+      "counterparty_name": "Batumi Wholesale Foods Ltd",
+      "counterparty_id": "MER-BWF-001",
+      "mcc": "5149",
+      "amount": 347.55,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-14",
+      "timestamp": "2026-07-17T08:58:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0717-14",
+      "counterparty_name": "Tbilisi Grocery Distributors",
+      "counterparty_id": "MER-TGD-003",
+      "mcc": "5149",
+      "amount": 265.3,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-15",
+      "timestamp": "2026-07-21T09:33:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0721-15",
+      "counterparty_name": "Kutaisi Trade Foods LLC",
+      "counterparty_id": "MER-KTF-002",
+      "mcc": "5149",
+      "amount": 402.85,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-16",
+      "timestamp": "2026-07-24T10:47:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0724-16",
+      "counterparty_name": "Batumi Wholesale Foods Ltd",
+      "counterparty_id": "MER-BWF-001",
+      "mcc": "5149",
+      "amount": 178.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-17",
+      "timestamp": "2026-07-28T07:40:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0728-17",
+      "counterparty_name": "Tbilisi Grocery Distributors",
+      "counterparty_id": "MER-TGD-003",
+      "mcc": "5149",
+      "amount": 291.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-18",
+      "timestamp": "2026-07-31T09:15:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0731-18",
+      "counterparty_name": "Kutaisi Trade Foods LLC",
+      "counterparty_id": "MER-KTF-002",
+      "mcc": "5149",
+      "amount": 356.4,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-19",
+      "timestamp": "2026-08-04T08:20:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0804-19",
+      "counterparty_name": "Batumi Wholesale Foods Ltd",
+      "counterparty_id": "MER-BWF-001",
+      "mcc": "5149",
+      "amount": 233.75,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-20",
+      "timestamp": "2026-08-07T10:55:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0807-20",
+      "counterparty_name": "Tbilisi Grocery Distributors",
+      "counterparty_id": "MER-TGD-003",
+      "mcc": "5149",
+      "amount": 379.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-21",
+      "timestamp": "2026-08-09T09:05:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0809-21",
+      "counterparty_name": "Kutaisi Trade Foods LLC",
+      "counterparty_id": "MER-KTF-002",
+      "mcc": "5149",
+      "amount": 198.6,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-22",
+      "timestamp": "2026-08-10T08:12:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0810-22",
+      "counterparty_name": "Batumi Wholesale Foods Ltd",
+      "counterparty_id": "MER-BWF-001",
+      "mcc": "5149",
+      "amount": 302.45,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-23",
+      "timestamp": "2026-08-11T09:48:00+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0811-23",
+      "counterparty_name": "Tbilisi Grocery Distributors",
+      "counterparty_id": "MER-TGD-003",
+      "mcc": "5149",
+      "amount": 267.9,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    },
+    {
+      "transaction_id": "TXN-MTK-0601-24",
+      "timestamp": "2026-08-12T07:41:22+04:00",
+      "agent_id": "AGT-MTK-001",
+      "payment_mandate_ref": "PM-MTK-2026-0812-07",
+      "counterparty_name": "Batumi Wholesale Foods Ltd",
+      "counterparty_id": "MER-BWF-001",
+      "mcc": "5149",
+      "amount": 366.2,
+      "currency": "GEL",
+      "status": "settled",
+      "channel": "agent_api"
+    }
+  ]
+}
