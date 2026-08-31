@@ -15,13 +15,20 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
+from typing import Literal
+
 from .finding import FindingAgent
+
+# An Observation can come from the four specialists OR the investigator —
+# unlike FindingAgent, which stays the four specialists only: the type system
+# itself says the investigator cannot mint a Finding (architecture-v2 §16).
+ObservationAgent = FindingAgent | Literal["investigator"]
 
 
 class Observation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     case_id: str
-    agent: FindingAgent
+    agent: ObservationAgent
     note: str
     cited_evidence: str

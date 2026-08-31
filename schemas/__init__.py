@@ -20,7 +20,7 @@ from .mandate import (
     Principal,
 )
 from .investigation import InvestigationAnswer, ToolCallRecord
-from .observation import Observation
+from .observation import Observation, ObservationAgent
 from .report import DraftReport, ReportSection
 from .review_gate import ReportStatus, ReviewerDecision, ReviewerDirective
 from .scoring import DispositionTier, RiskFactor, RiskScore, ScoringConfig, ScoringTier
@@ -57,6 +57,7 @@ __all__ = [
     "InvestigationAnswer",
     "ToolCallRecord",
     "Observation",
+    "ObservationAgent",
     "DraftReport",
     "ReportSection",
     "ReportStatus",

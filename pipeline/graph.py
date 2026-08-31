@@ -57,6 +57,7 @@ from agents.context import (
     canonical_context,
     compose_context,
     context_digest,
+    resolve_blocks,
 )
 from agents.critic import check_evidence_grounding
 from agents.drafting import draft_case_report
@@ -66,6 +67,8 @@ from agents.kya import KYAAgent
 from agents.llm import format_escalation_addendum
 from agents.log import LogAgent
 from agents.mandate import MandateAgent
+from agents.investigator import investigate
+from agents.orchestrator import OrchestratorDecision, route
 from agents.prompts import assemble_run_prompts, effective_text
 from agents.skills import SPECIALIST_SKILLS_BY_AGENT, enforce_skill_floor
 from agents.synthesizer import synthesize
@@ -647,3 +650,259 @@ async def resolve_gate(graph: CompiledStateGraph, config: dict, decision: dict):
     """Resume a held gate with a reviewer's decision dict. The gate node
     validates it server-side — a bad payload re-interrupts with an error."""
     return await graph.ainvoke(Command(resume=decision), config)
+
+
+# ---------------------------------------------------------------------------
+# Investigation
+# ---------------------------------------------------------------------------
+
+
+def build_investigation_graph(*, model=None, store: LedgerStore | None = None) -> CompiledStateGraph:
+    """One officer message, routed (architecture-v2 §14.2):
+
+        load_context → orchestrate → {specialist(s) | investigator | record} → record → END
+
+    The orchestrator picks skills and composes briefings; it cannot answer
+    substantive questions itself (its output schema is a routing decision).
+    A specialist dispatched here may produce new Findings — it judges
+    against its rules, with the officer's concern as its instruction and any
+    orchestrator-named record items attached verbatim on top of its
+    canonical evidence. The investigator may not — Observations and an
+    InvestigationAnswer only.
+    """
+    store = store or get_default_store()
+    mandate_agent = MandateAgent()
+    kya_agent = KYAAgent()
+    log_agent = LogAgent()
+    drift_agent = DriftAgent()
+
+    async def _load_context_node(state: SupervisionState) -> dict:
+        case_id = state["case_id"]
+        raw = latest_submission(store, case_id)
+        ingested = normalize_case_payload(raw)
+        record = project_case(store.events_for(case_id))
+
+        run_id = _new_run_id("investigation")
+        prompts = assemble_run_prompts("investigation", state.get("prompt_overrides"))
+        officer = state.get("officer") or "officer"
+        question_id = state.get("question_id") or f"Q-{uuid.uuid4().hex[:8]}"
+
+        store.append(
+            case_id=case_id, event_type="run_started", run_id=run_id,
+            payload={"run_id": run_id, "kind": "investigation", "prompts": prompts},
+            actor="system:investigation",
+        )
+        store.append(
+            case_id=case_id, event_type="question_asked", run_id=run_id,
+            payload={"question_id": question_id, "question": state.get("officer_message", "")},
+            actor=f"human:{officer}",
+        )
+        return {
+            "case": ingested,
+            "run_id": run_id,
+            "prompts": prompts,
+            "question_id": question_id,
+            "firm_name": record.firm,
+            "findings": record.findings,       # the record so far seeds the dedup base
+            "observations": record.observations,
+            "pass_number": 2,
+        }
+
+    async def _orchestrate_node(state: SupervisionState) -> dict:
+        record = project_case(store.events_for(state["case_id"]))
+        decision = await route(
+            state.get("officer_message", ""), record, model=model,
+            system_prompt=effective_text(state["prompts"], "ORCH-SESSION"),
+        )
+        return {
+            "orchestrator_decision": decision.model_dump(),
+            "orchestrator_reply": decision.message_to_officer,
+        }
+
+    def _route_from_orchestrator(state: SupervisionState) -> list[str] | str:
+        decision = OrchestratorDecision.model_validate(state["orchestrator_decision"])
+        if decision.intent != "dispatch" or not decision.targets:
+            return "record"
+        from agents.skills import SKILLS
+
+        return [SKILLS[t].agent for t in decision.targets]
+
+    def _decision(state: SupervisionState) -> OrchestratorDecision:
+        return OrchestratorDecision.model_validate(state["orchestrator_decision"])
+
+    def _extras(state: SupervisionState) -> list:
+        record = project_case(store.events_for(state["case_id"]))
+        return resolve_blocks(record, _decision(state).context_blocks)
+
+    def _record_dispatch(state: SupervisionState, agent_name: str, skill: str, composed: dict, instruction: str) -> None:
+        record = DispatchRecord(
+            case_id=state["case_id"], run_id=state["run_id"], target=agent_name,
+            skill=skill, instruction=instruction, context_blocks=composed,
+            context_digest=context_digest(composed),
+        )
+        store.append(
+            case_id=record.case_id, event_type="dispatch_recorded", run_id=state["run_id"],
+            payload=record.model_dump(), actor="agent:orchestrator",
+        )
+
+    def _record_outputs(state: SupervisionState, agent_name: str, findings, observations) -> None:
+        for finding in findings:
+            store.append(case_id=finding.case_id, event_type="finding_recorded",
+                         run_id=state["run_id"], payload=finding.model_dump(),
+                         actor=f"agent:{agent_name}")
+        for observation in observations:
+            store.append(case_id=observation.case_id, event_type="observation_recorded",
+                         run_id=state["run_id"], payload=observation.model_dump(),
+                         actor=f"agent:{agent_name}")
+
+    async def _inv_mandate_node(state: SupervisionState) -> dict:
+        decision = _decision(state)
+        composed = compose_context(canonical_context("mandate.review", state["case"]), _extras(state))
+        _record_dispatch(state, "mandate", "mandate.review", composed, decision.instruction)
+        findings = await mandate_agent.review(
+            state["case"], load_mandate_ruleset(), model=model,
+            reviewer_directive=decision.instruction or None,
+            prompts=state.get("prompts"), context=composed,
+        )
+        _record_outputs(state, "mandate", findings, [])
+        return {"findings": findings, "dispatch_contexts": {"mandate": composed}}
+
+    async def _inv_kya_node(state: SupervisionState) -> dict:
+        decision = _decision(state)
+        ruleset = load_kya_ruleset()
+        floor = kya_agent.run(state["case"], ruleset)
+        composed = compose_context(
+            canonical_context("kya.review", state["case"], floor_findings=floor), _extras(state)
+        )
+        _record_dispatch(state, "kya", "kya.review", composed, decision.instruction)
+        review = await kya_agent.review(
+            state["case"], ruleset, model=model,
+            reviewer_directive=decision.instruction or None,
+            prompts=state.get("prompts"), context=composed,
+        )
+        _record_outputs(state, "kya", review.findings, review.observations)
+        return {"findings": review.findings, "observations": review.observations,
+                "dispatch_contexts": {"kya": composed}}
+
+    async def _inv_log_node(state: SupervisionState) -> dict:
+        decision = _decision(state)
+        ruleset = load_log_ruleset()
+        try:
+            composed = compose_context(
+                canonical_context("log.analyze", state["case"], ruleset=ruleset), _extras(state)
+            )
+        except ContextCompositionError:
+            review = await log_agent.review(state["case"], ruleset, model=model)
+            return {"findings": review.findings, "observations": review.observations}
+        _record_dispatch(state, "log", "log.analyze", composed, decision.instruction)
+        review = await log_agent.review(
+            state["case"], ruleset, model=model,
+            reviewer_directive=decision.instruction or None,
+            prompts=state.get("prompts"), context=composed,
+        )
+        _record_outputs(state, "log", review.findings, review.observations)
+        return {"findings": review.findings, "observations": review.observations,
+                "dispatch_contexts": {"log": composed}}
+
+    async def _inv_drift_node(state: SupervisionState) -> dict:
+        decision = _decision(state)
+        ruleset = load_drift_ruleset()
+        try:
+            composed = compose_context(
+                canonical_context("drift.analyze", state["case"], ruleset=ruleset), _extras(state)
+            )
+        except ContextCompositionError:
+            review = await drift_agent.review(state["case"], ruleset, model=model)
+            return {"findings": review.findings, "observations": review.observations}
+        _record_dispatch(state, "drift", "drift.analyze", composed, decision.instruction)
+        review = await drift_agent.review(
+            state["case"], ruleset, model=model,
+            reviewer_directive=decision.instruction or None,
+            prompts=state.get("prompts"), context=composed,
+        )
+        _record_outputs(state, "drift", review.findings, review.observations)
+        return {"findings": review.findings, "observations": review.observations,
+                "dispatch_contexts": {"drift": composed}}
+
+    async def _investigator_node(state: SupervisionState) -> dict:
+        decision = _decision(state)
+        question = decision.instruction or state.get("officer_message", "")
+        composed = {"question": question, "context_blocks": [b.model_dump() for b in _extras(state)]}
+        _record_dispatch(state, "investigator", "investigator.lookup", composed, decision.instruction)
+
+        answer, observations = await investigate(
+            state["case"], question, question_id=state["question_id"],
+            store=store, model=model,
+            system_prompt=effective_text(state["prompts"], "INVESTIGATOR"),
+        )
+        store.append(
+            case_id=answer.case_id, event_type="investigation_completed",
+            run_id=state["run_id"], payload=answer.model_dump(), actor="agent:investigator",
+        )
+        _record_outputs(state, "investigator", [], observations)
+        return {"observations": observations}
+
+    async def _record_node(state: SupervisionState) -> dict:
+        case_id = state["case_id"]
+        run_events = store.events_for_run(state["run_id"])
+        # A specialist pass may have changed the findings — keep the score
+        # current; a pure lookup or reply leaves it untouched.
+        if any(e.event_type == "finding_recorded" for e in run_events):
+            record = project_case(store.events_for(case_id))
+            score = score_findings(case_id, record.findings, load_scoring_config())
+            store.append(case_id=case_id, event_type="score_computed", run_id=state["run_id"],
+                         payload=score.model_dump(), actor="system:scoring")
+        store.append(
+            case_id=case_id, event_type="run_completed", run_id=state["run_id"],
+            payload={"run_id": state["run_id"], "kind": "investigation",
+                     "finding_count": sum(1 for e in run_events if e.event_type == "finding_recorded"),
+                     "observation_count": sum(1 for e in run_events if e.event_type == "observation_recorded")},
+            actor="system:investigation",
+        )
+        return {}
+
+    graph = StateGraph(SupervisionState)
+    graph.add_node("load_context", _load_context_node)
+    graph.add_node("orchestrate", _orchestrate_node)
+    graph.add_node("mandate", _inv_mandate_node)
+    graph.add_node("kya", _inv_kya_node)
+    graph.add_node("log", _inv_log_node)
+    graph.add_node("drift", _inv_drift_node)
+    graph.add_node("investigator", _investigator_node)
+    graph.add_node("record", _record_node)
+
+    graph.add_edge(START, "load_context")
+    graph.add_edge("load_context", "orchestrate")
+    graph.add_conditional_edges(
+        "orchestrate", _route_from_orchestrator,
+        [*_SPECIALIST_NODES, "investigator", "record"],
+    )
+    for node in (*_SPECIALIST_NODES, "investigator"):
+        graph.add_edge(node, "record")
+    graph.add_edge("record", END)
+
+    return graph.compile()
+
+
+async def run_investigation(
+    case_id: str,
+    officer_message: str,
+    *,
+    officer: str = "officer",
+    model=None,
+    store: LedgerStore | None = None,
+    prompt_overrides: dict[str, str] | None = None,
+):
+    """One officer message through the orchestrator. Returns (CaseRecord,
+    the orchestrator's reply) — the record is the durable truth; the reply
+    is conversational surface."""
+    store = store or get_default_store()
+    graph = build_investigation_graph(model=model, store=store)
+    state = await graph.ainvoke({
+        "case_id": case_id,
+        "officer_message": officer_message,
+        "officer": officer,
+        "findings": [], "observations": [], "messages": [],
+        **({"prompt_overrides": prompt_overrides} if prompt_overrides else {}),
+    })
+    return project_case(store.events_for(case_id)), state.get("orchestrator_reply", "")

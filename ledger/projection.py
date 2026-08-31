@@ -248,9 +248,10 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
         decisions=decisions,
         has_grounded_draft_after_last_decision=draft_pending,
         open_questions=bool(open_questions),
-        # A recorded decision is human engagement even without an explicit
-        # case_opened event — a rerun leaves the case live under review.
-        opened=opened_by is not None or bool(decisions),
+        # A recorded decision or an asked question is human engagement even
+        # without an explicit case_opened event — a rerun or an answered
+        # investigation leaves the case live under review.
+        opened=opened_by is not None or bool(decisions) or bool(questions),
         triaged=triaged,
     )
 

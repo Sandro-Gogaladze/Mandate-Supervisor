@@ -99,6 +99,13 @@ class SupervisionState(MessagesState, total=False):
     run_id: str
     pass_number: int
     firm_name: str
+    # Investigation-run keys (architecture-v2 §14.2): the officer's message
+    # and identity, the orchestrator's routing decision, and its reply.
+    officer_message: str
+    officer: str
+    question_id: str
+    orchestrator_decision: dict
+    orchestrator_reply: str
     prompt_overrides: dict
     prompts: dict
     dispatch_plan: DispatchPlan

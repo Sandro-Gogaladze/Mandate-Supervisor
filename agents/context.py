@@ -88,6 +88,44 @@ def compose_context(base: dict, extra_blocks: list[ContextBlock] | None = None) 
     return composed
 
 
+def resolve_blocks(record, block_ids: list[str]) -> list[ContextBlock]:
+    """Orchestrator-named record items → verbatim blocks (§13.3). The
+    orchestrator NAMES blocks; this resolver fetches their content untouched
+    — the model never authors or summarizes what goes into a briefing. An id
+    that doesn't resolve is logged and skipped, not improvised."""
+    import logging
+
+    logger = logging.getLogger(__name__)
+    blocks: list[ContextBlock] = []
+    for block_id in block_ids:
+        content = None
+        if block_id == "score" and record.risk_score is not None:
+            content = record.risk_score.model_dump()
+        elif block_id == "correlations" and record.correlations:
+            content = [c.model_dump() for c in record.correlations]
+        elif block_id.startswith("finding:"):
+            fid = block_id.split(":", 1)[1]
+            match = next((f for f in record.findings if f.finding_id == fid), None)
+            content = match.model_dump() if match else None
+        elif block_id.startswith("answer:"):
+            qid = block_id.split(":", 1)[1]
+            match = next((a for a in record.answers if a.question_id == qid), None)
+            if match is not None:
+                content = {"question": match.question, "answer": match.answer,
+                           "cited_evidence": match.cited_evidence}
+        elif block_id.startswith("observation:"):
+            try:
+                idx = int(block_id.split(":", 1)[1])
+                content = record.observations[idx].model_dump()
+            except (ValueError, IndexError):
+                content = None
+        if content is None:
+            logger.warning("Context block %r did not resolve on case %s — skipped", block_id, record.case_id)
+            continue
+        blocks.append(ContextBlock(block_id=block_id, content=content))
+    return blocks
+
+
 def context_digest(context: dict) -> str:
     """sha256 over the canonical bytes — same serialization that signs the
     mandate corpus and chains the ledger, so two runs' contexts compare as

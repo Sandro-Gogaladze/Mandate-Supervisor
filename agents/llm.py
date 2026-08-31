@@ -29,7 +29,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 
-from schemas import FindingAgent, Observation
+from schemas import Observation, ObservationAgent
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +122,7 @@ def format_reviewer_addendum(instructions: str) -> str:
 
 
 def parse_observations(
-    raw: list, *, case_id: str, agent: FindingAgent, note_key: str = "note", cited_key: str = "cited_evidence"
+    raw: list, *, case_id: str, agent: ObservationAgent, note_key: str = "note", cited_key: str = "cited_evidence"
 ) -> list[Observation]:
     """Builds `Observation`s from a tool call's array field, skipping (and
     logging) any element that doesn't match the schema instead of crashing
