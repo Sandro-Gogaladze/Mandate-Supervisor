@@ -39,9 +39,14 @@ process.on('uncaughtException', (err) => {
   console.error('[copilot-runtime] Uncaught exception; ignoring to keep the server alive:', err)
 })
 
+// Three agents, one per run kind (architecture-v2 §14): triage is the
+// multi-agent showpiece, session is the conversational orchestrator,
+// drafter carries the human gate (interrupt outcome + resume).
 const runtime = new CopilotRuntime({
   agents: {
-    mandate_supervisor: new HttpAgent({ url: `${BACKEND_URL}/agent` }),
+    mandate_supervisor: new HttpAgent({ url: `${BACKEND_URL}/agent/triage` }),
+    supervisor_session: new HttpAgent({ url: `${BACKEND_URL}/agent/session` }),
+    report_drafter: new HttpAgent({ url: `${BACKEND_URL}/agent/drafter` }),
   },
 })
 
@@ -55,5 +60,7 @@ app.use(createCopilotExpressHandler({ runtime, basePath: '/copilotkit' }))
 
 app.listen(PORT, () => {
   console.log(`CopilotKit runtime listening on http://localhost:${PORT}/copilotkit`)
-  console.log(`  -> forwarding agent "mandate_supervisor" to ${BACKEND_URL}/agent`)
+  console.log(`  -> triage:  mandate_supervisor -> ${BACKEND_URL}/agent/triage`)
+  console.log(`  -> session: supervisor_session -> ${BACKEND_URL}/agent/session`)
+  console.log(`  -> drafter: report_drafter     -> ${BACKEND_URL}/agent/drafter`)
 })

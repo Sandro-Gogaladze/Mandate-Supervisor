@@ -107,7 +107,7 @@ def _new_run_id(kind: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def build_triage_graph(*, model=None, store: LedgerStore | None = None) -> CompiledStateGraph:
+def build_triage_graph(*, model=None, store: LedgerStore | None = None, checkpointer=None) -> CompiledStateGraph:
     store = store or get_default_store()
     mandate_agent = MandateAgent()
     kya_agent = KYAAgent()
@@ -421,7 +421,9 @@ def build_triage_graph(*, model=None, store: LedgerStore | None = None) -> Compi
     graph.add_edge("synthesizer", "risk_score")
     graph.add_edge("risk_score", END)
 
-    return graph.compile()
+    # checkpointer is AG-UI thread plumbing only (api/main.py) — disposable,
+    # never the record. run_triage() compiles without one: nothing interrupts.
+    return graph.compile(checkpointer=checkpointer)
 
 
 async def run_triage(
@@ -657,7 +659,7 @@ async def resolve_gate(graph: CompiledStateGraph, config: dict, decision: dict):
 # ---------------------------------------------------------------------------
 
 
-def build_investigation_graph(*, model=None, store: LedgerStore | None = None) -> CompiledStateGraph:
+def build_investigation_graph(*, model=None, store: LedgerStore | None = None, checkpointer=None) -> CompiledStateGraph:
     """One officer message, routed (architecture-v2 §14.2):
 
         load_context → orchestrate → {specialist(s) | investigator | record} → record → END
@@ -881,7 +883,7 @@ def build_investigation_graph(*, model=None, store: LedgerStore | None = None) -
         graph.add_edge(node, "record")
     graph.add_edge("record", END)
 
-    return graph.compile()
+    return graph.compile(checkpointer=checkpointer)
 
 
 async def run_investigation(
