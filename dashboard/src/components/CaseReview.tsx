@@ -50,13 +50,21 @@ const TRIAGE_AGENT = 'mandate_supervisor'
 const SESSION_AGENT = 'supervisor_session'
 const DRAFTER_AGENT = 'report_drafter'
 
-// Graph-internal plumbing steps map onto the hub node the supervisor
-// actually sees; unmapped internals simply don't light anything.
+// The map shows the supervisor's model of the loop; graph-internal
+// plumbing steps fold onto the nearest visible node so live lighting
+// still tells the truth: ingest is dispatch prep, an escalation round is
+// a re-dispatch, the critic checks the output pool, the score is the
+// result returning to the orchestrator, load_record is drafting prep.
 const STEP_ALIAS: Record<string, string | null> = {
   orchestrate: 'orchestrator',
   load_context: 'orchestrator',
-  record: null,
-  load_record: null,
+  record: 'orchestrator',
+  ingest: 'dispatch',
+  bump_round: 'dispatch',
+  escalate_check: 'findings',
+  critic: 'findings',
+  risk_score: 'orchestrator',
+  load_record: 'draft_report',
 }
 
 function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; onBack: () => void }) {

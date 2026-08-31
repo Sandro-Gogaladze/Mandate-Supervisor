@@ -3,6 +3,7 @@
 // can't drift into three different sets of labels for the same node.
 import {
   Inbox,
+  ListChecks,
   SearchCheck,
   Waypoints,
   ShieldCheck,
@@ -80,6 +81,9 @@ export const NODE_META: Record<string, NodeMeta> = {
   orchestrate: { label: 'Orchestrate', icon: Waypoints, color: 'slate' },
   record: { label: 'Record', icon: ScrollText, color: 'slate' },
   load_record: { label: 'Load record', icon: Inbox, color: 'slate' },
+  findings: { label: 'Findings / Observations', icon: ListChecks, color: 'slate' },
+  supervisor: { label: 'Supervisor', icon: UserRoundCheck, color: 'indigo' },
+  orchestrator: { label: 'Orchestrator', icon: Waypoints, color: 'indigo' },
   draft_report: {
     label: 'Draft report',
     icon: FileText,

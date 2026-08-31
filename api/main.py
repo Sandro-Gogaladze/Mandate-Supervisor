@@ -320,59 +320,46 @@ async def graph_structure() -> dict:
 _FULL_MAP_NODES: list[dict] = [
     {"id": "supervisor", "label": "Supervisor", "lane": "hub", "synthetic": True},
     {"id": "orchestrator", "label": "Orchestrator", "lane": "hub", "synthetic": True},
-    {"id": "ingest", "label": "Ingest", "lane": "triage", "synthetic": False},
     {"id": "dispatch", "label": "Dispatch", "lane": "triage", "synthetic": False},
     {"id": "mandate", "label": "Mandate", "lane": "triage", "synthetic": False},
     {"id": "kya", "label": "KYA", "lane": "triage", "synthetic": False},
     {"id": "log", "label": "Log", "lane": "triage", "synthetic": False},
     {"id": "drift", "label": "Drift", "lane": "triage", "synthetic": False},
-    {"id": "escalate_check", "label": "Escalate check", "lane": "triage", "synthetic": False},
-    {"id": "bump_round", "label": "Escalation round", "lane": "triage", "synthetic": False},
-    {"id": "critic", "label": "Critic", "lane": "triage", "synthetic": False},
-    {"id": "synthesizer", "label": "Synthesizer", "lane": "triage", "synthetic": False},
-    {"id": "risk_score", "label": "Risk score", "lane": "triage", "synthetic": False},
     {"id": "investigator", "label": "Investigator", "lane": "investigation", "synthetic": False},
+    # The typed output pool every worker reports into — a display grouping,
+    # not a graph node (escalate_check/critic step events alias onto it).
+    {"id": "findings", "label": "Findings / Observations", "lane": "triage", "synthetic": True},
+    {"id": "synthesizer", "label": "Synthesizer", "lane": "triage", "synthetic": False},
     {"id": "draft_report", "label": "Draft report", "lane": "drafting", "synthetic": False},
     {"id": "grounding_check", "label": "Grounding check", "lane": "drafting", "synthetic": False},
-    {"id": "human_gate", "label": "Human gate", "lane": "drafting", "synthetic": False},
+    {"id": "human_gate", "label": "Decision / Sign-off", "lane": "drafting", "synthetic": False},
 ]
 
-# kind: "main" solid forward flow · "loop" a bounded return edge ·
-# "route" the orchestrator starting a lane · "return" results flowing back
+# The supervisor's own mental model of the loop (drawn to direction):
+# dispatch fans to five peers, results pool, the synthesizer correlates,
+# everything returns through the orchestrator to the supervisor — who
+# loops with follow-ups, or calls the review complete and sends it to
+# draft -> grounding -> sign-off.
 _FULL_MAP_EDGES: list[dict] = [
-    {"source": "supervisor", "target": "orchestrator", "kind": "main"},
+    {"source": "supervisor", "target": "orchestrator", "kind": "main", "label": "converse / direct"},
     {"source": "orchestrator", "target": "supervisor", "kind": "return"},
-    # triage lane
-    {"source": "orchestrator", "target": "ingest", "kind": "route"},
-    {"source": "ingest", "target": "dispatch", "kind": "main"},
+    {"source": "orchestrator", "target": "dispatch", "kind": "main"},
     {"source": "dispatch", "target": "mandate", "kind": "main"},
     {"source": "dispatch", "target": "kya", "kind": "main"},
     {"source": "dispatch", "target": "log", "kind": "main"},
     {"source": "dispatch", "target": "drift", "kind": "main"},
-    {"source": "mandate", "target": "escalate_check", "kind": "main"},
-    {"source": "kya", "target": "escalate_check", "kind": "main"},
-    {"source": "log", "target": "escalate_check", "kind": "main"},
-    {"source": "drift", "target": "escalate_check", "kind": "main"},
-    {"source": "escalate_check", "target": "bump_round", "kind": "loop"},
-    {"source": "bump_round", "target": "kya", "kind": "loop"},
-    {"source": "bump_round", "target": "log", "kind": "loop"},
-    {"source": "bump_round", "target": "drift", "kind": "loop"},
-    {"source": "escalate_check", "target": "critic", "kind": "main"},
-    {"source": "critic", "target": "synthesizer", "kind": "main"},
-    {"source": "synthesizer", "target": "risk_score", "kind": "main"},
-    {"source": "risk_score", "target": "orchestrator", "kind": "return"},
-    # investigation lane — the orchestrator can also re-brief a specialist
-    {"source": "orchestrator", "target": "investigator", "kind": "route"},
-    {"source": "orchestrator", "target": "mandate", "kind": "loop"},
-    {"source": "investigator", "target": "orchestrator", "kind": "return"},
-    # drafting lane
-    {"source": "orchestrator", "target": "draft_report", "kind": "route"},
+    {"source": "dispatch", "target": "investigator", "kind": "route", "label": "optional · after first run"},
+    {"source": "mandate", "target": "findings", "kind": "main"},
+    {"source": "kya", "target": "findings", "kind": "main"},
+    {"source": "log", "target": "findings", "kind": "main"},
+    {"source": "drift", "target": "findings", "kind": "main"},
+    {"source": "investigator", "target": "findings", "kind": "main"},
+    {"source": "findings", "target": "synthesizer", "kind": "main", "label": "correlates"},
+    {"source": "synthesizer", "target": "orchestrator", "kind": "return"},
+    {"source": "supervisor", "target": "draft_report", "kind": "route", "label": "review complete"},
     {"source": "draft_report", "target": "grounding_check", "kind": "main"},
     {"source": "grounding_check", "target": "draft_report", "kind": "loop"},
     {"source": "grounding_check", "target": "human_gate", "kind": "main"},
-    {"source": "human_gate", "target": "supervisor", "kind": "return"},
-    # a send-back from the gate becomes a directed triage pass
-    {"source": "human_gate", "target": "dispatch", "kind": "loop"},
 ]
 
 # Validation at import time: every non-synthetic node must exist in one of

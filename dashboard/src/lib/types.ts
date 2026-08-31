@@ -327,6 +327,7 @@ export interface MapEdge {
   source: string
   target: string
   kind: MapEdgeKind
+  label?: string
 }
 
 export interface FullMap {

@@ -28,29 +28,32 @@ export type NodeStatus = 'pending' | 'active' | 'done' | 'awaiting'
 // top, the three lanes stacked beneath, loop edges bending back upward.
 const POSITIONS: Record<string, { x: number; y: number }> = {
   supervisor: { x: 105, y: 0 },
-  orchestrator: { x: 105, y: 96 },
-  ingest: { x: 0, y: 226 },
-  dispatch: { x: 210, y: 226 },
-  mandate: { x: 0, y: 316 },
-  kya: { x: 210, y: 316 },
-  log: { x: 0, y: 406 },
-  drift: { x: 210, y: 406 },
-  escalate_check: { x: 0, y: 496 },
-  bump_round: { x: 210, y: 496 },
-  critic: { x: 0, y: 586 },
-  synthesizer: { x: 210, y: 586 },
-  risk_score: { x: 105, y: 676 },
-  investigator: { x: 105, y: 806 },
-  draft_report: { x: 0, y: 936 },
-  grounding_check: { x: 210, y: 936 },
-  human_gate: { x: 105, y: 1026 },
+  orchestrator: { x: 105, y: 104 },
+  dispatch: { x: 105, y: 208 },
+  mandate: { x: 0, y: 312 },
+  kya: { x: 210, y: 312 },
+  log: { x: 0, y: 402 },
+  drift: { x: 210, y: 402 },
+  investigator: { x: 105, y: 492 },
+  findings: { x: 105, y: 596 },
+  synthesizer: { x: 105, y: 692 },
+  draft_report: { x: 105, y: 848 },
+  grounding_check: { x: 105, y: 944 },
+  human_gate: { x: 105, y: 1040 },
 }
 
 const LANE_LABELS: { id: string; label: string; y: number }[] = [
-  { id: 'lane-triage', label: 'FULL REVIEW PASS', y: 196 },
-  { id: 'lane-investigation', label: 'INVESTIGATION', y: 776 },
-  { id: 'lane-drafting', label: 'REPORT & DECISION', y: 906 },
+  { id: 'lane-drafting', label: 'REVIEW COMPLETE → REPORT & SIGN-OFF', y: 812 },
 ]
+
+// One-line captions under each node's name while idle.
+const CAPTIONS: Record<string, string> = {
+  supervisor: 'you',
+  orchestrator: 'routes & briefs',
+  dispatch: 'fans out',
+  findings: 'typed output pool',
+  human_gate: 'named decision',
+}
 
 const STATUS_RING: Record<NodeStatus, string> = {
   active: 'ring-2 ring-amber-500/60 shadow-[0_0_0_5px_rgba(245,158,11,0.14)] border-amber-500/70',
@@ -93,7 +96,13 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
           {data.label}
         </div>
         <div className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
-          {data.status === 'active' ? 'working…' : data.status === 'done' ? 'complete' : data.status === 'awaiting' ? 'awaiting you' : data.synthetic ? (data.nodeId === 'supervisor' ? 'you' : 'routes') : 'ready'}
+          {data.status === 'active'
+            ? 'working…'
+            : data.status === 'done'
+              ? 'complete'
+              : data.status === 'awaiting'
+                ? 'awaiting you'
+                : (CAPTIONS[data.nodeId] ?? 'ready')}
         </div>
       </div>
       {data.status === 'active' && (
@@ -199,6 +208,10 @@ export function SupervisionMap({
           target: e.target,
           type: 'smoothstep',
           animated: live || holding,
+          label: e.label,
+          labelStyle: { fontSize: 8, fill: 'var(--muted-foreground)', fontFamily: 'var(--font-mono)' },
+          labelBgStyle: { fill: 'var(--background)', fillOpacity: 0.85 },
+          labelBgPadding: [3, 2] as [number, number],
           style: {
             stroke: live ? '#f59e0b' : holding ? 'oklch(0.55 0.21 262)' : settled ? '#10b981' : 'var(--border)',
             strokeWidth: live || holding ? 2.25 : settled ? 2 : 1.5,
