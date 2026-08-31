@@ -42,7 +42,7 @@ def test_finding_ids_unique_across_crypto_and_policy_passes() -> None:
     ids = [f.finding_id for f in findings]
     assert len(ids) == len(set(ids))
     # crypto pass and policy pass use visibly different id schemes
-    assert any("-FND-" in i for i in ids)
+    assert any("-KYC-" in i for i in ids)
     assert any("-POL-" in i for i in ids)
 
 

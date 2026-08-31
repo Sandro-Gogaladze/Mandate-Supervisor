@@ -113,5 +113,5 @@ def test_finding_ids_distinguishable_from_chain_pass() -> None:
     findings = MandateAgent().run(case, ruleset)
     ids = [f.finding_id for f in findings]
     assert len(ids) == len(set(ids))
-    assert any("-FND-" in i for i in ids)  # from ingestion's chain check
+    assert any("-CHN-" in i for i in ids)  # from ingestion's chain check
     assert any("-MND-" in i for i in ids)  # from the new policy checks

@@ -53,7 +53,7 @@
       "label": "structuring",
       "firm": "Sameba Trading LLC",
       "expected_findings": [
-        { "agent": "log", "type": "structuring_pattern" }
+        { "agent": "log", "type": "transaction_structuring_detected" }
       ],
       "summary": "One ~₾8,700 settlement split into three same-day, same-counterparty payments just under the ₾3,000 synthetic reporting threshold."
     },
@@ -63,9 +63,7 @@
       "label": "drift",
       "firm": "Adjara Coastal Logistics",
       "expected_findings": [
-        { "agent": "drift", "type": "avg_amount_drift" },
-        { "agent": "drift", "type": "frequency_drift" },
-        { "agent": "drift", "type": "counterparty_concentration_shift" }
+        { "agent": "drift", "type": "behavioral_drift_detected" }
       ],
       "summary": "49 transactions over ~11 weeks: avg amount ₾182→₾370, frequency 3/wk→6/wk, new counterparty grows to dominate. No single rule breached."
     },

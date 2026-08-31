@@ -55,13 +55,23 @@ def build_verification_context() -> VerificationContext:
 
 
 class _FindingIdCounter:
-    def __init__(self, case_id: str) -> None:
+    """`prefix` exists because finding_ids must be unique across *independent*
+    counter instances for the same case: verify_credential_with_ruleset() and
+    verify_chain_links_with_ruleset() are called separately by the KYA and
+    Mandate agents, and two counters both minting `<case_id>-FND-001` collide —
+    pipeline/state.py's dedup reducer then silently drops one of the findings
+    (proven with a case carrying both a bad credential and a broken chain).
+    verify_case() keeps the historical "FND" prefix since it shares one counter
+    across both passes and cannot collide with itself."""
+
+    def __init__(self, case_id: str, prefix: str = "FND") -> None:
         self._case_id = case_id
+        self._prefix = prefix
         self._n = 0
 
     def next(self) -> str:
         self._n += 1
-        return f"{self._case_id}-FND-{self._n:03d}"
+        return f"{self._case_id}-{self._prefix}-{self._n:03d}"
 
 
 def _finding(
@@ -212,7 +222,7 @@ def verify_chain_links(
 
 def verify_case(raw_case: dict, context: VerificationContext | None = None) -> list[Finding]:
     context = context or build_verification_context()
-    counter = _FindingIdCounter(raw_case["case_id"])
+    counter = _FindingIdCounter(raw_case["case_id"], prefix="KYC")
     return verify_credential(raw_case, context, counter) + verify_chain_links(raw_case, context, counter)
 
 
@@ -233,7 +243,7 @@ def verify_credential_with_ruleset(
         kya_rules=active_rules_by_type(ruleset),
         mandate_rules={},
     )
-    counter = _FindingIdCounter(raw_case["case_id"])
+    counter = _FindingIdCounter(raw_case["case_id"], prefix="KYC")
     return verify_credential(raw_case, context, counter)
 
 
@@ -243,5 +253,5 @@ def verify_chain_links_with_ruleset(raw_case: dict, ruleset: Ruleset) -> list[Fi
     context = VerificationContext(
         public_keys={}, issuers={}, kya_rules={}, mandate_rules=active_rules_by_type(ruleset),
     )
-    counter = _FindingIdCounter(raw_case["case_id"])
+    counter = _FindingIdCounter(raw_case["case_id"], prefix="CHN")
     return verify_chain_links(raw_case, context, counter)

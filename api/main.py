@@ -153,6 +153,8 @@ async def graph_structure() -> dict:
     edges = [
         {"source": edge.source, "target": edge.target, "conditional": edge.conditional}
         for edge in drawable.edges
-        if edge.source not in ("__start__",) and edge.target not in ()
+        # Both endpoints must be nodes we actually emit — an edge into
+        # "__end__" would point React Flow at a node that doesn't exist.
+        if edge.source != "__start__" and edge.target != "__end__"
     ]
     return {"nodes": nodes, "edges": edges}
