@@ -1,50 +1,78 @@
-"""Orchestrator (PLAN items 4 and 9).
+"""The bounded runs (architecture-v2 §14): triage and drafting.
 
-Dispatch: the Orchestrator LLM proposes a DispatchPlan; a deterministic
-floor validator (pipeline/dispatch.py::enforce_floor) guarantees Mandate
-and KYA always run, and Log/Drift run whenever there's enough transaction
-history for each to say anything (different minimums per agent — see
-pipeline/dispatch.py's module docstring). The LLM can propose running
-*more* than the floor requires, never less.
+Each graph starts, does one job, appends what it produced to the ledger, and
+exits. None is held open — the case lives in the ledger, not in a paused
+process. The one interrupt() left is the human gate at the end of the
+DRAFTING run: it guards the artifact (a report cannot issue without a named
+decision — minutes, which is what a checkpointer is for), never the case
+(open for a week — a ledger state).
 
-Escalation: after the dispatched specialists run, if any produced an
-unresolved Observation, the graph loops back — capped at exactly one extra
-round — and re-dispatches only the agent(s) each observation actually
-targets (pipeline/escalation.py). A re-dispatched agent on the escalation
-round only contributes to `observations`, never `findings`: its rule-
-backed verdicts were already decided in round 0, so nothing calls
-`.run()` again or re-emits those findings a second time.
+TRIAGE — build_triage_graph():
 
-Every specialist node calls `.review()`, not `.run()` — the orchestrator's
-default path needs a live ANTHROPIC_API_KEY, since dispatch and escalation
-are both fundamentally about deciding which LLM-capable analysis to
-invoke. Every node is `async` and every agent call is `await`ed — this is
-what lets LangGraph's `.astream_events()` (and CopilotKit's AG-UI adapter
-on top of it) capture thinking/reasoning content as it streams from
-`langchain_anthropic.ChatAnthropic`; that capture only fires on the async
-callback path, not sync `.invoke()` (agents/llm.py's module docstring).
-`build_graph(model=...)` accepts an injectable model (threaded into every
-node as a closure) specifically so tests can run the entire graph against
-a fake — see tests/test_pipeline.py — without either a live key or,
-worse, silently making real paid API calls on every `pytest` run.
+    ingest → dispatch → {mandate, kya, log, drift} → escalate_check
+           ⇄ bump_round → critic → synthesizer → risk_score → END
+
+  The existing detection pipeline, minus the drafting tail, plus: every
+  node appends its output to the ledger as it is produced; every specialist
+  dispatch records the exact composed context it received
+  (dispatch_recorded — the event this architecture exists to make
+  possible); the deterministic critic and the additive synthesizer run
+  before scoring. A directed re-analysis is a triage run with a
+  reviewer_directive in its initial state — it enters at exactly the named
+  specialists (the floor applies to pass 1 only; coverage was guaranteed
+  when the case first arrived).
+
+DRAFTING — build_drafting_graph():
+
+    load_record → draft_report ⇄ grounding_check → human_gate (interrupt) → END
+
+  Only reachable by explicit request — a clean case never drafts, it gets
+  "close, no action" (a named decision, not a document). The score is
+  recomputed from the ledger's current findings first, so the report states
+  the tier as of when it was written. Grounding retry cap, report_blocked
+  path, and the gate's self-defending loop are unchanged from the old
+  single graph. A `rerun` decision records the directive and ENDS the run;
+  the caller then starts a directed triage — the fan-back no longer lives
+  inside one long-running graph.
+
+Every guarantee here is code, not prompt: the skill floor
+(agents/skills.py), the evidence floor (agents/context.py), observations
+never scoring (pipeline/scoring.py's signature), grounding
+(agents/grounding.py), the critic (agents/critic.py), correlation id
+resolution (agents/synthesizer.py), and the gate (graph topology).
 """
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.types import interrupt
+from langgraph.types import Command, interrupt
 from pydantic import ValidationError
 
+from agents.context import (
+    ContextCompositionError,
+    canonical_context,
+    compose_context,
+    context_digest,
+)
+from agents.critic import check_evidence_grounding
 from agents.drafting import draft_case_report
 from agents.drift import DriftAgent
 from agents.grounding import check_grounding
 from agents.kya import KYAAgent
+from agents.llm import format_escalation_addendum
 from agents.log import LogAgent
 from agents.mandate import MandateAgent
-from ingestion.normalize import normalize_case
+from agents.prompts import assemble_run_prompts, effective_text
+from agents.skills import SPECIALIST_SKILLS_BY_AGENT, enforce_skill_floor
+from agents.synthesizer import synthesize
+from ingestion.normalize import normalize_case_payload
+from ledger import LedgerStore, get_default_store
+from ledger.projection import project_case
+from ledger.seed import latest_submission
 from pipeline.dispatch import enforce_floor, propose_dispatch_plan
 from pipeline.escalation import escalation_targets, observations_for
 from pipeline.scoring import score_findings
@@ -56,158 +84,424 @@ from registry.loader import (
     load_mandate_ruleset,
     load_scoring_config,
 )
-from schemas import ReviewerDecision
+from schemas import DispatchPlan, DispatchRecord, ReviewerDecision, ReviewerDirective
 
 _SPECIALIST_NODES = ("mandate", "kya", "log", "drift")
 _MAX_ESCALATION_ROUNDS = 1
-# Grounding-retry cap per CLAUDE.md's orchestration table ("grounding-retry
-# (capped at 2) on the drafting agent"): 1 initial draft + at most 2
-# regenerations, then the report is blocked rather than shipped ungrounded.
+# 1 initial draft + at most 2 regenerations, then blocked (CLAUDE.md).
 _MAX_GROUNDING_RETRIES = 2
-# The human-directed re-analysis loop (PLAN item 13) is bounded by the
-# human — every iteration costs an explicit reviewer decision, so it cannot
-# run away on its own. This cap is belt-and-braces on top of that, not the
-# real control.
+# The human-directed loop is bounded by the human — every iteration costs an
+# explicit named decision. This cap is belt-and-braces, not the real control.
 _MAX_REVIEWER_ROUNDS = 3
 
 
-def build_graph(*, model=None, checkpointer=None) -> CompiledStateGraph:
+def _new_run_id(kind: str) -> str:
+    return f"{kind[:3]}-{uuid.uuid4().hex[:12]}"
+
+
+# ---------------------------------------------------------------------------
+# Triage
+# ---------------------------------------------------------------------------
+
+
+def build_triage_graph(*, model=None, store: LedgerStore | None = None) -> CompiledStateGraph:
+    store = store or get_default_store()
     mandate_agent = MandateAgent()
     kya_agent = KYAAgent()
     log_agent = LogAgent()
     drift_agent = DriftAgent()
 
     async def _ingest_node(state: SupervisionState) -> dict:
-        ingested = normalize_case(state["case_path"])
-        return {"case": ingested, "ingestion_findings": ingested.findings}
+        case_id = state["case_id"]
+        raw = latest_submission(store, case_id)
+        ingested = normalize_case_payload(raw)
+
+        directive = state.get("reviewer_directive")
+        run_id = _new_run_id("triage")
+        prompts = assemble_run_prompts("triage", state.get("prompt_overrides"))
+        store.append(
+            case_id=case_id, event_type="run_started", run_id=run_id,
+            payload={
+                "run_id": run_id, "kind": "triage", "prompts": prompts,
+                **({"directive": directive.model_dump()} if directive else {}),
+            },
+            actor="system:triage",
+        )
+        return {
+            "case": ingested,
+            "ingestion_findings": ingested.findings,
+            "run_id": run_id,
+            "prompts": prompts,
+            "pass_number": 2 if directive else 1,
+        }
 
     async def _dispatch_node(state: SupervisionState) -> dict:
-        plan = await propose_dispatch_plan(state["case"], model=model)
-        plan = enforce_floor(plan, state["case"])
-        return {"dispatch_plan": plan, "escalation_round": 0}
+        case = state["case"]
+        directive = state.get("reviewer_directive")
+
+        if directive is not None:
+            # A directed pass: the human named the specialists; no LLM
+            # proposal, and the floor does not re-apply (pass 2).
+            selected = [SPECIALIST_SKILLS_BY_AGENT[a] for a in directive.target_agents]
+            selected = enforce_skill_floor(selected, case, pass_number=2)
+            plan = DispatchPlan(
+                run_mandate="mandate" in directive.target_agents,
+                run_kya="kya" in directive.target_agents,
+                run_log="log" in directive.target_agents,
+                run_drift="drift" in directive.target_agents,
+                reasoning=f"Directed re-analysis by a named reviewer: {directive.instructions}",
+            )
+        else:
+            plan = await propose_dispatch_plan(
+                case, model=model,
+                system_prompt=effective_text(state["prompts"], "ORCH-DISPATCH"),
+            )
+            proposed = [
+                skill for flag, skill in [
+                    (plan.run_mandate, "mandate.review"), (plan.run_kya, "kya.review"),
+                    (plan.run_log, "log.analyze"), (plan.run_drift, "drift.analyze"),
+                ] if flag
+            ]
+            selected = enforce_skill_floor(proposed, case, pass_number=1)
+            plan = enforce_floor(plan, case)  # the mirrored view the UI shows
+
+        store.append(
+            case_id=case.case.case_id, event_type="dispatch_planned", run_id=state["run_id"],
+            payload={"plan": plan.model_dump(), "selected_skills": selected},
+            actor="agent:orchestrator",
+        )
+        return {"dispatch_plan": plan, "selected_skills": selected, "escalation_round": 0}
 
     def _route_from_dispatch(state: SupervisionState) -> list[str]:
-        plan = state["dispatch_plan"]
-        targets = []
-        if plan.run_mandate:
-            targets.append("mandate")
-        if plan.run_kya:
-            targets.append("kya")
-        if plan.run_log:
-            targets.append("log")
-        if plan.run_drift:
-            targets.append("drift")
-        return targets or ["escalate_check"]  # floor guarantees this never happens in practice
+        agents = [
+            agent for agent, skill in SPECIALIST_SKILLS_BY_AGENT.items()
+            if skill in state.get("selected_skills", [])
+        ]
+        ordered = [a for a in _SPECIALIST_NODES if a in agents]
+        return ordered or ["escalate_check"]  # floor guarantees non-empty on pass 1
 
     def _directive_for(state: SupervisionState, agent_name: str) -> str | None:
-        """The reviewer's instruction text, iff this agent is one of the
-        directive's targets. A directed pass (PLAN item 13) takes precedence
-        over escalation semantics: the human asked a specific question, and
-        the answer may legitimately include *new findings* — safe because
-        pipeline/state.py's dedup reducer drops re-emitted identical ids,
-        while a genuinely changed judgment arrives under a new id."""
         directive = state.get("reviewer_directive")
         if directive is not None and agent_name in directive.target_agents:
             return directive.instructions
         return None
 
-    async def _mandate_node(state: SupervisionState) -> dict:
-        # Mandate's LLM subcheck produces real Findings, never Observations
-        # (agents/mandate_reasoning.py) — nothing to resolve on an
-        # escalation round, so it's never a *machine* re-dispatch target
-        # (pipeline/escalation.py). A human reviewer can still send it back
-        # with a directive (item 13), which is the only way this node runs
-        # more than once.
-        findings = await mandate_agent.review(
-            state["case"], load_mandate_ruleset(), model=model,
-            reviewer_directive=_directive_for(state, "mandate"),
+    def _record_dispatch(state: SupervisionState, agent_name: str, composed: dict, instruction: str) -> None:
+        record = DispatchRecord(
+            case_id=state["case"].case.case_id,
+            run_id=state["run_id"],
+            target=agent_name,
+            skill=SPECIALIST_SKILLS_BY_AGENT[agent_name],
+            instruction=instruction,
+            context_blocks=composed,
+            context_digest=context_digest(composed),
         )
-        return {"findings": findings}
+        # Recorded BEFORE the model call (§9.4) — the audit trail shows the
+        # briefing even if the subagent then dies mid-flight.
+        store.append(
+            case_id=record.case_id, event_type="dispatch_recorded", run_id=state["run_id"],
+            payload=record.model_dump(), actor="agent:orchestrator",
+        )
+
+    def _record_outputs(state: SupervisionState, agent_name: str, findings, observations) -> None:
+        for finding in findings:
+            store.append(
+                case_id=finding.case_id, event_type="finding_recorded", run_id=state["run_id"],
+                payload=finding.model_dump(), actor=f"agent:{agent_name}",
+            )
+        for observation in observations:
+            store.append(
+                case_id=observation.case_id, event_type="observation_recorded", run_id=state["run_id"],
+                payload=observation.model_dump(), actor=f"agent:{agent_name}",
+            )
+
+    async def _mandate_node(state: SupervisionState) -> dict:
+        case = state["case"]
+        directive = _directive_for(state, "mandate")
+        ruleset = load_mandate_ruleset()
+        composed = compose_context(canonical_context("mandate.review", case))
+        _record_dispatch(state, "mandate", composed, directive or "")
+        findings = await mandate_agent.review(
+            case, ruleset, model=model, reviewer_directive=directive,
+            prompts=state.get("prompts"), context=composed,
+        )
+        _record_outputs(state, "mandate", findings, [])
+        return {"findings": findings, "dispatch_contexts": {"mandate": composed}}
 
     async def _kya_node(state: SupervisionState) -> dict:
+        case = state["case"]
         directive = _directive_for(state, "kya")
-        if directive is not None:
-            review = await kya_agent.review(state["case"], load_kya_ruleset(), model=model, reviewer_directive=directive)
-            return {"findings": review.findings, "observations": review.observations}
-        escalating = state.get("escalation_round", 0) > 0
+        escalating = state.get("escalation_round", 0) > 0 and directive is None
         prior = observations_for("kya", state.get("observations", [])) if escalating else None
-        review = await kya_agent.review(state["case"], load_kya_ruleset(), model=model, prior_observations=prior)
+        ruleset = load_kya_ruleset()
+
+        floor = kya_agent.run(case, ruleset)  # deterministic, cheap; review() recomputes identically
+        composed = compose_context(canonical_context("kya.review", case, floor_findings=floor))
+        instruction = directive or (format_escalation_addendum(prior) if prior else "")
+        _record_dispatch(state, "kya", composed, instruction)
+
+        review = await kya_agent.review(
+            case, ruleset, model=model, prior_observations=prior,
+            reviewer_directive=directive, prompts=state.get("prompts"), context=composed,
+        )
         if escalating:
-            return {"observations": review.observations}
-        return {"findings": review.findings, "observations": review.observations}
+            # Rule-backed verdicts were decided in round 0 — an escalation
+            # round only narrows/resolves the observation list.
+            _record_outputs(state, "kya", [], review.observations)
+            return {"observations": review.observations, "dispatch_contexts": {"kya": composed}}
+        _record_outputs(state, "kya", review.findings, review.observations)
+        return {
+            "findings": review.findings, "observations": review.observations,
+            "dispatch_contexts": {"kya": composed},
+        }
 
     async def _log_node(state: SupervisionState) -> dict:
+        case = state["case"]
         directive = _directive_for(state, "log")
-        if directive is not None:
-            review = await log_agent.review(state["case"], load_log_ruleset(), model=model, reviewer_directive=directive)
-            return {"findings": review.findings, "observations": review.observations}
-        escalating = state.get("escalation_round", 0) > 0
+        escalating = state.get("escalation_round", 0) > 0 and directive is None
         prior = observations_for("log", state.get("observations", [])) if escalating else None
-        review = await log_agent.review(state["case"], load_log_ruleset(), model=model, prior_observations=prior)
+        ruleset = load_log_ruleset()
+
+        try:
+            composed = compose_context(canonical_context("log.analyze", case, ruleset=ruleset))
+        except ContextCompositionError:
+            # No active Log rules — review() returns empty; nothing dispatched.
+            review = await log_agent.review(case, ruleset, model=model)
+            return {"findings": review.findings, "observations": review.observations}
+
+        instruction = directive or (format_escalation_addendum(prior) if prior else "")
+        _record_dispatch(state, "log", composed, instruction)
+        review = await log_agent.review(
+            case, ruleset, model=model, prior_observations=prior,
+            reviewer_directive=directive, prompts=state.get("prompts"), context=composed,
+        )
         if escalating:
-            return {"observations": review.observations}
-        return {"findings": review.findings, "observations": review.observations}
+            _record_outputs(state, "log", [], review.observations)
+            return {"observations": review.observations, "dispatch_contexts": {"log": composed}}
+        _record_outputs(state, "log", review.findings, review.observations)
+        return {
+            "findings": review.findings, "observations": review.observations,
+            "dispatch_contexts": {"log": composed},
+        }
 
     async def _drift_node(state: SupervisionState) -> dict:
+        case = state["case"]
         directive = _directive_for(state, "drift")
-        if directive is not None:
-            review = await drift_agent.review(state["case"], load_drift_ruleset(), model=model, reviewer_directive=directive)
-            return {"findings": review.findings, "observations": review.observations}
-        escalating = state.get("escalation_round", 0) > 0
+        escalating = state.get("escalation_round", 0) > 0 and directive is None
         prior = observations_for("drift", state.get("observations", [])) if escalating else None
-        review = await drift_agent.review(state["case"], load_drift_ruleset(), model=model, prior_observations=prior)
+        ruleset = load_drift_ruleset()
+
+        tx_count = len(case.case.transaction_history)
+        try:
+            rule = next(
+                r for r in ruleset.rules
+                if r.type == "behavioral_drift_detected" and r.status == "active"
+            )
+            from schemas import typed_params
+
+            insufficient = tx_count < typed_params(rule).min_total_transactions
+        except StopIteration:
+            insufficient = True
+
+        if insufficient:
+            # Dispatched but declined on data availability — auditable as
+            # such, without computing statistics over too little history.
+            composed = {"insufficient_baseline_gate": True, "transaction_count": tx_count}
+            _record_dispatch(state, "drift", composed, directive or "")
+            review = await drift_agent.review(case, ruleset, model=model)
+            return {"findings": review.findings, "observations": review.observations,
+                    "dispatch_contexts": {"drift": composed}}
+
+        composed = compose_context(canonical_context("drift.analyze", case, ruleset=ruleset))
+        instruction = directive or (format_escalation_addendum(prior) if prior else "")
+        _record_dispatch(state, "drift", composed, instruction)
+        review = await drift_agent.review(
+            case, ruleset, model=model, prior_observations=prior,
+            reviewer_directive=directive, prompts=state.get("prompts"), context=composed,
+        )
         if escalating:
-            return {"observations": review.observations}
-        return {"findings": review.findings, "observations": review.observations}
+            _record_outputs(state, "drift", [], review.observations)
+            return {"observations": review.observations, "dispatch_contexts": {"drift": composed}}
+        _record_outputs(state, "drift", review.findings, review.observations)
+        return {
+            "findings": review.findings, "observations": review.observations,
+            "dispatch_contexts": {"drift": composed},
+        }
 
     async def _escalate_check_node(state: SupervisionState) -> dict:
-        return {}  # pure join point; routing decided by _route_after_specialists
+        return {}  # pure join point
 
     def _route_after_specialists(state: SupervisionState) -> str:
-        """Decides only whether to escalate at all — NOT which specialists
-        to re-dispatch (that's _route_escalation_targets, on bump_round's
-        own outgoing edge). Returning specialist names directly from here
-        was a real bug caught by the test suite: this edge's declared
-        targets are only {"bump_round", "draft_report"}, so returning e.g.
-        "kya" raised a KeyError at graph-execution time, not at build time.
-        Since PLAN items 11/12, the settled exit is the scoring + drafting
-        tail, not END."""
         if state.get("escalation_round", 0) >= _MAX_ESCALATION_ROUNDS:
-            return "risk_score"
-        return "bump_round" if escalation_targets(state.get("observations", [])) else "risk_score"
+            return "critic"
+        return "bump_round" if escalation_targets(state.get("observations", [])) else "critic"
 
     async def _bump_round_node(state: SupervisionState) -> dict:
-        return {"escalation_round": state.get("escalation_round", 0) + 1}
+        next_round = state.get("escalation_round", 0) + 1
+        store.append(
+            case_id=state["case"].case.case_id, event_type="escalation_round_started",
+            run_id=state["run_id"],
+            payload={"round": next_round, "targets": escalation_targets(state.get("observations", []))},
+            actor="system:triage",
+        )
+        return {"escalation_round": next_round}
 
     def _route_escalation_targets(state: SupervisionState) -> list[str] | str:
         targets = escalation_targets(state.get("observations", []))
-        return targets if targets else "risk_score"
+        return targets if targets else "critic"
+
+    async def _critic_node(state: SupervisionState) -> dict:
+        results = check_evidence_grounding(
+            state.get("findings", []), state.get("observations", []),
+            state.get("dispatch_contexts", {}),
+        )
+        for result in results:
+            store.append(
+                case_id=state["case"].case.case_id, event_type="critic_checked",
+                run_id=state["run_id"], payload=result.model_dump(), actor="system:critic",
+            )
+        return {"critic_results": [r.model_dump() for r in results]}
+
+    async def _synthesizer_node(state: SupervisionState) -> dict:
+        findings = state.get("findings", [])
+        correlations = await synthesize(
+            state["case"].case.case_id, findings, model=model,
+            system_prompt=effective_text(state["prompts"], "SYNTHESIZER") if state.get("prompts") else None,
+        ) if len(findings) >= 2 else []
+        for correlation in correlations:
+            store.append(
+                case_id=correlation.case_id, event_type="correlation_recorded",
+                run_id=state["run_id"], payload=correlation.model_dump(), actor="agent:synthesizer",
+            )
+        return {"correlations": correlations}
 
     async def _risk_score_node(state: SupervisionState) -> dict:
-        """Pure arithmetic (pipeline/scoring.py) — recomputed on every pass
-        through the tail, since a reviewer-directed re-analysis may have
-        changed the findings. Also the point where a consumed reviewer
-        directive is cleared: it steered exactly one specialist pass, and
-        every path from the specialists to the drafting tail runs through
-        here."""
-        score = score_findings(
-            state["case"].case.case_id, state.get("findings", []), load_scoring_config()
+        case_id = state["case"].case.case_id
+        score = score_findings(case_id, state.get("findings", []), load_scoring_config())
+        store.append(
+            case_id=case_id, event_type="score_computed", run_id=state["run_id"],
+            payload=score.model_dump(), actor="system:scoring",
         )
+        store.append(
+            case_id=case_id, event_type="run_completed", run_id=state["run_id"],
+            payload={
+                "run_id": state["run_id"], "kind": "triage",
+                "finding_count": len(state.get("findings", [])),
+                "observation_count": len(state.get("observations", [])),
+            },
+            actor="system:triage",
+        )
+        # The directive steered exactly one pass; consumed here.
         return {"risk_score": score, "reviewer_directive": None}
+
+    graph = StateGraph(SupervisionState)
+    graph.add_node("ingest", _ingest_node)
+    graph.add_node("dispatch", _dispatch_node)
+    graph.add_node("mandate", _mandate_node)
+    graph.add_node("kya", _kya_node)
+    graph.add_node("log", _log_node)
+    graph.add_node("drift", _drift_node)
+    graph.add_node("escalate_check", _escalate_check_node)
+    graph.add_node("bump_round", _bump_round_node)
+    graph.add_node("critic", _critic_node)
+    graph.add_node("synthesizer", _synthesizer_node)
+    graph.add_node("risk_score", _risk_score_node)
+
+    graph.add_edge(START, "ingest")
+    graph.add_edge("ingest", "dispatch")
+    graph.add_conditional_edges("dispatch", _route_from_dispatch, [*_SPECIALIST_NODES, "escalate_check"])
+    for node in _SPECIALIST_NODES:
+        graph.add_edge(node, "escalate_check")
+    graph.add_conditional_edges("escalate_check", _route_after_specialists, ["bump_round", "critic"])
+    graph.add_conditional_edges("bump_round", _route_escalation_targets, [*_SPECIALIST_NODES, "critic"])
+    graph.add_edge("critic", "synthesizer")
+    graph.add_edge("synthesizer", "risk_score")
+    graph.add_edge("risk_score", END)
+
+    return graph.compile()
+
+
+async def run_triage(
+    case_id: str,
+    *,
+    model=None,
+    store: LedgerStore | None = None,
+    prompt_overrides: dict[str, str] | None = None,
+    directive: ReviewerDirective | None = None,
+):
+    """One bounded triage pass. Starts, appends everything it produces to
+    the ledger, exits. Returns the projected CaseRecord — the durable truth,
+    not the transient graph state."""
+    store = store or get_default_store()
+    graph = build_triage_graph(model=model, store=store)
+    initial: dict = {
+        "case_id": case_id, "findings": [], "observations": [], "messages": [],
+        **({"prompt_overrides": prompt_overrides} if prompt_overrides else {}),
+        **({"reviewer_directive": directive} if directive else {}),
+    }
+    await graph.ainvoke(initial)
+    return project_case(store.events_for(case_id))
+
+
+# ---------------------------------------------------------------------------
+# Drafting
+# ---------------------------------------------------------------------------
+
+
+def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkpointer=None) -> CompiledStateGraph:
+    store = store or get_default_store()
+
+    async def _load_record_node(state: SupervisionState) -> dict:
+        case_id = state["case_id"]
+        record = project_case(store.events_for(case_id))
+
+        run_id = _new_run_id("drafting")
+        prompts = assemble_run_prompts("drafting", state.get("prompt_overrides"))
+        store.append(
+            case_id=case_id, event_type="run_started", run_id=run_id,
+            payload={"run_id": run_id, "kind": "drafting", "prompts": prompts},
+            actor="system:drafting",
+        )
+
+        # The report states the tier as of when it was written — recompute
+        # from the ledger's *current* findings, not the last triage's score.
+        score = score_findings(case_id, record.findings, load_scoring_config())
+        store.append(
+            case_id=case_id, event_type="score_computed", run_id=run_id,
+            payload=score.model_dump(), actor="system:scoring",
+        )
+
+        last_triage = next((r for r in reversed(record.runs) if r.kind == "triage"), None)
+        return {
+            "run_id": run_id,
+            "prompts": prompts,
+            "firm_name": record.firm,
+            "findings": record.findings,
+            "observations": record.observations,
+            "risk_score": score,
+            "dispatch_plan": last_triage.plan if last_triage else None,
+            "escalation_round": record.escalation_rounds,
+            "draft_attempts": 0,
+            "grounding_problems": [],
+            "reviewer_rounds": sum(1 for d in record.decisions if d.action == "rerun"),
+        }
 
     async def _draft_node(state: SupervisionState) -> dict:
         report = await draft_case_report(
-            case_id=state["case"].case.case_id,
-            firm_name=state["case"].case.firm.name,
+            case_id=state["case_id"],
+            firm_name=state.get("firm_name", "unknown"),
             findings=state.get("findings", []),
             observations=state.get("observations", []),
             dispatch_plan=state.get("dispatch_plan"),
             escalation_round=state.get("escalation_round", 0),
             risk_score=state.get("risk_score"),
-            # On a retry, the validator's exact complaints ride along so the
-            # model fixes the actual problems instead of re-rolling blind.
             prior_problems=state.get("grounding_problems") or None,
             model=model,
+            system_prompt=effective_text(state["prompts"], "DRAFTING"),
+        )
+        store.append(
+            case_id=state["case_id"], event_type="report_drafted", run_id=state["run_id"],
+            payload=report.model_dump(), actor="agent:drafting",
         )
         return {"draft_report": report, "draft_attempts": state.get("draft_attempts", 0) + 1}
 
@@ -215,31 +509,47 @@ def build_graph(*, model=None, checkpointer=None) -> CompiledStateGraph:
         problems = check_grounding(
             state["draft_report"], state.get("findings", []), state.get("observations", [])
         )
+        attempt = state.get("draft_attempts", 0)
+        store.append(
+            case_id=state["case_id"], event_type="grounding_checked", run_id=state["run_id"],
+            payload={"passed": not problems, "problems": problems, "attempt": attempt},
+            actor="system:grounding",
+        )
         if not problems:
             return {"grounding_problems": [], "report_blocked": False}
-        out_of_retries = state.get("draft_attempts", 0) > _MAX_GROUNDING_RETRIES
+        out_of_retries = attempt > _MAX_GROUNDING_RETRIES
+        if out_of_retries:
+            store.append(
+                case_id=state["case_id"], event_type="report_blocked", run_id=state["run_id"],
+                payload={"problems": problems}, actor="system:grounding",
+            )
+            store.append(
+                case_id=state["case_id"], event_type="run_completed", run_id=state["run_id"],
+                payload={"run_id": state["run_id"], "kind": "drafting",
+                         "finding_count": len(state.get("findings", [])),
+                         "observation_count": len(state.get("observations", []))},
+                actor="system:drafting",
+            )
         return {"grounding_problems": problems, "report_blocked": out_of_retries}
 
     def _route_after_grounding(state: SupervisionState) -> str:
         if not state.get("grounding_problems"):
-            return "human_gate"  # grounded — a named human decides what happens next
+            return "human_gate"
         if state.get("report_blocked"):
-            return END  # out of retries — blocked, nothing approvable to gate
+            return END  # blocked — nothing approvable to gate
         return "draft_report"
 
     async def _human_gate_node(state: SupervisionState) -> dict:
-        """PLAN item 13 — the graph pauses here (LangGraph `interrupt()`;
-        the checkpointer holds the frozen run) and structurally cannot
-        proceed without a resume payload carrying a reviewer's decision.
-        Invalid payloads and cap-violating rerun requests re-interrupt with
-        an error field rather than crashing the run: the gate holds until a
-        *valid* named decision arrives."""
+        """The graph pauses here (interrupt(); the checkpointer holds the
+        frozen run) and structurally cannot issue anything without a resume
+        payload carrying a named reviewer's decision. Invalid payloads and
+        cap-violating rerun requests re-interrupt with an error field."""
         rounds = state.get("reviewer_rounds", 0)
         rerun_allowed = rounds < _MAX_REVIEWER_ROUNDS
         context = {
             "reason": "report_approval",
             "message": "Grounded report awaiting a named reviewer's decision.",
-            "case_id": state["case"].case.case_id,
+            "case_id": state["case_id"],
             "rerun_allowed": rerun_allowed,
             "reviewer_rounds": rounds,
             "max_reviewer_rounds": _MAX_REVIEWER_ROUNDS,
@@ -252,7 +562,7 @@ def build_graph(*, model=None, checkpointer=None) -> CompiledStateGraph:
                 error = "Decision payload must be an object with action and reviewer."
                 continue
             try:
-                # decided_at is stamped server-side, never trusted from the client.
+                # decided_at stamped server-side, never trusted from the client.
                 decision = ReviewerDecision.model_validate(
                     {**payload, "decided_at": datetime.now(timezone.utc).isoformat()}
                 )
@@ -269,65 +579,71 @@ def build_graph(*, model=None, checkpointer=None) -> CompiledStateGraph:
                     continue
             break
 
+        store.append(
+            case_id=state["case_id"], event_type="decision_recorded", run_id=state["run_id"],
+            payload=decision.model_dump(), actor=f"human:{decision.reviewer}",
+        )
+        store.append(
+            case_id=state["case_id"], event_type="run_completed", run_id=state["run_id"],
+            payload={"run_id": state["run_id"], "kind": "drafting",
+                     "finding_count": len(state.get("findings", [])),
+                     "observation_count": len(state.get("observations", []))},
+            actor="system:drafting",
+        )
+
         updates: dict = {"reviewer_decisions": [decision]}
         if decision.action == "approve":
             updates["report_status"] = "issued"
         elif decision.action == "reject":
             updates["report_status"] = "rejected"
         else:
+            # The drafting run ENDS here; the caller reads the recorded
+            # directive and starts a directed triage run — the fan-back no
+            # longer lives inside one long-held graph.
             updates["report_status"] = "draft"
             updates["reviewer_directive"] = decision.directive
             updates["reviewer_rounds"] = rounds + 1
         return updates
 
-    def _route_after_gate(state: SupervisionState) -> list[str] | str:
-        last = (state.get("reviewer_decisions") or [])[-1]
-        if last.action == "rerun" and last.directive is not None:
-            return list(last.directive.target_agents)
-        return END
-
     graph = StateGraph(SupervisionState)
-    graph.add_node("ingest", _ingest_node)
-    graph.add_node("dispatch", _dispatch_node)
-    graph.add_node("mandate", _mandate_node)
-    graph.add_node("kya", _kya_node)
-    graph.add_node("log", _log_node)
-    graph.add_node("drift", _drift_node)
-    graph.add_node("escalate_check", _escalate_check_node)
-    graph.add_node("bump_round", _bump_round_node)
-    graph.add_node("risk_score", _risk_score_node)
+    graph.add_node("load_record", _load_record_node)
     graph.add_node("draft_report", _draft_node)
     graph.add_node("grounding_check", _grounding_node)
     graph.add_node("human_gate", _human_gate_node)
 
-    graph.add_edge(START, "ingest")
-    graph.add_edge("ingest", "dispatch")
-    graph.add_conditional_edges("dispatch", _route_from_dispatch, [*_SPECIALIST_NODES, "escalate_check"])
-
-    for node in _SPECIALIST_NODES:
-        graph.add_edge(node, "escalate_check")
-
-    graph.add_conditional_edges("escalate_check", _route_after_specialists, ["bump_round", "risk_score"])
-    graph.add_conditional_edges("bump_round", _route_escalation_targets, [*_SPECIALIST_NODES, "risk_score"])
-    graph.add_edge("risk_score", "draft_report")
+    graph.add_edge(START, "load_record")
+    graph.add_edge("load_record", "draft_report")
     graph.add_edge("draft_report", "grounding_check")
     graph.add_conditional_edges("grounding_check", _route_after_grounding, ["draft_report", "human_gate", END])
-    # The reviewer's re-analysis directive fans back out to exactly the
-    # specialists it names; approve/reject end the run.
-    graph.add_conditional_edges("human_gate", _route_after_gate, [*_SPECIALIST_NODES, END])
+    graph.add_edge("human_gate", END)
 
     return graph.compile(checkpointer=checkpointer)
 
 
-async def run_case(case_path: str, *, model=None, thread_id: str = "run") -> SupervisionState:
-    """One full pass up to the human gate. Since PLAN item 13 the graph
-    *always* pauses at `human_gate` on the grounded path (an `interrupt()`
-    needs a checkpointer, hence the per-call MemorySaver + thread config) —
-    the returned state carries `__interrupt__` alongside the full record.
-    Resuming with a decision is the caller's job (the API/UI in production,
-    `Command(resume=...)` against a shared graph instance in tests)."""
-    graph = build_graph(model=model, checkpointer=MemorySaver())
-    config = {"configurable": {"thread_id": thread_id}}
-    return await graph.ainvoke(
-        {"case_path": case_path, "findings": [], "observations": [], "messages": []}, config
-    )
+async def start_drafting(
+    case_id: str,
+    *,
+    model=None,
+    store: LedgerStore | None = None,
+    prompt_overrides: dict[str, str] | None = None,
+    thread_id: str | None = None,
+):
+    """Runs the drafting graph up to the human gate (or to a blocked END).
+    Returns (graph, config, state) — resume with resolve_gate(). The
+    checkpointer is per-call and disposable: it holds one in-flight draft
+    for minutes; the ledger holds the case forever."""
+    store = store or get_default_store()
+    graph = build_drafting_graph(model=model, store=store, checkpointer=MemorySaver())
+    config = {"configurable": {"thread_id": thread_id or _new_run_id("thread")}}
+    initial: dict = {
+        "case_id": case_id, "messages": [],
+        **({"prompt_overrides": prompt_overrides} if prompt_overrides else {}),
+    }
+    state = await graph.ainvoke(initial, config)
+    return graph, config, state
+
+
+async def resolve_gate(graph: CompiledStateGraph, config: dict, decision: dict):
+    """Resume a held gate with a reviewer's decision dict. The gate node
+    validates it server-side — a bad payload re-interrupts with an error."""
+    return await graph.ainvoke(Command(resume=decision), config)

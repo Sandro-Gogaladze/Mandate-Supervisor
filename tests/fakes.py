@@ -84,3 +84,48 @@ class FakeChatModel:
         if callable(args):
             args = args(messages)
         return FakeAIMessage(tool_calls=[{"name": tool_name, "args": args, "id": f"fake_{tool_name}", "type": "tool_call"}])
+
+
+# ---------------------------------------------------------------------------
+# The comprehensive graph fake: one canned response per tool name used
+# anywhere in the triage/drafting graphs. Shared by tests/test_triage_run.py
+# and tests/test_drafting_run.py (it used to live in test_pipeline.py).
+# ---------------------------------------------------------------------------
+
+import json as _json
+
+CLEAN_VERDICT = {"anomalous": False, "explanation": "n/a", "cited_evidence": "n/a"}
+
+
+def grounded_draft(messages) -> dict:
+    """Payload-aware fake draftsman: cites exactly the finding_ids the case
+    actually produced, so grounding passes first try."""
+    payload = _json.loads(messages[-1].content)
+    ids = [f["finding_id"] for f in payload["findings"]]
+    sections = (
+        [{"title": "Findings", "body": "See cited findings.", "cited_finding_ids": ids}] if ids else []
+    )
+    note = "Unverified items for officer review." if payload["unverified_observations"] else None
+    return {"overall_assessment": "Review complete.", "sections": sections, "open_observations_note": note}
+
+
+DEFAULT_GRAPH_RESPONSES = {
+    "record_dispatch_plan": {
+        "run_mandate": True, "run_kya": True, "run_log": True, "run_drift": True,
+        "reasoning": "run everything",
+    },
+    "record_observations": {"observations": []},
+    "write_narration": {"narration": "Nothing to report."},
+    "record_log_analysis": {
+        "structuring": CLEAN_VERDICT, "concentration": CLEAN_VERDICT,
+        "velocity": CLEAN_VERDICT, "other_observations": [],
+    },
+    "record_drift_analysis": {"drift": CLEAN_VERDICT, "other_observations": []},
+    "record_semantic_check": {"consistent": True, "quoted_evidence": "", "explanation": "matches intent"},
+    "record_correlations": {"correlations": []},
+    "draft_case_report": grounded_draft,
+}
+
+
+def make_graph_fake(overrides: dict | None = None) -> "FakeChatModel":
+    return FakeChatModel({**DEFAULT_GRAPH_RESPONSES, **(overrides or {})})

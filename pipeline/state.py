@@ -50,6 +50,7 @@ import operator
 
 from ingestion.normalize import IngestedCase
 from schemas import (
+    Correlation,
     DispatchPlan,
     DraftReport,
     Finding,
@@ -74,14 +75,42 @@ def _add_observations(existing: list[Observation], new: list[Observation]) -> li
     return existing + [o for o in new if key(o) not in seen]
 
 
+def _merge_dispatch_contexts(existing: dict, new: dict) -> dict:
+    """Parallel specialist nodes each contribute their own agent's composed
+    context on fan-in; a later dispatch of the same agent (escalation round,
+    directed pass) replaces its entry — the critic checks output against the
+    context of the pass that produced it."""
+    return {**existing, **new}
+
+
 class SupervisionState(MessagesState, total=False):
-    case_path: str
+    # The case is addressed by id and read from the ledger's case_submitted
+    # event — never by filesystem path. (The old case_path was client-
+    # controlled state fed to a file read; architecture-v2 §14.1.)
+    case_id: str
+    # Run bookkeeping (architecture-v2 §10.5): run_id groups this run's
+    # ledger events; prompts is the assembled per-run prompt set recorded on
+    # run_started; pass_number 1 = first triage (floor applies), 2 = a
+    # directed pass (targets exactly what the human named).
     case: IngestedCase
     ingestion_findings: list[Finding]
     findings: Annotated[list[Finding], _add_findings]
     observations: Annotated[list[Observation], _add_observations]
+    run_id: str
+    pass_number: int
+    firm_name: str
+    prompt_overrides: dict
+    prompts: dict
     dispatch_plan: DispatchPlan
+    selected_skills: list[str]
     escalation_round: int
+    # agent -> the exact composed context it received (recorded on
+    # dispatch_recorded; the critic reads this).
+    dispatch_contexts: Annotated[dict, _merge_dispatch_contexts]
+    # Deterministic critic results + validated synthesizer output — plain
+    # overwrites, each is produced once per pass through the tail.
+    critic_results: list[dict]
+    correlations: list[Correlation]
     # PLAN item 12 — the drafting/grounding tail. All plain overwrites, no
     # reducers: exactly one draft is current at a time (a grounding retry
     # *replaces* the failed draft, it doesn't accumulate next to it).

@@ -37,6 +37,7 @@ PROMPTS_DIR = Path(__file__).resolve().parent.parent / "registry" / "prompts"
 PROMPTS_BY_RUN_KIND: dict[str, tuple[str, ...]] = {
     "triage": (
         "ORCH-DISPATCH",
+        "SYNTHESIZER",
         "SPECIALIST-MANDATE",
         "SPECIALIST-KYA",
         "KYA-NARRATION",
@@ -46,6 +47,7 @@ PROMPTS_BY_RUN_KIND: dict[str, tuple[str, ...]] = {
     "investigation": (
         "ORCH-SESSION",
         "INVESTIGATOR",
+        "SYNTHESIZER",
         "SPECIALIST-MANDATE",
         "SPECIALIST-KYA",
         "KYA-NARRATION",

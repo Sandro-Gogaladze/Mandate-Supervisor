@@ -20,6 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pipeline.state import _add_findings, _add_observations
 from schemas import (
     Correlation,
+    DispatchPlan,
     DispatchRecord,
     DraftReport,
     Finding,
@@ -54,6 +55,7 @@ class RunRecord(BaseModel):
     # on run_started — the full text, not a pointer, since an overridden
     # prompt has no stable artifact to point at (§6).
     prompts: dict[str, dict] = Field(default_factory=dict)
+    plan: DispatchPlan | None = None      # the orchestrator's own reasoning (dispatch_planned)
     dispatches: list[DispatchRecord] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)
     observations: list[Observation] = Field(default_factory=list)
@@ -95,6 +97,7 @@ class CaseRecord(BaseModel):
     open_questions: list[dict] = Field(default_factory=list)     # {question_id, question}
     opened_by: str | None = None
     submitted_summary: str | None = None
+    escalation_rounds: int = 0
     first_event_at: str
     last_event_at: str
     event_count: int
@@ -157,6 +160,7 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
     opened_by: str | None = None
     closed = False
     triaged = False
+    escalation_rounds = 0
     # a draft only "awaits a decision" if no decision has landed after it
     draft_pending = False
 
@@ -178,6 +182,9 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
             )
             runs[run.run_id] = run
             run_order.append(run.run_id)
+        elif kind == "dispatch_planned":
+            if event.run_id in runs and "plan" in payload:
+                runs[event.run_id].plan = DispatchPlan.model_validate(payload["plan"])
         elif kind == "dispatch_recorded":
             record = DispatchRecord.model_validate(payload)
             if record.run_id in runs:
@@ -208,6 +215,8 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
                 runs[event.run_id].completed_at = event.recorded_at
             if payload.get("kind") == "triage" or (event.run_id in runs and runs[event.run_id].kind == "triage"):
                 triaged = True
+        elif kind == "escalation_round_started":
+            escalation_rounds += 1
         elif kind == "question_asked":
             questions[payload["question_id"]] = payload
         elif kind == "investigation_completed":
@@ -239,7 +248,9 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
         decisions=decisions,
         has_grounded_draft_after_last_decision=draft_pending,
         open_questions=bool(open_questions),
-        opened=opened_by is not None,
+        # A recorded decision is human engagement even without an explicit
+        # case_opened event — a rerun leaves the case live under review.
+        opened=opened_by is not None or bool(decisions),
         triaged=triaged,
     )
 
@@ -260,6 +271,7 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
         open_questions=open_questions,
         opened_by=opened_by,
         submitted_summary=submitted_summary,
+        escalation_rounds=escalation_rounds,
         first_event_at=events[0].recorded_at,
         last_event_at=events[-1].recorded_at,
         event_count=len(events),

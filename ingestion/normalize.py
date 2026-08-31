@@ -45,6 +45,28 @@ def normalize_case(path: Path | str, context: VerificationContext | None = None)
     return IngestedCase(case=case, findings=findings, raw=raw)
 
 
+def normalize_case_payload(raw: dict, context: VerificationContext | None = None) -> IngestedCase:
+    """Same as normalize_case(), but from an in-memory raw dict — what the
+    triage graph uses now that the bundle comes out of the ledger's
+    case_submitted event rather than a filesystem path (architecture-v2
+    §14.1; closes the client-controlled-path read the old case_path had).
+    Cryptographic verification still runs against the raw dict — the QA
+    notes were part of what was signed."""
+    from pydantic import ValidationError
+
+    from data.loader import CaseLoadError, strip_qa_notes
+    from schemas import CaseBundle
+
+    context = context or build_verification_context()
+    findings = verify_case(raw, context)
+    try:
+        case = CaseBundle.model_validate(strip_qa_notes(raw))
+    except ValidationError as exc:
+        raise CaseLoadError(f"submitted case failed schema validation:\n{exc}") from exc
+    case = case.model_copy(update={"label": None, "narrative": None})
+    return IngestedCase(case=case, findings=findings, raw=raw)
+
+
 def normalize_corpus() -> list[IngestedCase]:
     """Every case in data/corpus_manifest.json, ingested. Builds the
     verification context once and reuses it across all cases."""

@@ -21,6 +21,7 @@ EVENT_TYPES = frozenset({
     "case_submitted",          # full raw CaseBundle dict
     "case_opened",             # {}
     "run_started",             # {run_id, kind, prompts: {prompt_id: {effective, override, default_version}}}
+    "dispatch_planned",        # {plan: DispatchPlan, selected_skills} — the orchestrator's own reasoning
     "dispatch_recorded",       # DispatchRecord — the exact context sent to one agent
     "finding_recorded",        # Finding
     "observation_recorded",    # Observation
