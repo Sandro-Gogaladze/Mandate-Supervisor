@@ -310,6 +310,30 @@ export interface GraphStructure {
   edges: GraphEdge[]
 }
 
+// GET /graph/full — the whole supervision loop in one structure. Real
+// LangGraph node ids (validated server-side against the compiled graphs)
+// plus two synthetic hub nodes and the caller-level connective edges.
+export type MapLane = 'hub' | 'triage' | 'investigation' | 'drafting'
+export type MapEdgeKind = 'main' | 'loop' | 'route' | 'return'
+
+export interface MapNode {
+  id: string
+  label: string
+  lane: MapLane
+  synthetic: boolean
+}
+
+export interface MapEdge {
+  source: string
+  target: string
+  kind: MapEdgeKind
+}
+
+export interface FullMap {
+  nodes: MapNode[]
+  edges: MapEdge[]
+}
+
 export const SPECIALIST_NODES = ['mandate', 'kya', 'log', 'drift'] as const
 
 export const AGENT_LABELS: Record<ObservationAgent, string> = {

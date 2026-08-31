@@ -1,5 +1,6 @@
 import type {
   CaseDetail,
+  FullMap,
   CaseRecord,
   CaseSummary,
   GraphStructure,
@@ -39,6 +40,10 @@ export function getCase(caseId: string): Promise<CaseDetail> {
 
 export function getGraphStructure(): Promise<GraphStructure> {
   return getJSON('/graph')
+}
+
+export function getFullMap(): Promise<FullMap> {
+  return getJSON('/graph/full')
 }
 
 export function getLedgerEvents(caseId: string): Promise<LedgerEvent[]> {

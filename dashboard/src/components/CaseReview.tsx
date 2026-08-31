@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 import {
   ArrowLeft,
   BadgeCheck,
-  ChevronDown,
   FolderOpen,
   History,
   ListChecks,
@@ -16,7 +15,6 @@ import {
   Waypoints,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -27,19 +25,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { closeCase, getCase, getGraphStructure, getLedgerEvents } from '@/lib/api'
+import { closeCase, getCase, getFullMap, getLedgerEvents } from '@/lib/api'
 import type {
   CaseDetail,
   CaseRecord,
   CaseSummary,
+  FullMap,
   GateContext,
-  GraphStructure,
   LedgerEvent,
   ReviewerDirective,
 } from '@/lib/types'
 import { EMPTY_AGENT_STATE, type SupervisionAgentState } from '@/lib/agent-state'
 import { usePipelineFeed } from '@/hooks/usePipelineFeed'
-import { PipelineGraph } from '@/components/PipelineGraph'
+import { SupervisionMap, type NodeStatus } from '@/components/SupervisionMap'
 import { Conversation } from '@/components/Conversation'
 import { ResultsPanel } from '@/components/ResultsPanel'
 import { CaseFilePanel } from '@/components/CaseFilePanel'
@@ -52,9 +50,18 @@ const TRIAGE_AGENT = 'mandate_supervisor'
 const SESSION_AGENT = 'supervisor_session'
 const DRAFTER_AGENT = 'report_drafter'
 
+// Graph-internal plumbing steps map onto the hub node the supervisor
+// actually sees; unmapped internals simply don't light anything.
+const STEP_ALIAS: Record<string, string | null> = {
+  orchestrate: 'orchestrator',
+  load_context: 'orchestrator',
+  record: null,
+  load_record: null,
+}
+
 function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; onBack: () => void }) {
   const caseId = caseSummary.case_id
-  const [graph, setGraph] = useState<GraphStructure | null>(null)
+  const [map, setMap] = useState<FullMap | null>(null)
   const [detail, setDetail] = useState<CaseDetail | null>(null)
   const [record, setRecord] = useState<CaseRecord | null>(null)
   const [ledger, setLedger] = useState<LedgerEvent[] | null>(null)
@@ -63,13 +70,12 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null)
   const [promptOverrides, setPromptOverrides] = useState<Record<string, string>>({})
   const [officer, setOfficer] = useState('Case officer')
-  const [pipelineOpen, setPipelineOpen] = useState(false)
   const [closeOpen, setCloseOpen] = useState(false)
   const [closeOfficer, setCloseOfficer] = useState('')
   const pendingRerun = useRef<ReviewerDirective | null>(null)
   const feed = usePipelineFeed()
 
-  // The ledger IS the transcript; the projection is the summary rail.
+  // The ledger IS the transcript; the projection feeds the findings tab.
   const refreshRecord = useCallback(() => {
     getCase(caseId)
       .then((d) => {
@@ -84,7 +90,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
   }, [caseId])
 
   useEffect(() => {
-    getGraphStructure().then(setGraph).catch(() => setGraph(null))
+    getFullMap().then(setMap).catch(() => setMap(null))
   }, [])
   useEffect(() => {
     refreshRecord()
@@ -124,12 +130,21 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId])
 
+  const recordStep = useCallback(
+    (stepName: string, status: 'inProgress' | 'complete') => {
+      const target = stepName in STEP_ALIAS ? STEP_ALIAS[stepName] : stepName
+      if (target) feed.recordNodeEvent(target, status)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+
   // One feed across all three agents — the conversation's live block and
-  // the pipeline canvas read the same stream.
+  // the supervision map read the same stream.
   useEffect(() => {
     const handlers = {
-      onStepStartedEvent: ({ event }: any) => feed.recordNodeEvent(event.stepName, 'inProgress'),
-      onStepFinishedEvent: ({ event }: any) => feed.recordNodeEvent(event.stepName, 'complete'),
+      onStepStartedEvent: ({ event }: any) => recordStep(event.stepName, 'inProgress'),
+      onStepFinishedEvent: ({ event }: any) => recordStep(event.stepName, 'complete'),
       onToolCallStartEvent: ({ event }: any) => feed.recordToolEvent(event.toolCallName, 'inProgress', {}),
       onToolCallArgsEvent: ({ toolCallName, partialToolCallArgs }: any) =>
         feed.recordToolEvent(toolCallName, 'executing', partialToolCallArgs),
@@ -199,7 +214,6 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
       ...(Object.keys(promptOverrides).length ? { prompt_overrides: promptOverrides } : {}),
     })
     triageAgent.runAgent()
-    setPipelineOpen(true)
     if (Object.keys(promptOverrides).length) {
       setPromptOverrides({}) // per-run: consumed by this run, next starts default
       toast('Running with edited instructions — recorded on this run only.')
@@ -256,10 +270,22 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [record?.status])
 
-  // Pipeline auto-opens while a triage pass streams.
-  useEffect(() => {
-    if (triage.running) setPipelineOpen(true)
-  }, [triage.running])
+  // Map statuses: live feed, settled to done once nothing runs; the gate
+  // holds its node in "awaiting" — the one state that is neither working
+  // nor complete.
+  const displayNodeStatus = useMemo<Record<string, NodeStatus>>(() => {
+    const base: Record<string, NodeStatus> = anyRunning
+      ? { ...feed.nodeStatus }
+      : Object.fromEntries(
+          Object.entries(feed.nodeStatus).map(([id, status]) => [id, status === 'active' ? ('done' as const) : status]),
+        )
+    if (session.running) base['orchestrator'] = 'active'
+    if (gate) {
+      base['human_gate'] = 'awaiting'
+      base['supervisor'] = 'awaiting'
+    }
+    return base
+  }, [feed.nodeStatus, anyRunning, session.running, gate])
 
   const liveLabel = triage.running
     ? 'Full review pass running'
@@ -304,6 +330,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
 
   const hasTriage = (record?.runs ?? []).some((r) => r.kind === 'triage')
   const closable = !!record && !['issued', 'closed_rejected', 'closed_no_action'].includes(record.status)
+  const findingsBadge = view.findings.length + view.observations.length
 
   return (
     <Tabs defaultValue="room" className="flex h-full min-h-0 flex-col gap-0">
@@ -325,10 +352,11 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
         </div>
         <TabsList className="mt-2 h-auto gap-1 bg-transparent p-0">
           {[
-            { value: 'room', icon: MessageSquareText, label: 'Case room' },
-            { value: 'file', icon: FolderOpen, label: 'Case file' },
-            { value: 'timeline', icon: History, label: 'Timeline' },
-          ].map(({ value, icon: Icon, label }) => (
+            { value: 'room', icon: MessageSquareText, label: 'Case room', badge: 0 },
+            { value: 'findings', icon: ListChecks, label: 'Findings', badge: findingsBadge },
+            { value: 'file', icon: FolderOpen, label: 'Case file', badge: 0 },
+            { value: 'timeline', icon: History, label: 'Timeline', badge: 0 },
+          ].map(({ value, icon: Icon, label, badge }) => (
             <TabsTrigger
               key={value}
               value={value}
@@ -336,80 +364,71 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
             >
               <Icon className="size-4" />
               {label}
+              {badge > 0 && (
+                <span className="rounded-full bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">{badge}</span>
+              )}
             </TabsTrigger>
           ))}
         </TabsList>
       </header>
 
-      {/* The case room: the conversation IS the primary surface. The
-          pipeline canvas collapses to a strip; the summary rail rides
-          alongside on wide screens. */}
+      {/* The case room: the supervision map on the left, always visible —
+          the whole loop, lanes lighting as runs move — and the
+          conversation as the working surface. Findings live in their own
+          tab; the transcript already carries them in context. */}
       <TabsContent value="room" className="min-h-0 flex-1">
         <div className="flex h-full min-h-0">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <div className="shrink-0 border-b bg-card/60">
-              <button
-                type="button"
-                onClick={() => setPipelineOpen((v) => !v)}
-                className="flex w-full items-center gap-2 px-4 py-2 text-xs font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                aria-expanded={pipelineOpen}
-              >
-                <Waypoints className="size-3.5" />
-                Triage pipeline
-                {triage.running && (
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
-                  </span>
-                )}
-                <ChevronDown className={cn('ml-auto size-3.5 transition-transform', pipelineOpen && 'rotate-180')} />
-              </button>
-              {pipelineOpen && (
-                <div className="h-64 border-t">
-                  {graph ? (
-                    <PipelineGraph structure={graph} nodeStatus={feed.nodeStatus} nodeStartSeq={feed.nodeStartSeq} />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading graph…</div>
-                  )}
-                </div>
+          <aside className="hidden w-[380px] shrink-0 border-r bg-card/40 lg:block xl:w-[430px]">
+            <div className="flex items-center gap-2 border-b px-4 py-2.5 text-xs font-semibold text-muted-foreground">
+              <Waypoints className="size-3.5" />
+              Supervision loop
+              {anyRunning && (
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
+                </span>
+              )}
+              <span className={cn('ml-auto font-normal', !liveLabel && 'text-muted-foreground/60')}>
+                {liveLabel ?? 'idle'}
+              </span>
+            </div>
+            <div className="h-[calc(100%-2.4rem)]">
+              {map ? (
+                <SupervisionMap map={map} nodeStatus={displayNodeStatus} nodeStartSeq={feed.nodeStartSeq} />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading map…</div>
               )}
             </div>
-
-            <div className="min-h-0 flex-1">
-              <Conversation
-                events={ledger}
-                liveEvents={feed.events}
-                liveLabel={liveLabel}
-                pendingQuestion={pendingQuestion}
-                pendingReply={pendingReply}
-                gate={gate}
-                gateRisk={drafter.state.risk_score ?? record?.risk_score ?? null}
-                findingsCount={view.findings.length}
-                officer={officer}
-                onOfficerChange={setOfficer}
-                onDecide={handleDecision}
-                onSend={handleSend}
-                onRun={handleRun}
-                onDraft={handleDraft}
-                onCloseCase={() => setCloseOpen(true)}
-                busy={anyRunning}
-                hasTriage={hasTriage}
-                closable={closable}
-              />
-            </div>
-          </div>
-
-          <aside className="hidden w-96 shrink-0 border-l xl:block">
-            <Card className="h-full gap-0 rounded-none border-0 p-0">
-              <div className="flex items-center gap-2 border-b px-4 py-3 text-sm font-semibold">
-                <ListChecks className="size-4 text-muted-foreground" />
-                Case summary
-              </div>
-              <div className="min-h-0 flex-1">
-                <ResultsPanel view={view} answers={record?.answers ?? []} />
-              </div>
-            </Card>
           </aside>
+
+          <div className="min-h-0 min-w-0 flex-1">
+            <Conversation
+              events={ledger}
+              liveEvents={feed.events}
+              liveLabel={liveLabel}
+              pendingQuestion={pendingQuestion}
+              pendingReply={pendingReply}
+              gate={gate}
+              gateRisk={drafter.state.risk_score ?? record?.risk_score ?? null}
+              findingsCount={view.findings.length}
+              officer={officer}
+              onOfficerChange={setOfficer}
+              onDecide={handleDecision}
+              onSend={handleSend}
+              onRun={handleRun}
+              onDraft={handleDraft}
+              onCloseCase={() => setCloseOpen(true)}
+              busy={anyRunning}
+              hasTriage={hasTriage}
+              closable={closable}
+            />
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="findings" className="min-h-0 flex-1">
+        <div className="mx-auto h-full max-w-3xl">
+          <ResultsPanel view={view} answers={record?.answers ?? []} />
         </div>
       </TabsContent>
 
