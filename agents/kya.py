@@ -24,6 +24,7 @@ from ingestion.verify import verify_credential_with_ruleset
 from schemas import Finding, Ruleset
 
 from .kya_checks import run_policy_checks
+from .prompts import effective_text
 from .kya_reasoning import Observation, narrate_findings, reason_about_case
 
 
@@ -54,11 +55,25 @@ class KYAAgent:
         narrate: bool = True,
         prior_observations: list[Observation] | None = None,
         reviewer_directive: str | None = None,
+        prompts: dict[str, dict] | None = None,
+        context: dict | None = None,
     ) -> KYAReview:
         findings = self.run(case, ruleset)
+        # `prompts` is the run's assembled prompt set (agents/prompts.py) —
+        # the same text recorded on run_started; `context` is the composed
+        # evidence recorded on dispatch_recorded (agents/context.py).
+        reasoning_prompt = effective_text(prompts, "SPECIALIST-KYA") if prompts else None
+        narration_prompt = effective_text(prompts, "KYA-NARRATION") if prompts else None
         observations = (
-            await reason_about_case(case, findings, model=model, prior_observations=prior_observations, reviewer_directive=reviewer_directive)
+            await reason_about_case(
+                case, findings, model=model, prior_observations=prior_observations,
+                reviewer_directive=reviewer_directive, system_prompt=reasoning_prompt,
+                context=context,
+            )
             if reason else []
         )
-        narration = await narrate_findings(case.case.case_id, findings, model=model) if narrate else None
+        narration = (
+            await narrate_findings(case.case.case_id, findings, model=model, system_prompt=narration_prompt)
+            if narrate else None
+        )
         return KYAReview(findings=findings, observations=observations, narration=narration)

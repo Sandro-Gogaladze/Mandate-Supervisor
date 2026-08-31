@@ -23,6 +23,7 @@ from ingestion.normalize import IngestedCase
 from schemas import Finding, Observation, Ruleset, typed_params
 
 from .drift_reasoning import analyze_drift
+from .prompts import effective_text
 
 
 @dataclass
@@ -46,6 +47,8 @@ class DriftAgent:
         model=None,
         prior_observations: list[Observation] | None = None,
         reviewer_directive: str | None = None,
+        prompts: dict[str, dict] | None = None,
+        context: dict | None = None,
     ) -> DriftReview:
         if ruleset is None:
             return DriftReview(findings=[])
@@ -61,5 +64,10 @@ class DriftAgent:
         if len(case.case.transaction_history) < params.min_total_transactions:
             return DriftReview(findings=[], insufficient_baseline=True)
 
-        findings, observations = await analyze_drift(case, rule, model=model, prior_observations=prior_observations, reviewer_directive=reviewer_directive)
+        findings, observations = await analyze_drift(
+            case, rule, model=model, prior_observations=prior_observations,
+            reviewer_directive=reviewer_directive,
+            system_prompt=effective_text(prompts, "SPECIALIST-DRIFT") if prompts else None,
+            context=context,
+        )
         return DriftReview(findings=findings, observations=observations)

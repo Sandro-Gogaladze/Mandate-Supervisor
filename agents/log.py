@@ -20,6 +20,7 @@ from ingestion.normalize import IngestedCase
 from schemas import Finding, Observation, Ruleset
 
 from .log_reasoning import analyze_log
+from .prompts import effective_text
 
 
 @dataclass
@@ -42,6 +43,8 @@ class LogAgent:
         model=None,
         prior_observations: list[Observation] | None = None,
         reviewer_directive: str | None = None,
+        prompts: dict[str, dict] | None = None,
+        context: dict | None = None,
     ) -> LogReview:
         if ruleset is None:
             return LogReview(findings=[])
@@ -62,5 +65,7 @@ class LogAgent:
             model=model,
             prior_observations=prior_observations,
             reviewer_directive=reviewer_directive,
+            system_prompt=effective_text(prompts, "SPECIALIST-LOG") if prompts else None,
+            context=context,
         )
         return LogReview(findings=findings, observations=observations)

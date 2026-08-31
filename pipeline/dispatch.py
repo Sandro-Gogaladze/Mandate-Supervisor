@@ -16,25 +16,13 @@ import json
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from agents.llm import THINKING_EFFORT, get_model, get_tool_call
+from agents.prompts import assemble
 from ingestion.normalize import IngestedCase
 from registry.loader import load_drift_ruleset
 from schemas import DispatchPlan, Ruleset, typed_params
 
-SYSTEM_PROMPT = """You are the Orchestrator in a bank regulator's AI-payment-agent \
-supervision pipeline. You decide which specialist checks are worth running for one case: \
-Mandate (was this specific transaction in scope), KYA (is this agent's identity \
-legitimate), Log (does the transaction pattern look evasive), Drift (has behavior shifted \
-from baseline).
-
-You are given a summary of the case, not raw findings — nothing has been checked yet. Two \
-of the four specialists (Mandate, KYA) are mandatory on every case regardless of what you \
-decide; propose them as true, but know that even if you propose false, a deterministic \
-floor will force them to run anyway — your real decision is about Log and Drift, where \
-whether they're worth running depends on how much transaction history exists to analyze. \
-A case with very little history gives Log/Drift little or nothing to work with — say so in \
-your reasoning rather than reflexively proposing everything.
-
-Respond only by calling the record_dispatch_plan tool."""
+PROMPT_ID = "ORCH-DISPATCH"
+SYSTEM_PROMPT = assemble(PROMPT_ID).effective
 
 _DISPATCH_PLAN_TOOL = {
     "name": "record_dispatch_plan",
@@ -62,7 +50,10 @@ def _case_summary(case: IngestedCase) -> dict:
     }
 
 
-async def propose_dispatch_plan(case: IngestedCase, *, model=None, thinking_effort: str = THINKING_EFFORT) -> DispatchPlan:
+async def propose_dispatch_plan(
+    case: IngestedCase, *, model=None, thinking_effort: str = THINKING_EFFORT,
+    system_prompt: str | None = None,
+) -> DispatchPlan:
     """Needs a live ANTHROPIC_API_KEY unless `model` is supplied."""
     model = model or get_model()
     bound = model.bind(
@@ -72,7 +63,7 @@ async def propose_dispatch_plan(case: IngestedCase, *, model=None, thinking_effo
     )
 
     response = await bound.ainvoke([
-        SystemMessage(content=SYSTEM_PROMPT),
+        SystemMessage(content=system_prompt or SYSTEM_PROMPT),
         HumanMessage(content=json.dumps(_case_summary(case), indent=2)),
     ])
 

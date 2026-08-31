@@ -25,36 +25,10 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from schemas import DispatchPlan, DraftReport, Finding, Observation, RiskScore
 
 from .llm import THINKING_EFFORT, get_model, get_tool_call
+from .prompts import assemble
 
-SYSTEM_PROMPT = """You write the supervisory review report for a bank regulator's case officer, \
-summarizing what a multi-agent review of one AI payment agent's mandate chain and transaction \
-history found.
-
-You will receive structured JSON: the verified findings (each with a finding_id), any unverified \
-observations, which specialists were dispatched and why, and whether an escalation round ran. \
-That JSON is your ONLY source of truth.
-
-Rules — these are hard requirements, checked mechanically after you write:
-1. Every claim you make must trace to a finding. Every section MUST cite at least one real \
-finding_id in cited_finding_ids, and collectively your sections must cite EVERY finding — \
-none may be silently omitted.
-2. If there are zero findings, write no sections; say the review was clean in \
-overall_assessment.
-3. Observations are unverified model hunches, NOT findings. Never present them inside \
-sections. If any exist, summarize them in open_observations_note, clearly as unverified items \
-for the officer's judgment; if none exist, open_observations_note must be null.
-4. Invent nothing: no amounts, names, dates, or rule ids that do not appear in the input.
-5. Plain, neutral, regulatory register. Short sentences. No hedging filler, no drama. A busy \
-case officer should get the picture from overall_assessment alone in ten seconds.
-6. If a risk score is provided, state its disposition tier and total in overall_assessment \
-exactly as given — the score is computed deterministically from ruleset weights; never \
-substitute your own severity arithmetic or invent a different tier.
-
-Group related findings into coherent sections (e.g. one section for the mandate breach and its \
-knock-on effects) rather than one section per finding, when that reads better.
-
-However you reason, your final response MUST be a call to the draft_case_report tool and \
-nothing else — do not end your turn with plain text."""
+PROMPT_ID = "DRAFTING"
+SYSTEM_PROMPT = assemble(PROMPT_ID).effective
 
 RETRY_ADDENDUM = """
 
@@ -171,6 +145,7 @@ async def draft_case_report(
     prior_problems: list[str] | None = None,
     model=None,
     thinking_effort: str = THINKING_EFFORT,
+    system_prompt: str | None = None,
 ) -> DraftReport:
     """Draft (or, with `prior_problems`, re-draft) the case report. Needs a
     live ANTHROPIC_API_KEY unless `model` is supplied (tests inject a fake)."""
@@ -181,7 +156,7 @@ async def draft_case_report(
         tool_choice={"type": "auto"},
     )
 
-    system = SYSTEM_PROMPT
+    system = system_prompt or SYSTEM_PROMPT
     if prior_problems:
         system += RETRY_ADDENDUM.format(problems="\n".join(f"- {p}" for p in prior_problems))
 

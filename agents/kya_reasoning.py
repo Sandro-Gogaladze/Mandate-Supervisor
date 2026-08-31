@@ -26,6 +26,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from ingestion.normalize import IngestedCase
 from schemas import Finding, Observation
 
+from .prompts import assemble
 from .llm import (
     THINKING_EFFORT,
     ModelDidNotCallTool,
@@ -44,31 +45,10 @@ __all__ = [
 ]
 
 
-REASONING_SYSTEM_PROMPT = """You are assisting a bank regulator's KYA (Know Your Agent) \
-review of one AI payment agent's identity credential. A fixed set of deterministic rules \
-has already been evaluated against this credential — their results are provided to you, \
-and you are not re-checking them or second-guessing their verdicts.
-
-Your only job is to look at the structured data below for anything those fixed rules \
-would not catch — for example, an issuer or delegation-chain holder name that closely \
-resembles a real trusted name (possible impersonation or typosquatting), or anything else \
-structurally unusual worth a human reviewer's second look.
-
-You are NOT authorized to state that a rule was violated, assign a severity, or restate \
-a finding that's already listed. If you notice nothing beyond what's already listed, \
-call the tool with an empty observations list — do not invent a concern to have something \
-to report. Every observation must quote the exact field and value it concerns via
-cited_field.
-
-Take as long as you need to think this through carefully before answering — consider \
-each field in the data individually, and specifically consider whether an issuer or \
-holder name that looks like it resembles a known trusted entity might instead simply BE \
-that trusted entity's own legitimate, correctly-issued credential; resemblance to a real \
-name is only meaningful as a red flag when the credential is not already the genuine \
-article, so weigh that possibility explicitly before treating resemblance as suspicious.
-
-However you reason, your final response MUST be a call to the record_observations tool \
-and nothing else — do not end your turn with plain text."""
+REASONING_PROMPT_ID = "SPECIALIST-KYA"
+# The default, assembled from registry/prompts/ (architecture-v2 §12) —
+# preamble and tool contract are fixed; only the body is per-run overridable.
+REASONING_SYSTEM_PROMPT = assemble(REASONING_PROMPT_ID).effective
 
 
 _OBSERVATION_TOOL = {
@@ -94,7 +74,10 @@ _OBSERVATION_TOOL = {
 }
 
 
-def _structured_view(case: IngestedCase, floor_findings: list[Finding]) -> dict:
+def structured_view(case: IngestedCase, floor_findings: list[Finding]) -> dict:
+    """KYA's canonical evidence — the base every dispatch of this skill
+    always contains (architecture-v2 §9.2, the evidence floor). Public so
+    agents/context.py can compose it with orchestrator-added blocks."""
     credential = case.case.kya_credential
     intent = case.case.mandate_chain.intent
     return {
@@ -120,6 +103,8 @@ async def reason_about_case(
     thinking_effort: str = THINKING_EFFORT,
     prior_observations: list[Observation] | None = None,
     reviewer_directive: str | None = None,
+    system_prompt: str | None = None,
+    context: dict | None = None,
 ) -> list[Observation]:
     """The agentic ceiling. Needs a live ANTHROPIC_API_KEY unless `model`
     is supplied (tests inject a fake).
@@ -139,7 +124,9 @@ async def reason_about_case(
         tool_choice={"type": "auto"},
     )
 
-    system = REASONING_SYSTEM_PROMPT
+    # `system_prompt` is the per-run assembled text (default or override) —
+    # agents/prompts.py guarantees the tool contract survives any override.
+    system = system_prompt or REASONING_SYSTEM_PROMPT
     if prior_observations:
         system += format_escalation_addendum(prior_observations)
     if reviewer_directive:
@@ -147,7 +134,13 @@ async def reason_about_case(
 
     response = await bound.ainvoke([
         SystemMessage(content=system),
-        HumanMessage(content=json.dumps(_structured_view(case, floor_findings), indent=2)),
+        HumanMessage(content=json.dumps(
+            # A pre-composed context (canonical base + orchestrator-added
+            # blocks, agents/context.py) is used verbatim — it is exactly what
+            # dispatch_recorded logged. Absent one, the canonical view alone.
+            context if context is not None else structured_view(case, floor_findings),
+            indent=2,
+        )),
     ])
 
     tool_input = get_tool_call(response, "record_observations")
@@ -155,14 +148,8 @@ async def reason_about_case(
     return parse_observations(raw, case_id=case.case.case_id, agent="kya", cited_key="cited_field")
 
 
-NARRATION_SYSTEM_PROMPT = """You write a short, plain-English summary of a KYA (Know Your \
-Agent) review for a bank case officer. You will be given a list of findings that were \
-already verified by deterministic checks. Cite only these findings, using their exact \
-type and summary text — do not add any claim that is not present in the list provided. \
-If the list is empty, say plainly in one sentence that the credential passed every check.
-
-However you reason, your final response MUST be a call to the write_narration tool and \
-nothing else — do not end your turn with plain text."""
+NARRATION_PROMPT_ID = "KYA-NARRATION"
+NARRATION_SYSTEM_PROMPT = assemble(NARRATION_PROMPT_ID).effective
 
 _NARRATION_TOOL = {
     "name": "write_narration",
@@ -181,6 +168,7 @@ async def narrate_findings(
     *,
     model=None,
     thinking_effort: str = THINKING_EFFORT,
+    system_prompt: str | None = None,
 ) -> str:
     """Grounded narration of `findings` only — never raw case data. Needs a
     live ANTHROPIC_API_KEY unless `model` is supplied."""
@@ -197,7 +185,7 @@ async def narrate_findings(
     }
 
     response = await bound.ainvoke([
-        SystemMessage(content=NARRATION_SYSTEM_PROMPT),
+        SystemMessage(content=system_prompt or NARRATION_SYSTEM_PROMPT),
         HumanMessage(content=json.dumps(payload, indent=2)),
     ])
 

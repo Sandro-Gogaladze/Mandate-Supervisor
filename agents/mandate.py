@@ -22,6 +22,7 @@ from schemas import Finding, Ruleset
 
 from .mandate_checks import run_policy_checks
 from .mandate_reasoning import check_cart_reasoning_matches_intent
+from .prompts import effective_text
 
 
 class MandateAgent:
@@ -42,6 +43,8 @@ class MandateAgent:
         model=None,
         semantic_check: bool = True,
         reviewer_directive: str | None = None,
+        prompts: dict[str, dict] | None = None,
+        context: dict | None = None,
     ) -> list[Finding]:
         findings = self.run(case, ruleset)
         if not semantic_check or ruleset is None:
@@ -54,7 +57,11 @@ class MandateAgent:
         if rule is None:
             return findings
 
-        semantic_finding = await check_cart_reasoning_matches_intent(case, rule, model=model, reviewer_directive=reviewer_directive)
+        semantic_finding = await check_cart_reasoning_matches_intent(
+            case, rule, model=model, reviewer_directive=reviewer_directive,
+            system_prompt=effective_text(prompts, "SPECIALIST-MANDATE") if prompts else None,
+            context=context,
+        )
         if semantic_finding is not None:
             findings = findings + [semantic_finding]
         return findings

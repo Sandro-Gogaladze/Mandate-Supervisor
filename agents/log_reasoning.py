@@ -27,6 +27,7 @@ from ingestion.normalize import IngestedCase
 from schemas import Finding, Observation, Rule, typed_params
 
 from .llm import THINKING_EFFORT, format_escalation_addendum, format_reviewer_addendum, get_model, get_tool_call, parse_observations
+from .prompts import assemble
 from .log_stats import (
     amount_stats,
     counterparty_breakdown,
@@ -36,61 +37,8 @@ from .log_stats import (
     velocity_stats,
 )
 
-SYSTEM_PROMPT = """You are the Log specialist in a bank regulator's supervision pipeline \
-for AI payment agents. You are given pre-computed statistics over one agent's settled \
-transaction history — never raw, unfiltered records — and your job is to judge whether \
-the PATTERN across these transactions looks like something a human compliance reviewer \
-would want to look at, even though every individual transaction may have been within its \
-mandate.
-
-Every number you are given is real and already computed for you (sums, per-counterparty \
-totals, time gaps, candidate same-counterparty transaction clusters). Nothing has been \
-pre-judged as anomalous — deciding whether something in this data is actually reportable \
-is entirely your job. Evaluate exactly three named categories, each against the real \
-numbers you're given, not your general sense of what looks large:
-
-1. STRUCTURING — you are given every candidate cluster of same-counterparty transactions \
-that occurred close together in time (candidate_structuring_clusters), and this mandate's \
-synthetic reporting-flag threshold. A cluster is worth flagging as structuring when its \
-members are individually under the threshold, close together in time, and their sum \
-exceeds the threshold — this pattern (several payments that individually looks fine, \
-summing to something that would not have) is what deliberate splitting to evade a \
-reporting threshold looks like. Not every candidate cluster is structuring: a cluster \
-whose sum stays under the threshold, or that looks like an ordinary repeat-purchase \
-pattern rather than deliberate splitting, is not. Use judgment, not just "a cluster exists."
-
-2. COUNTERPARTY CONCENTRATION — is one counterparty receiving a share of spend or \
-transaction count that's unusual GIVEN how many counterparties this mandate actually \
-approves? A mandate that only approves one or two vendors will naturally show high \
-concentration — that is correct, not anomalous. Concentration is only worth flagging when \
-it's high relative to the diversification the mandate's own scope implies, or when it \
-represents a sharp, unexplained shift partway through the visible history (e.g. spend that \
-used to be split three ways suddenly going almost entirely to one counterparty).
-
-3. TRANSACTION VELOCITY — is there a burst of transactions in a tight time window that \
-isn't better explained by the structuring pattern above? For example, several transactions \
-to DIFFERENT counterparties within minutes of each other, faster than a human-reviewed \
-process would plausibly produce, or a sudden spike in frequency compared to the rest of \
-the visible history.
-
-For anything else that looks like a genuine agentic-payment risk pattern beyond these \
-three named categories, record it as a separate, open observation instead — do not force \
-it into one of the three if it doesn't fit. Patterns worth this kind of attention include \
-(not an exhaustive list, use judgment): repeated suspiciously round amounts; amounts that \
-cluster just under some other implied boundary you notice in the data; a steadily \
-escalating transaction size over time that could indicate an agent testing the limits of \
-its own mandate; transactions clustered at unusual hours (very late night, extremely early \
-morning) inconsistent with the rest of the pattern; or a brand-new counterparty suddenly \
-receiving a large share of spend with no prior history.
-
-Ground every judgment in the actual numbers, transaction ids, or cluster contents provided \
-— quote them. Do not invent a concern to have something to report; if nothing stands out, \
-say so plainly with an empty observations list and anomalous=false on all three named \
-categories.
-
-Take as long as you need to think this through. However you reason, your final response \
-MUST be a call to the record_log_analysis tool and nothing else — do not end your turn \
-with plain text."""
+PROMPT_ID = "SPECIALIST-LOG"
+SYSTEM_PROMPT = assemble(PROMPT_ID).effective
 
 
 _VERDICT_SCHEMA = {
@@ -129,7 +77,8 @@ _LOG_ANALYSIS_TOOL = {
 }
 
 
-def _structured_view(case: IngestedCase, structuring_rule: Rule) -> dict:
+def structured_view(case: IngestedCase, structuring_rule: Rule) -> dict:
+    """Log's canonical evidence — see agents/kya_reasoning.structured_view."""
     df = to_dataframe(case.case.transaction_history)
     scope = case.case.mandate_chain.intent.authorization_scope
     params = typed_params(structuring_rule)
@@ -160,6 +109,8 @@ async def analyze_log(
     thinking_effort: str = THINKING_EFFORT,
     prior_observations: list[Observation] | None = None,
     reviewer_directive: str | None = None,
+    system_prompt: str | None = None,
+    context: dict | None = None,
 ) -> tuple[list[Finding], list[Observation]]:
     """The entire Log agent. Needs a live ANTHROPIC_API_KEY unless `model`
     is supplied.
@@ -180,7 +131,7 @@ async def analyze_log(
         tool_choice={"type": "auto"},
     )
 
-    system = SYSTEM_PROMPT
+    system = system_prompt or SYSTEM_PROMPT
     if prior_observations:
         system += format_escalation_addendum(prior_observations)
     if reviewer_directive:
@@ -188,7 +139,10 @@ async def analyze_log(
 
     response = await bound.ainvoke([
         SystemMessage(content=system),
-        HumanMessage(content=json.dumps(_structured_view(case, structuring_rule), indent=2)),
+        HumanMessage(content=json.dumps(
+            context if context is not None else structured_view(case, structuring_rule),
+            indent=2,
+        )),
     ])
 
     result = get_tool_call(response, "record_log_analysis")
