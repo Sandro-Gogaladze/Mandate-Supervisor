@@ -76,7 +76,10 @@ async def test_reply_intent_answers_without_dispatching_anyone(store) -> None:
     assert new_calls == ["route_supervisor_request"]  # nobody else ran
     assert reply == "KYA found nothing; the score is on the record."
     events = [e.event_type for e in store.events_for(case_id) if e.run_id and e.run_id.startswith("inv-")]
-    assert events == ["run_started", "question_asked", "run_completed"]
+    assert events == ["run_started", "question_asked", "orchestrator_replied", "run_completed"]
+    replied = next(e for e in store.events_for(case_id) if e.event_type == "orchestrator_replied")
+    assert replied.payload["message"] == "KYA found nothing; the score is on the record."
+    assert replied.payload["intent"] == "reply"
     assert store.events_for(case_id)[-1].event_type == "run_completed"
 
 
@@ -160,3 +163,19 @@ async def test_dispatch_to_the_investigator_records_answer_and_trail(store) -> N
     inv_events = [e for e in store.events_for(case_id) if e.run_id and e.run_id.startswith("inv-")]
     assert not any(e.event_type == "finding_recorded" for e in inv_events)
     assert store.verify() == []
+
+
+async def test_run_triage_intent_passes_through_for_the_caller(store) -> None:
+    """"run the full review" in chat: the orchestrator routes, the CALLER
+    (the UI) starts the triage run — nothing dispatches inside this graph."""
+    case_id = await _triaged(store)
+    fake = make_graph_fake({"route_supervisor_request": {
+        "intent": "run_triage", "targets": [], "instruction": "", "context_blocks": [],
+        "message_to_officer": "Starting a full triage pass now.",
+    }})
+    calls_before = list(fake.call_log)
+    record, reply = await run_investigation(case_id, "run the full review again", officer="Ana", model=fake, store=store)
+    assert fake.call_log[len(calls_before):] == ["route_supervisor_request"]
+    assert reply == "Starting a full triage pass now."
+    replied = [e for e in store.events_for(case_id) if e.event_type == "orchestrator_replied"][-1]
+    assert replied.payload["intent"] == "run_triage"

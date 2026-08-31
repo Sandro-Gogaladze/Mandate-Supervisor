@@ -37,7 +37,10 @@ _ROUTE_TOOL = {
     "input_schema": {
         "type": "object",
         "properties": {
-            "intent": {"type": "string", "enum": ["dispatch", "reply"]},
+            "intent": {
+                "type": "string",
+                "enum": ["dispatch", "reply", "run_triage", "draft_report"],
+            },
             "targets": {
                 "type": "array", "items": {"type": "string"},
                 "description": "skill_ids to dispatch (empty for a reply).",
@@ -60,7 +63,11 @@ _ROUTE_TOOL = {
 class OrchestratorDecision(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    intent: str  # "dispatch" | "reply"
+    # "dispatch" and "reply" resolve inside the investigation run;
+    # "run_triage" and "draft_report" are routing decisions the CALLER
+    # executes (the UI starts the corresponding run) — the orchestrator
+    # still only routes, it never runs anything itself.
+    intent: str  # "dispatch" | "reply" | "run_triage" | "draft_report"
     targets: list[str] = Field(default_factory=list)
     instruction: str = ""
     context_blocks: list[str] = Field(default_factory=list)
@@ -126,8 +133,11 @@ async def route(
     ])
 
     result = get_tool_call(response, "route_supervisor_request")
+    intent = result.get("intent", "reply")
+    if intent not in ("dispatch", "reply", "run_triage", "draft_report"):
+        intent = "reply"
     decision = OrchestratorDecision.model_validate({
-        "intent": result.get("intent", "reply"),
+        "intent": intent,
         "targets": result.get("targets") or [],
         "instruction": result.get("instruction") or "",
         "context_blocks": result.get("context_blocks") or [],

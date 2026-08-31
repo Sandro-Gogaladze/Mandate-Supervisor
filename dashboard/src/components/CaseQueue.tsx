@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 // Status chips: where the case is in its life — derived from the ledger,
 // never stored (ledger/projection.py).
 const STATUS_META: Record<CaseStatus, { label: string; tone: string }> = {
-  submitted: { label: 'awaiting triage', tone: 'bg-muted text-muted-foreground border-transparent' },
+  submitted: { label: 'awaiting review', tone: 'bg-muted text-muted-foreground border-transparent' },
   triaged: { label: 'triaged', tone: 'border-border text-muted-foreground' },
   under_review: { label: 'under review', tone: 'border-primary/30 bg-primary/5 text-primary' },
   investigating: { label: 'investigating', tone: 'border-primary/30 bg-primary/5 text-primary' },
@@ -77,8 +77,8 @@ export function CaseQueue({ onSelect }: { onSelect: (c: CaseSummary) => void }) 
             </Badge>
           </div>
           <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
-            Highest risk first — cases arrive triaged and scored. Open one to investigate, or submit a mandate
-            chain and transaction history that arrived outside this queue.
+            Highest risk first once reviewed — a supervisor runs the first pass from each case's room. Open a
+            case to work it, or submit a mandate chain and transaction history that arrived outside this queue.
           </p>
         </div>
         <UploadCaseDialog

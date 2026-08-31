@@ -723,6 +723,8 @@ def build_investigation_graph(*, model=None, store: LedgerStore | None = None, c
 
     def _route_from_orchestrator(state: SupervisionState) -> list[str] | str:
         decision = OrchestratorDecision.model_validate(state["orchestrator_decision"])
+        # run_triage / draft_report are executed by the CALLER (the UI starts
+        # that run); inside this graph they resolve like a reply.
         if decision.intent != "dispatch" or not decision.targets:
             return "record"
         from agents.skills import SKILLS
@@ -846,6 +848,21 @@ def build_investigation_graph(*, model=None, store: LedgerStore | None = None, c
 
     async def _record_node(state: SupervisionState) -> dict:
         case_id = state["case_id"]
+        decision = state.get("orchestrator_decision")
+        if decision:
+            # The routing decision itself goes on the record — "what it
+            # routed, with what instruction" is answerable from the ledger,
+            # not just from a transient chat surface.
+            store.append(
+                case_id=case_id, event_type="orchestrator_replied", run_id=state["run_id"],
+                payload={
+                    "intent": decision.get("intent"),
+                    "targets": decision.get("targets", []),
+                    "instruction": decision.get("instruction", ""),
+                    "message": decision.get("message_to_officer", ""),
+                },
+                actor="agent:orchestrator",
+            )
         run_events = store.events_for_run(state["run_id"])
         # A specialist pass may have changed the findings — keep the score
         # current; a pure lookup or reply leaves it untouched.

@@ -31,6 +31,7 @@ EVENT_TYPES = frozenset({
     "score_computed",          # RiskScore
     "run_completed",           # {run_id, kind, finding_count, observation_count}
     "question_asked",          # {question_id, question}
+    "orchestrator_replied",    # {intent, targets, instruction, message} — the routing decision, on the record
     "investigation_completed",  # InvestigationAnswer
     "report_drafted",          # DraftReport
     "grounding_checked",       # {passed, problems, attempt}

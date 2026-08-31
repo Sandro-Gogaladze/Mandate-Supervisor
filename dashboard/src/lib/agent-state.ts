@@ -35,6 +35,13 @@ export interface SupervisionAgentState {
   officer_message?: string
   officer?: string
   question_id?: string
+  orchestrator_decision?: {
+    intent: 'dispatch' | 'reply' | 'run_triage' | 'draft_report'
+    targets: string[]
+    instruction: string
+    context_blocks: string[]
+    message_to_officer: string
+  }
   orchestrator_reply?: string
 }
 

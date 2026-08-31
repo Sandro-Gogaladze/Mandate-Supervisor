@@ -23,6 +23,7 @@ export function ReviewGate({
   onDecide,
   risk,
   findingsCount,
+  defaultReviewer,
 }: {
   context: GateContext
   onDecide: (d: GateSubmission) => void
@@ -30,8 +31,11 @@ export function ReviewGate({
    * officer isn't recalling panels above (recognition over recall). */
   risk?: RiskScore | null
   findingsCount?: number
+  /** Prefilled from the conversation's "acting as" identity — still
+   * editable; the name on the decision is always the officer's call. */
+  defaultReviewer?: string
 }) {
-  const [reviewer, setReviewer] = useState('')
+  const [reviewer, setReviewer] = useState(defaultReviewer ?? '')
   const [comment, setComment] = useState('')
   const [instructions, setInstructions] = useState('')
   const [targets, setTargets] = useState<FindingAgent[]>([])

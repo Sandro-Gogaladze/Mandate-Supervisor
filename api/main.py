@@ -11,9 +11,9 @@
   the append-only record (`ledger/projection.py`), sorted by risk score —
   the concept note's "prioritised queue", literally. Run listings, run
   diffs, prompt defaults, chain verification, JSONL export.
-- **Intake**: uploads validate against the same schema ingestion enforces,
-  append `case_submitted`, and fire a background triage — cases arrive
-  scored, not blank.
+- **Intake**: uploads validate against the same schema ingestion enforces
+  and append `case_submitted`. Triage is supervisor-initiated — from the
+  case room or by asking the orchestrator — never automatic.
 
 Checkpointers here are AG-UI thread plumbing: per-process, in-memory,
 disposable. The ledger is the record; deleting a checkpointer loses only an
@@ -178,10 +178,12 @@ async def _background_triage(case_id: str) -> None:
 
 
 @app.post("/cases/upload")
-async def upload_case(file: UploadFile, background: BackgroundTasks) -> dict:
-    """Validate against the same schema ingestion enforces, append
-    case_submitted, fire triage in the background — the case lands in the
-    queue scored, not blank."""
+async def upload_case(file: UploadFile) -> dict:
+    """Validate against the same schema ingestion enforces and append
+    case_submitted. Triage is NOT fired automatically — a supervisor starts
+    the first pass, from the case room or by asking the orchestrator
+    (revised on direction after live use; automatic-on-submission was built
+    and removed)."""
     body = await file.read()
     try:
         raw = json.loads(body)
@@ -199,7 +201,6 @@ async def upload_case(file: UploadFile, background: BackgroundTasks) -> dict:
         raise HTTPException(status_code=400, detail=f"A case with id {case.case_id!r} already exists.")
 
     submit_case(_store, raw, actor="human:officer")
-    background.add_task(_background_triage, case.case_id)
     record = project_case(_store.events_for(case.case_id))
     return _summary(record, case.case_id)
 
