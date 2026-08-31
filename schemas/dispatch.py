@@ -21,3 +21,24 @@ class DispatchPlan(BaseModel):
     run_log: bool
     run_drift: bool
     reasoning: str
+
+
+class DispatchRecord(BaseModel):
+    """One agent briefing, recorded in full (architecture-v2 §10.5's
+    `dispatch_recorded` — the event this architecture exists to make
+    possible). `context_blocks` is the verbatim payload the agent received —
+    the answer to "what did the orchestrator give to whom"; `context_digest`
+    is its SHA-256 so two runs can be compared cheaply. `instruction` is any
+    steering text appended to the agent's own system prompt (an escalation
+    addendum, a reviewer directive, an orchestrator briefing) — empty string
+    when the agent ran on its canonical brief alone."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    case_id: str
+    run_id: str
+    target: str          # agent name: mandate | kya | log | drift | investigator
+    skill: str           # skill_id from agents/skills.py
+    instruction: str
+    context_blocks: dict
+    context_digest: str

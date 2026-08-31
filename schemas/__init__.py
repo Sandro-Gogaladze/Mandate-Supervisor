@@ -1,6 +1,7 @@
 from .case import CaseBundle, Firm, ScenarioLabel
 from .common import ChainLink, SignatureEnvelope
-from .dispatch import DispatchPlan
+from .correlation import Correlation
+from .dispatch import DispatchPlan, DispatchRecord
 from .finding import Finding, FindingAgent
 from .kya import DelegationEntry, IssuerRef, KYACredential
 from .mandate import (
@@ -18,6 +19,7 @@ from .mandate import (
     PaymentMethod,
     Principal,
 )
+from .investigation import InvestigationAnswer, ToolCallRecord
 from .observation import Observation
 from .report import DraftReport, ReportSection
 from .review_gate import ReportStatus, ReviewerDecision, ReviewerDirective
@@ -31,7 +33,9 @@ __all__ = [
     "ScenarioLabel",
     "ChainLink",
     "SignatureEnvelope",
+    "Correlation",
     "DispatchPlan",
+    "DispatchRecord",
     "DelegationEntry",
     "Finding",
     "FindingAgent",
@@ -50,6 +54,8 @@ __all__ = [
     "PaymentMandate",
     "PaymentMethod",
     "Principal",
+    "InvestigationAnswer",
+    "ToolCallRecord",
     "Observation",
     "DraftReport",
     "ReportSection",
