@@ -1,15 +1,25 @@
 // Mirrors pipeline/state.py's SupervisionState — the shape streamed back by
-// the LangGraph agent over AG-UI/CopilotKit. `messages` exists only because
-// AG-UI requires it even for a state-driven (non-chat) UI; nothing here
-// reads it.
-import type { DispatchPlan, DraftReport, Finding, Observation, ReportStatus, ReviewerDecision, RiskScore } from './types'
+// the LangGraph agents over AG-UI/CopilotKit. Cases are addressed by
+// case_id; the bundle lives in the ledger, never in a client-supplied path.
+import type {
+  Correlation,
+  DispatchPlan,
+  DraftReport,
+  Finding,
+  Observation,
+  ReportStatus,
+  ReviewerDecision,
+  ReviewerDirective,
+  RiskScore,
+} from './types'
 
 export interface SupervisionAgentState {
-  case_path: string
-  case?: { case: Record<string, unknown> } | Record<string, unknown>
-  ingestion_findings?: Finding[]
+  case_id: string
+  run_id?: string
+  prompt_overrides?: Record<string, string>
   findings?: Finding[]
   observations?: Observation[]
+  correlations?: Correlation[]
   dispatch_plan?: DispatchPlan
   escalation_round?: number
   draft_report?: DraftReport
@@ -18,12 +28,18 @@ export interface SupervisionAgentState {
   report_blocked?: boolean
   risk_score?: RiskScore
   reviewer_decisions?: ReviewerDecision[]
+  reviewer_directive?: ReviewerDirective | null
   reviewer_rounds?: number
   report_status?: ReportStatus
+  // investigation-run keys
+  officer_message?: string
+  officer?: string
+  question_id?: string
+  orchestrator_reply?: string
 }
 
 export const EMPTY_AGENT_STATE: SupervisionAgentState = {
-  case_path: '',
+  case_id: '',
   findings: [],
   observations: [],
 }

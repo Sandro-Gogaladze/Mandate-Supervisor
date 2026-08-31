@@ -15,6 +15,9 @@ export type NodeStatus = 'pending' | 'active' | 'done' | 'awaiting'
 // nodes, and the structure itself (nodes/edges) still comes from
 // `/graph` -> `graph.get_graph()`, never hand-maintained. Spacing is wide —
 // this graph is the product's visual centerpiece, not a compact diagram.
+// The TRIAGE graph — since the run split (architecture-v2 §14) drafting and
+// the human gate live in their own short run, surfaced by the report panel,
+// not on this canvas.
 const POSITIONS: Record<string, { x: number; y: number }> = {
   ingest: { x: 0, y: 280 },
   dispatch: { x: 300, y: 280 },
@@ -24,10 +27,9 @@ const POSITIONS: Record<string, { x: number; y: number }> = {
   drift: { x: 660, y: 570 },
   escalate_check: { x: 1040, y: 280 },
   bump_round: { x: 1360, y: 60 },
-  risk_score: { x: 1360, y: 280 },
-  draft_report: { x: 1680, y: 280 },
-  grounding_check: { x: 2000, y: 280 },
-  human_gate: { x: 2320, y: 280 },
+  critic: { x: 1360, y: 280 },
+  synthesizer: { x: 1680, y: 280 },
+  risk_score: { x: 2000, y: 280 },
 }
 
 const STATUS_RING: Record<NodeStatus, string> = {

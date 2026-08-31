@@ -1,4 +1,5 @@
-import { CheckCheck, Eye, FileText, RotateCw, ShieldAlert, XCircle } from 'lucide-react'
+import { CheckCheck, Eye, FileText, Loader2, RotateCw, ShieldAlert, XCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -54,14 +55,34 @@ function DecisionTrail({ state }: { state: SupervisionAgentState }) {
   )
 }
 
-export function ReportPanel({ state }: { state: SupervisionAgentState }) {
+export function ReportPanel({
+  state,
+  onDraft,
+  drafting,
+}: {
+  state: SupervisionAgentState
+  onDraft?: () => void
+  drafting?: boolean
+}) {
   const report = state.draft_report
 
   if (!report) {
+    // Report on demand (architecture-v2 §6): triage never drafts. The
+    // officer investigates first, then asks for the report — so it can cite
+    // what the investigation surfaced.
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+      <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-sm text-muted-foreground">
         <FileText className="size-6 text-muted-foreground/40" />
-        <p>The drafting agent writes its report once the specialists finish.</p>
+        <p className="max-w-md">
+          The report is drafted when you ask for it — after you've reviewed the findings and asked your
+          questions — so it can cite everything on the record.
+        </p>
+        {onDraft && (
+          <Button size="sm" onClick={onDraft} disabled={drafting}>
+            {drafting ? <Loader2 className="animate-spin" /> : <FileText />}
+            {drafting ? 'Drafting…' : 'Draft report'}
+          </Button>
+        )}
       </div>
     )
   }

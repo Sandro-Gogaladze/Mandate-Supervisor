@@ -3,6 +3,7 @@
 // can't drift into three different sets of labels for the same node.
 import {
   Inbox,
+  SearchCheck,
   Waypoints,
   ShieldCheck,
   Fingerprint,
@@ -57,6 +58,28 @@ export const NODE_META: Record<string, NodeMeta> = {
   },
   escalate_check: { label: 'Escalate check', icon: GitMerge, color: 'slate' },
   bump_round: { label: 'Bump round', icon: RotateCcw, color: 'slate' },
+  critic: {
+    label: 'Critic',
+    icon: FileCheck2,
+    color: 'slate',
+    blurb: 'Deterministic check that every model-judged claim quotes numbers that exist in the evidence it was given.',
+  },
+  synthesizer: {
+    label: 'Synthesizer',
+    icon: GitMerge,
+    color: 'indigo',
+    blurb: 'Finds relationships between findings — three detectors seeing one event — without touching the findings or the score.',
+  },
+  investigator: {
+    label: 'Investigator',
+    icon: SearchCheck,
+    color: 'teal',
+    blurb: 'Answers open questions with read-only lookups — transactions, counterparties, issuers, rules. Observations only, never a verdict.',
+  },
+  load_context: { label: 'Load record', icon: Inbox, color: 'slate' },
+  orchestrate: { label: 'Orchestrate', icon: Waypoints, color: 'slate' },
+  record: { label: 'Record', icon: ScrollText, color: 'slate' },
+  load_record: { label: 'Load record', icon: Inbox, color: 'slate' },
   draft_report: {
     label: 'Draft report',
     icon: FileText,

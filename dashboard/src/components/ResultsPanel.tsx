@@ -1,16 +1,36 @@
-import { AlertTriangle, CircleSlash, Eye, Gauge, ListChecks, Route } from 'lucide-react'
+import { AlertTriangle, CircleSlash, Eye, Gauge, GitMerge, ListChecks, Route, SearchCheck } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { nodeMeta, AGENT_TONE } from '@/lib/node-meta'
 import { cn } from '@/lib/utils'
-import type { SupervisionAgentState } from '@/lib/agent-state'
-import type { DispositionTier, FindingAgent, RiskScore } from '@/lib/types'
+import type {
+  Correlation,
+  DispatchPlan,
+  DispositionTier,
+  Finding,
+  FindingAgent,
+  InvestigationAnswer,
+  Observation,
+  ObservationAgent,
+  RiskScore,
+} from '@/lib/types'
 
 export const TIER_TONE: Record<DispositionTier, string> = {
   clear: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30 dark:text-emerald-400',
   review: 'bg-amber-500/10 text-amber-700 border-amber-500/30 dark:text-amber-400',
   escalate: 'bg-red-500/10 text-red-700 border-red-500/30 dark:text-red-400',
+}
+
+/** What the results panel renders — the ledger projection, or the live
+ * triage overlay while a run streams (CaseReview builds it). */
+export interface ResultsView {
+  findings: Finding[]
+  observations: Observation[]
+  correlations: Correlation[]
+  dispatch_plan?: DispatchPlan
+  escalation_round?: number
+  risk_score?: RiskScore
 }
 
 function ScoreCard({ score }: { score: RiskScore }) {
@@ -25,7 +45,6 @@ function ScoreCard({ score }: { score: RiskScore }) {
         <span className="font-mono text-[10px] text-muted-foreground">weights · config {score.config_version}</span>
       </div>
       <div className="mt-2 flex items-center gap-3">
-        {/* DESIGN.md: numbers are data, data is mono. */}
         <span className="font-mono text-3xl font-bold tracking-tight">{score.total.toFixed(2)}</span>
         <Badge variant="outline" className={cn('gap-1 text-xs font-semibold uppercase', TIER_TONE[score.tier])}>
           {score.tier_label}
@@ -65,7 +84,7 @@ function SectionTitle({ icon: Icon, children }: { icon: typeof AlertTriangle; ch
   )
 }
 
-function AgentChip({ agent }: { agent: FindingAgent }) {
+function AgentChip({ agent }: { agent: ObservationAgent }) {
   const meta = nodeMeta(agent)
   const Icon = meta.icon
   return (
@@ -76,11 +95,16 @@ function AgentChip({ agent }: { agent: FindingAgent }) {
   )
 }
 
-export function ResultsPanel({ state }: { state: SupervisionAgentState }) {
-  const plan = state.dispatch_plan
-  const findings = state.findings ?? []
-  const observations = state.observations ?? []
-  const hasAnything = plan || findings.length > 0 || observations.length > 0 || state.risk_score
+const RELATIONSHIP_LABEL: Record<Correlation['relationship'], string> = {
+  same_event: 'same event',
+  causal: 'causal',
+  corroborating: 'corroborating',
+  contradictory: 'contradictory',
+}
+
+export function ResultsPanel({ view, answers }: { view: ResultsView; answers: InvestigationAnswer[] }) {
+  const { findings, observations, correlations, dispatch_plan: plan, risk_score } = view
+  const hasAnything = plan || findings.length > 0 || observations.length > 0 || risk_score || answers.length > 0
 
   if (!hasAnything) {
     return (
@@ -94,7 +118,7 @@ export function ResultsPanel({ state }: { state: SupervisionAgentState }) {
   return (
     <ScrollArea className="h-full">
       <div className="flex flex-col gap-5 p-4">
-        {state.risk_score && <ScoreCard score={state.risk_score} />}
+        {risk_score && <ScoreCard score={risk_score} />}
 
         {plan && (
           <div>
@@ -115,9 +139,9 @@ export function ResultsPanel({ state }: { state: SupervisionAgentState }) {
                   </Badge>
                 )
               })}
-              {(state.escalation_round ?? 0) > 0 && (
+              {(view.escalation_round ?? 0) > 0 && (
                 <Badge variant="secondary" className="gap-1">
-                  escalation round {state.escalation_round}
+                  escalation round {view.escalation_round}
                 </Badge>
               )}
             </div>
@@ -137,10 +161,60 @@ export function ResultsPanel({ state }: { state: SupervisionAgentState }) {
                     <span className="font-mono text-[10px] text-muted-foreground">{f.type}</span>
                   </div>
                   <p className="mt-2 leading-relaxed">{f.summary}</p>
-                  {f.rule_id && (
-                    <span className="mt-1.5 inline-block rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-                      {f.rule_id}
-                    </span>
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    {f.rule_id && (
+                      <span className="inline-block rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                        {f.rule_id}
+                      </span>
+                    )}
+                    <span className="font-mono text-[10px] text-muted-foreground/60">{f.finding_id}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {correlations.length > 0 && (
+          <div>
+            <Separator className="mb-4" />
+            <SectionTitle icon={GitMerge}>Correlations ({correlations.length})</SectionTitle>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Relationships between findings — validated against real finding ids, never scored.
+            </p>
+            <div className="mt-2 flex flex-col gap-2">
+              {correlations.map((c, i) => (
+                <div key={i} className="rounded-lg border border-indigo-500/25 bg-indigo-500/[0.04] p-3 text-sm">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant="outline" className="gap-1 border-indigo-500/30 text-[10px] uppercase text-indigo-700 dark:text-indigo-400">
+                      {RELATIONSHIP_LABEL[c.relationship]}
+                    </Badge>
+                    {c.finding_ids.map((fid) => (
+                      <span key={fid} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                        {fid}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-2 leading-relaxed">{c.explanation}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {answers.length > 0 && (
+          <div>
+            <Separator className="mb-4" />
+            <SectionTitle icon={SearchCheck}>Investigation answers ({answers.length})</SectionTitle>
+            <div className="mt-2 flex flex-col gap-2">
+              {answers.map((a) => (
+                <div key={a.question_id} className="rounded-lg border border-teal-500/25 bg-teal-500/[0.04] p-3 text-sm">
+                  <p className="text-[13px] font-medium">“{a.question}”</p>
+                  <p className="mt-1.5 leading-relaxed">{a.answer}</p>
+                  {a.tool_calls.length > 0 && (
+                    <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">
+                      trail: {a.tool_calls.map((t) => t.tool).join(' → ')}
+                    </p>
                   )}
                 </div>
               ))}
