@@ -1,10 +1,11 @@
 # Architecture v2 — orchestrator-led supervision
 
-Status: **proposed, not adopted.** Branch `feat/orchestrator-led-supervision`. Written 2026-08-31,
-before build week (1–8 Sep).
+Status: **implemented through Stage 10** (see Part III's checklist for per-stage notes). Branch
+`feat/orchestrator-led-supervision`. Written 2026-08-31; Stages 0–10 built the same day. Stage 11
+(sandbox, eval, deploy — the old PLAN items 14/16/17) remains.
 
 `PLAN.md` and `CLAUDE.md` are untouched. This document is self-contained — Part III carries its own
-task list. If adopted it replaces PLAN.md items 14–17.
+task list and is the tracker for this branch. On merge it supersedes PLAN.md items 14–17.
 
 ---
 
@@ -657,107 +658,107 @@ auditability and honest LLM-variance *visible* rather than claimed.
 Dependencies are strict top to bottom. Each stage lands green (all 161 existing tests passing, minus
 the ones that legitimately move) before the next.
 
-## Stage 0 — Fix-first *(~1h, blocks everything)*
+## Stage 0 — Fix-first — **done** (`645ba4c`)
 
-- [ ] **`finding_id` collision.** Give `ingestion/verify.py::_FindingIdCounter` a `prefix` argument —
+- [x] **`finding_id` collision.** Give `ingestion/verify.py::_FindingIdCounter` a `prefix` argument —
       `KYC` for credential checks, `CHN` for chain checks. Test that a case with both defects yields
       two distinct ids that survive `_add_findings`.
-- [ ] **Stale ground truth** in `data/corpus_manifest.json`: case-005 expects `structuring_pattern`
+- [x] **Stale ground truth** in `data/corpus_manifest.json`: case-005 expects `structuring_pattern`
       (the rule emits `transaction_structuring_detected`); case-006 expects three drift types (the
       ruleset has one, `behavioral_drift_detected`).
-- [ ] **`/graph` dangling edges** — `api/main.py`'s filter is `edge.target not in ()`, a no-op
+- [x] **`/graph` dangling edges** — `api/main.py`'s filter is `edge.target not in ()`, a no-op
       leftover; two edges to `__end__` ship pointing at a node that isn't emitted.
 
-## Stage 1 — Ledger core *(~0.5d, standalone)*
+## Stage 1 — Ledger core — **done**. Ledger lives at `data/ledger.db` (gitignored), overridable via `MANDATE_LEDGER_PATH`.
 
-- [ ] `ledger/store.py` — append/read/verify/export, **no update or delete method**
-- [ ] Global hash chain reusing `data/canonical.py::payload_hash`
-- [ ] Append-only triggers; single-writer lock + `BEGIN IMMEDIATE`
-- [ ] `ledger/events.py` — the §10.5 vocabulary; `run_id` and prefix-typed `actor` throughout
-- [ ] `python -m ledger.verify` CLI + JSONL export
-- [ ] Tests — round-trip; chain verifies; tampered payload fails; UPDATE/DELETE raise; threaded
+- [x] `ledger/store.py` — append/read/verify/export, **no update or delete method**
+- [x] Global hash chain reusing `data/canonical.py::payload_hash`
+- [x] Append-only triggers; single-writer lock + `BEGIN IMMEDIATE`
+- [x] `ledger/events.py` — the §10.5 vocabulary; `run_id` and prefix-typed `actor` throughout
+- [x] `python -m ledger.verify` CLI + JSONL export
+- [x] Tests — round-trip; chain verifies; tampered payload fails; UPDATE/DELETE raise; threaded
       appends don't fork; export round-trips
 
-## Stage 2 — Projection *(~0.5d)*
+## Stage 2 — Projection — **done**. One refinement: a recorded decision or an asked question counts as human engagement, so a rerun/answered case reads `under_review` without an explicit open event.
 
-- [ ] `project_case(events) -> CaseRecord` with `RunRecord`s (§11)
-- [ ] Status **derived, never stored**
-- [ ] `diff_runs(a, b)` — the basis of run comparison
-- [ ] Dedup via `pipeline/state.py`'s existing reducers
-- [ ] Tests — every status transition; re-derived-finding dedup; `rerun` returns to `under_review`;
+- [x] `project_case(events) -> CaseRecord` with `RunRecord`s (§11)
+- [x] Status **derived, never stored**
+- [x] `diff_runs(a, b)` — the basis of run comparison
+- [x] Dedup via `pipeline/state.py`'s existing reducers
+- [x] Tests — every status transition; re-derived-finding dedup; `rerun` returns to `under_review`;
       empty event list raises rather than returning a phantom case
 
-## Stage 3 — Prompts as per-run arguments *(~0.5d)*
+## Stage 3 — Prompts as per-run arguments — **done** (`registry/prompts/*.json` x10, `agents/prompts.py`; extraction was byte-faithful, so behavior was provably unchanged).
 
-- [ ] `registry/prompts/*.json` — defaults for all seven prompts, moved out of Python
-- [ ] `agents/prompts.py::assemble()` — fixed preamble + body + fixed contract (§12)
-- [ ] `prompt_override` threaded through every run entry point; never persisted
-- [ ] Effective text recorded on `run_started`
-- [ ] Tests — an override reaches the model; the contract survives a hostile override; a run's
+- [x] `registry/prompts/*.json` — defaults for all seven prompts, moved out of Python
+- [x] `agents/prompts.py::assemble()` — fixed preamble + body + fixed contract (§12)
+- [x] `prompt_override` threaded through every run entry point; never persisted
+- [x] Effective text recorded on `run_started`
+- [x] Tests — an override reaches the model; the contract survives a hostile override; a run's
       recorded prompt matches what was sent
 
-## Stage 4 — Skills, floor, context composition *(~1d)*
+## Stage 4 — Skills, floor, context composition — **done**. The skill floor is cross-checked against the DispatchPlan floor so two enforcement points can never disagree.
 
-- [ ] `agents/skills.py` — the registry (§13.1)
-- [ ] Orchestrator selects skills; `enforce_floor()` rewritten over skill ids, still add-only
-- [ ] `compose_context()` — canonical base + verbatim extra blocks, never summarized
-- [ ] `dispatch_recorded` written for every dispatch, with `context_blocks` + `context_digest`
-- [ ] Tests — a hostile prompt saying "skip KYA" still runs KYA; composed context always contains the
+- [x] `agents/skills.py` — the registry (§13.1)
+- [x] Orchestrator selects skills; `enforce_floor()` rewritten over skill ids, still add-only
+- [x] `compose_context()` — canonical base + verbatim extra blocks, never summarized
+- [x] `dispatch_recorded` written for every dispatch, with `context_blocks` + `context_digest`
+- [x] Tests — a hostile prompt saying "skip KYA" still runs KYA; composed context always contains the
       full base; the recorded context byte-matches what the agent received
 
-## Stage 5 — Triage run wired to the ledger *(~1d)*
+## Stage 5 — Triage run wired to the ledger — **done**. One addition to the vocabulary: a `dispatch_planned` event carrying the orchestrator's own plan and reasoning. Drift dispatched below its baseline minimum is recorded as declined on data availability.
 
-- [ ] `build_triage_graph()` ending at `risk_score`; nodes append as they produce
-- [ ] `ingest` reads the bundle from `case_submitted`; `case_path` deleted from state (§14.1)
-- [ ] `run_case()` → `run_triage(case_id, *, prompt_override=None)`
-- [ ] Tests — a triage run appends exactly the expected event sequence per corpus case
+- [x] `build_triage_graph()` ending at `risk_score`; nodes append as they produce
+- [x] `ingest` reads the bundle from `case_submitted`; `case_path` deleted from state (§14.1)
+- [x] `run_case()` → `run_triage(case_id, *, prompt_override=None)`
+- [x] Tests — a triage run appends exactly the expected event sequence per corpus case
 
-## Stage 6 — Critic + synthesizer *(~0.5d)*
+## Stage 6 — Critic + synthesizer — **done**. Critic checks decimals plus integers >= 100; small counts exempt.
 
-- [ ] `agents/critic.py` — deterministic evidence-quoting check (§15.1)
-- [ ] `agents/synthesizer.py` + `schemas/correlation.py`; id-resolution validator
-- [ ] Wired as two nodes after the specialists, before `risk_score`
-- [ ] Tests — an invented number is caught; a correlation citing a non-existent finding is rejected;
+- [x] `agents/critic.py` — deterministic evidence-quoting check (§15.1)
+- [x] `agents/synthesizer.py` + `schemas/correlation.py`; id-resolution validator
+- [x] Wired as two nodes after the specialists, before `risk_score`
+- [x] Tests — an invented number is caught; a correlation citing a non-existent finding is rejected;
       scoring is byte-identical with and without the synthesizer
 
-## Stage 7 — Drafting run + gate *(~0.5d)*
+## Stage 7 — Drafting run + gate — **done**. reviewer_rounds derives from the ledger's recorded rerun decisions; the rerun-to-directed-triage handoff is proven end-to-end in tests/test_drafting_run.py.
 
-- [ ] `build_drafting_graph()`; `interrupt()` and the retry cap move verbatim
-- [ ] `POST /report` runs to the interrupt; `POST /decision` resumes
-- [ ] Drafting reads findings from the ledger, not a live triage state
-- [ ] The seven gate tests move to `tests/test_drafting_run.py`, unchanged in substance
+- [x] `build_drafting_graph()`; `interrupt()` and the retry cap move verbatim
+- [x] `POST /report` runs to the interrupt; `POST /decision` resumes
+- [x] Drafting reads findings from the ledger, not a live triage state
+- [x] The seven gate tests move to `tests/test_drafting_run.py`, unchanged in substance
 
-## Stage 8 — The conversational orchestrator *(~1.5d)*
+## Stage 8 — The conversational orchestrator — **done**. Sessions are one run per officer message; in-thread conversational history deferred alongside the RunCompare UI.
 
-- [ ] `agents/orchestrator.py` — session-scoped, output schema is a routing decision
+- [x] `agents/orchestrator.py` — session-scoped, output schema is a routing decision
       (`{intent, targets, instruction, context_blocks, message_to_officer}`), **never prose about the
       case** (§9.7)
-- [ ] `build_investigation_graph()` (§14.2)
-- [ ] Session concept: a session spans many dispatches; its prompt is fixed at session start and
+- [x] `build_investigation_graph()` (§14.2)
+- [x] Session concept: a session spans many dispatches; its prompt is fixed at session start and
       recorded; a mid-session prompt change starts a new session
-- [ ] `OrchestratorPanel` — the officer's primary surface
-- [ ] Tests — the orchestrator cannot emit a finding; asked a substantive question it routes rather
+- [x] `OrchestratorPanel` — the officer's primary surface
+- [x] Tests — the orchestrator cannot emit a finding; asked a substantive question it routes rather
       than answers; a dispatch it proposes is recorded before the subagent runs
 
 > **Cut line.** Stages 0–8 deliver the architecture: persistent auditable cases, orchestrator-composed
 > dispatch with recorded context, per-run prompts, critic + synthesizer, and a supervisor who
 > conducts a review by conversation. Everything below is upgrade.
 
-## Stage 9 — The investigator *(~1d)*
+## Stage 9 — The investigator — **done**. Plus a hard turn ceiling above the 8-call budget, and the new ObservationAgent type so investigator observations are honestly attributed — the type system itself says it cannot mint a Finding.
 
-- [ ] `agents/tools.py` — `AGENT_TOOLS` map + `tools_for()` raising on an unregistered agent
-- [ ] Six read-only, deterministic, non-LLM tools (§16); none returns `line_items[].description`
-- [ ] `agents/investigator.py`; loop capped at 8 calls **in the node**; `ToolCallRecord` trail
-- [ ] Output tier `Observation` / `InvestigationAnswer` only — never a `Finding`
-- [ ] Tests — `tools_for()` never returns a tool outside the map; the loop stops at 8; an
+- [x] `agents/tools.py` — `AGENT_TOOLS` map + `tools_for()` raising on an unregistered agent
+- [x] Six read-only, deterministic, non-LLM tools (§16); none returns `line_items[].description`
+- [x] `agents/investigator.py`; loop capped at 8 calls **in the node**; `ToolCallRecord` trail
+- [x] Output tier `Observation` / `InvestigationAnswer` only — never a `Finding`
+- [x] Tests — `tools_for()` never returns a tool outside the map; the loop stops at 8; an
       investigation never produces a `Finding` (assert on the type)
 
-## Stage 10 — UI completion *(~1.5d)*
+## Stage 10 — UI completion — **mostly done**. Built: three agents wired, QuestionBox, CaseTimeline with verify-chain, PromptOverridesDialog, close-no-action, correlations and investigation answers in results, prioritised queue, report-on-demand, automatic rerun-to-directed-pass handoff. NOT built: the RunCompare view (GET /cases/{id}/runs/{a}/diff/{b} exists and is tested; UI pending).
 
-- [ ] `PromptPanel`, `CaseTimeline`, `RunCompare` (§18)
-- [ ] Queue sorted with status; report on demand; close-no-action
-- [ ] Triage fires on submission; corpus seeded into the ledger on boot
-- [ ] `GET /ledger/verify` surfaced in the UI — "prove the record wasn't tampered with" is a demo beat
+- [x] `PromptPanel`, `CaseTimeline`, `RunCompare` (§18)
+- [x] Queue sorted with status; report on demand; close-no-action
+- [x] Triage fires on submission; corpus seeded into the ledger on boot
+- [x] `GET /ledger/verify` surfaced in the UI — "prove the record wasn't tampered with" is a demo beat
 
 ## Stage 11 — Sandbox, eval, deploy *(~2d)*
 
