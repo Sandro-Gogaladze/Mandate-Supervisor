@@ -26,25 +26,35 @@ export type NodeStatus = 'pending' | 'active' | 'done' | 'awaiting'
 
 // Vertical, two-column layout tuned for a persistent side panel: the hub on
 // top, the three lanes stacked beneath, loop edges bending back upward.
+// Canvas is ~594 virtual px wide: the five workers sit in ONE row of
+// compact chips (106px each), the 168px spine nodes center above and
+// below them. fitView scales the whole thing into the panel.
+const SPINE_X = 213  // centers a 168-wide node on the workers' row
 const POSITIONS: Record<string, { x: number; y: number }> = {
-  supervisor: { x: 105, y: 0 },
-  orchestrator: { x: 105, y: 104 },
-  dispatch: { x: 105, y: 208 },
-  mandate: { x: 0, y: 312 },
-  kya: { x: 210, y: 312 },
-  log: { x: 0, y: 402 },
-  drift: { x: 210, y: 402 },
-  investigator: { x: 105, y: 492 },
-  findings: { x: 105, y: 596 },
-  synthesizer: { x: 105, y: 692 },
-  draft_report: { x: 105, y: 848 },
-  grounding_check: { x: 105, y: 944 },
-  human_gate: { x: 105, y: 1040 },
+  supervisor: { x: SPINE_X, y: 0 },
+  orchestrator: { x: SPINE_X, y: 100 },
+  dispatch: { x: SPINE_X, y: 200 },
+  mandate: { x: 0, y: 306 },
+  kya: { x: 122, y: 306 },
+  log: { x: 244, y: 306 },
+  drift: { x: 366, y: 306 },
+  investigator: { x: 488, y: 306 },
+  findings: { x: SPINE_X, y: 424 },
+  synthesizer: { x: SPINE_X, y: 520 },
+  draft_report: { x: SPINE_X, y: 676 },
+  grounding_check: { x: SPINE_X, y: 772 },
+  human_gate: { x: SPINE_X, y: 868 },
 }
 
 const LANE_LABELS: { id: string; label: string; y: number }[] = [
-  { id: 'lane-drafting', label: 'REVIEW COMPLETE → REPORT & SIGN-OFF', y: 812 },
+  { id: 'lane-drafting', label: 'REVIEW COMPLETE → REPORT & SIGN-OFF', y: 640 },
 ]
+
+// The five parallel workers render as compact peer chips.
+const WORKER_IDS = new Set(['mandate', 'kya', 'log', 'drift', 'investigator'])
+// The investigator only joins when the orchestrator routes a question to
+// it — dimmed until it actually lights.
+const DIMMED_IDS = new Set(['investigator'])
 
 // One-line captions under each node's name while idle.
 const CAPTIONS: Record<string, string> = {
@@ -66,6 +76,8 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
   const meta = nodeMeta(data.nodeId)
   const Icon = data.nodeId === 'supervisor' ? UserRound : meta.icon
   const icon = AGENT_ICON[meta.color]
+  const worker = WORKER_IDS.has(data.nodeId)
+  const dimmed = DIMMED_IDS.has(data.nodeId) && data.status === 'pending'
 
   const iconWrap =
     data.status === 'active'
@@ -77,6 +89,50 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
           : data.synthetic
             ? 'bg-primary/10 text-primary'
             : cn(icon.bg, icon.text)
+
+  const statusDot = (
+    <>
+      {data.status === 'active' && (
+        <span className="absolute -right-1 -top-1 flex size-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
+          <span className="relative inline-flex size-2.5 rounded-full bg-amber-500" />
+        </span>
+      )}
+      {data.status === 'awaiting' && (
+        <span className="absolute -right-1 -top-1 flex size-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+          <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
+        </span>
+      )}
+    </>
+  )
+
+  if (worker) {
+    // Compact peer chip — five of these share one row.
+    return (
+      <div
+        className={cn(
+          'relative flex flex-col items-center gap-1 rounded-xl border bg-card px-2 py-2 shadow-sm transition-all duration-300',
+          STATUS_RING[data.status],
+          dimmed && 'border-dashed bg-card/50 opacity-60',
+        )}
+        style={{ width: 106 }}
+      >
+        <Handle type="target" position={Position.Top} className="!h-2 !w-2 !border !border-card !bg-muted-foreground/50" />
+        <div className={cn('flex size-8 items-center justify-center rounded-lg transition-colors duration-300', iconWrap)}>
+          <Icon className="size-4.5" strokeWidth={2.25} />
+        </div>
+        <div className={cn('max-w-full truncate text-[11px] font-semibold', data.status === 'pending' ? 'text-muted-foreground' : 'text-foreground')}>
+          {data.label}
+        </div>
+        <div className="text-[8px] font-medium uppercase tracking-wide text-muted-foreground">
+          {data.status === 'active' ? 'working…' : data.status === 'done' ? 'complete' : dimmed ? 'on request' : 'ready'}
+        </div>
+        {statusDot}
+        <Handle type="source" position={Position.Bottom} className="!h-2 !w-2 !border !border-card !bg-muted-foreground/50" />
+      </div>
+    )
+  }
 
   return (
     <div
@@ -105,18 +161,7 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
                 : (CAPTIONS[data.nodeId] ?? 'ready')}
         </div>
       </div>
-      {data.status === 'active' && (
-        <span className="absolute -right-1 -top-1 flex size-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-amber-500" />
-        </span>
-      )}
-      {data.status === 'awaiting' && (
-        <span className="absolute -right-1 -top-1 flex size-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
-        </span>
-      )}
+      {statusDot}
       <Handle type="source" position={Position.Bottom} className="!h-2 !w-2 !border !border-card !bg-muted-foreground/50" />
     </div>
   )
@@ -124,7 +169,7 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
 
 function LaneLabelView({ data }: { data: { label: string } }) {
   return (
-    <div className="w-[378px] border-t border-dashed border-border pt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+    <div className="w-[594px] border-t border-dashed border-border pt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
       {data.label}
     </div>
   )
