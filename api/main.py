@@ -356,7 +356,9 @@ _FULL_MAP_EDGES: list[dict] = [
     {"source": "investigator", "target": "findings", "kind": "main"},
     {"source": "findings", "target": "synthesizer", "kind": "main"},
     {"source": "synthesizer", "target": "orchestrator", "kind": "return"},
-    {"source": "supervisor", "target": "draft_report", "kind": "route"},
+    # "draft the report" is routed by the orchestrator (intent
+    # draft_report) on the supervisor's say-so — the line runs from the hub.
+    {"source": "orchestrator", "target": "draft_report", "kind": "route"},
     {"source": "draft_report", "target": "grounding_check", "kind": "main"},
     {"source": "grounding_check", "target": "draft_report", "kind": "loop"},
     {"source": "grounding_check", "target": "human_gate", "kind": "main"},

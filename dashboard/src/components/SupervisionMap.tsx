@@ -189,17 +189,22 @@ const nodeTypes = { mapNode: MapNodeView, laneLabel: LaneLabelView }
 // curves — they never overlap the main top-to-bottom flow. Everything
 // else runs straight down the spine as smoothstep.
 const EDGE_ROUTING: Record<string, { sourceHandle: string; targetHandle: string }> = {
+  // The supervisor ⇄ orchestrator LOOP: down the spine, back up the left —
+  // a visible cycle, not two overlapping verticals.
   'orchestrator-supervisor': { sourceHandle: 'ls', targetHandle: 'lt' },
+  // Results returning to the hub climb the right margin.
   'synthesizer-orchestrator': { sourceHandle: 'rs', targetHandle: 'rt' },
-  'supervisor-draft_report': { sourceHandle: 'ls', targetHandle: 'lt' },
+  // The orchestrator's draft_report routing runs down the left margin,
+  // past the whole review body, into the report section.
+  'orchestrator-draft_report': { sourceHandle: 'ls', targetHandle: 'lt' },
   'grounding_check-draft_report': { sourceHandle: 'rs', targetHandle: 'rt' },
 }
 
-const EDGE_STYLE: Record<MapEdgeKind, { dash?: string; opacity: number }> = {
+const EDGE_STYLE: Record<MapEdgeKind, { dash?: string; opacity: number; width?: number }> = {
   main: { opacity: 1 },
-  route: { dash: '6 4', opacity: 0.9 },
-  loop: { dash: '3 4', opacity: 0.75 },
-  return: { dash: '2 5', opacity: 0.55 },
+  route: { dash: '6 4', opacity: 0.95, width: 2 },
+  loop: { dash: '3 4', opacity: 0.8 },
+  return: { dash: '4 4', opacity: 0.9, width: 2 },
 }
 
 function MapControls() {
@@ -277,7 +282,7 @@ export function SupervisionMap({
           animated: live || holding,
           style: {
             stroke: live ? '#f59e0b' : holding ? 'oklch(0.55 0.21 262)' : settled ? '#10b981' : 'var(--border)',
-            strokeWidth: live || holding ? 2.25 : settled ? 2 : 1.5,
+            strokeWidth: live || holding ? 2.5 : settled ? 2 : (style.width ?? 1.5),
             strokeDasharray: style.dash,
             opacity: live || settled || holding ? 1 : style.opacity,
           },
