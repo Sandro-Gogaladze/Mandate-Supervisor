@@ -7,6 +7,7 @@
 import { useMemo } from 'react'
 import {
   Background,
+  BaseEdge,
   Handle,
   MarkerType,
   Panel,
@@ -14,6 +15,7 @@ import {
   ReactFlow,
   useReactFlow,
   type Edge,
+  type EdgeProps,
   type Node,
 } from '@xyflow/react'
 import { Maximize, Minus, Plus, UserRound } from 'lucide-react'
@@ -182,20 +184,38 @@ function LaneLabelView({ data }: { data: { label: string } }) {
 }
 
 const nodeTypes = { mapNode: MapNodeView, laneLabel: LaneLabelView }
+const edgeTypes = { detour: DetourEdge }
 
-// Long return/route edges leave the spine and travel the MARGINS as
-// curves — they never overlap the main top-to-bottom flow. Everything
-// else runs straight down the spine as smoothstep.
-const EDGE_ROUTING: Record<string, { sourceHandle: string; targetHandle: string }> = {
-  // The supervisor ⇄ orchestrator LOOP: down the spine, back up the left —
-  // a visible cycle, not two overlapping verticals.
-  'orchestrator-supervisor': { sourceHandle: 'ls', targetHandle: 'lt' },
-  // Results returning to the hub climb the right margin.
-  'synthesizer-orchestrator': { sourceHandle: 'rs', targetHandle: 'rt' },
-  // The orchestrator's draft_report routing runs down the left margin,
-  // past the whole review body, into the report section.
-  'orchestrator-draft_report': { sourceHandle: 'ls', targetHandle: 'lt' },
-  'grounding_check-draft_report': { sourceHandle: 'rs', targetHandle: 'rt' },
+// Long return/route edges must never pass under a box. Each gets an
+// explicit DETOUR LANE — a vertical channel in the margins, clear of every
+// node — and a custom edge draws source → lane → target orthogonally.
+// Lanes are spread so two edges sharing a side never overlap.
+const EDGE_ROUTING: Record<string, { sourceHandle: string; targetHandle: string; laneX: number }> = {
+  // supervisor ⇄ orchestrator loop: back up the near-left lane
+  'orchestrator-supervisor': { sourceHandle: 'ls', targetHandle: 'lt', laneX: -44 },
+  // results return to the hub around the far right, outside the worker row
+  'synthesizer-orchestrator': { sourceHandle: 'rs', targetHandle: 'rt', laneX: 648 },
+  // the draft_report routing runs down the far-left lane, around everything
+  'orchestrator-draft_report': { sourceHandle: 'ls', targetHandle: 'lt', laneX: -76 },
+  // grounding retry: short hop in the right margin of the report lane
+  'grounding_check-draft_report': { sourceHandle: 'rs', targetHandle: 'rt', laneX: 428 },
+}
+
+function DetourEdge({ sourceX, sourceY, targetX, targetY, style, markerEnd, data }: EdgeProps) {
+  const laneX = (data as { laneX?: number } | undefined)?.laneX ?? sourceX
+  const r = 14
+  const dirIn = laneX > sourceX ? 1 : -1
+  const dirV = targetY > sourceY ? 1 : -1
+  const dirOut = targetX > laneX ? 1 : -1
+  const path = [
+    `M ${sourceX} ${sourceY}`,
+    `L ${laneX - dirIn * r} ${sourceY}`,
+    `Q ${laneX} ${sourceY} ${laneX} ${sourceY + dirV * r}`,
+    `L ${laneX} ${targetY - dirV * r}`,
+    `Q ${laneX} ${targetY} ${laneX + dirOut * r} ${targetY}`,
+    `L ${targetX} ${targetY}`,
+  ].join(' ')
+  return <BaseEdge path={path} style={style} markerEnd={markerEnd} />
 }
 
 const EDGE_STYLE: Record<MapEdgeKind, { dash?: string; opacity: number; width?: number }> = {
@@ -209,7 +229,7 @@ function MapControls() {
   const { zoomIn, zoomOut, fitBounds, getNodesBounds, getNodes } = useReactFlow()
   // fitView() only QUEUES on a fully-static graph — fitBounds sets the
   // viewport directly (the React Flow v12 trap found in phase 10).
-  const fit = () => fitBounds(getNodesBounds(getNodes()), { padding: 0.1, duration: 200 })
+  const fit = () => fitBounds(getNodesBounds(getNodes()), { padding: 0.16, duration: 200 })
   return (
     <Panel position="bottom-right" className="!m-2">
       <div className="flex items-center gap-0.5 rounded-lg border bg-card p-0.5 shadow-sm">
@@ -273,10 +293,10 @@ export function SupervisionMap({
           id: `${e.source}-${e.target}-${e.kind}`,
           source: e.source,
           target: e.target,
-          // Margin-routed edges curve; spine edges step. No labels — the
-          // dash styles carry the meaning (solid flow, dashed route/return).
-          type: routing ? 'default' : 'smoothstep',
-          ...(routing ?? {}),
+          // Margin edges take an explicit detour lane around every box;
+          // spine edges step. No labels — dash styles carry the meaning.
+          type: routing ? 'detour' : 'smoothstep',
+          ...(routing ? { sourceHandle: routing.sourceHandle, targetHandle: routing.targetHandle, data: { laneX: routing.laneX } } : {}),
           animated: live || holding,
           style: {
             stroke: live ? '#f59e0b' : holding ? 'oklch(0.55 0.21 262)' : settled ? '#10b981' : 'var(--border)',
@@ -301,8 +321,9 @@ export function SupervisionMap({
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
-        fitViewOptions={{ padding: 0.08 }}
+        fitViewOptions={{ padding: 0.16 }}
         proOptions={{ hideAttribution: true }}
         nodesDraggable={false}
         nodesConnectable={false}
