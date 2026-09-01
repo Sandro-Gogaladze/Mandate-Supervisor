@@ -147,6 +147,25 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     [],
   )
 
+  // In an investigation run the orchestrator dispatches a worker directly —
+  // there is no `dispatch` graph node to stream. Lighting audit finding:
+  // the worker lit with no lit path into it. When the session stream starts
+  // a worker step, synthesize the dispatch hop first (start-before-worker
+  // keeps the edge-traversal ordering correct); a reply-only turn never
+  // touches it, so Dispatch stays dark when nothing was dispatched.
+  const WORKER_STEPS = useMemo(() => new Set(['mandate', 'kya', 'log', 'drift', 'investigator']), [])
+  const recordSessionStep = useCallback(
+    (stepName: string, status: 'inProgress' | 'complete') => {
+      if (status === 'inProgress' && WORKER_STEPS.has(stepName)) {
+        feed.recordNodeEvent('dispatch', 'inProgress')
+        feed.recordNodeEvent('dispatch', 'complete')
+      }
+      recordStep(stepName, status)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+
   // One feed across all three agents — the conversation's live block and
   // the supervision map read the same stream.
   useEffect(() => {
@@ -159,9 +178,14 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
       onToolCallEndEvent: ({ toolCallName, toolCallArgs }: any) =>
         feed.recordToolEvent(toolCallName, 'complete', toolCallArgs),
     }
-    const subs = [triageAgent, sessionAgent].map((agent) =>
-      agent.subscribe({ ...handlers, onRunFinishedEvent: () => refreshRecord() }),
-    )
+    const triageSub = triageAgent.subscribe({ ...handlers, onRunFinishedEvent: () => refreshRecord() })
+    const sessionSub = sessionAgent.subscribe({
+      ...handlers,
+      onStepStartedEvent: ({ event }: any) => recordSessionStep(event.stepName, 'inProgress'),
+      onStepFinishedEvent: ({ event }: any) => recordSessionStep(event.stepName, 'complete'),
+      onRunFinishedEvent: () => refreshRecord(),
+    })
+    const subs = [triageSub, sessionSub]
     const drafterSub = drafterAgent.subscribe({
       ...handlers,
       // The human gate arrives as a run finishing with an interrupt outcome.
