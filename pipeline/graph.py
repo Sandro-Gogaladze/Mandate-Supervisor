@@ -87,7 +87,7 @@ from registry.loader import (
     load_mandate_ruleset,
     load_scoring_config,
 )
-from schemas import DispatchPlan, DispatchRecord, ReviewerDecision, ReviewerDirective
+from schemas import DispatchPlan, DispatchRecord, Finding, Observation, ReviewerDecision, ReviewerDirective
 
 _SPECIALIST_NODES = ("mandate", "kya", "log", "drift")
 _MAX_ESCALATION_ROUNDS = 1
@@ -846,6 +846,48 @@ def build_investigation_graph(*, model=None, store: LedgerStore | None = None, c
         _record_outputs(state, "investigator", [], observations)
         return {"observations": observations}
 
+    async def _inv_critic_node(state: SupervisionState) -> dict:
+        """Same deterministic check as triage's critic, scoped to what THIS
+        run produced — a re-briefed specialist's new findings must quote
+        numbers that exist in the context it was just given. Old findings on
+        the record were checked by their own run's critic."""
+        run_events = store.events_for_run(state["run_id"])
+        new_findings = [
+            Finding.model_validate(e.payload) for e in run_events
+            if e.event_type == "finding_recorded"
+        ]
+        new_observations = [
+            Observation.model_validate(e.payload) for e in run_events
+            if e.event_type == "observation_recorded"
+        ]
+        results = check_evidence_grounding(
+            new_findings, new_observations, state.get("dispatch_contexts", {})
+        )
+        for result in results:
+            store.append(
+                case_id=state["case_id"], event_type="critic_checked",
+                run_id=state["run_id"], payload=result.model_dump(), actor="system:critic",
+            )
+        return {"critic_results": [r.model_dump() for r in results]}
+
+    async def _inv_synthesizer_node(state: SupervisionState) -> dict:
+        """Re-correlate only when this run actually changed the findings —
+        a lookup or a clean re-check leaves the correlations as they were."""
+        run_events = store.events_for_run(state["run_id"])
+        if not any(e.event_type == "finding_recorded" for e in run_events):
+            return {}
+        record = project_case(store.events_for(state["case_id"]))
+        correlations = await synthesize(
+            state["case_id"], record.findings, model=model,
+            system_prompt=effective_text(state["prompts"], "SYNTHESIZER") if state.get("prompts") else None,
+        )
+        for correlation in correlations:
+            store.append(
+                case_id=correlation.case_id, event_type="correlation_recorded",
+                run_id=state["run_id"], payload=correlation.model_dump(), actor="agent:synthesizer",
+            )
+        return {"correlations": correlations}
+
     async def _record_node(state: SupervisionState) -> dict:
         case_id = state["case_id"]
         decision = state.get("orchestrator_decision")
@@ -888,6 +930,8 @@ def build_investigation_graph(*, model=None, store: LedgerStore | None = None, c
     graph.add_node("log", _inv_log_node)
     graph.add_node("drift", _inv_drift_node)
     graph.add_node("investigator", _investigator_node)
+    graph.add_node("critic", _inv_critic_node)
+    graph.add_node("synthesizer", _inv_synthesizer_node)
     graph.add_node("record", _record_node)
 
     graph.add_edge(START, "load_context")
@@ -896,8 +940,15 @@ def build_investigation_graph(*, model=None, store: LedgerStore | None = None, c
         "orchestrate", _route_from_orchestrator,
         [*_SPECIALIST_NODES, "investigator", "record"],
     )
-    for node in (*_SPECIALIST_NODES, "investigator"):
-        graph.add_edge(node, "record")
+    # A re-briefed specialist's output goes through the same critic +
+    # synthesizer tail as a triage pass (architecture-v2 §14.2). The
+    # investigator produces observations only — nothing rule-backed to
+    # check or correlate — so it records directly.
+    for node in _SPECIALIST_NODES:
+        graph.add_edge(node, "critic")
+    graph.add_edge("critic", "synthesizer")
+    graph.add_edge("synthesizer", "record")
+    graph.add_edge("investigator", "record")
     graph.add_edge("record", END)
 
     return graph.compile(checkpointer=checkpointer)

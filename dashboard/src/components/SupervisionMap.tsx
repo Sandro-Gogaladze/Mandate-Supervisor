@@ -32,22 +32,21 @@ export type NodeStatus = 'pending' | 'active' | 'done' | 'awaiting'
 const SPINE_X = 213  // centers a 168-wide node on the workers' row
 const POSITIONS: Record<string, { x: number; y: number }> = {
   supervisor: { x: SPINE_X, y: 0 },
-  orchestrator: { x: SPINE_X, y: 100 },
-  dispatch: { x: SPINE_X, y: 200 },
-  mandate: { x: 0, y: 306 },
-  kya: { x: 122, y: 306 },
-  log: { x: 244, y: 306 },
-  drift: { x: 366, y: 306 },
-  investigator: { x: 488, y: 306 },
-  findings: { x: SPINE_X, y: 424 },
-  synthesizer: { x: SPINE_X, y: 520 },
-  draft_report: { x: SPINE_X, y: 676 },
-  grounding_check: { x: SPINE_X, y: 772 },
-  human_gate: { x: SPINE_X, y: 868 },
+  orchestrator: { x: SPINE_X, y: 104 },
+  mandate: { x: 0, y: 216 },
+  kya: { x: 122, y: 216 },
+  log: { x: 244, y: 216 },
+  drift: { x: 366, y: 216 },
+  investigator: { x: 488, y: 216 },
+  findings: { x: SPINE_X, y: 334 },
+  synthesizer: { x: SPINE_X, y: 430 },
+  draft_report: { x: SPINE_X, y: 586 },
+  grounding_check: { x: SPINE_X, y: 682 },
+  human_gate: { x: SPINE_X, y: 778 },
 }
 
 const LANE_LABELS: { id: string; label: string; y: number }[] = [
-  { id: 'lane-drafting', label: 'REVIEW COMPLETE → REPORT & SIGN-OFF', y: 640 },
+  { id: 'lane-drafting', label: 'REVIEW COMPLETE → REPORT & SIGN-OFF', y: 550 },
 ]
 
 // The five parallel workers render as compact peer chips.
@@ -59,8 +58,7 @@ const DIMMED_IDS = new Set(['investigator'])
 // One-line captions under each node's name while idle.
 const CAPTIONS: Record<string, string> = {
   supervisor: 'you',
-  orchestrator: 'routes & briefs',
-  dispatch: 'fans out',
+  orchestrator: 'routes · briefs · dispatches',
   findings: 'typed output pool',
   human_gate: 'named decision',
 }

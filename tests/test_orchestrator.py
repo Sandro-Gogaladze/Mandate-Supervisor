@@ -121,6 +121,10 @@ async def test_dispatch_to_a_specialist_records_briefing_and_findings(store) -> 
     assert "share a beneficiary" in fake.last_messages_for("record_log_analysis")[0].content
     # and the score was recomputed since findings changed
     assert record.risk_score.total > 0
+    # the run's output went through the critic, scoped to THIS run
+    critic_events = [e for e in store.events_for(case_id)
+                     if e.event_type == "critic_checked" and e.run_id == inv_run.run_id]
+    assert any(e.payload["target"] == "log" for e in critic_events)
 
 
 async def test_dispatch_to_the_investigator_records_answer_and_trail(store) -> None:

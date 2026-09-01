@@ -52,20 +52,29 @@ const DRAFTER_AGENT = 'report_drafter'
 
 // The map shows the supervisor's model of the loop; graph-internal
 // plumbing steps fold onto the nearest visible node so live lighting
-// still tells the truth: ingest is dispatch prep, an escalation round is
-// a re-dispatch, the critic checks the output pool, the score is the
-// result returning to the orchestrator, load_record is drafting prep.
+// still tells the truth. Dispatching (ingest prep, the plan+floor step,
+// an escalation re-dispatch, session routing) is the ORCHESTRATOR's own
+// act — there is no separate dispatch box; the hub fans straight out.
 const STEP_ALIAS: Record<string, string | null> = {
   orchestrate: 'orchestrator',
   load_context: 'orchestrator',
   record: 'orchestrator',
-  ingest: 'dispatch',
-  bump_round: 'dispatch',
+  ingest: 'orchestrator',
+  dispatch: 'orchestrator',
+  bump_round: 'orchestrator',
   escalate_check: 'findings',
   critic: 'findings',
   risk_score: 'orchestrator',
   load_record: 'draft_report',
 }
+
+// The five workers run in PARALLEL, but the AG-UI adapter streams one
+// active step at a time — trusting its per-worker STEP_FINISHED would show
+// a single amber chip hopping around a concurrent fan-out. So: a worker
+// goes active on its first step and STAYS active until the run moves past
+// the fan (any non-worker step starting = the join), when every active
+// worker settles at once — which is what actually happened.
+const WORKER_NODES = new Set(['mandate', 'kya', 'log', 'drift', 'investigator'])
 
 function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; onBack: () => void }) {
   const caseId = caseSummary.case_id
@@ -138,29 +147,25 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId])
 
+  const activeWorkers = useRef<Set<string>>(new Set())
   const recordStep = useCallback(
     (stepName: string, status: 'inProgress' | 'complete') => {
       const target = stepName in STEP_ALIAS ? STEP_ALIAS[stepName] : stepName
-      if (target) feed.recordNodeEvent(target, status)
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  )
-
-  // In an investigation run the orchestrator dispatches a worker directly —
-  // there is no `dispatch` graph node to stream. Lighting audit finding:
-  // the worker lit with no lit path into it. When the session stream starts
-  // a worker step, synthesize the dispatch hop first (start-before-worker
-  // keeps the edge-traversal ordering correct); a reply-only turn never
-  // touches it, so Dispatch stays dark when nothing was dispatched.
-  const WORKER_STEPS = useMemo(() => new Set(['mandate', 'kya', 'log', 'drift', 'investigator']), [])
-  const recordSessionStep = useCallback(
-    (stepName: string, status: 'inProgress' | 'complete') => {
-      if (status === 'inProgress' && WORKER_STEPS.has(stepName)) {
-        feed.recordNodeEvent('dispatch', 'inProgress')
-        feed.recordNodeEvent('dispatch', 'complete')
+      if (!target) return
+      if (WORKER_NODES.has(target)) {
+        if (status === 'inProgress') {
+          activeWorkers.current.add(target)
+          feed.recordNodeEvent(target, 'inProgress')
+        }
+        // a worker's STEP_FINISHED only means the stream moved to another
+        // concurrent worker — ignored; the join below settles them together
+        return
       }
-      recordStep(stepName, status)
+      if (status === 'inProgress' && activeWorkers.current.size > 0) {
+        for (const worker of activeWorkers.current) feed.recordNodeEvent(worker, 'complete')
+        activeWorkers.current.clear()
+      }
+      feed.recordNodeEvent(target, status)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -178,14 +183,9 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
       onToolCallEndEvent: ({ toolCallName, toolCallArgs }: any) =>
         feed.recordToolEvent(toolCallName, 'complete', toolCallArgs),
     }
-    const triageSub = triageAgent.subscribe({ ...handlers, onRunFinishedEvent: () => refreshRecord() })
-    const sessionSub = sessionAgent.subscribe({
-      ...handlers,
-      onStepStartedEvent: ({ event }: any) => recordSessionStep(event.stepName, 'inProgress'),
-      onStepFinishedEvent: ({ event }: any) => recordSessionStep(event.stepName, 'complete'),
-      onRunFinishedEvent: () => refreshRecord(),
-    })
-    const subs = [triageSub, sessionSub]
+    const subs = [triageAgent, sessionAgent].map((agent) =>
+      agent.subscribe({ ...handlers, onRunFinishedEvent: () => refreshRecord() }),
+    )
     const drafterSub = drafterAgent.subscribe({
       ...handlers,
       // The human gate arrives as a run finishing with an interrupt outcome.
@@ -243,6 +243,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
 
   const handleRun = () => {
     feed.reset()
+    activeWorkers.current.clear()
     setGate(null)
     resetAgent(triageAgent, {
       case_id: caseId,
@@ -257,6 +258,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
 
   const handleDraft = () => {
     feed.reset()
+    activeWorkers.current.clear()
     setGate(null)
     resetAgent(drafterAgent, { case_id: caseId })
     drafterAgent.runAgent()
@@ -264,6 +266,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
 
   const handleSend = (text: string) => {
     feed.reset()
+    activeWorkers.current.clear()
     setPendingQuestion(text)
     resetAgent(sessionAgent, { case_id: caseId, officer_message: text, officer })
     sessionAgent.runAgent()

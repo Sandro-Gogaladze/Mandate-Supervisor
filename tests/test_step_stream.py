@@ -37,8 +37,9 @@ STEP_ALIAS = {
     "orchestrate": "orchestrator",
     "load_context": "orchestrator",
     "record": "orchestrator",
-    "ingest": "dispatch",
-    "bump_round": "dispatch",
+    "ingest": "orchestrator",
+    "dispatch": "orchestrator",
+    "bump_round": "orchestrator",
     "escalate_check": "findings",
     "critic": "findings",
     "risk_score": "orchestrator",
@@ -47,7 +48,7 @@ STEP_ALIAS = {
 # Mirror of the /graph/full node ids (minus "supervisor", the one node that
 # never receives step events — it lights only via the gate's awaiting state).
 MAP_NODE_IDS = {
-    "orchestrator", "dispatch", "mandate", "kya", "log", "drift", "investigator",
+    "orchestrator", "mandate", "kya", "log", "drift", "investigator",
     "findings", "synthesizer", "draft_report", "grounding_check", "human_gate",
 }
 
@@ -186,7 +187,10 @@ async def test_investigation_stream_dispatches_specialist(store) -> None:
     seq = await node_transitions(graph, {
         "case_id": cid, "officer_message": "recheck same-day payments", "officer": "Ana",
         "findings": [], "observations": [], "messages": []})
-    assert seq == ["load_context", "orchestrate", "log", "record"]
+    # architecture-v2 §14.2: a re-briefed specialist's output goes through
+    # the same critic + synthesizer tail as a triage pass
+    assert seq == ["load_context", "orchestrate", "log", "critic", "synthesizer", "record"]
+    assert_all_steps_light_something(seq)
 
 
 async def test_drafting_stream_holds_at_gate_then_resumes(store) -> None:

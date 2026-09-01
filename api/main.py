@@ -319,8 +319,10 @@ async def graph_structure() -> dict:
 # the human starting runs, results returning to the conversation.
 _FULL_MAP_NODES: list[dict] = [
     {"id": "supervisor", "label": "Supervisor", "lane": "hub", "synthetic": True},
+    # Dispatch is not a separate box: proposing the plan and enforcing the
+    # floor IS the orchestrator's act — the graph's dispatch/ingest/
+    # bump_round steps light the hub. The orchestrator fans straight out.
     {"id": "orchestrator", "label": "Orchestrator", "lane": "hub", "synthetic": True},
-    {"id": "dispatch", "label": "Dispatch", "lane": "triage", "synthetic": False},
     {"id": "mandate", "label": "Mandate", "lane": "triage", "synthetic": False},
     {"id": "kya", "label": "KYA", "lane": "triage", "synthetic": False},
     {"id": "log", "label": "Log", "lane": "triage", "synthetic": False},
@@ -343,12 +345,11 @@ _FULL_MAP_NODES: list[dict] = [
 _FULL_MAP_EDGES: list[dict] = [
     {"source": "supervisor", "target": "orchestrator", "kind": "main"},
     {"source": "orchestrator", "target": "supervisor", "kind": "return"},
-    {"source": "orchestrator", "target": "dispatch", "kind": "main"},
-    {"source": "dispatch", "target": "mandate", "kind": "main"},
-    {"source": "dispatch", "target": "kya", "kind": "main"},
-    {"source": "dispatch", "target": "log", "kind": "main"},
-    {"source": "dispatch", "target": "drift", "kind": "main"},
-    {"source": "dispatch", "target": "investigator", "kind": "route"},
+    {"source": "orchestrator", "target": "mandate", "kind": "main"},
+    {"source": "orchestrator", "target": "kya", "kind": "main"},
+    {"source": "orchestrator", "target": "log", "kind": "main"},
+    {"source": "orchestrator", "target": "drift", "kind": "main"},
+    {"source": "orchestrator", "target": "investigator", "kind": "route"},
     {"source": "mandate", "target": "findings", "kind": "main"},
     {"source": "kya", "target": "findings", "kind": "main"},
     {"source": "log", "target": "findings", "kind": "main"},
