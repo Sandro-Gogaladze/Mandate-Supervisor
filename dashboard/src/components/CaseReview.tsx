@@ -208,6 +208,9 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     if (handledSessionRuns.current === sessionRuns.current) return
     handledSessionRuns.current = sessionRuns.current
     setPendingQuestion(null)
+    // The routing turn is over — the hub settles green even if a step
+    // event was lost across the SSE relay.
+    feed.recordNodeEvent('orchestrator', 'complete')
     const intent = (session.state.orchestrator_decision as { intent?: string } | undefined)?.intent
     if (intent === 'run_triage') handleRun()
     else if (intent === 'draft_report') handleDraft()

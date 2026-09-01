@@ -119,6 +119,10 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
         style={{ width: 106 }}
       >
         <Handle type="target" position={Position.Top} className="!h-2 !w-2 !border !border-card !bg-muted-foreground/50" />
+      <Handle id="lt" type="target" position={Position.Left} className="!h-1.5 !w-1.5 !border-0 !bg-transparent" />
+      <Handle id="ls" type="source" position={Position.Left} className="!h-1.5 !w-1.5 !border-0 !bg-transparent" />
+      <Handle id="rt" type="target" position={Position.Right} className="!h-1.5 !w-1.5 !border-0 !bg-transparent" />
+      <Handle id="rs" type="source" position={Position.Right} className="!h-1.5 !w-1.5 !border-0 !bg-transparent" />
         <div className={cn('flex size-8 items-center justify-center rounded-lg transition-colors duration-300', iconWrap)}>
           <Icon className="size-4.5" strokeWidth={2.25} />
         </div>
@@ -144,6 +148,10 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
       style={{ width: 168 }}
     >
       <Handle type="target" position={Position.Top} className="!h-2 !w-2 !border !border-card !bg-muted-foreground/50" />
+      <Handle id="lt" type="target" position={Position.Left} className="!h-1.5 !w-1.5 !border-0 !bg-transparent" />
+      <Handle id="ls" type="source" position={Position.Left} className="!h-1.5 !w-1.5 !border-0 !bg-transparent" />
+      <Handle id="rt" type="target" position={Position.Right} className="!h-1.5 !w-1.5 !border-0 !bg-transparent" />
+      <Handle id="rs" type="source" position={Position.Right} className="!h-1.5 !w-1.5 !border-0 !bg-transparent" />
       <div className={cn('flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors duration-300', iconWrap)}>
         <Icon className="size-4" strokeWidth={2.25} />
       </div>
@@ -176,6 +184,16 @@ function LaneLabelView({ data }: { data: { label: string } }) {
 }
 
 const nodeTypes = { mapNode: MapNodeView, laneLabel: LaneLabelView }
+
+// Long return/route edges leave the spine and travel the MARGINS as
+// curves — they never overlap the main top-to-bottom flow. Everything
+// else runs straight down the spine as smoothstep.
+const EDGE_ROUTING: Record<string, { sourceHandle: string; targetHandle: string }> = {
+  'orchestrator-supervisor': { sourceHandle: 'ls', targetHandle: 'lt' },
+  'synthesizer-orchestrator': { sourceHandle: 'rs', targetHandle: 'rt' },
+  'supervisor-draft_report': { sourceHandle: 'ls', targetHandle: 'lt' },
+  'grounding_check-draft_report': { sourceHandle: 'rs', targetHandle: 'rt' },
+}
 
 const EDGE_STYLE: Record<MapEdgeKind, { dash?: string; opacity: number }> = {
   main: { opacity: 1 },
@@ -247,16 +265,16 @@ export function SupervisionMap({
         const live = traversed && nodeStatus[e.target] === 'active'
         const holding = traversed && nodeStatus[e.target] === 'awaiting'
         const settled = traversed && nodeStatus[e.target] === 'done'
+        const routing = EDGE_ROUTING[`${e.source}-${e.target}`]
         return {
           id: `${e.source}-${e.target}-${e.kind}`,
           source: e.source,
           target: e.target,
-          type: 'smoothstep',
+          // Margin-routed edges curve; spine edges step. No labels — the
+          // dash styles carry the meaning (solid flow, dashed route/return).
+          type: routing ? 'default' : 'smoothstep',
+          ...(routing ?? {}),
           animated: live || holding,
-          label: e.label,
-          labelStyle: { fontSize: 8, fill: 'var(--muted-foreground)', fontFamily: 'var(--font-mono)' },
-          labelBgStyle: { fill: 'var(--background)', fillOpacity: 0.85 },
-          labelBgPadding: [3, 2] as [number, number],
           style: {
             stroke: live ? '#f59e0b' : holding ? 'oklch(0.55 0.21 262)' : settled ? '#10b981' : 'var(--border)',
             strokeWidth: live || holding ? 2.25 : settled ? 2 : 1.5,
