@@ -211,7 +211,31 @@ def _check_consent_method_allowlist(case: CaseBundle, rule: Rule, ctx: PolicyCon
     return None
 
 
+_PLACEHOLDER_MODEL_VERSIONS = frozenset({"", "unknown", "n/a", "tbd", "none", "-"})
+
+
+def _check_model_version_pinned(case: CaseBundle, rule: Rule, ctx: PolicyContext, counter: _FindingIdCounter) -> Finding | None:
+    """KYA-TEC-01 — is a model version declared at all? (F18)
+
+    The weakest of the substrate rules and still worth having: without a
+    pinned version you cannot separate a firm's misconfiguration from a
+    model's flaw, cannot warn other firms running the same model, and cannot
+    see a market-wide monoculture (F67). Whether the declared version is the
+    one that actually *ran* is KYA-TEC-02, owned by Provenance, and blocked
+    until construction_context is submitted.
+    """
+    declared = (case.mandate_chain.intent.agent.model_version or "").strip()
+    if declared.lower() in _PLACEHOLDER_MODEL_VERSIONS:
+        return _finding(counter, case.case_id, rule,
+            f"agent {case.kya_credential.agent_id} declares no usable model_version "
+            f"({case.mandate_chain.intent.agent.model_version!r}); its decisions cannot be "
+            f"attributed to a specific model.",
+            details={"declared_model_version": case.mandate_chain.intent.agent.model_version})
+    return None
+
+
 _POLICY_CHECKERS = {
+    "model_version_pinned_to_mandate": _check_model_version_pinned,
     "issuer_min_trust_level": _check_issuer_min_trust_level,
     "issuer_reaccreditation_not_stale": _check_issuer_reaccreditation_not_stale,
     "credential_not_expired": _check_credential_not_expired,

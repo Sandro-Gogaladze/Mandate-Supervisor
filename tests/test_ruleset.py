@@ -31,9 +31,14 @@ def test_active_vs_draft_split() -> None:
     rs = load_kya_ruleset()
     active = active_rules(rs)
     draft = [r for r in rs.rules if r.status == "draft"]
+    # v2026.3 restructure (docs/kya-ruleset.md): 42 rules across eight
+    # families. The 18 active ones carry their v2026.1 types, severities and
+    # finding_types unchanged, so no case's score moved — re-weighting is
+    # dial 11 and belongs in the policy sandbox, not in a restructure.
+    assert len(rs.rules) == 42
     assert len(active) == 18
-    assert len(draft) == 15
-    # every draft rule must explain itself
+    assert len(draft) == 24
+    # every draft rule must explain what blocks it
     assert all(r.notes for r in draft)
 
 
@@ -72,7 +77,7 @@ def test_corpus_kya_ground_truth_traces_to_an_active_rule() -> None:
 
 def test_typed_params_validates_configured_rule() -> None:
     rs = load_kya_ruleset()
-    cap_rule = next(r for r in rs.rules if r.rule_id == "KYA-CAP-01")
+    cap_rule = next(r for r in rs.rules if r.rule_id == "KYA-CAP-02")
     params = typed_params(cap_rule)
     assert isinstance(params, CapabilityVocabularyAllowlistParams)
     assert "cart_construction" in params.allowed_exact
@@ -81,9 +86,9 @@ def test_typed_params_validates_configured_rule() -> None:
 def test_capability_allowlist_covers_every_case_in_the_corpus() -> None:
     """The allowlist params were derived from the real corpus (not
     guessed) — confirm every capability string in every case is actually
-    covered, so KYA-CAP-01 wouldn't false-positive on the corpus itself."""
+    covered, so KYA-CAP-02 wouldn't false-positive on the corpus itself."""
     rs = load_kya_ruleset()
-    cap_rule = next(r for r in rs.rules if r.rule_id == "KYA-CAP-01")
+    cap_rule = next(r for r in rs.rules if r.rule_id == "KYA-CAP-02")
     params: CapabilityVocabularyAllowlistParams = typed_params(cap_rule)
 
     def covered(capability: str) -> bool:
@@ -93,13 +98,18 @@ def test_capability_allowlist_covers_every_case_in_the_corpus() -> None:
 
     for _entry, case in iter_corpus_labeled():
         for capability in case.kya_credential.capabilities:
-            assert covered(capability), f"{case.case_id}: {capability!r} not covered by KYA-CAP-01"
+            assert covered(capability), f"{case.case_id}: {capability!r} not covered by KYA-CAP-02"
 
 
 def test_new_active_rules_have_no_bite_on_the_current_corpus() -> None:
-    """KYA-ISS-04/KYA-CON-01 are documented as 'no bite yet on this corpus' —
-    confirm that's actually true rather than just asserted in the
-    description, and that KYA-CRD-03's date ordering holds for every case."""
+    """KYA-ISS-04 is documented as 'no bite yet on this corpus' — confirm
+    that's actually true rather than just asserted in the description, and
+    that KYA-LIF-02's date ordering holds for every case.
+
+    consent_method_allowlist used to be checked here as KYA-CON-01. It moved
+    out of KYA entirely in v2026.3: KYA answers identity and standing, and
+    whether consent was validly obtained is the Consent & Harm domain's
+    question (docs/kya-ruleset.md Part 6)."""
     from datetime import date
 
     rs = load_kya_ruleset()
@@ -112,7 +122,6 @@ def test_new_active_rules_have_no_bite_on_the_current_corpus() -> None:
     }
 
     iss04 = typed_params(by_id["KYA-ISS-04"])
-    con01 = typed_params(by_id["KYA-CON-01"])
     as_of = date.fromisoformat(rs.as_of)
 
     for _entry, case in iter_corpus_labeled():
@@ -126,7 +135,6 @@ def test_new_active_rules_have_no_bite_on_the_current_corpus() -> None:
         assert (as_of - accredited_since).days <= iss04.max_reaccreditation_age_days
 
         consent_method = case.mandate_chain.intent.consent.method
-        assert consent_method in con01.allowed_methods
 
 
 def test_no_params_rule_rejects_unexpected_params() -> None:

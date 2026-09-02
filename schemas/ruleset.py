@@ -13,92 +13,25 @@ registry/rulesets/*.json and is loaded by registry/loader.py.
 """
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 RuleStatus = Literal["active", "draft", "retired"]
 
-RuleType = Literal[
-    # A. Issuer trust
-    "issuer_trust_required",
-    "issuer_status_active",
-    "issuer_min_trust_level",
-    "issuer_reaccreditation_not_stale",
-    # B. Credential lifecycle
-    "credential_not_expired",
-    "credential_min_validity_window",
-    "credential_issued_before_expiry",
-    "credential_rotation_no_overlap",
-    # C. Cryptographic integrity
-    "signature_algorithm_allowlist",
-    "signature_must_verify",
-    "payload_hash_must_recompute",
-    # D. Delegation chain -> human accountability
-    "delegation_chain_terminates_in_human",
-    "delegation_chain_no_duplicate_holders",
-    "delegation_chain_max_depth",
-    "delegation_entry_signatures_must_verify",
-    "delegation_terminus_matches_intent_principal",
-    "delegation_intermediate_agents_registered",
-    "delegation_terminus_in_firm_signatory_list",
-    # E. Capability / scope hygiene
-    "capability_vocabulary_allowlist",
-    "credential_capabilities_non_empty",
-    "credential_capabilities_cover_purpose",
-    "capability_creep_across_reissuance",
-    # F. Consent provenance
-    "consent_method_allowlist",
-    # Structural anomaly
-    "signer_key_not_reused_across_identities",
-    "credential_id_not_reused_across_agents",
-    # G. Operator firm standing
-    "operator_firm_registered",
-    "operator_firm_good_standing",
-    "operator_firm_has_compliance_contact",
-    "operator_firm_ownership_unchanged",
-    # H. Agent identity/registration
-    "agent_pre_registered",
-    "agent_classification_declared",
-    "model_version_pinned_to_mandate",
-    "model_version_not_blocklisted",
-    # Mandate domain: chain integrity (PLAN item 3 / ingestion).
-    "cart_chain_link_matches_intent",
-    "payment_chain_link_matches_cart",
-    # Mandate domain: scope/cap (PLAN item 6 deterministic core). Unlike
-    # KYA's rules, these mostly carry no ruleset-level params at all — the
-    # "threshold" is whatever the case's own Intent declares
-    # (max_transaction_amount etc.), not a regulator policy constant, so
-    # there's nothing for the registry to configure beyond severity/status.
-    "cart_total_within_per_transaction_cap",
-    "cart_merchant_category_allowed",
-    "cart_counterparty_allowed",
-    "cart_merchant_geographic_scope_allowed",
-    "cumulative_spend_within_monthly_cap",
-    "payment_amount_matches_cart_total",
-    "cart_currency_matches_scope",
-    "payment_currency_matches_cart",
-    "payment_authorized_within_validity_window",
-    # Mandate domain: prompt-injection defense (PLAN item 6 part 2). Two
-    # independent mechanisms on purpose — see agents/mandate_reasoning.py
-    # module docstring: the heuristic is deterministic and runs regardless
-    # of what the LLM concludes, so a manipulated semantic check doesn't
-    # leave injection detection with a single point of failure.
-    "cart_reasoning_matches_intent",
-    "line_item_description_injection_heuristic",
-    # Log domain (PLAN item 7). All three LLM-evaluated — named, scoped
-    # rules (unlike KYA's open-ended ceiling), backed by pre-computed
-    # statistics/candidate clusters rather than raw judgment or a
-    # hardcoded Python verdict. See agents/log_reasoning.py.
-    "transaction_structuring_detected",
-    "counterparty_concentration_anomaly",
-    "transaction_velocity_anomaly",
-    # Drift domain (PLAN item 8). Same reasoning as Log: PSI/z-score/
-    # frequency statistics are computed deterministically
-    # (agents/drift_stats.py), but whether a shift constitutes meaningful
-    # drift is the model's judgment, not a threshold comparison. See
-    # agents/drift_reasoning.py.
-    "behavioral_drift_detected",
+# Rule `type` is the key a checker function is registered under. It was a
+# closed Literal through v2026.1, which worked at 33 rules in two domains and
+# stops working at ~110 across nine: every new rule in any domain would edit
+# this shared schema file, which is the opposite of rules-as-data.
+#
+# The real safety net is the checker registry, not this type. An ACTIVE
+# computable rule whose type has no registered checker raises
+# NotImplementedError at evaluation (agents/*_checks.py::run_policy_checks) —
+# a loud failure, and the one that actually matters. What remains here is a
+# shape check that catches typos and casing drift.
+RuleType = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9_]*$", min_length=3, max_length=80),
 ]
 
 
@@ -197,6 +130,9 @@ def typed_params(rule: "Rule") -> BaseModel:
     return model.model_validate(rule.params)
 
 
+Evaluation = Literal["computable", "judged"]
+
+
 class Rule(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -205,6 +141,17 @@ class Rule(BaseModel):
     version: int
     status: RuleStatus
     effective_from: str
+    # architecture-v3 Part I·5: how this rule is evaluated, declared on the
+    # rule rather than inferred from the agent. `computable` runs in the
+    # owning agent's check() — plain functions, no model. `judged` can only
+    # be evaluated by that agent's reasoning pass, over the measurements
+    # check() produced for it.
+    #
+    # Defaults to computable because most rules are, and because a judged
+    # rule that forgot to say so fails loudly: the checker registry has no
+    # function for it and run_policy_checks() raises NotImplementedError
+    # rather than skipping it silently.
+    evaluation: Evaluation = "computable"
     # Consumed by scoring (PLAN item 11); a pure weighted-factor function
     # reads this straight off the rule that produced each finding.
     severity_weight: float = Field(ge=0.0, le=1.0)
@@ -233,6 +180,16 @@ class Ruleset(BaseModel):
     as_of: str
     description: str
     rules: list[Rule]
+
+    @model_validator(mode="after")
+    def _validate_rule_types_unique(self) -> "Ruleset":
+        """Two rules sharing a type both resolve to one checker, so one of
+        them silently never fires. Loud at load time instead."""
+        types = [r.type for r in self.rules]
+        if len(types) != len(set(types)):
+            dupes = sorted({t for t in types if types.count(t) > 1})
+            raise ValueError(f"duplicate rule type(s) in {self.ruleset_id}: {dupes}")
+        return self
 
     @model_validator(mode="after")
     def _validate_rule_ids_unique(self) -> "Ruleset":

@@ -17,20 +17,35 @@ A deterministic check produces a **fact**, not a verdict: *"Cart total ₾1,289.
 whether it was deliberate, what it connects to, how serious it is for this firm, or what else deserves
 a look. That is the agents' job.
 
-## A domain has three parts, and only one of them is an agent
+## Agents own their rules end to end
 
-This is the distinction the previous draft blurred. **No agent runs before the orchestrator.**
+A domain is a **ruleset plus an agent**, and the agent runs the whole thing. Nothing evaluates rules
+outside the agent that owns them.
 
-| Part | What it is | When it runs |
-|---|---|---|
-| **The ruleset** | `registry/rulesets/mandate.json` — versioned data | — |
-| **The checker** | `checks/mandate.py` — plain functions, no model | **at intake**, before any agent exists |
-| **The agent** | `MandateAgent` — an LLM reasoner with a prompt and tools | **only when the orchestrator dispatches it** |
+```python
+class Specialist:
+    ruleset_id = "kya"
 
-The checker and the agent both belong to the Mandate domain — one is its mechanical half, the other
-its judgment half. But the checker is *code the rule engine calls*, not an agent taking a turn. Saying
-"nine specialists run their rules in parallel before dispatch" was wrong: what runs is the **rule
-engine**, organised by domain.
+    async def review(self, evidence, brief) -> SpecialistReport:
+        facts = self.check(evidence)            # 1 · MY rules, deterministic, no model
+        return await self.reason(facts, brief)  # 2 · interpret  3 · hunt in-domain
+```
+
+**One pass, three moves** — check, interpret, notice — which is how a domain expert actually works.
+
+Two details that matter:
+
+- **`check()` is the node's code, not a tool the model chooses to call.** Exposing it as a tool would
+  let a model skip its own rulebook, and a specialist silently not running its rules is a coverage
+  hole nobody would notice. It is still the agent running its own rules; it just isn't optional.
+- **Data preparation is shared; rule evaluation is not.** Intake verifies signatures, resolves
+  registries and computes statistics *once* — otherwise Log and Drift each build the same dataframe
+  and can end up citing different numbers for the same thing, which is a credibility problem in a
+  supervisory file. Rule evaluation stays entirely inside the agents.
+
+**Only the orchestrator runs before the specialists**, and on round 1 it has nothing to decide — it
+dispatches everything. Its judgment lands from round 2, when it holds every fact and assessment
+round 1 produced.
 
 ## Not every rule is code
 
@@ -44,21 +59,21 @@ Each rule declares its own evaluation mode in the ruleset JSON:
 Roughly **one rule in seven is judged**. The rule engine evaluates the computable ones at intake. The
 judged ones can only be evaluated by the dispatched agent.
 
-### What the rule engine produces for a domain whose rules are all judged
+### What `check()` produces for a domain whose rules are all judged
 
-Log's rules are *all* model-judged. A naive rule engine would emit nothing for Log, and the
-orchestrator would plan blind about transaction patterns — back to v2's problem.
+Log's rules are *all* model-judged, so a naive `check()` would emit nothing and the agent would reason
+from raw rows.
 
-**The rule engine emits two kinds of fact:**
+**`check()` emits two kinds of fact:**
 
 | Kind | Source | Example |
 |---|---|---|
 | **rule outcome** — `breach` · `satisfied` · `absent` | a computable rule | *"Cart total 1289.0 exceeds cap 350.0 by 939.0"* `MND-CAP-01` |
 | **measurement** | deterministic computation behind a *judged* rule | *"Cluster: 3 payments to MER-X within 6h, ₾2,900 + ₾2,850 + ₾2,950 = ₾8,700, threshold ₾3,000"* |
 
-So Log's checker computes every cluster, velocity and concentration number as a **measurement**, even
-though the verdict is judged. The orchestrator plans on the measurement; the Log agent turns it into a
-verdict on `LOG-STR-01`.
+So Log's `check()` computes every cluster, velocity and concentration number as a **measurement**, and
+its reasoning pass turns those into a verdict on `LOG-STR-01`. The model never sees raw transaction
+rows and reaches for a calculator — it sees computed evidence and judges it.
 
 **Every judged rule has deterministic measurements behind it.** That is the contract, and it is what
 the critic later checks an assessment against.
@@ -91,6 +106,100 @@ judgment is an agent.**
 
 ---
 
+# Part I·5 — The rulebook in operation
+
+Answering, precisely: what are the rules, when do they run, who runs which, what is automatic, and is
+anything run that isn't a rule.
+
+## Is KYA the whole rulebook? No — it is one of nine
+
+`KYA-*` covers **the agent's identity and standing only**. Eight other rulesets cover everything else,
+and each has exactly one owner.
+
+| Ruleset | Owner agent | Question it answers | Rules | Judged |
+|---|---|---|---|---|
+| `KYA-*` | KYA | Is this agent legitimately who it claims, with authority tracing to an accountable human? | 42 | 2 |
+| `MND-*` | Mandate | Was this payment within what the human signed? | 12 | 1 |
+| `PRV-*` | Provenance | Was the mandate assembled from trustworthy inputs? | ~8 | 1 |
+| `INJ-*` | Injection | Was the agent manipulated by content it read? | ~6 | 1 |
+| `CPY-*` | Counterparty | Who received the money, and are they who they claim? | ~8 | 0 |
+| `CNS-*` | Consent & Harm | Was the human there, and is the consumer worse off? | ~9 | 1 |
+| `LOG-*` | Log | What does the transaction pattern reveal? | ~7 | most |
+| `DRIFT-*` | Drift | What changed against this agent's own baseline? | 3 | 3 |
+| `CTL-*` | Control Assurance | Did the firm's own controls work? | 15 | 0 |
+
+**No agent evaluates another agent's ruleset.** The mapping is one-to-one and it is how a rule finds
+its runner: `Rule.ruleset` names the domain, the domain names the agent.
+
+The **Hunter has no ruleset by design.** Its whole job is what no rule covers, which is why it can
+have no rulebook — and why its output is `Observation` only, never a rule-backed assessment.
+
+## When each rule runs
+
+Every rule declares its own evaluation mode, in the ruleset JSON:
+
+```jsonc
+{ "rule_id": "KYA-ACC-01", "evaluation": "computable" }   // code · runs in check()
+{ "rule_id": "KYA-REG-03", "evaluation": "judged"     }   // model · runs in reason()
+```
+
+Both run **inside the same agent, in the same pass**:
+
+```
+KYA agent dispatched
+  ├─ 1. check()   evaluates all 40 computable KYA rules  →  facts
+  ├─ 2. reason()  evaluates the 2 judged KYA rules, over those facts
+  └─ 3. hunt      notices anything in the KYA domain no rule covers
+```
+
+So `KYA-ACC-01` (does the delegation chain reach a human?) is pure code and always produces a fact.
+`KYA-REG-03` (does observed activity match the declared classification?) needs a model and produces an
+assessment. **Both are KYA's, both run when KYA runs, neither runs anywhere else.**
+
+## What is automatic, and what is not
+
+| | Automatic | Decided |
+|---|---|---|
+| **Intake** — verify, resolve registries, compute statistics | ✅ always, on every submission, 0 model calls | — |
+| **Round 1 dispatch** | — | the orchestrator decides, but its prompt says a first pass is comprehensive, so in practice: everything with data |
+| **A rule inside a dispatched agent** | ✅ **always** — an agent never picks which of its rules to run | — |
+| **Round 2+ dispatch** | — | the orchestrator judges the officer's question against round 1's facts |
+| **Synthesis** (critic → synthesizer → control assurance → score) | ✅ always, after any round | — |
+| **Report** | — | only on explicit request |
+| **Portfolio sweep** | ✅ scheduled | — |
+| **Red Team probe** | — | officer-initiated only |
+
+**The line that matters: an agent never chooses which of its rules to run.** Dispatch is a decision;
+rule coverage inside a dispatched agent is not. If KYA runs, all 42 KYA rules are evaluated. That is
+what makes coverage claimable — *"we evaluated 42 identity rules"* is true or the agent didn't run.
+
+## Is anything run that isn't a rule?
+
+Yes, three things — and keeping them distinct from rules is what stops the rulebook becoming a
+dumping ground.
+
+**1 · Verification and resolution, at intake.** Ed25519 signature checks, chain-hash recomputation,
+registry lookups, statistical computation. These are *inputs to* rules, not rules. `KYA-IDN-01`
+("the signature verifies") is the rule; the actual elliptic-curve verification is machinery it calls.
+
+**2 · In-domain hunting, inside every agent.** After evaluating its rules, each agent looks for what
+its rules don't cover. Output is `Observation` — unscored, uncitable, surfaced to the officer, and
+**the raw material for new rules**. An observation recurring across cases is a candidate rule, which
+is how the rulebook grows past 110 without anyone guessing in advance.
+
+**3 · The synthesis stage.** The critic resolves evidence references (deterministic, no rules). The
+synthesizer relates assessments to each other (`Correlation`, not a rule outcome). Scoring is
+arithmetic over assessments. None of these evaluates a rule; all of them operate on rule output.
+
+## How many rules run on a case
+
+With every agent dispatched and all evidence blocks present: **~110 rules across nine rulesets**, of
+which about 15 are judged. On CASE-2026-007, where the firm submitted no `construction_context` or
+`consent_ceremony`, Provenance and Consent report their rules `absent` and the case carries a data-gap
+finding instead.
+
+---
+
 # Part II — The shape
 
 ```
@@ -100,23 +209,30 @@ judgment is an agent.**
 ┌──────────────────────────────────────────────────────────────────────┐
 │  INTAKE — code only, 0 model calls                                   │
 │    verify signatures and chains · resolve registries                 │
-│    compute shared evidence once (statistics, profiles, baselines)    │
-│    RULE ENGINE evaluates every computable rule, by domain            │
-│    ────────────────────────────► FACTS + MEASUREMENTS + data gaps    │
+│    compute shared statistics once (profiles, baselines, clusters)    │
+│    note which submission blocks are present                          │
+│    ──────────────────────────────────────► the EVIDENCE PACK         │
+│    No rules evaluated here. Rules belong to agents.                  │
 └──────────────────────────────────────────────────────────────────────┘
        │
        ▼
 ┌──────────────────────────────────────────────────────────────────────┐
-│  ORCHESTRATOR — 1 call · the only agent that sees everything         │
-│    reads all facts · plans the review · writes a brief per skill     │
-│    round 1: its prompt says a first pass is comprehensive            │
-│    round 2+: targeted at the officer's question                      │
+│  ORCHESTRATOR — 1 call                                               │
+│    round 1: dispatch every agent whose evidence block is present     │
+│             (nothing to decide — its prompt says a first pass is     │
+│              comprehensive; the floor is a backstop, not the driver) │
+│    round 2+: judge the officer's question against every fact and     │
+│              assessment round 1 produced, dispatch what is relevant  │
 └──────────────────────────────────────────────────────────────────────┘
        │  dispatches skills with briefs — agents never talk to each other
        ├──► mandate      ├──► counterparty   ├──► log
        ├──► kya          ├──► consent        ├──► drift
-       ├──► provenance   ├──► injection      └──► hunter
-       │                                          (9 in parallel, 1 call each)
+       ├──► provenance   ├──► injection      └──► hunter (cross-domain)
+       │
+       │   EACH AGENT, ONE PASS:   1 · check()  its rules → facts
+       │                           2 · reason   over its facts
+       │                           3 · hunt     in its own domain
+       │                           → assessments + observations
        ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │  SYNTHESIS — sequential, each consumes what precedes                 │
