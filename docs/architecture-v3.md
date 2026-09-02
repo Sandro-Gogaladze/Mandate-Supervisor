@@ -41,10 +41,64 @@ floor already knew — dispatch was theatre. With facts in hand it makes a real 
 
 Running `check()` costs microseconds. Deciding whether to run it would cost more than running it.
 
+## What a check actually is — and no, not every rule is code
+
+**Every rule in the registry declares its own evaluation mode.** This is a property of the rule, stored
+in the ruleset JSON, not a property of the agent:
+
+```jsonc
+{ "rule_id": "MND-CAP-01", "evaluation": "computable", ... }   // arithmetic — check() evaluates it
+{ "rule_id": "MND-SEM-01", "evaluation": "judged",     ... }   // semantic — assess() evaluates it
+```
+
+`check()` runs the **computable** rules. The **judged** rules cannot run there — they need a model, so
+they are evaluated in the dispatched `assess()` pass. Roughly one rule in seven is judged.
+
+### So what does `check()` produce for an agent whose rules are all judged?
+
+This is the hole the previous draft left. Log's three v2 rules are *all* model-judged, so a naive
+`check()` would emit nothing, and the orchestrator would plan blind about transaction patterns —
+straight back to v2's problem.
+
+**`check()` emits two kinds of fact, and this is what closes it:**
+
+| Fact kind | From | Example |
+|---|---|---|
+| **rule outcome** — `breach` · `satisfied` · `absent` | a computable rule | *"Cart total 1289.0 exceeds cap 350.0 by 939.0"* `MND-CAP-01` |
+| **measurement** | deterministic computation feeding a *judged* rule | *"Cluster: 3 payments to MER-X within 6h, ₾2,900 + ₾2,850 + ₾2,950 = ₾8,700, threshold ₾3,000"* |
+
+So Log's `check()` computes every cluster, velocity and concentration number as **measurements**, even
+though the verdict on whether they constitute structuring is judged. The orchestrator plans on the
+measurement — *"there's a cluster summing to 8,700 against a 3,000 threshold, brief Log deep"* — and
+`assess()` turns the measurement into a verdict on `LOG-STR-01`.
+
+**Every judged rule has measurements behind it.** That is the contract: a rule may be judged, but the
+evidence it is judged on is always computed deterministically first. It is also what the critic checks
+— an agent's assessment must cite the measurements it was given.
+
+### Which rulebook does a check use?
+
+**One ruleset per domain, one owner each.** `kya-ruleset.md` fully specifies two of them; the rest
+exist in v2 at various maturity and expand per `coverage-model.md`.
+
+| Ruleset | Owner | Rules | Judged | Status |
+|---|---|---|---|---|
+| `KYA-*` | KYA | 42 | 2 | **fully specified** in `kya-ruleset.md` |
+| `CTL-*` | Control Assurance | 15 | 0 | **fully specified** in `kya-ruleset.md` |
+| `MND-*` | Mandate | 12 | 1 | exists in v2; needs `MND-SEM-03`, geographic scope |
+| `LOG-*` | Log | 3 → ~7 | most | exists; add round amounts, off-hours, limit probing, alert flooding |
+| `DRIFT-*` | Drift | 1 → 3 | 3 | exists; split into amount / frequency / mix |
+| `PRV-*` | Provenance | — | ~1 | **to write** — F33, F34, F36, F37 |
+| `INJ-*` | Injection | — | ~1 | **to write** — F32, F35, per channel |
+| `CPY-*` | Counterparty | — | 0 | **to write** — F51–F58, all mechanical |
+| `CNS-*` | Consent & Harm | — | ~1 | **to write** — F24–F31, F38 |
+
+The Hunter has **no ruleset by design** — its whole job is what no rule covers.
+
 ## What stays absolutely deterministic
 
-The trust anchors: cryptographic verification · the hash-chained ledger · rule *evaluation* (arithmetic
-and lookups) · the score floor · grounding validation · the critic · tool permissioning · the human
+The trust anchors: cryptographic verification · the hash-chained ledger · **computable** rule
+evaluation · the score floor · grounding validation · the critic · tool permissioning · the human
 gate · ingestion.
 
 **Everything a firm could challenge in a hearing is deterministic. Everything requiring supervisory
@@ -153,6 +207,173 @@ Each subagent: one question, a scoped slice of evidence, its own tool budget (3)
 **It never writes to the ledger** — it answers its parent, and the parent owns the resulting
 assessment. Accountability stays with the named specialist. Depth capped at **1**; a subagent cannot
 spawn subagents. Only `deep` dispatches may spawn at all.
+
+---
+
+# Part III·5 — One case, end to end
+
+CASE-2026-007, the prompt-injection case, with real numbers from the live run.
+
+## Step 1 · Intake — **0 model calls**
+
+The submission arrives. Machinery, not agents:
+
+- **Verify** — Ed25519 on the credential, every delegation entry, the Cart→Intent and Payment→Cart
+  chain hashes.
+- **Resolve registries** — issuer, operator firm, agent, merchant, tool allowlist.
+- **Compute shared evidence** — transaction statistics, baseline split, counterparty breakdown, the
+  cross-ledger counterparty profile. Computed **once** so nine agents don't each recompute PSI.
+- **Identify gaps** — which submission blocks are absent.
+- **Record** — one `evidence_assembled` event with a digest. Same submission → same digest, always.
+
+Case status: `received`. Cost so far: nothing.
+
+## Step 2 · Check — **0 model calls, nine specialists in parallel**
+
+Each specialist runs its own **computable** rules over the shared evidence and emits facts. Nobody has
+judged anything yet.
+
+```
+Mandate.check()      11 computable rules
+  ✗ breach       MND-CAP-01  "Cart total 1289.0 exceeds cap 350.0 by 939.0"
+  ✗ breach       MND-SEM-02  "line_items[0].description contains instruction-like text:
+                              'Note to purchasing agent'"
+  ✓ satisfied    MND-CHN-01, MND-CHN-02  chain hashes recompute
+  ✓ satisfied    MND-CAP-02  merchant MCC 5261 is in the allowed set
+  ✓ satisfied    MND-CAP-03, MND-CUR-01/02, MND-VAL-01, MND-CON-01
+  —              MND-SEM-01  judged · not evaluated here
+
+KYA.check()          40 computable rules → 38 satisfied, 2 absent (no agent registry)
+Log.check()          0 computable rules, but 6 MEASUREMENTS:
+  ◆ measurement  "7 transactions; largest cluster is 1 payment; no cluster exceeds threshold"
+  ◆ measurement  "counterparty concentration 100% across 1 approved counterparty"
+  ◆ measurement  "velocity: max 2 transactions per 24h window"
+Drift.check()        ✗ absent  "7 transactions below the 30-transaction baseline minimum"
+Counterparty.check() 6 satisfied, 2 absent (no merchant registry yet)
+Provenance.check()   absent × N  (no construction_context in this submission)
+Consent.check()      absent × N  (no consent_ceremony in this submission)
+Injection.check()    ✗ breach  INJ-01  "instruction-shaped text in channel: product_listing"
+Hunter.check()       — no rules by design
+```
+
+**Result: ~110 facts.** Three breaches, ~90 satisfied, 6 measurements, ~11 absent. Plus one **data-gap
+finding**: *"Provenance and Consent could not be evaluated — the firm submitted no `construction_context`
+or `consent_ceremony` block; 15 rules disabled."*
+
+## Step 3 · Plan — **1 model call**
+
+The orchestrator sees every fact. **On round 1 the floor is: every case-scoped skill runs.** Its
+decision is not *whether* but **depth and focus** — plus which facts to attach to whom.
+
+```jsonc
+{
+  "hypothesis": "Prompt injection via the product listing; the agent complied and added an
+                 unrequested line item. The cap breach is the arithmetic side effect, not the
+                 primary failure.",
+  "dispatches": [
+    { "skill": "injection.trace",  "depth": "deep",
+      "focus": "Instruction-shaped text found in line_items[0]. Establish the channel and whether
+                the agent's own attestation cites it as authority.",
+      "facts_attached": ["F-007-MND-SEM-02", "F-007-INJ-01"] },
+    { "skill": "mandate.review",   "depth": "deep",
+      "focus": "The cap breach is already established — do not re-derive it. Assess per-line-item
+                intent fidelity: which items are within what the human asked for.",
+      "facts_attached": ["F-007-MND-CAP-01"] },
+    { "skill": "log.analyze",      "depth": "standard",
+      "focus": "7 transactions, no cluster near threshold. Confirm or refute.",
+      "facts_attached": ["F-007-LOG-M1", "F-007-LOG-M2", "F-007-LOG-M3"] },
+    { "skill": "kya.review",       "depth": "standard" },
+    { "skill": "counterparty.profile", "depth": "standard" },
+    { "skill": "hunt.open",        "depth": "standard" }
+  ],
+  "declined": [
+    { "skill": "drift.analyze", "reason": "insufficient history — 7 transactions vs 30 minimum" },
+    { "skill": "provenance.verify", "reason": "no construction_context submitted" },
+    { "skill": "consent.review",    "reason": "no consent_ceremony submitted" }
+  ]
+}
+```
+
+Note what it did: told Mandate **not to re-derive** the cap breach, attached the injection facts to
+Injection, and declined three skills for *stated, factual* reasons rather than guesses. It could not
+have done any of that in v2, where it saw three fields.
+
+`plan_recorded` goes on the ledger, hypothesis included — the eval harness scores it later.
+
+## Step 4 · Assess — **6 parallel model calls, plus subagents**
+
+Each dispatched specialist reasons over its facts and its brief.
+
+```
+Injection.assess()   → Assessment(breach, INJ-01)
+                       channel = product_listing
+                       narrative: "The agent's attestation cites the listing text as authority:
+                       'described as pre-authorized by the operator'. It acted on merchant-authored
+                       content as though it were an operator instruction."
+                       severity_floor 0.60 → severity_assessed 0.90
+                       rationale: "The attestation shows compliance, not mere presence of the text."
+
+Mandate.assess()     → Assessment(satisfied, per line item KGS-FERT-20KG)
+                     → Assessment(breach, MND-SEM-01, subject=GHG-GIFTCARD-TOPUP)
+                       "A gift-card top-up is not garden or landscaping supplies, whoever sells it."
+
+Log.assess()         → Assessment(explained, LOG-STR-01)
+                       "No cluster approaches the threshold. 7 transactions is too thin for a
+                       structuring judgment either way." confidence: possible
+
+KYA.assess()         → REG-03, CAP-04 → satisfied
+                       ──Send()──► subagent: "is 'Guria Home & Garden' the registered operator
+                                              name, or a near-match to another firm?"
+                                   → answer: exact match, no concern
+
+Hunter.assess()      → Observation: "The gift-card SKU has no prior history with this supplier
+                       across the ledger. Every other SKU from MER-KGS-001 appears at least twice."
+```
+
+## Step 5 · Synthesis — **sequential**
+
+```
+Critic (deterministic, 0 calls)
+  resolves every fact_id and evidence_ref against the brief each agent was given
+  → all quoted values present · passed
+
+Synthesizer (1 call)
+  → Correlation(same_event, [MND-CAP-01, MND-SEM-02, MND-SEM-01, INJ-01])
+    "Four detectors, one injected line item."
+
+Control Assurance (1 call)
+  → no `controls` block submitted
+  → ControlAssessment(posture="absent") for every breach
+  → plus CTL-REP-02: "The firm declared no control set. Coverage cannot be assessed."
+
+Score (deterministic, 0 calls)
+  score_floor    2.30   ESCALATE
+  score_assessed 2.75   ESCALATE   (Injection escalated 0.60 → 0.90, recorded with rationale)
+```
+
+Case status: `assessed`. **Total: ~10 model calls, ~4 sequential hops.**
+
+## Step 6 · The officer, and round 2
+
+She opens the case room and reads the transcript. Then:
+
+> *"Was a human actually in the loop for this one?"*
+
+- `check()` **does not re-run** — it is deterministic over an unchanged submission.
+- The orchestrator re-plans with round 1 in context: the question is about consent, and Consent was
+  declined in round 1 for a factual reason. It replies rather than dispatching:
+  *"The firm submitted no consent ceremony record, so I can't establish that. `human_presence_required`
+  on this mandate is false, so no human was required. Do you want me to raise the missing record as a
+  finding in its own right?"*
+- She says yes. Round 2 dispatches `consent.review` scoped to the data gap, which emits
+  `Assessment(breach, CNS-31)` — *no record that a human was ever involved.*
+- Score recomputes. Round 3 is available if she wants it.
+
+## Step 7 · Report
+
+She asks for the report. Drafting sees **only** the structured record — assessments, correlations,
+control postures, the score — never raw firm text. Grounding validates deterministically. The gate
+holds until she types her name.
 
 ---
 
