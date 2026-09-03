@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from .common import ChainLink, SignatureEnvelope
+from .submission import SubMerchant
 
 
 class Principal(BaseModel):
@@ -84,6 +85,13 @@ class Merchant(BaseModel):
     name: str
     mcc: str
     country: str
+    # Geographic scope carries sanctions, cross-border reporting and tax
+    # weight — an agent transacting outside its permitted region can breach
+    # obligations unrelated to the payment. Unblocks MND-CAP-04, which is
+    # written and has been blocked on this field's absence (F48).
+    region: str | None = None
+    # F52 — marketplace fronting. Optional because a direct merchant has none.
+    sub_merchant: SubMerchant | None = None
 
 
 class LineItem(BaseModel):

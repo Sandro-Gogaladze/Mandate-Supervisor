@@ -3,7 +3,7 @@
 Two eval-only annotation layers exist in data/cases/*.json that a real
 submission will never carry:
 
-- top-level `label` / `narrative` (docs/phases/01-synthetic-data.md §2.7)
+- top-level `label` / `planted_defects` / `narrative` (eval-only ground truth)
 - nested `_*_note` fields sprinkled at the exact defect location
   (e.g. `_chain_note`, `_kya_note`) for human QA readability
 
@@ -59,7 +59,7 @@ def load_raw_case_json(path: Path | str) -> dict:
 
 
 def load_labeled_case(path: Path | str) -> CaseBundle:
-    """Load a case with its eval-only `label`/`narrative` intact.
+    """Load a case with its eval-only ground truth intact.
 
     For the eval harness only (PLAN item 16) — never hand this to a pipeline
     node.
@@ -73,9 +73,16 @@ def load_labeled_case(path: Path | str) -> CaseBundle:
 
 
 def load_case_for_pipeline(path: Path | str) -> CaseBundle:
-    """Load a case as the pipeline will actually see it: no label, no narrative."""
+    """Load a case as the pipeline will actually see it: no ground truth.
+
+    Stripping matters more now that `planted_defects` names the exact failures
+    a case was built around — leaking it to the pipeline would hand the answer
+    key to the thing being evaluated.
+    """
     case = load_labeled_case(path)
-    return case.model_copy(update={"label": None, "narrative": None})
+    return case.model_copy(
+        update={"label": None, "planted_defects": [], "narrative": None}
+    )
 
 
 def load_manifest() -> list[dict]:

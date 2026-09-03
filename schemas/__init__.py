@@ -34,6 +34,22 @@ from .report import DraftReport, ReportSection
 from .review_gate import ReportStatus, ReviewerDecision, ReviewerDirective
 from .scoring import DispositionTier, RiskFactor, RiskScore, ScoringConfig, ScoringTier
 from .ruleset import Evaluation, Rule, RuleStatus, RuleType, Ruleset, typed_params
+from .submission import (
+    Alternative,
+    ConsentCeremony,
+    ConstructionContext,
+    ControlExecution,
+    ControlOverride,
+    Controls,
+    DeclaredControl,
+    ModelAttestation,
+    PolicyVersion,
+    RenderedLineItem,
+    RenderedValues,
+    SelectionContext,
+    SubMerchant,
+    ToolCall,
+)
 from .transaction import TransactionLogEntry
 
 __all__ = [
@@ -49,6 +65,10 @@ __all__ = [
     "SCORING_VERDICTS",
     "Verdict",
     "CaseBundle",
+    "ConsentCeremony",
+    "ConstructionContext",
+    "Controls",
+    "SubMerchant",
     "Firm",
     "ScenarioLabel",
     "ChainLink",
