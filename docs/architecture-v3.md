@@ -52,12 +52,12 @@ round 1 produced.
 Each rule declares its own evaluation mode in the ruleset JSON:
 
 ```jsonc
-{ "rule_id": "MND-CAP-01", "evaluation": "computable" }   // arithmetic → the rule engine
-{ "rule_id": "MND-SEM-01", "evaluation": "judged"     }   // semantic   → the agent
+{ "rule_id": "MND-CAP-01", "evaluation": "computable" }   // arithmetic → check()
+{ "rule_id": "MND-SEM-01", "evaluation": "judged"     }   // semantic   → reason()
 ```
 
-Roughly **one rule in seven is judged**. The rule engine evaluates the computable ones at intake. The
-judged ones can only be evaluated by the dispatched agent.
+Roughly **one rule in seven is judged**. Both halves run inside the owning agent, in one dispatched
+pass — `check()` first, then `reason()` over the facts it produced.
 
 ### What `check()` produces for a domain whose rules are all judged
 
@@ -227,7 +227,8 @@ finding instead.
        │  dispatches skills with briefs — agents never talk to each other
        ├──► mandate      ├──► counterparty   ├──► log
        ├──► kya          ├──► consent        ├──► drift
-       ├──► provenance   ├──► injection      └──► hunter (cross-domain)
+       ├──► provenance   ├──► injection      ├──► control assurance
+       │                                     └──► hunter (cross-domain only)
        │
        │   EACH AGENT, ONE PASS:   1 · check()  its rules → facts
        │                           2 · reason   over its facts
@@ -236,7 +237,8 @@ finding instead.
        ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │  SYNTHESIS — sequential, each consumes what precedes                 │
-│    critic (deterministic) → synthesizer → control assurance → score  │
+│    critic (deterministic) → synthesizer → score                      │
+│    the synthesizer joins fact → assessment → control posture         │
 └──────────────────────────────────────────────────────────────────────┘
        │
        ▼
@@ -256,7 +258,7 @@ different specialist is the officer's next round. Iteration replaces recursion, 
 
 The eleven from `coverage-model.md`, plus the Hunter. Grouped by **cadence**, not importance.
 
-## Dispatched per round — nine, in parallel
+## Dispatched per round — ten, in parallel
 
 | # | Specialist | Skill | Owns | Its judged rules |
 |---|---|---|---|---|
@@ -270,11 +272,28 @@ The eleven from `coverage-model.md`, plus the Hunter. Grouped by **cadence**, no
 | 8 | **Drift** | `drift.analyze` | F65 | per-dimension drift + onset attribution |
 | 9 | **Hunter** | `hunt.open` | *(no rules by design)* | **what is happening that no rule covers** |
 
-## Sequential — consumes the others
+| 10 | **Control Assurance** | `controls.assess` | F70–F73 · 15 `CTL-*` | *(none — mechanical)* |
 
-| # | Specialist | Skill | Why it can't be a peer |
-|---|---|---|---|
-| 10 | **Control Assurance** | `controls.assess` | `CTL-EFF-01` asks whether a control that *should* have triggered did — it needs to know what tripped |
+### Why Control Assurance is a peer after all
+
+An earlier draft made it sequential, reasoning that `CTL-EFF-01` ("did a control that *should* have
+triggered actually trigger?") needs to know what tripped. **That generalised from one rule to the whole
+agent, and it was wrong on both counts.**
+
+**14 of the 15 `CTL-*` rules have no dependency at all.** Coverage (`CTL-REP-02`) reads the *mandate's*
+risk surface — the caps and scopes the firm itself declared — not anyone's findings. Disposition rules
+read the control execution log against the transaction log. Override rate, audit-log completeness,
+tamper-evidence: all self-contained.
+
+**And `CTL-EFF-01` doesn't need Mandate either.** It holds the mandate (cap ₾350) and the transaction
+(₾1,289); "a cap breach occurred" is the same arithmetic, available from shared evidence. It asks a
+different question from Mandate's — *did your control fire*, not *was this authorised* — and it can
+answer it independently.
+
+So Control Assurance runs in parallel with the rest, and **`ControlPosture` links to a `fact_id`
+rather than an `assessment_id`.** Facts are the better anchor anyway: they are stable, whereas an
+assessment can be superseded in a later round. The synthesis stage joins fact → assessment → posture
+when it assembles the case.
 
 ## Off-cycle
 
@@ -286,15 +305,31 @@ The eleven from `coverage-model.md`, plus the Hunter. Grouped by **cadence**, no
 **Support:** Orchestrator · Investigator · Critic *(deterministic)* · Synthesizer · Drafting ·
 Grounding *(deterministic)*.
 
-## The Hunter
+## The Hunter — and what it is told *not* to look at
 
 The failure catalogue has 73 entries. A real attacker invents #74, and no rule will catch it, because
 rules only catch what someone already wrote down. The Hunter gets the **whole** evidence set and **all**
-facts with no domain boundary, and is asked one question: *what is happening here that no rule covers?*
+facts with no domain boundary.
 
-Observations only — never scored, never citable. **Its output feeds the registry:** an observation
-recurring across cases becomes a candidate rule. That is the loop from discovery to policy, and it is
-what gives the policy sandbox real inputs rather than guesses.
+**Every other agent already hunts inside its own domain**, so a Hunter repeating that is pure waste and
+noise. Its brief is therefore an *exclusion*, and its prompt carries two things no other agent gets:
+
+1. **The domain map** — what each of the ten specialists covers, stated as territory to stay out of.
+   *"Mandate has scope, caps, counterparty and currency. KYA has identity, accreditation and
+   delegation. Log has structuring, velocity and concentration. Do not report in these terms."*
+2. **The full rule inventory across all nine rulesets** — so it can check whether a rule already exists
+   for what it noticed, and say so if it does.
+
+What it is asked for instead:
+
+- **Cross-domain relationships** no single specialist could see — a counterparty appearing the day
+  after a credential reissue spans KYA and Counterparty, and neither owns it.
+- **Patterns with no rule anywhere**, in any ruleset, in any domain.
+- **Absences** — something a case of this shape should contain and doesn't.
+
+Observations only, never scored, never citable. **Its output feeds the registry:** an observation
+recurring across cases becomes a candidate rule. That is the loop from discovery to policy, and what
+gives the policy sandbox real inputs rather than guesses.
 
 ---
 
@@ -307,7 +342,7 @@ bypasses it. Its default prompt says so:
 
 > *"A first pass on a new case is comprehensive. Dispatch every skill whose data prerequisites are met.
 > Your judgment on this pass is about **depth and focus** — which skills need deep attention and what
-> each should concentrate on given what the rule engine already established — not about whether to
+> each should concentrate on given what the last round established — not about whether to
 > look. Decline a skill only when a fact shows its prerequisites are unmet, and say which fact."*
 
 The **deterministic floor remains as a backstop**, exactly as in v2: it can turn a proposed *no* into
@@ -454,7 +489,7 @@ Log.assess()         → Assessment(explained, LOG-STR-01, confidence=possible)
                         structuring judgment either way."
 
 KYA.assess()         → REG-03, CAP-04 satisfied. Uses get_registry_record to confirm the operator
-                       name is an exact match rather than a near-name — a tool call, not a subagent.
+                       name is an exact match rather than a near-name.
 
 Counterparty.assess()→ Assessment(satisfied) · single approved counterparty, consistent history
 
@@ -487,7 +522,7 @@ Status `assessed`. **~10 model calls, ~3 sequential hops.**
 
 > *"Was a human actually in the loop for this one?"*
 
-- The rule engine **does not re-run** — it is deterministic over an unchanged submission.
+- `check()` **does not re-run** — it is deterministic over an unchanged submission.
 - The orchestrator re-plans with round 1 in context. The question is about consent, and Consent was
   declined for a factual reason, so it **replies rather than dispatching**:
   *"No consent ceremony record was submitted, so I can't establish that. `human_presence_required` on
@@ -507,7 +542,7 @@ Drafting sees **only** the structured record — assessments, correlations, cont
 
 **A review is a conversation, not a run.** Round 1 is comprehensive; later rounds are targeted.
 
-- **The rule engine runs once**, at intake. Deterministic over an unchanged submission, so re-running
+- **Each agent's `check()` runs once**, in its round-1 dispatch. Deterministic over an unchanged submission, so re-running
   it would produce identical facts. *"Re-check that cluster at 12 hours"* is a **tool call** inside a
   round, not a re-run.
 - **The orchestrator carries state.** Every round sees prior rounds' assessments, the full message
@@ -647,6 +682,101 @@ New events: `facts_recorded` · `plan_recorded` · `assessment_recorded` · `ass
 
 ---
 
+# Part X·5 — Everything this needs before it works
+
+The architecture is the easy half. Below is every input it depends on, where each comes from, and what
+is blocked without it. Sourcing and feasibility are argued in `coverage-model.md` Part 3; this is the
+checklist.
+
+## A · Submitted by the firm — four new blocks
+
+Six of twelve specialists cannot function on what firms send today. **All of it exists in a system a
+bank already runs**; nothing here is a research problem.
+
+| Block | Unblocks | Where the firm gets it | Effort |
+|---|---|---|---|
+| **`consent_ceremony`** — occurred, timestamp, principal, method, **`rendered_values`**, scope, supersedes | F24–F27, F29–F31 · the `CNS-*` ruleset · Consent agent | Most of it is **PSD2 Strong Customer Authentication logs**, which every EU-aligned bank already keeps. `rendered_values` is the consent UI serialising what it displayed. | ~20 lines at the confirm handler |
+| **`construction_context`** — model declared/observed, policy hash, tool calls with `server_id` and `tool_schema_hash`, bounded `selection_context` | F32, F33, F35–F38 · `PRV-*` and `INJ-*` · Provenance + Injection | Model version is in the LLM provider's API response. Tool calls are in **agent observability that already exists** — LangSmith, Langfuse, OTel traces. | days |
+| **`controls`** — declared control set + execution log with overrides | F70–F73 · the `CTL-*` ruleset · Control Assurance | The **fraud/transaction-monitoring engine's own decision log**. Overrides are already logged for audit. | mapping only |
+| **merchant fields** — `region`, `sub_merchant` | F48, F52 · part of `CPY-*` | Acquirer data. **Sub-merchant disclosure is already a Visa/Mastercard PayFac requirement** — it just isn't surfaced to the paying side. | plumbing |
+
+**Deliberately not requested:** screenshots · provider-signed model attestation · full catalog
+archives · A2A transcripts. F28 and F34 are parked as a result, and the docs say so.
+
+## B · Held by the regulator — four registries
+
+| Registry | Unblocks | Where it comes from |
+|---|---|---|
+| `data/registry/firms.json` | 4 `KYA-OPF-*` + `KYA-ACC-07` | **The existing NBG licensing register.** Pure re-use — licence status, standing, ownership dates, compliance contact |
+| `data/registry/agents.json` | 5 `KYA-REG-*` + `KYA-ISS-05` + 3 `KYA-TEC-*` | **Does not exist anywhere — this is the policy proposal.** An agent registration regime: declare the agent, operator, classification and pinned model before it may transact |
+| `data/registry/merchants.json` | `CPY-*` · F51, F53, F54 | Company register + acquirer reporting, incl. the beneficial-ownership record the paying firm can't supply |
+| `data/registry/tools.json` | `KYA-TEC-06` · F33 | Firms declare their tool/MCP stack at agent registration — one row per tool |
+| *(exists)* `data/registry/issuers.json` | 5 `KYA-ISS-*` | Already built |
+
+## C · Derived from the ledger — no new data at all
+
+**Twelve failures need nothing from anyone.** All computable from events already stored:
+
+- **Credential history** per `agent_id` — from prior `case_submitted` events. Unblocks `KYA-IDN-04/05`,
+  `KYA-CAP-05`, `KYA-LIF-04` (creep, key reuse, id collision, rotation overlap).
+- **Mandate consumption** — unblocks F50, mandate replay.
+- **Cross-case counterparty profile** — unblocks F57, the same payee across unrelated firms.
+- **Cross-firm model versions, timing, cart shapes** — unblocks the entire Systemic tier, F67–F69.
+
+## D · The rulebooks — nine, four still to write
+
+| Ruleset | State | Work |
+|---|---|---|
+| `KYA-*` | **42 rules shipped**, 18 active, 24 draft | promote drafts as B lands |
+| `CTL-*` | specified in `kya-ruleset.md` | write JSON + 15 checkers |
+| `MND-*` | 12 exist | add `MND-SEM-03`, promote geographic scope (needs `Merchant.region`) |
+| `LOG-*` | 3 exist | add round amounts, off-hours, limit probing, alert flooding |
+| `DRIFT-*` | 1 exists | split into amount / frequency / mix — also fixes the case-006 calibration structurally |
+| `PRV-*` `INJ-*` `CPY-*` `CNS-*` | none | write from `coverage-model.md`'s failure ids |
+
+## E · Prompts — one per agent, in `registry/prompts/`
+
+Ten exist. **Six new:** `specialist-provenance`, `specialist-injection`, `specialist-counterparty`,
+`specialist-consent`, `specialist-controls`, `hunter`. Plus a rewritten `orch-session` carrying the
+round-1-is-comprehensive instruction, and a `hunter` prompt carrying the domain-exclusion map and the
+full rule inventory.
+
+## F · Scoring config — `registry/scoring.json`
+
+- **Confidence factors** — certain / probable / possible.
+- **`same_event` de-duplication factor** — how much a second detector on the *same* event adds.
+- **`corroborating` compounding factor** — how much a second detector on a *different* event adds.
+- **Per-rule-class floors** — a cryptographic chain break is categorically escalate.
+- **The fourth disposition, `monitor`**, plus a `case_watched` ledger state. Without it, drift
+  findings, `possible`-confidence assessments and portfolio concentrations are all forced into
+  `clear` or `review`.
+
+## G · Corpus — two new cases, two edits
+
+| Case | Change | Demonstrates |
+|---|---|---|
+| **new case-008** | `consent_ceremony.rendered_values.amount = 50.00` against a signed Cart of ₾1,200 | **F29** — every existing check passes and one comparison exposes it. The best single demo beat available |
+| **case-002** | add `controls` with the ₾500 cap declared, `outcome: triggered`, plus an `override` | **F72** — turns a cap breach into a conduct question |
+| **case-007** | add `construction_context` with the poisoned listing, plus a variant carrying it in the **tool description** | **F32** with a `channel` field — one attack, two routes, one currently invisible |
+| **+2 firms** | same `observed_model_version` across three firms | **F67** monoculture — needs no new fields, only more cases |
+
+## H · The eleven dials
+
+Named in `kya-ruleset.md` Part 5, all registry data: delegation depth · issuer-tier-by-risk-class ·
+re-accreditation age · credential validity window · capability vocabulary · least-privilege tolerance ·
+capability-creep tolerance · model blocklist · validation-required-above · **override rate** · and
+**the severity weights**, which is the dial that actually determines outcomes and the one most likely
+to be wrong on first pass.
+
+## What is genuinely blocking
+
+**Nothing, for stages 0–3.** Facts, assessments, agent-owned checks, shared evidence and the eval
+harness all run on data that exists today. **B (registries) gates the KYA promotions; A (submission
+blocks) gates the four new specialists.** Both are synthetic for the demo — hours of JSON, not weeks —
+and the feasibility argument for the real version is in `coverage-model.md`.
+
+---
+
 # Part XI — The plan
 
 **0 · Fix-first** *(0.5d)* — synthesizer list guard · correlation dedup · `run_failed` + AG-UI
@@ -656,8 +786,8 @@ New events: `facts_recorded` · `plan_recorded` · `assessment_recorded` · `ass
 `EvidenceRef`, supersession. Scoring computes both scores. `Finding` becomes a compatibility view.
 *Acceptance: existing tests pass; an agent lowering severity fails validation.*
 
-**2 · The rule engine + model-free intake** *(2d)* — extract checkers into `checks/` per domain, add
-`evaluation: computable|judged` to every rule, emit facts and measurements, assemble shared evidence
+**2 · Agent checks emit facts + shared evidence** *(2d)* — each specialist's `check()` returns `Fact`s
+instead of `Finding`s, emitting measurements for its judged rules; shared evidence assembled
 once, data-gap findings. *Acceptance: a case intakes and produces its full fact set with
 `ANTHROPIC_API_KEY` unset.*
 
