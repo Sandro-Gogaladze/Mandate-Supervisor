@@ -1,5 +1,19 @@
 import pytest
 
+# PARKED — migration-plan.md Phase 2/3.
+#
+# These cover the KYA agent, which is real and still wanted. They are parked because
+# their FIXTURE is gone: every one built its case from data/cases/*.json, and
+# the corpus is now two dossiers with a different shape.
+#
+# Parked rather than deleted, and loudly rather than quietly: the logic under
+# test did not stop mattering, and a silently shrinking suite is how a
+# migration loses coverage nobody notices. Each comes back when the pipeline
+# consumes a Dossier and a dossier fixture exists to replace the case one.
+pytestmark = pytest.mark.skip(reason="fixture removed with the case corpus — migration Phase 2/3")
+
+import pytest
+
 from agents.kya import KYAAgent, KYAReview
 from agents.kya_checks import run_policy_checks
 from agents.kya_reasoning import ModelDidNotCallTool, Observation, narrate_findings, reason_about_case

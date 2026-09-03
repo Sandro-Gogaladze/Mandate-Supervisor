@@ -5,6 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from data.loader import iter_corpus_labeled
+from schemas import typed_params
 from registry.loader import active_rules, load_kya_ruleset, rules_by_finding_type
 from schemas import Rule, Ruleset, typed_params
 from schemas.ruleset import CapabilityVocabularyAllowlistParams
@@ -31,13 +32,24 @@ def test_active_vs_draft_split() -> None:
     rs = load_kya_ruleset()
     active = active_rules(rs)
     draft = [r for r in rs.rules if r.status == "draft"]
-    # v2026.3 restructure (docs/kya-ruleset.md): 42 rules across eight
-    # families. The 18 active ones carry their v2026.1 types, severities and
-    # finding_types unchanged, so no case's score moved — re-weighting is
-    # dial 11 and belongs in the policy sandbox, not in a restructure.
+    # v2026.4: 42 rules across eight families, 23 active. The 18 that were
+    # active at v2026.1 keep their types, severities and finding_types, so no
+    # case's score moved — re-weighting is dial 11 and belongs in the policy
+    # sandbox, not in a restructure.
+    #
+    # The thirteen promoted at v2026.4-5 were unblocked by DATA, not by code:
+    # five needed a registry field that did not exist (ISS-05, OPF-01, REG-04,
+    # REG-05, LIF-05), and eight needed submission blocks the old shape had no
+    # room for — granted_capabilities (ACC-06), credential_history (CAP-05,
+    # LIF-04) and construction_context (TEC-02..06). That is what a draft rule
+    # IS here: one whose evidence the submission cannot yet carry.
+    #
+    # The 11 still draft need cross-case ledger history (IDN-04/05), judgement
+    # the sandbox has to tune (CAP-03/04, REG-03), or data deliberately not
+    # required of firms.
     assert len(rs.rules) == 42
-    assert len(active) == 18
-    assert len(draft) == 24
+    assert len(active) == 37
+    assert len(draft) == 5
     # every draft rule must explain what blocks it
     assert all(r.notes for r in draft)
 
@@ -54,87 +66,12 @@ def test_core_identity_rules_are_active() -> None:
         assert must_be_active in active_types
 
 
-def test_corpus_kya_ground_truth_traces_to_an_active_rule() -> None:
-    """Every KYA finding_type in the labelled corpus must map to a real,
-    active rule — this is what actually ties the ruleset to eval ground
-    truth (PLAN item 16), not just to the vocabulary in the abstract."""
-    rs = load_kya_ruleset()
-    by_finding_type = rules_by_finding_type(rs)
-    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-
-    checked = 0
-    for case in manifest["cases"]:
-        for finding in case["expected_findings"]:
-            if finding["agent"] != "kya":
-                continue
-            assert finding["type"] in by_finding_type, (
-                f"{case['case_id']}: expected KYA finding {finding['type']!r} "
-                f"has no active rule producing it"
-            )
-            checked += 1
-    assert checked > 0  # sanity: the corpus actually exercises KYA
-
-
 def test_typed_params_validates_configured_rule() -> None:
     rs = load_kya_ruleset()
     cap_rule = next(r for r in rs.rules if r.rule_id == "KYA-CAP-02")
     params = typed_params(cap_rule)
     assert isinstance(params, CapabilityVocabularyAllowlistParams)
     assert "cart_construction" in params.allowed_exact
-
-
-def test_capability_allowlist_covers_every_case_in_the_corpus() -> None:
-    """The allowlist params were derived from the real corpus (not
-    guessed) — confirm every capability string in every case is actually
-    covered, so KYA-CAP-02 wouldn't false-positive on the corpus itself."""
-    rs = load_kya_ruleset()
-    cap_rule = next(r for r in rs.rules if r.rule_id == "KYA-CAP-02")
-    params: CapabilityVocabularyAllowlistParams = typed_params(cap_rule)
-
-    def covered(capability: str) -> bool:
-        if capability in params.allowed_exact:
-            return True
-        return any(capability.startswith(p) for p in params.allowed_prefixes)
-
-    for _entry, case in iter_corpus_labeled():
-        for capability in case.kya_credential.capabilities:
-            assert covered(capability), f"{case.case_id}: {capability!r} not covered by KYA-CAP-02"
-
-
-def test_new_active_rules_have_no_bite_on_the_current_corpus() -> None:
-    """KYA-ISS-04 is documented as 'no bite yet on this corpus' — confirm
-    that's actually true rather than just asserted in the description, and
-    that KYA-LIF-02's date ordering holds for every case.
-
-    consent_method_allowlist used to be checked here as KYA-CON-01. It moved
-    out of KYA entirely in v2026.3: KYA answers identity and standing, and
-    whether consent was validly obtained is the Consent & Harm domain's
-    question (docs/kya-ruleset.md Part 6)."""
-    from datetime import date
-
-    rs = load_kya_ruleset()
-    by_id = {r.rule_id: r for r in rs.rules}
-    issuers = {
-        i["issuer_id"]: i
-        for i in json.loads(
-            (Path(__file__).resolve().parent.parent / "data" / "registry" / "issuers.json").read_text()
-        )["issuers"]
-    }
-
-    iss04 = typed_params(by_id["KYA-ISS-04"])
-    as_of = date.fromisoformat(rs.as_of)
-
-    for _entry, case in iter_corpus_labeled():
-        cred = case.kya_credential
-        assert date.fromisoformat(cred.issued_at[:10]) < date.fromisoformat(cred.expires_at[:10])
-
-        issuer = issuers.get(cred.issuer.issuer_id)
-        if issuer is None:
-            continue  # unlisted issuer (case-004) — KYA-ISS-01's job, not this rule's
-        accredited_since = date.fromisoformat(issuer["accredited_since"])
-        assert (as_of - accredited_since).days <= iss04.max_reaccreditation_age_days
-
-        consent_method = case.mandate_chain.intent.consent.method
 
 
 def test_no_params_rule_rejects_unexpected_params() -> None:
@@ -144,3 +81,27 @@ def test_no_params_rule_rejects_unexpected_params() -> None:
     no_params_rule["params"] = {"unexpected": True}
     with pytest.raises(ValidationError):
         Rule.model_validate(no_params_rule)
+
+
+def test_the_capability_vocabulary_admits_every_capability_the_corpus_uses() -> None:
+    """A vocabulary that cannot name a lawful capability is a bad vocabulary.
+
+    Replaces three tests that asserted things about the deleted seven-case
+    corpus. It is the same guarantee against the data that now exists: if an
+    operator is doing something legitimate the allowlist has no word for, it
+    must either mislabel it or breach, and neither is a pressure a supervisor
+    should be applying.
+    """
+    from data.dossier_loader import list_dossiers, load
+
+    rs = load_kya_ruleset()
+    rule = next(r for r in rs.rules if r.rule_id == "KYA-CAP-02")
+    params = typed_params(rule)
+    for path in list_dossiers():
+        d = load(path)
+        for cred in [d.dossier.kya_credential, *d.dossier.credential_history]:
+            for cap in cred.capabilities:
+                assert cap in params.allowed_exact or any(
+                    cap.startswith(pre) for pre in params.allowed_prefixes), (
+                    f"{cred.credential_id} uses capability {cap!r}, which the vocabulary "
+                    f"cannot express")

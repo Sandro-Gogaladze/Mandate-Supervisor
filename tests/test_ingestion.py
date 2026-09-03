@@ -1,3 +1,17 @@
+import pytest
+
+# PARKED — migration-plan.md Phase 2/3.
+#
+# These cover ingestion, which is real and still wanted. They are parked because
+# their FIXTURE is gone: every one built its case from data/cases/*.json, and
+# the corpus is now two dossiers with a different shape.
+#
+# Parked rather than deleted, and loudly rather than quietly: the logic under
+# test did not stop mattering, and a silently shrinking suite is how a
+# migration loses coverage nobody notices. Each comes back when the pipeline
+# consumes a Dossier and a dossier fixture exists to replace the case one.
+pytestmark = pytest.mark.skip(reason="fixture removed with the case corpus — migration Phase 2/3")
+
 from copy import deepcopy
 
 from data.loader import CASES_DIR, DATA_DIR, load_raw_case_json
