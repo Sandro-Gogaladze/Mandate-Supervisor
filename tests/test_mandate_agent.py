@@ -22,6 +22,12 @@ FULL_FLOOR_EXPECTED = {
     "CASE-2026-005": [],
     "CASE-2026-006": [],
     "CASE-2026-007": ["per_transaction_cap_exceeded", "injection_heuristic_flag"],
+    "CASE-2026-101": [],
+    "CASE-2026-102": [],
+    # 102's consent divergence and 103's control override are both invisible
+    # here by design — no Consent or Control Assurance specialist exists yet.
+    # data/corpus_manifest.json records the gap in `awaiting_specialist`.
+    "CASE-2026-103": ["per_transaction_cap_exceeded"],
 }
 
 

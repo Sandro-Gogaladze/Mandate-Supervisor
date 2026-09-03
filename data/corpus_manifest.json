@@ -1,7 +1,7 @@
 {
-  "corpus_version": "2026.1",
-  "as_of": "2026-08-24",
-  "description": "Labelled synthetic corpus for Mandate Supervisor. One case per scenario label, ground truth for the eval harness (see PLAN.md item 16). The loader must strip 'label' and 'narrative' from a case before it reaches the pipeline — real submissions won't carry them.",
+  "corpus_version": "2026.2",
+  "as_of": "2026-09-03",
+  "description": "Labelled synthetic corpus for Mandate Supervisor. Cases 001-007 are the original one-per-scenario-label set. Cases 101+ are the coverage-model corpus (docs/synthetic-data-spec.md): international e-commerce, USD, hand-authored one at a time, each carrying `planted_defects` naming the docs/coverage-model.md failures it is built to make detectable. The loader must strip 'label', 'planted_defects' and 'narrative' before a case reaches the pipeline — real submissions won't carry them.",
   "schema_ref": "docs/phases/01-synthetic-data.md",
   "cases": [
     {
@@ -10,7 +10,9 @@
       "label": "compliant",
       "firm": "Mtkvari Retail Group",
       "expected_findings": [],
-      "summary": "Clean chain, valid KYA, 24 in-scope transactions. Also the false-positive control."
+      "summary": "Clean chain, valid KYA, 24 in-scope transactions. Also the false-positive control.",
+      "planted_defects": [],
+      "awaiting_specialist": {}
     },
     {
       "case_id": "CASE-2026-002",
@@ -18,11 +20,22 @@
       "label": "mandate_breaching",
       "firm": "Kolkheti Facilities Services",
       "expected_findings": [
-        { "agent": "mandate", "type": "category_out_of_scope" },
-        { "agent": "mandate", "type": "counterparty_not_approved" },
-        { "agent": "mandate", "type": "per_transaction_cap_exceeded" }
+        {
+          "agent": "mandate",
+          "type": "category_out_of_scope"
+        },
+        {
+          "agent": "mandate",
+          "type": "counterparty_not_approved"
+        },
+        {
+          "agent": "mandate",
+          "type": "per_transaction_cap_exceeded"
+        }
       ],
-      "summary": "₾2,150 laptop purchase from an unapproved electronics merchant; chain intact, purely a scope breach."
+      "summary": "₾2,150 laptop purchase from an unapproved electronics merchant; chain intact, purely a scope breach.",
+      "planted_defects": [],
+      "awaiting_specialist": {}
     },
     {
       "case_id": "CASE-2026-003",
@@ -30,10 +43,18 @@
       "label": "broken_chain",
       "firm": "Rioni Hospitality Group",
       "expected_findings": [
-        { "agent": "mandate", "type": "chain_hash_mismatch" },
-        { "agent": "mandate", "type": "payment_amount_inconsistent_with_cart" }
+        {
+          "agent": "mandate",
+          "type": "chain_hash_mismatch"
+        },
+        {
+          "agent": "mandate",
+          "type": "payment_amount_inconsistent_with_cart"
+        }
       ],
-      "summary": "Payment authorizes ₾1,850 against a Cart whose actual total is ₾720; declared chain hash doesn't recompute."
+      "summary": "Payment authorizes ₾1,850 against a Cart whose actual total is ₾720; declared chain hash doesn't recompute.",
+      "planted_defects": [],
+      "awaiting_specialist": {}
     },
     {
       "case_id": "CASE-2026-004",
@@ -41,11 +62,22 @@
       "label": "synthetic_identity",
       "firm": "Svaneti Import Co",
       "expected_findings": [
-        { "agent": "kya", "type": "issuer_not_in_trust_registry" },
-        { "agent": "kya", "type": "delegation_chain_no_human_terminus" },
-        { "agent": "kya", "type": "delegation_terminus_principal_mismatch" }
+        {
+          "agent": "kya",
+          "type": "issuer_not_in_trust_registry"
+        },
+        {
+          "agent": "kya",
+          "type": "delegation_chain_no_human_terminus"
+        },
+        {
+          "agent": "kya",
+          "type": "delegation_terminus_principal_mismatch"
+        }
       ],
-      "summary": "Credential issued by an unlisted issuer; delegation chain ends at another agent, never a human. The third finding (delegation_terminus_principal_mismatch, KYA-DEL-05) was added once the full KYA ruleset existed (docs/phases/05-kya-agent.md) — it wasn't hand-authored originally, but it's a genuine consequence of the terminus not being human at all: it can't match the Intent's human principal either. Not a false positive; the original two-finding ground truth just predated the rule that catches it."
+      "summary": "Credential issued by an unlisted issuer; delegation chain ends at another agent, never a human. The third finding (delegation_terminus_principal_mismatch, KYA-DEL-05) was added once the full KYA ruleset existed (docs/phases/05-kya-agent.md) — it wasn't hand-authored originally, but it's a genuine consequence of the terminus not being human at all: it can't match the Intent's human principal either. Not a false positive; the original two-finding ground truth just predated the rule that catches it.",
+      "planted_defects": [],
+      "awaiting_specialist": {}
     },
     {
       "case_id": "CASE-2026-005",
@@ -53,9 +85,14 @@
       "label": "structuring",
       "firm": "Sameba Trading LLC",
       "expected_findings": [
-        { "agent": "log", "type": "transaction_structuring_detected" }
+        {
+          "agent": "log",
+          "type": "transaction_structuring_detected"
+        }
       ],
-      "summary": "One ~₾8,700 settlement split into three same-day, same-counterparty payments just under the ₾3,000 synthetic reporting threshold."
+      "summary": "One ~₾8,700 settlement split into three same-day, same-counterparty payments just under the ₾3,000 synthetic reporting threshold.",
+      "planted_defects": [],
+      "awaiting_specialist": {}
     },
     {
       "case_id": "CASE-2026-006",
@@ -63,9 +100,14 @@
       "label": "drift",
       "firm": "Adjara Coastal Logistics",
       "expected_findings": [
-        { "agent": "drift", "type": "behavioral_drift_detected" }
+        {
+          "agent": "drift",
+          "type": "behavioral_drift_detected"
+        }
       ],
-      "summary": "49 transactions over ~11 weeks: avg amount ₾182→₾370, frequency 3/wk→6/wk, new counterparty grows to dominate. No single rule breached."
+      "summary": "49 transactions over ~11 weeks: avg amount ₾182→₾370, frequency 3/wk→6/wk, new counterparty grows to dominate. No single rule breached.",
+      "planted_defects": [],
+      "awaiting_specialist": {}
     },
     {
       "case_id": "CASE-2026-007",
@@ -73,11 +115,72 @@
       "label": "prompt_injection",
       "firm": "Guria Home & Garden",
       "expected_findings": [
-        { "agent": "mandate", "type": "per_transaction_cap_exceeded" },
-        { "agent": "mandate", "type": "cart_reasoning_semantic_mismatch" },
-        { "agent": "mandate", "type": "injection_heuristic_flag", "field": "mandate_chain.cart.line_items[0].description" }
+        {
+          "agent": "mandate",
+          "type": "per_transaction_cap_exceeded"
+        },
+        {
+          "agent": "mandate",
+          "type": "cart_reasoning_semantic_mismatch"
+        },
+        {
+          "agent": "mandate",
+          "type": "injection_heuristic_flag",
+          "field": "mandate_chain.cart.line_items[0].description"
+        }
       ],
-      "summary": "Merchant product description carries an embedded instruction; agent's cart reasoning shows partial compliance, adding an unrequested ₾1,200 line item. per_transaction_cap_exceeded is a deterministic side effect (the smuggled item pushes cart_total from ~₾89 to ₾1,289, well over the ₾350 cap) already caught by MND-CAP-01 (docs/phases/06-mandate-agent.md). The gift-card top-up is legitimately within the cart's merchant MCC scope (5261, the approved garden-supply category) — this was originally labelled category_out_of_scope, which described a merchant-MCC mismatch that doesn't apply here; the real defect is a line-item-level semantic mismatch (a gift-card top-up isn't garden/landscaping supplies), only catchable by the prompt-playback semantic subcheck (MND-SEM-01, not built yet — PLAN item 6 part 2), corrected to that rule's actual finding_type."
+      "summary": "Merchant product description carries an embedded instruction; agent's cart reasoning shows partial compliance, adding an unrequested ₾1,200 line item. per_transaction_cap_exceeded is a deterministic side effect (the smuggled item pushes cart_total from ~₾89 to ₾1,289, well over the ₾350 cap) already caught by MND-CAP-01 (docs/phases/06-mandate-agent.md). The gift-card top-up is legitimately within the cart's merchant MCC scope (5261, the approved garden-supply category) — this was originally labelled category_out_of_scope, which described a merchant-MCC mismatch that doesn't apply here; the real defect is a line-item-level semantic mismatch (a gift-card top-up isn't garden/landscaping supplies), only catchable by the prompt-playback semantic subcheck (MND-SEM-01, not built yet — PLAN item 6 part 2), corrected to that rule's actual finding_type.",
+      "planted_defects": [],
+      "awaiting_specialist": {}
+    },
+    {
+      "case_id": "CASE-2026-101",
+      "file": "cases/case-101-clean-restock.json",
+      "label": "compliant",
+      "firm": "Halden Supply Co",
+      "planted_defects": [],
+      "expected_findings": [],
+      "summary": "Rotterdam B2B packaging supplier, 46 transactions Jun-Aug 2026. All three submission blocks present and internally consistent. The false-positive control for the coverage-model corpus: anything reported here is a false positive.",
+      "awaiting_specialist": {}
+    },
+    {
+      "case_id": "CASE-2026-102",
+      "file": "cases/case-102-consent-divergence.json",
+      "label": "consent_divergence",
+      "firm": "Brightline Retail Group",
+      "planted_defects": [
+        "F29"
+      ],
+      "expected_findings": [],
+      "summary": "Austin DTC home goods, human_presence_required. The confirmation screen showed $52.40; the signed cart is $1,292.20. Every cryptographic and scope check passes — the divergence is only visible by comparing consent_ceremony.rendered_values against the Cart.",
+      "awaiting_specialist": {
+        "F29": "consent"
+      }
+    },
+    {
+      "case_id": "CASE-2026-103",
+      "file": "cases/case-103-control-bypassed.json",
+      "label": "control_bypassed",
+      "firm": "Marisol Trading BV",
+      "planted_defects": [
+        "F42",
+        "F72"
+      ],
+      "expected_findings": [
+        {
+          "agent": "mandate",
+          "type": "per_transaction_cap_exceeded"
+        }
+      ],
+      "summary": "Amsterdam marketplace seller, $500 per-order cap, one $2,182.00 order. Two axes: the cap breach, and the firm's own blocking control triggering correctly and being overridden 31s later by a named analyst. Sub-merchant is properly disclosed, so fronting is not in play.",
+      "awaiting_specialist": {
+        "F72": "control-assurance"
+      }
     }
-  ]
+  ],
+  "ground_truth_fields": {
+    "planted_defects": "Failures from docs/coverage-model.md this case is built to make detectable. The permanent ground truth — it does not change as the pipeline grows.",
+    "expected_findings": "What the CURRENT pipeline must produce, exactly. Grows as specialists land.",
+    "awaiting_specialist": "Planted defects no implemented agent can see yet, each naming the agent that will own it. The coverage gap, executable: when that agent lands, move the failure out of here and add its finding to expected_findings."
+  }
 }

@@ -19,11 +19,17 @@ def test_case_file_validates_against_schema(path: Path) -> None:
 
 
 def test_corpus_has_all_seven_scenario_labels() -> None:
+    """The original seven scenarios must all still be represented.
+
+    A subset check, not equality: the corpus grows, and `label` is now an open
+    slug rather than a closed enum (schemas/case.py). Asserting equality would
+    mean every new scenario breaks a test about the *old* ones.
+    """
     labels = set()
     for path in CASE_FILES:
         raw = json.loads(path.read_text(encoding="utf-8"))
         labels.add(raw["label"])
-    assert labels == {
+    assert labels >= {
         "compliant",
         "mandate_breaching",
         "broken_chain",
