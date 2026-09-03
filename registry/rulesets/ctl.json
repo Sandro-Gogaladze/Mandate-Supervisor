@@ -1,0 +1,216 @@
+{
+  "ruleset_id": "CTL-RULESET",
+  "domain": "controls",
+  "version": "2026.1",
+  "as_of": "2026-09-03",
+  "description": "The controls ruleset — SAFR's contribution, mapped onto its four components: controls repository (REP), disposition engine (DIS), control effectiveness (EFF) and audit log (LOG). Specified in docs/kya-ruleset.md Part 3. This is what makes the product a SUPERVISION tool rather than a detection tool: the other rulesets ask whether the agent misbehaved, these ask whether the firm's own controls worked — which is the question a supervisor is actually empowered to act on. All 15 are deterministic; none needs a model. CTL-DIS-04 and CTL-EFF-04 partition one shape between them — a blocking control that triggered and did not stop the payment — on whether an override was recorded. Splitting on that keeps them from double-reporting the same transaction, and it is the split that matters supervisorily: an ignored control is a systems failure, an overridden one is a conduct question.",
+  "rules": [
+    {
+      "rule_id": "CTL-REP-01",
+      "type": "control_set_declared",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.7,
+      "finding_type": "control_set_absent",
+      "description": "A declared control set exists for this agent. Without one, every claim the operator makes about how it manages risk is governance by assertion.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-REP-02",
+      "type": "every_mandate_risk_has_a_control",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.75,
+      "finding_type": "uncontrolled_mandate_risk",
+      "description": "Every risk the mandate creates has at least one declared control addressing it. F70: a cap authorised with nothing enforcing it is not a cap.",
+      "notes": null,
+      "params": {
+        "required_risks": [
+          "stated_budget_cap",
+          "category_match",
+          "shopper_confirmation",
+          "mandate_single_use"
+        ]
+      }
+    },
+    {
+      "rule_id": "CTL-REP-03",
+      "type": "controls_versioned",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.45,
+      "finding_type": "control_version_unpinnable",
+      "description": "Controls are versioned and the version in force at transaction time is identifiable. A control that cannot be pinned to what actually ran cannot be evidenced.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-REP-04",
+      "type": "control_enforcement_declared",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.35,
+      "finding_type": "control_enforcement_undeclared",
+      "description": "Each control declares its enforcement mode. The failure this prevents is a control everyone believed was blocking that was only ever advisory.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-DIS-01",
+      "type": "every_action_evaluated",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.85,
+      "finding_type": "action_not_evaluated",
+      "description": "Every agent action was evaluated by the control set before execution. Actions that bypass the checkpoint entirely are invisible to every other rule in this family.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-DIS-02",
+      "type": "disposition_recorded",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.55,
+      "finding_type": "disposition_missing",
+      "description": "A disposition is recorded for each evaluated action. An engine that runs and does not say what it decided cannot be audited.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-DIS-03",
+      "type": "human_review_has_a_decision",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.8,
+      "finding_type": "human_review_undecided",
+      "description": "Actions dispositioned for human review carry a recorded human decision. Prevents the escalation path existing on paper only.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-DIS-04",
+      "type": "no_execution_after_reject",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 1.0,
+      "finding_type": "executed_after_reject",
+      "description": "A blocking control triggered, nobody overrode it, and the payment settled anyway. This is F73 — it fired, it held, and the breach happened regardless — and it is the most serious outcome in this ruleset because no human ever claimed the authority to let it through. Weight 1.0.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-EFF-01",
+      "type": "control_that_should_trigger_did",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.8,
+      "finding_type": "control_failed_to_trigger",
+      "description": "A declared control that should have triggered did trigger. F71: the control is on paper, not in the system. Consumes the other agents' findings, which is why Control Assurance runs after the peer fan-out rather than inside it.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-EFF-02",
+      "type": "override_has_authority_and_reason",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.85,
+      "finding_type": "override_unattributed",
+      "description": "No override without a recorded authority and reason. F72: an anonymous bypass is not a supervisable fact — the conduct question is who, on what authority, and how often.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-EFF-03",
+      "type": "override_rate_within_maximum",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.65,
+      "finding_type": "override_rate_excessive",
+      "description": "The override rate is within the permitted maximum. Detects normalised deviance: override as routine rather than exception.",
+      "notes": null,
+      "params": {
+        "max_override_rate": 0.05,
+        "min_evaluations": 20
+      }
+    },
+    {
+      "rule_id": "CTL-EFF-04",
+      "type": "triggered_blocking_control_has_no_settlement",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.9,
+      "finding_type": "blocking_control_bypassed",
+      "description": "A blocking control triggered and the payment settled after a recorded override. Distinct from CTL-DIS-04, which is the same execution with NO override: there the control was simply ignored, here somebody took a decision. The supervisory question differs accordingly — not 'why did it not hold' but 'why is a blocking control overridable at all, and by whom'.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-LOG-01",
+      "type": "audit_log_covers_period",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.6,
+      "finding_type": "audit_log_gap",
+      "description": "An audit log is present and covers the whole reporting period. Gaps fall exactly where the interesting activity is.",
+      "notes": null,
+      "params": {
+        "max_gap_days": 10
+      }
+    },
+    {
+      "rule_id": "CTL-LOG-02",
+      "type": "audit_log_tamper_evident",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.55,
+      "finding_type": "audit_log_not_tamper_evident",
+      "description": "The log is tamper-evident — hash chain or WORM attestation. A log that can be edited after the fact is a narrative, not evidence.",
+      "notes": null,
+      "params": {}
+    },
+    {
+      "rule_id": "CTL-LOG-03",
+      "type": "log_reconciles_to_settlement",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.75,
+      "finding_type": "log_settlement_mismatch",
+      "description": "Log entry count reconciles to settlement records. Silent omission is the strongest signal in this family: the entries that go missing are not random ones.",
+      "notes": null,
+      "params": {}
+    }
+  ]
+}

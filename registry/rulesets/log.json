@@ -1,8 +1,8 @@
 {
   "ruleset_id": "LOG-RULESET",
   "domain": "log",
-  "version": "2026.1",
-  "as_of": "2026-08-26",
+  "version": "2026.2",
+  "as_of": "2026-09-03",
   "description": "Log ruleset. All three rules are LLM-evaluated (agents/log_reasoning.py) against real pre-computed statistics/candidate clusters (agents/log_stats.py) — no deterministic verdict layer at all, revised from the original build which hardcoded structuring as a Python threshold check. See docs/phases/07-log-agent.md for why a dispatch-floor tension (CLAUDE.md's stated 'Log+Drift run when history >= 30 tx') doesn't fit this domain's structuring check and needed its own resolution.",
   "rules": [
     {
@@ -13,9 +13,16 @@
       "effective_from": "2026-08-01",
       "severity_weight": 0.85,
       "finding_type": "transaction_structuring_detected",
-      "description": "A cluster of same-counterparty transactions, each individually under the threshold, occurring within a short window and summing to more than the threshold — deliberate splitting to stay under a reporting/scrutiny threshold. This is case-005's defect: three payments to the same counterparty 17-22 minutes apart, each just under ₾3,000, summing to ₾8,700.",
+      "description": "A cluster of same-counterparty transactions, each individually under the threshold, occurring within a short window and summing to more than the threshold — deliberate splitting to stay under a reporting/scrutiny threshold. This is case-005's defect: three payments to the same counterparty 17-22 minutes apart, each just under ₾3,000, summing to ₾8,700. Threshold is a policy dial, and it must sit inside the agent's operating range to mean anything: at 3000 against a consumer shopping agent whose largest transaction is $867, the rule is switched off rather than lenient.",
       "notes": "threshold=3000 (SR-STRUCT-01) is a synthetic reporting-flag figure invented for this demo, not a real AML threshold (docs/phases/01-synthetic-data.md §3). Candidate clusters (same-counterparty transactions within window_hours of each other) are computed deterministically by agents/log_stats.py::structuring_clusters — but whether a candidate cluster actually constitutes structuring is the model's judgment against threshold/min_cluster_size, not a Python comparison.",
-      "params": { "threshold": 3000.0, "min_cluster_size": 2, "window_hours": 24.0 }
+      "params": {
+        "threshold": 3000.0,
+        "min_cluster_size": 2,
+        "window_hours": 24.0,
+        "threshold_by_classification": {
+          "consumer_shopping": 1000.0
+        }
+      }
     },
     {
       "rule_id": "LOG-CON-01",

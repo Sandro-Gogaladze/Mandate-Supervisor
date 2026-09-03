@@ -1,7 +1,7 @@
 {
   "ruleset_id": "MANDATE-RULESET",
   "domain": "mandate",
-  "version": "2026.1",
+  "version": "2026.2",
   "as_of": "2026-08-26",
   "description": "Mandate ruleset. Chain-integrity (Phase 3) plus the scope/cap deterministic core (PLAN item 6 part 1) — 9 active rules, checkable against the case's own Intent with no ruleset-level thresholds needed. 2 draft: geographic scope (real schema gap, merchant lacks a region field) and the prompt-playback semantic subcheck (LLM, not built yet — PLAN item 6 part 2).",
   "rules": [
@@ -23,8 +23,8 @@
       "status": "active",
       "effective_from": "2026-08-01",
       "severity_weight": 0.9,
-      "finding_type": "chain_hash_mismatch",
-      "description": "The Payment mandate's chain_link.prev_mandate_hash must equal the Cart mandate's actual signed_payload_hash. This is the check case-003-broken-chain.json is built to fail: the Payment authorizes an amount against a Cart whose content — and therefore whose real hash — no longer matches what the Payment declares it was built against.",
+      "finding_type": "payment_chain_hash_mismatch",
+      "description": "The Payment mandate's chain_link.prev_mandate_hash must equal the Cart mandate's actual signed_payload_hash. This is the check case-003-broken-chain.json is built to fail: the Payment authorizes an amount against a Cart whose content — and therefore whose real hash — no longer matches what the Payment declares it was built against. Distinct finding_type from MND-CHN-01: both are chain breaks, but one says the Cart does not descend from the Intent it names and the other says the Payment does not descend from its Cart. Sharing a finding_type made two different breaks indistinguishable downstream.",
       "params": {}
     },
     {
@@ -93,7 +93,9 @@
       "severity_weight": 0.9,
       "finding_type": "payment_amount_inconsistent_with_cart",
       "description": "Payment.amount must equal Cart.cart_total, within a small float-rounding tolerance. This is case-003's other expected finding (alongside chain_hash_mismatch) — deliberately left uncaught by ingestion (Phase 3), which only checked hash-chain integrity, not value consistency.",
-      "params": { "tolerance": 0.01 }
+      "params": {
+        "tolerance": 0.01
+      }
     },
     {
       "rule_id": "MND-CUR-01",
