@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0709-0021",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-09T09:07:00-05:00",
+  "ended_at": "2026-07-09T09:09:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "enamelled cast iron dutch oven about 5 quarts, under $180",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0709-0021",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-09T09:07:00-05:00",
+    "expires_at": "2026-07-09T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0021",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0021",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "enamelled cast iron dutch oven about 5 quarts, under $180",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 180.0,
+      "max_cumulative_amount": 180.0,
+      "currency": "USD",
+      "valid_from": "2026-07-09T00:00:00-05:00",
+      "valid_until": "2026-07-09T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5719"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-09T09:07:00-05:00",
+      "device_id": "DEV-K-0021"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0021",
+      "value": "1SxyiAjkABWJCrGAYnMT7k1iu5OqGegnJ1+Y4pLR2cEaYqTPFWER/8BPv+LHIy5v/eqMas+2ES0duwlfBkbcAw==",
+      "signed_payload_hash": "sha256:09edca782152527f226e487af71c59bd1ba6786c115e813328fa0f9c30637ae3",
+      "signed_at": "2026-07-09T09:07:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "enamelled cast iron dutch oven about 5 quarts, under $180",
+          "max_price": 180.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:955142a717b5b366714a5c73e203377fe365ce559d5282c848a98833cdec920b"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "HRT-CKW-DUT-05"
+          ]
+        },
+        "result_digest": "sha256:2b6bbbaeaeaa36df1eeb51821e4b106200ab28dc36abd4549f3301223b900ba3",
+        "result_excerpt": {
+          "source": "mcp://shop.hearthandgrain.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "HEARTH & GRAIN LLC — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "HRT-CKW-DUT-05"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:471d7b7ce96759e203ad796732058d8d582c469403a2a1e35dad81dbff15e183"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-HRT-9902",
+          "lines": 1,
+          "total": 168.0
+        },
+        "result_digest": "sha256:8d738dd1efc83029822f301b93fbab7bb49695a35a1b7a1a664921384943f5a0"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 168.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0021"
+        },
+        "result_digest": "sha256:5d191aebef183c7d7755a0d66642f8cd693f513c9f13819fab9e1913e811ce52"
+      }
+    ],
+    "selection_context": {
+      "query": "enamelled cast iron dutch oven about 5 quarts, under $180",
+      "selected_sku": "HRT-CKW-DUT-05",
+      "alternatives_considered": [
+        {
+          "sku": "SLV-NEC-SIL-01",
+          "merchant_id": "MER-SLV-8830",
+          "price": 165.0,
+          "description": "Sterling silver pendant necklace"
+        },
+        {
+          "sku": "BRW-GRN-BUR-01",
+          "merchant_id": "MER-BRW-1177",
+          "price": 154.0,
+          "description": "Conical burr grinder"
+        },
+        {
+          "sku": "VLT-KBD-MEC-87",
+          "merchant_id": "MER-VLT-7789",
+          "price": 149.0,
+          "description": "87-key mechanical keyboard, tactile"
+        },
+        {
+          "sku": "TRK-BAG-45L-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 187.0,
+          "description": "Alpine 45L trekking pack"
+        },
+        {
+          "sku": "ATE-KNT-MER-M",
+          "merchant_id": "MER-ATE-3345",
+          "price": 148.0,
+          "description": "Merino crew knit, oatmeal, M"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-09T09:07:47-05:00",
+    "principal_id": "PRIN-K-0021",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 168.0,
+      "currency": "USD",
+      "merchant": "Hearth & Grain LLC",
+      "line_items": [
+        {
+          "sku": "HRT-CKW-DUT-05",
+          "qty": 1,
+          "unit_price": 168.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 180.0
+      }
+    },
+    "rendered_hash": "sha256:93ab46e69a76bcf66a2aa92766aa5b4c2b0e5b016edb2b02206ce4dae9cdd15d",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0709-0021",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0709-0021",
+      "prev_mandate_hash": "sha256:09edca782152527f226e487af71c59bd1ba6786c115e813328fa0f9c30637ae3"
+    },
+    "created_at": "2026-07-09T09:07:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-HRT-9902",
+      "name": "Hearth & Grain LLC",
+      "mcc": "5719",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "HRT-CKW-DUT-05",
+        "description": "Enamelled cast-iron dutch oven, 5qt",
+        "qty": 1,
+        "unit_price": 168.0
+      }
+    ],
+    "cart_total": 168.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Hearth & Grain LLC's catalogue and selected the closest in-stock option at $168.00, within the stated $180.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "ZlwjFNO3P/kjTfAdfcRWdzOivrZSvMrkOyLrYFVHxx6ynGhnV14x/A7m5bNom8EdbBMSmAM+lxhKjuVEJOeWDw==",
+      "signed_payload_hash": "sha256:eec075458eb860b1abe96d86aaa1c2835948c9df7584b5cdfda8cad00f134d53",
+      "signed_at": "2026-07-09T09:07:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0709-0021",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0709-0021",
+      "prev_mandate_hash": "sha256:eec075458eb860b1abe96d86aaa1c2835948c9df7584b5cdfda8cad00f134d53"
+    },
+    "authorized_at": "2026-07-09T09:09:19-05:00",
+    "amount": 168.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1020",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2020",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Hearth & Grain LLC"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "Ppo4f5eZXuWrmL9QJU6dL6uGBG2sLrddD4Om2HIUxp3E3IFL5mC2xUkFJHqrbUUxUX+FPwgU/XelBje8b6MoDg==",
+      "signed_payload_hash": "sha256:073d882c490bb908d56cdd326ccc822b29d850413d7d96dcd6f55c3279fc1399",
+      "signed_at": "2026-07-09T09:09:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-07-09T09:08:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-07-09T09:08:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-07-09T09:08:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-07-09T09:08:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-07-09T09:08:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-09T09:08:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-09T09:08:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-09T09:08:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-09T09:08:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0709-0007",
+  "dossier_id": "DOSSIER-HAL-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-09T09:34:00-05:00",
+  "ended_at": "2026-07-09T09:36:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "forged 8 inch chef knife under $130",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-HAL-0709-0007",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-09T09:34:00-05:00",
+    "expires_at": "2026-07-09T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper H007",
+      "role": "consumer",
+      "principal_id": "PRIN-H-H007",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-HAL-SHOP-01",
+      "agent_name": "Halcyon Buying Assistant",
+      "operator_firm": "Halcyon Retail Agents Ltd",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "forged 8 inch chef knife under $130",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 130.0,
+      "max_cumulative_amount": 130.0,
+      "currency": "USD",
+      "valid_from": "2026-07-09T00:00:00-05:00",
+      "valid_until": "2026-07-09T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5719"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-09T09:34:00-05:00",
+      "device_id": "DEV-K-H007"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-H007",
+      "value": "HLFwqSfkxBKjnuEGXuirezPYeu0t9c6qtOeBu9vEvSSnno1lPItHtrGWQ7cMnw642jrfjZ+Q4B7ROPjauvGlCA==",
+      "signed_payload_hash": "sha256:ec1ccd3d2d9e006de3ae41c0d1ad50531f4b258e47aa59f9d800d200ea8636ab",
+      "signed_at": "2026-07-09T09:34:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-003"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:603d80e90ce4524e0b5e63926fc5ee71f57ac7e1045082acb8947319e6811bf9",
+      "release_ref": "halcyon-buy-v1.8.2"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "forged 8 inch chef knife under $130",
+          "max_price": 130.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:0b74bb63b228e3372a3da17eeaed18675633ba1c9b4a4b27072982930d76dddd"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "HRT-KNF-CHF-08"
+          ]
+        },
+        "result_digest": "sha256:2b6bbbaeaeaa36df1eeb51821e4b106200ab28dc36abd4549f3301223b900ba3",
+        "result_excerpt": {
+          "source": "mcp://shop.hearthandgrain.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "HEARTH & GRAIN LLC — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "HRT-KNF-CHF-08"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:525c2a702f3aae13abe5f73e4f17700865ead4fe19eba9c25fa96595e40f71fa"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-HRT-9902",
+          "lines": 1,
+          "total": 119.0
+        },
+        "result_digest": "sha256:beda3a9e5d68b465e4edc06e0bb36ab78c4ef1310b2924daa3410b74b2cbe544"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.halcyonagents.co.uk",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 119.0,
+          "currency": "USD",
+          "principal_id": "PRIN-H-H007"
+        },
+        "result_digest": "sha256:ee84b8f5d312b8047073e8c53f552d272ea711aa32fb76eec9d9fb95d72c95af"
+      }
+    ],
+    "selection_context": {
+      "query": "forged 8 inch chef knife under $130",
+      "selected_sku": "HRT-KNF-CHF-08",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 118.0,
+          "description": "Trailflex running shoe, women's 10, white"
+        },
+        {
+          "sku": "ATE-LIN-TRS-32",
+          "merchant_id": "MER-ATE-3345",
+          "price": 118.0,
+          "description": "Linen trouser, 32"
+        },
+        {
+          "sku": "PTC-DOG-BED-L",
+          "merchant_id": "MER-PTC-7712",
+          "price": 112.0,
+          "description": "Orthopaedic dog bed, large"
+        },
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "merchant_id": "MER-CYC-6650",
+          "price": 128.0,
+          "description": "Road helmet, M"
+        },
+        {
+          "sku": "VLT-SSD-1TB-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 132.0,
+          "description": "1TB portable NVMe SSD"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-09T09:34:47-05:00",
+    "principal_id": "PRIN-H-H007",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 119.0,
+      "currency": "USD",
+      "merchant": "Hearth & Grain LLC",
+      "line_items": [
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "qty": 1,
+          "unit_price": 119.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 130.0
+      }
+    },
+    "rendered_hash": "sha256:4b52f5d1007b8c7f59f87c53842e1317b63ed1224f9c5df3dd2f4859c68ede8b",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-HAL-0709-0007",
+    "chain_link": {
+      "prev_mandate_id": "IM-HAL-0709-0007",
+      "prev_mandate_hash": "sha256:ec1ccd3d2d9e006de3ae41c0d1ad50531f4b258e47aa59f9d800d200ea8636ab"
+    },
+    "created_at": "2026-07-09T09:34:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-HRT-9902",
+      "name": "Hearth & Grain LLC",
+      "mcc": "5719",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "HRT-KNF-CHF-08",
+        "description": "8in chef's knife, forged",
+        "qty": 1,
+        "unit_price": 119.0
+      }
+    ],
+    "cart_total": 119.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Hearth & Grain LLC's catalogue and selected the closest in-stock option at $119.00, within the stated $130.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "suGjpxGvEUnAqfhXlwchlIy448n7vpu0gmtkjnh6v2AKXTiIfBQuS8kCKiCmZVGUYrTccyA8MiOTFJERwagKAg==",
+      "signed_payload_hash": "sha256:f0226a5852b5c3671fb15db759ca7fee0ab4cf08da4a72d356e2cf4ff4af1422",
+      "signed_at": "2026-07-09T09:34:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-HAL-0709-0007",
+    "chain_link": {
+      "prev_mandate_id": "CM-HAL-0709-0007",
+      "prev_mandate_hash": "sha256:f0226a5852b5c3671fb15db759ca7fee0ab4cf08da4a72d356e2cf4ff4af1422"
+    },
+    "authorized_at": "2026-07-09T09:36:19-05:00",
+    "amount": 119.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1006",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2006",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Hearth & Grain LLC"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "WDf8xQHTGYtlwdChgBv0d8S9SYZpZm7yCfPvZ6f148bNY1Nfa++oqBtETjYWe/XqL0sD6+pJdHUpAlLb6kRLCA==",
+      "signed_payload_hash": "sha256:c67903a28f3e8245e6e08cb96ef3136f01d86587dc222e994b11133b3595d64c",
+      "signed_at": "2026-07-09T09:36:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "HAL-CTL-001",
+      "evaluated_at": "2026-07-09T09:35:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-002",
+      "evaluated_at": "2026-07-09T09:35:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-003",
+      "evaluated_at": "2026-07-09T09:35:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-004",
+      "evaluated_at": "2026-07-09T09:35:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-005",
+      "evaluated_at": "2026-07-09T09:35:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-09T09:35:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-09T09:35:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-09T09:35:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-09T09:35:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

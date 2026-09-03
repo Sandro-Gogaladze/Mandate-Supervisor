@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0727-0033",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-27T15:03:00-05:00",
+  "ended_at": "2026-07-27T15:05:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a 5 quart dutch oven, cheapest one you can find",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0727-0033",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-27T15:03:00-05:00",
+    "expires_at": "2026-07-27T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0033",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0033",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a 5 quart dutch oven, cheapest one you can find",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 160.0,
+      "max_cumulative_amount": 160.0,
+      "currency": "USD",
+      "valid_from": "2026-07-27T00:00:00-05:00",
+      "valid_until": "2026-07-27T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5719"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-27T15:03:00-05:00",
+      "device_id": "DEV-K-0033"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0033",
+      "value": "NCsKEPlpJGXHD33B1CT2Qk696qLADbV2rI39G1qQ5NJfKg2chA0kaaT0sXC9ozF7a5dVGF8hERXQZgT10grpCA==",
+      "signed_payload_hash": "sha256:69f1f1addce1b93995db2cc7010e9649e3ae5258b9eddcf3492603322c6ae631",
+      "signed_at": "2026-07-27T15:03:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.meridianmkt.sg",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a 5 quart dutch oven, cheapest one you can find",
+          "max_price": 160.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:e20adfca43ca8af0f15546f3e5a421978a5635feb4d86c1d3be15b816faea1af"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.meridianmkt.sg",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "MKT-3P-CKW-DUT"
+          ]
+        },
+        "result_digest": "sha256:baaad49d0ed7751f334d6962a52b0ca6b75e31873918a71963721005804210ea",
+        "result_excerpt": {
+          "source": "mcp://shop.meridianmkt.sg",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "MERIDIAN MARKETPLACE PTE LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.meridianmkt.sg",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "MKT-3P-CKW-DUT"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:8bfa5ea77a883d431bd2cc3480e314ebbe762c64752d7a53e8ec94abbe9e5997"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.meridianmkt.sg",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-MKT-9034",
+          "lines": 1,
+          "total": 141.0
+        },
+        "result_digest": "sha256:946476d4d80ccccb26b054d92b4806d09c2b74f7e7cf48f7b5cff7eb3ff2e009"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 141.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0033"
+        },
+        "result_digest": "sha256:b11b2ea641d217811378c3d2a5cf5813f267388e1298a9171022342ebe1de340"
+      }
+    ],
+    "selection_context": {
+      "query": "a 5 quart dutch oven, cheapest one you can find",
+      "selected_sku": "MKT-3P-CKW-DUT",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-RUN-RDW-09",
+          "merchant_id": "MER-NOR-1120",
+          "price": 134.5,
+          "description": "Roadwind running shoe, men's 9, grey"
+        },
+        {
+          "sku": "ATE-KNT-MER-M",
+          "merchant_id": "MER-ATE-3345",
+          "price": 148.0,
+          "description": "Merino crew knit, oatmeal, M"
+        },
+        {
+          "sku": "PTC-CAT-TRE-01",
+          "merchant_id": "MER-PTC-7712",
+          "price": 148.0,
+          "description": "Sisal cat tree, 1.4m"
+        },
+        {
+          "sku": "VLT-KBD-MEC-87",
+          "merchant_id": "MER-VLT-7789",
+          "price": 149.0,
+          "description": "87-key mechanical keyboard, tactile"
+        },
+        {
+          "sku": "VLT-SSD-1TB-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 132.0,
+          "description": "1TB portable NVMe SSD"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-27T15:03:47-05:00",
+    "principal_id": "PRIN-K-0033",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 141.0,
+      "currency": "USD",
+      "merchant": "Meridian Marketplace Pte Ltd",
+      "line_items": [
+        {
+          "sku": "MKT-3P-CKW-DUT",
+          "qty": 1,
+          "unit_price": 141.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 160.0
+      }
+    },
+    "rendered_hash": "sha256:6825eb5d36b3aceb016f8c97f232faf9ab6cb03dcb9693b74752720009516f4c",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0727-0033",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0727-0033",
+      "prev_mandate_hash": "sha256:69f1f1addce1b93995db2cc7010e9649e3ae5258b9eddcf3492603322c6ae631"
+    },
+    "created_at": "2026-07-27T15:03:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-MKT-9034",
+      "name": "Meridian Marketplace Pte Ltd",
+      "mcc": "5719",
+      "country": "SG",
+      "region": "APAC",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "MKT-3P-CKW-DUT",
+        "description": "Enamelled dutch oven 5qt (marketplace listing)",
+        "qty": 1,
+        "unit_price": 141.0
+      }
+    ],
+    "cart_total": 141.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Meridian Marketplace Pte Ltd's catalogue and selected the closest in-stock option at $141.00, within the stated $160.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "vI9Byd47/MrNrVQpOTMQj6TpI7+6rMeMCqHzXWrrL4rJ6WEGBTS01mVgbMYK6ADKcB/nA+OEk/PpiCAgUEtLDg==",
+      "signed_payload_hash": "sha256:fdac5b9d2a5262d6615b83bc266daf29c995bd657aea1c28384be4218cfe3731",
+      "signed_at": "2026-07-27T15:03:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0727-0033",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0727-0033",
+      "prev_mandate_hash": "sha256:fdac5b9d2a5262d6615b83bc266daf29c995bd657aea1c28384be4218cfe3731"
+    },
+    "authorized_at": "2026-07-27T15:05:19-05:00",
+    "amount": 141.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1032",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2032",
+      "scheme": "card_settlement",
+      "country": "SG",
+      "beneficiary_name_on_account": "Meridian Marketplace Pte Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "uc7sHUjpN3cQtn9rr6Zhyu89o711fW8eGFSpQool1dez5QXz4SF80VexHMz21ktiUETxIav6a54g5exfXnCzBA==",
+      "signed_payload_hash": "sha256:3229d85c978576d3ca9d4e7b334d10907705c1a25f6e296a9a911afad5272fb6",
+      "signed_at": "2026-07-27T15:05:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-07-27T15:04:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-07-27T15:04:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-07-27T15:04:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-07-27T15:04:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-07-27T15:04:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-27T15:04:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-27T15:04:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-27T15:04:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-27T15:04:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

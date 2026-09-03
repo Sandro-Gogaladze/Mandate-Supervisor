@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0812-0044",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-12T22:41:00-05:00",
+  "ended_at": "2026-08-12T22:43:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "salt fat acid heat, hardback",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0812-0044",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-12T22:41:00-05:00",
+    "expires_at": "2026-08-12T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0044",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0044",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "salt fat acid heat, hardback",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 40.0,
+      "max_cumulative_amount": 40.0,
+      "currency": "USD",
+      "valid_from": "2026-08-12T00:00:00-05:00",
+      "valid_until": "2026-08-12T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5942"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-12T22:41:00-05:00",
+      "device_id": "DEV-K-0044"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0044",
+      "value": "jFsjoA2MZZVLxTVlnr7EC0cIgWbIvsBuZUZAADA8+y7zasyF3oQs2kp1djEbKyeYE1FczRow//hZdRyq6va2AA==",
+      "signed_payload_hash": "sha256:664a29677eb41133496899e603fa6720f800e68af7ba7ba6e7f822375feaf06c",
+      "signed_at": "2026-08-12T22:41:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "salt fat acid heat, hardback",
+          "max_price": 40.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:ba3b807a5f609762940c85a5203a927cd300c23c9592bc02cf4dd0117d3ccd31"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-COK-02"
+          ]
+        },
+        "result_digest": "sha256:b65ad8815c26df6ee326702e076a4b4980004d6037976a2ac8f3b7dbe1b3d809",
+        "result_excerpt": {
+          "source": "mcp://shop.pagegrove.co.uk",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "PAGEGROVE BOOKS LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-COK-02"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:7ed568d593536668f545486b1818aa1a9bc3c3c3ee79663b9a3fa097eff9eb0f"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-PGE-2201",
+          "lines": 1,
+          "total": 34.0
+        },
+        "result_digest": "sha256:41c32de646b9c7ecc7c6130f3e40dce0006ff47d9f956f92864302d4b29f82c7"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 34.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0044"
+        },
+        "result_digest": "sha256:a3af05bce0251026fa24d2309aedfa7c688fdaa758a1253159291615069aa147"
+      }
+    ],
+    "selection_context": {
+      "query": "salt fat acid heat, hardback",
+      "selected_sku": "PGE-BOK-COK-02",
+      "alternatives_considered": [
+        {
+          "sku": "BRW-COF-BEA-1K",
+          "merchant_id": "MER-BRW-1177",
+          "price": 38.0,
+          "description": "Single-origin coffee beans, 1kg"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        },
+        {
+          "sku": "DSK-NTB-A5-10",
+          "merchant_id": "MER-DSK-3390",
+          "price": 42.0,
+          "description": "A5 dotted notebook, 10-pack"
+        },
+        {
+          "sku": "VLT-CAB-USB-03",
+          "merchant_id": "MER-VLT-7789",
+          "price": 24.0,
+          "description": "USB-C braided cable, 2m, 3-pack"
+        },
+        {
+          "sku": "KDO-PZL-1000-04",
+          "merchant_id": "MER-KDO-5573",
+          "price": 22.0,
+          "description": "1000-piece landscape puzzle"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-12T22:41:47-05:00",
+    "principal_id": "PRIN-K-0044",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 34.0,
+      "currency": "USD",
+      "merchant": "Pagegrove Books Ltd",
+      "line_items": [
+        {
+          "sku": "PGE-BOK-COK-02",
+          "qty": 1,
+          "unit_price": 34.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 40.0
+      }
+    },
+    "rendered_hash": "sha256:df10ae9cd54d314ee9f12e7f561639de34e4de0ae20d5a294d7b4e0a494bd91f",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0812-0044",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0812-0044",
+      "prev_mandate_hash": "sha256:664a29677eb41133496899e603fa6720f800e68af7ba7ba6e7f822375feaf06c"
+    },
+    "created_at": "2026-08-12T22:41:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-PGE-2201",
+      "name": "Pagegrove Books Ltd",
+      "mcc": "5942",
+      "country": "GB",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "PGE-BOK-COK-02",
+        "description": "Salt Fat Acid Heat, hardback",
+        "qty": 1,
+        "unit_price": 34.0
+      }
+    ],
+    "cart_total": 34.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Pagegrove Books Ltd's catalogue and selected the closest in-stock option at $34.00, within the stated $40.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "9GnXmgPrimOTd7OU5NzNff63lwTSRHIj48r2QUriI4NqkG4lcmf1YCnLo9Lfii2K1xeMKfSDt9ZTDyEuDByKCA==",
+      "signed_payload_hash": "sha256:8e1b57a47a3f9f6999fc7b60e442c85eef64970fdbd8d4a41331fed863016b41",
+      "signed_at": "2026-08-12T22:41:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0812-0044",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0812-0044",
+      "prev_mandate_hash": "sha256:8e1b57a47a3f9f6999fc7b60e442c85eef64970fdbd8d4a41331fed863016b41"
+    },
+    "authorized_at": "2026-08-12T22:43:19-05:00",
+    "amount": 34.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1043",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2043",
+      "scheme": "card_settlement",
+      "country": "GB",
+      "beneficiary_name_on_account": "Pagegrove Books Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "/r7GDu4MQ12ZcTFpPijuKumxbRzt/x5UxxuCWVF64rQVdEDqikU6KAkoG7kWrkvWkU14ZRPZVawP6YvRYAYpCw==",
+      "signed_payload_hash": "sha256:e8b5126c00d33bb286db57b82ef2fac118c41a9270b1a777bdfbbac4b1990fa7",
+      "signed_at": "2026-08-12T22:43:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-08-12T22:42:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-08-12T22:42:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-08-12T22:42:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-08-12T22:42:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-08-12T22:42:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-12T22:42:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-12T22:42:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-12T22:42:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-12T22:42:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

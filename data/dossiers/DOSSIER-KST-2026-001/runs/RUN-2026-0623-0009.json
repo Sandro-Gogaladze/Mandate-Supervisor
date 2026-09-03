@@ -1,0 +1,343 @@
+{
+  "run_id": "RUN-2026-0623-0009",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-23T10:05:00-05:00",
+  "ended_at": "2026-06-23T10:07:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "road helmet medium and a front and rear light set, $200 tops",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0623-0009",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-23T10:05:00-05:00",
+    "expires_at": "2026-06-23T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0009",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0009",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "road helmet medium and a front and rear light set, $200 tops",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 200.0,
+      "max_cumulative_amount": 200.0,
+      "currency": "USD",
+      "valid_from": "2026-06-23T00:00:00-05:00",
+      "valid_until": "2026-06-23T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5940"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-23T10:05:00-05:00",
+      "device_id": "DEV-K-0009"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0009",
+      "value": "IKXfrpYYykMnuGI5lmuVlC48VoRPx+FKR3L9hlo3mx4m6y9Q+AtzdDoaYgTVEKhrVZf/3SZjzJg0/KhEsVB0Cw==",
+      "signed_payload_hash": "sha256:466f72ce12262a87cba1e5078fca033e78984bf5cfa27137ce61a7e59e1da14b",
+      "signed_at": "2026-06-23T10:05:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "road helmet medium and a front and rear light set, $200 tops",
+          "max_price": 200.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:94669a0faf636504f9e75e99d10570930b8ef5473a94b9e39aaa56425be49db2"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "CYC-HLM-ROD-M",
+            "CYC-LGT-SET-01"
+          ]
+        },
+        "result_digest": "sha256:0a70d845e2e4769bb9db76ce5fbd0dc08753a8a89a8e24536590fd1f62643731",
+        "result_excerpt": {
+          "source": "mcp://shop.cyclora.fr",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "CYCLORA CYCLES SAS — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "CYC-HLM-ROD-M",
+            "CYC-LGT-SET-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:32f6fd994cee28065aaf9b2c6ecb7383dd82d303499fddc8b92e57ece0f5bec4"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-CYC-6650",
+          "lines": 2,
+          "total": 190.0
+        },
+        "result_digest": "sha256:6cf07ced3a90cd86c8abaa23648676ef10505d44b915fbb9e2a72333468ca58f"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 190.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0009"
+        },
+        "result_digest": "sha256:aaee9f59e277926592775d14ced87e06d2b918e0943fe848e2c7b8823fa4eff6"
+      }
+    ],
+    "selection_context": {
+      "query": "road helmet medium and a front and rear light set, $200 tops",
+      "selected_sku": "CYC-HLM-ROD-M",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-SSD-1TB-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 132.0,
+          "description": "1TB portable NVMe SSD"
+        },
+        {
+          "sku": "NOR-RUN-RDW-09",
+          "merchant_id": "MER-NOR-1120",
+          "price": 134.5,
+          "description": "Roadwind running shoe, men's 9, grey"
+        },
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "merchant_id": "MER-HRT-9902",
+          "price": 119.0,
+          "description": "8in chef's knife, forged"
+        },
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 118.0,
+          "description": "Trailflex running shoe, women's 10, white"
+        },
+        {
+          "sku": "ATE-LIN-TRS-32",
+          "merchant_id": "MER-ATE-3345",
+          "price": 118.0,
+          "description": "Linen trouser, 32"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-23T10:05:47-05:00",
+    "principal_id": "PRIN-K-0009",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 190.0,
+      "currency": "USD",
+      "merchant": "Cyclora Cycles SAS",
+      "line_items": [
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "qty": 1,
+          "unit_price": 128.0
+        },
+        {
+          "sku": "CYC-LGT-SET-01",
+          "qty": 1,
+          "unit_price": 62.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 200.0
+      }
+    },
+    "rendered_hash": "sha256:621bb103f8e4c8d8ab21b1b5d069e9995754afa71bbe60b339406eebb237bc80",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0623-0009",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0623-0009",
+      "prev_mandate_hash": "sha256:466f72ce12262a87cba1e5078fca033e78984bf5cfa27137ce61a7e59e1da14b"
+    },
+    "created_at": "2026-06-23T10:05:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-CYC-6650",
+      "name": "Cyclora Cycles SAS",
+      "mcc": "5940",
+      "country": "FR",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "CYC-HLM-ROD-M",
+        "description": "Road helmet, M",
+        "qty": 1,
+        "unit_price": 128.0
+      },
+      {
+        "sku": "CYC-LGT-SET-01",
+        "description": "Front and rear light set",
+        "qty": 1,
+        "unit_price": 62.0
+      }
+    ],
+    "cart_total": 190.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Cyclora Cycles SAS's catalogue and selected the closest in-stock option at $190.00, within the stated $200.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "9jvwQ/5+QUnEJxJpzPf6ET1JKlg8CPlRLlU5ZmrPZW5UzuEvjSrK6Avbe9hkDhD4BDoGJWSrZbkeFvOs+pO1Aw==",
+      "signed_payload_hash": "sha256:f338704657dfa6ad3a83d2c5980af12356b9ce646bf11967123ef41d71ced165",
+      "signed_at": "2026-06-23T10:05:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0623-0009",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0623-0009",
+      "prev_mandate_hash": "sha256:f338704657dfa6ad3a83d2c5980af12356b9ce646bf11967123ef41d71ced165"
+    },
+    "authorized_at": "2026-06-23T10:07:19-05:00",
+    "amount": 190.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1008",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2008",
+      "scheme": "card_settlement",
+      "country": "FR",
+      "beneficiary_name_on_account": "Cyclora Cycles SAS"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "/T27SnYqp3G9HgQfyCATBJfXpnsehuI0vlA7dL8YRFN3ABFTsD49Qa957Aq354dArAjIMAIaFrRCAmCMHuP5Dw==",
+      "signed_payload_hash": "sha256:08a28158e35a430547117f8a2b4a9daedb61870c91fca7a996651257d8782241",
+      "signed_at": "2026-06-23T10:07:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-06-23T10:06:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-06-23T10:06:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-06-23T10:06:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-06-23T10:06:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-06-23T10:06:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-23T10:06:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-23T10:06:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-23T10:06:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-23T10:06:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

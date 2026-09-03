@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0820-0018",
+  "dossier_id": "DOSSIER-HAL-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-20T15:47:00-05:00",
+  "ended_at": "2026-08-20T15:49:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "large orthopaedic dog bed",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-HAL-0820-0018",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-20T15:47:00-05:00",
+    "expires_at": "2026-08-20T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper H018",
+      "role": "consumer",
+      "principal_id": "PRIN-H-H018",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-HAL-SHOP-01",
+      "agent_name": "Halcyon Buying Assistant",
+      "operator_firm": "Halcyon Retail Agents Ltd",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "large orthopaedic dog bed",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 120.0,
+      "max_cumulative_amount": 120.0,
+      "currency": "USD",
+      "valid_from": "2026-08-20T00:00:00-05:00",
+      "valid_until": "2026-08-20T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5995"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-20T15:47:00-05:00",
+      "device_id": "DEV-K-H018"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-H018",
+      "value": "HMslLYZKGiUFAGKC/5g+5Mxis6fhDnudgRyRayEn2JM5bJaT7U3Xjd4v5/06sRj2oPo0rax1mSzmZXnjKbDGAQ==",
+      "signed_payload_hash": "sha256:7bd7b01bddebe58f5f5384a3cce5a18dc161d42161ec2dd0c4c03d109c002e98",
+      "signed_at": "2026-08-20T15:47:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-003"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:dc955d3189ad0955d3c1dc069943df7ccd21472a0c9b9ce918cccd8d18b4b512",
+      "release_ref": "halcyon-buy-v1.9.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "large orthopaedic dog bed",
+          "max_price": 120.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:0acf70946493a2108c9ce3b9eb361b716c01835b6eade6d08d2432a74f1d92fd"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "PTC-DOG-BED-L"
+          ]
+        },
+        "result_digest": "sha256:15234dd90a61ed4e5d4f340c495cc4af470ef58462e5f23b921831fe467a0fff",
+        "result_excerpt": {
+          "source": "mcp://shop.petcove.ca",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "PETCOVE SUPPLIES LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "PTC-DOG-BED-L"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:9a8c03eaba928f964491195efa45538d3d5db0298bbe0e1471b0f820e978d1e9"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-PTC-7712",
+          "lines": 1,
+          "total": 112.0
+        },
+        "result_digest": "sha256:ac08c1746beed5feb896c138d11eee351b60ce8542542af951c83ef13162f063"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.halcyonagents.co.uk",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 112.0,
+          "currency": "USD",
+          "principal_id": "PRIN-H-H018"
+        },
+        "result_digest": "sha256:cdbb026436936962dc87b263a9ebe63aff72cbfae8778ed03b31bf5e14903430"
+      }
+    ],
+    "selection_context": {
+      "query": "large orthopaedic dog bed",
+      "selected_sku": "PTC-DOG-BED-L",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 118.0,
+          "description": "Trailflex running shoe, women's 10, white"
+        },
+        {
+          "sku": "ATE-LIN-TRS-32",
+          "merchant_id": "MER-ATE-3345",
+          "price": 118.0,
+          "description": "Linen trouser, 32"
+        },
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "merchant_id": "MER-HRT-9902",
+          "price": 119.0,
+          "description": "8in chef's knife, forged"
+        },
+        {
+          "sku": "KDO-BLD-CTY-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 96.0,
+          "description": "Modular city building set, 1200pc"
+        },
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "merchant_id": "MER-CYC-6650",
+          "price": 128.0,
+          "description": "Road helmet, M"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-20T15:47:47-05:00",
+    "principal_id": "PRIN-H-H018",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 112.0,
+      "currency": "USD",
+      "merchant": "Petcove Supplies Ltd",
+      "line_items": [
+        {
+          "sku": "PTC-DOG-BED-L",
+          "qty": 1,
+          "unit_price": 112.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 120.0
+      }
+    },
+    "rendered_hash": "sha256:204e8de4f95dfc788c9e67233042ce30893653738f0259daf8a3770164ada153",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-HAL-0820-0018",
+    "chain_link": {
+      "prev_mandate_id": "IM-HAL-0820-0018",
+      "prev_mandate_hash": "sha256:7bd7b01bddebe58f5f5384a3cce5a18dc161d42161ec2dd0c4c03d109c002e98"
+    },
+    "created_at": "2026-08-20T15:47:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-PTC-7712",
+      "name": "Petcove Supplies Ltd",
+      "mcc": "5995",
+      "country": "CA",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "PTC-DOG-BED-L",
+        "description": "Orthopaedic dog bed, large",
+        "qty": 1,
+        "unit_price": 112.0
+      }
+    ],
+    "cart_total": 112.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Petcove Supplies Ltd's catalogue and selected the closest in-stock option at $112.00, within the stated $120.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "fqctmXTfZo+SjuUSCA2JQPHY+7TApdDwJpklWp+We+lsF57EUZ6ne59xmiBczf4KSCSEYH/wC4LaQiInlWoyDg==",
+      "signed_payload_hash": "sha256:5f72531a4cfc0855f4291dddaa288df535bcb3bd550efe3af19977e3edf361d5",
+      "signed_at": "2026-08-20T15:47:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-HAL-0820-0018",
+    "chain_link": {
+      "prev_mandate_id": "CM-HAL-0820-0018",
+      "prev_mandate_hash": "sha256:5f72531a4cfc0855f4291dddaa288df535bcb3bd550efe3af19977e3edf361d5"
+    },
+    "authorized_at": "2026-08-20T15:49:19-05:00",
+    "amount": 112.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1017",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2017",
+      "scheme": "card_settlement",
+      "country": "CA",
+      "beneficiary_name_on_account": "Petcove Supplies Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "MNmZyvbv7+hEmc/TZjf/kKFs+HS09fLtDbVlv4jSuQ9Y/OsGz9DIw0fRQ5pRA49UwmijJFiuy753uTwrUryeDg==",
+      "signed_payload_hash": "sha256:bf4b645b3bf92be1ba07d1ed5c01020aea3a3c1718ec350eb8a6e512cdeb969f",
+      "signed_at": "2026-08-20T15:49:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "HAL-CTL-001",
+      "evaluated_at": "2026-08-20T15:48:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-002",
+      "evaluated_at": "2026-08-20T15:48:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-003",
+      "evaluated_at": "2026-08-20T15:48:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-004",
+      "evaluated_at": "2026-08-20T15:48:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-005",
+      "evaluated_at": "2026-08-20T15:48:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-20T15:48:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-20T15:48:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-20T15:48:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-20T15:48:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

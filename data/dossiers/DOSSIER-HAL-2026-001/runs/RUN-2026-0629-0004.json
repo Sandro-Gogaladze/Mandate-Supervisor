@@ -1,0 +1,343 @@
+{
+  "run_id": "RUN-2026-0629-0004",
+  "dossier_id": "DOSSIER-HAL-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-29T16:05:00-05:00",
+  "ended_at": "2026-06-29T16:07:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "vitamin c serum and the argan hair oil",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-HAL-0629-0004",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-29T16:05:00-05:00",
+    "expires_at": "2026-06-29T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper H004",
+      "role": "consumer",
+      "principal_id": "PRIN-H-H004",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-HAL-SHOP-01",
+      "agent_name": "Halcyon Buying Assistant",
+      "operator_firm": "Halcyon Retail Agents Ltd",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "vitamin c serum and the argan hair oil",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 90.0,
+      "max_cumulative_amount": 90.0,
+      "currency": "USD",
+      "valid_from": "2026-06-29T00:00:00-05:00",
+      "valid_until": "2026-06-29T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5977"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-29T16:05:00-05:00",
+      "device_id": "DEV-K-H004"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-H004",
+      "value": "7jLNQ94GEbSV5ompDtpNjKfwUEsEVshSGLFXpjR/ZUoVtIpJS3eOyChHhJGjw4pk+u+b8V2HpTqbn81puATDBw==",
+      "signed_payload_hash": "sha256:e408c667a847528c0e67db5caf341f9046576c5bb748eedb9a8866aaaee7a463",
+      "signed_at": "2026-06-29T16:05:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-003"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:603d80e90ce4524e0b5e63926fc5ee71f57ac7e1045082acb8947319e6811bf9",
+      "release_ref": "halcyon-buy-v1.8.2"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "vitamin c serum and the argan hair oil",
+          "max_price": 90.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:030752ccf8bc88e2a20c2bc09f899242b9be4894f500f58d06c7ae7647c32604"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "LUM-SKN-SER-30",
+            "LUM-HAI-OIL-10"
+          ]
+        },
+        "result_digest": "sha256:89b493bd07df4318be74d0c451c63f21b84ddab46781ea16d88349b89d69775f",
+        "result_excerpt": {
+          "source": "mcp://shop.lumenbeauty.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "LUMEN BEAUTY CO — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "LUM-SKN-SER-30",
+            "LUM-HAI-OIL-10"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:e63e19edc2b3e12758caf40c76a9eb86077f37eb7708ba352a076cef42881498"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-LUM-6614",
+          "lines": 2,
+          "total": 77.5
+        },
+        "result_digest": "sha256:5dc59cd5d8b5c2c873371861e64da4bdc94267ee5c254da9dc9af3a78568dbe0"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.halcyonagents.co.uk",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 77.5,
+          "currency": "USD",
+          "principal_id": "PRIN-H-H004"
+        },
+        "result_digest": "sha256:9d92dd44704249a2a2de3163864623c79e24af2541487193cf1a6929c5b411c8"
+      }
+    ],
+    "selection_context": {
+      "query": "vitamin c serum and the argan hair oil",
+      "selected_sku": "LUM-SKN-SER-30",
+      "alternatives_considered": [
+        {
+          "sku": "KDO-PLU-BEA-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 54.0,
+          "description": "Handmade wool bear"
+        },
+        {
+          "sku": "DSK-NTB-A5-10",
+          "merchant_id": "MER-DSK-3390",
+          "price": 42.0,
+          "description": "A5 dotted notebook, 10-pack"
+        },
+        {
+          "sku": "BRW-COF-BEA-1K",
+          "merchant_id": "MER-BRW-1177",
+          "price": 38.0,
+          "description": "Single-origin coffee beans, 1kg"
+        },
+        {
+          "sku": "NOR-SND-EVR-11",
+          "merchant_id": "MER-NOR-1120",
+          "price": 62.0,
+          "description": "Everstrap sandal, men's 11"
+        },
+        {
+          "sku": "PGE-BOK-COK-02",
+          "merchant_id": "MER-PGE-2201",
+          "price": 34.0,
+          "description": "Salt Fat Acid Heat, hardback"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-29T16:05:47-05:00",
+    "principal_id": "PRIN-H-H004",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 77.5,
+      "currency": "USD",
+      "merchant": "Lumen Beauty Co",
+      "line_items": [
+        {
+          "sku": "LUM-SKN-SER-30",
+          "qty": 1,
+          "unit_price": 48.0
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "qty": 1,
+          "unit_price": 29.5
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 90.0
+      }
+    },
+    "rendered_hash": "sha256:bf41dacd7ed78987c4fb3acc59a9ed815ffd480ba4e1378178ede333e0ade155",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-HAL-0629-0004",
+    "chain_link": {
+      "prev_mandate_id": "IM-HAL-0629-0004",
+      "prev_mandate_hash": "sha256:e408c667a847528c0e67db5caf341f9046576c5bb748eedb9a8866aaaee7a463"
+    },
+    "created_at": "2026-06-29T16:05:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-LUM-6614",
+      "name": "Lumen Beauty Co",
+      "mcc": "5977",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "LUM-SKN-SER-30",
+        "description": "Vitamin C serum, 30ml",
+        "qty": 1,
+        "unit_price": 48.0
+      },
+      {
+        "sku": "LUM-HAI-OIL-10",
+        "description": "Argan hair oil, 100ml",
+        "qty": 1,
+        "unit_price": 29.5
+      }
+    ],
+    "cart_total": 77.5,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Lumen Beauty Co's catalogue and selected the closest in-stock option at $77.50, within the stated $90.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "zmrHWBOo0+ypXhiUZ4nx7A52a9PnBjyCWGwL689PD8nRaGf1sBlyFlf4ClyvBe3IoBnq7QZB4Dx6O8k2KcZuDg==",
+      "signed_payload_hash": "sha256:231a37eefa34394e9623092fced6bd436ab45ee6b616e68224c8251fc59abd32",
+      "signed_at": "2026-06-29T16:05:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-HAL-0629-0004",
+    "chain_link": {
+      "prev_mandate_id": "CM-HAL-0629-0004",
+      "prev_mandate_hash": "sha256:231a37eefa34394e9623092fced6bd436ab45ee6b616e68224c8251fc59abd32"
+    },
+    "authorized_at": "2026-06-29T16:07:19-05:00",
+    "amount": 77.5,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1003",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2003",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Lumen Beauty Co"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "EGjHRLaaDDpeyp3Y3gx9kF58BjcYQ9h85KawVssKPzBMOIXtGgeF1XvgEYY99dR9mZuqUgZZeUPtu/gB7EV7Dg==",
+      "signed_payload_hash": "sha256:9ac6e39a18d7bcc6bed2d6bb1992f3869da196e2ffd819fb855804b7d54b37cb",
+      "signed_at": "2026-06-29T16:07:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "HAL-CTL-001",
+      "evaluated_at": "2026-06-29T16:06:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-002",
+      "evaluated_at": "2026-06-29T16:06:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-003",
+      "evaluated_at": "2026-06-29T16:06:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-004",
+      "evaluated_at": "2026-06-29T16:06:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-005",
+      "evaluated_at": "2026-06-29T16:06:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-29T16:06:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-29T16:06:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-29T16:06:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-29T16:06:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

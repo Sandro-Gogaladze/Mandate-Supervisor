@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0721-0029",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-21T13:12:00-05:00",
+  "ended_at": "2026-07-21T13:14:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "700x40 gravel tyres, pair",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0721-0029",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-21T13:12:00-05:00",
+    "expires_at": "2026-07-21T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0029",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0029",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "700x40 gravel tyres, pair",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 110.0,
+      "max_cumulative_amount": 110.0,
+      "currency": "USD",
+      "valid_from": "2026-07-21T00:00:00-05:00",
+      "valid_until": "2026-07-21T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5940"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-21T13:12:00-05:00",
+      "device_id": "DEV-K-0029"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0029",
+      "value": "9fNaTk67L+iDugqP2sK4Ki0Qbr7PJma/6cKgvPrENGW+3rXLhajPrEZjhJ/QeInuQnyH5GyIJztxZPjryE2NDQ==",
+      "signed_payload_hash": "sha256:41d90ac65eea2b390316060f094ad1050936ecf4e13d2646fd2bc08fd5944e18",
+      "signed_at": "2026-07-21T13:12:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "700x40 gravel tyres, pair",
+          "max_price": 110.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:fee248a298bbca20ebe19d896a110832d8bc2479145262d1d99414a79fc7ffdd"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "CYC-TYR-GRV-02"
+          ]
+        },
+        "result_digest": "sha256:0a70d845e2e4769bb9db76ce5fbd0dc08753a8a89a8e24536590fd1f62643731",
+        "result_excerpt": {
+          "source": "mcp://shop.cyclora.fr",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "CYCLORA CYCLES SAS — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "CYC-TYR-GRV-02"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:9291c85def5f8ee2621ab9d68cf0de012f8c4de56d2e8f055b22e7c4eea3050c"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-CYC-6650",
+          "lines": 1,
+          "total": 96.0
+        },
+        "result_digest": "sha256:7743df78d935e8854134401c22cb8525687dd6343344fd9a11baba71f1894fe4"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 96.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0029"
+        },
+        "result_digest": "sha256:e15ed58fd28757d88253fe02d32f321ef62dfd05e9db4c8f74f8d7b3f0caeb35"
+      }
+    ],
+    "selection_context": {
+      "query": "700x40 gravel tyres, pair",
+      "selected_sku": "CYC-TYR-GRV-02",
+      "alternatives_considered": [
+        {
+          "sku": "KDO-BLD-CTY-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 96.0,
+          "description": "Modular city building set, 1200pc"
+        },
+        {
+          "sku": "ATE-COT-OXF-L",
+          "merchant_id": "MER-ATE-3345",
+          "price": 92.0,
+          "description": "Brushed oxford shirt, L"
+        },
+        {
+          "sku": "HRT-LIN-TWL-06",
+          "merchant_id": "MER-HRT-9902",
+          "price": 88.0,
+          "description": "Waffle bath towel set of 6"
+        },
+        {
+          "sku": "PTC-DOG-BED-L",
+          "merchant_id": "MER-PTC-7712",
+          "price": 112.0,
+          "description": "Orthopaedic dog bed, large"
+        },
+        {
+          "sku": "PGE-BOK-SET-05",
+          "merchant_id": "MER-PGE-2201",
+          "price": 78.0,
+          "description": "Le Carre boxed set, 5 volumes"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-21T13:12:47-05:00",
+    "principal_id": "PRIN-K-0029",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 96.0,
+      "currency": "USD",
+      "merchant": "Cyclora Cycles SAS",
+      "line_items": [
+        {
+          "sku": "CYC-TYR-GRV-02",
+          "qty": 1,
+          "unit_price": 96.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 110.0
+      }
+    },
+    "rendered_hash": "sha256:6d7582459510984c469bbe44f57c3aff09e47ea25f699af67a4a74cbaeddc75f",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0721-0029",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0721-0029",
+      "prev_mandate_hash": "sha256:41d90ac65eea2b390316060f094ad1050936ecf4e13d2646fd2bc08fd5944e18"
+    },
+    "created_at": "2026-07-21T13:12:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-CYC-6650",
+      "name": "Cyclora Cycles SAS",
+      "mcc": "5940",
+      "country": "FR",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "CYC-TYR-GRV-02",
+        "description": "Gravel tyre 700x40, pair",
+        "qty": 1,
+        "unit_price": 96.0
+      }
+    ],
+    "cart_total": 96.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Cyclora Cycles SAS's catalogue and selected the closest in-stock option at $96.00, within the stated $110.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "pqR5TaqVGWkCZR90pGb9zMysyOkXRug1S38QoTJUs/1RguqIhccT+wkSlzKJWUt44yatiaySHGqhEcGLMFTxAg==",
+      "signed_payload_hash": "sha256:5a1a0801e8a1c770ebfc5fdf4ddc8e57ee330a6fbb3288053786a86a17fbbee0",
+      "signed_at": "2026-07-21T13:12:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0721-0029",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0721-0029",
+      "prev_mandate_hash": "sha256:5a1a0801e8a1c770ebfc5fdf4ddc8e57ee330a6fbb3288053786a86a17fbbee0"
+    },
+    "authorized_at": "2026-07-21T13:14:19-05:00",
+    "amount": 96.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1028",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2028",
+      "scheme": "card_settlement",
+      "country": "FR",
+      "beneficiary_name_on_account": "Cyclora Cycles SAS"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "Bu7pAC+IwuP57t30J8MPLetQNDhVF38aOY5DjywVsUR4YQFwpxDpGMu347LHq1EJFLhDfvc/L+mUCACUVidyDg==",
+      "signed_payload_hash": "sha256:57e6ccdc576a7eeedd16d2702ae115a03ace3467085d919b3db3d1831979333b",
+      "signed_at": "2026-07-21T13:14:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-07-21T13:13:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-07-21T13:13:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-07-21T13:13:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-07-21T13:13:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-07-21T13:13:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-21T13:13:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-21T13:13:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-21T13:13:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-21T13:13:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

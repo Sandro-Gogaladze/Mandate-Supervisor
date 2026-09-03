@@ -1,25 +1,80 @@
 {
-  "registry_version": "2026.1",
+  "registry_version": "2026.2",
   "as_of": "2026-09-01",
   "description": "Agent operators. NOT regulated entities — they appear here because an institution sponsors them, and the institution is accountable for what it authorises on their behalf.",
   "operators": [
     {
-      "operator_id": "OPR-001",
-      "legal_name": "Brightline Retail Group, Inc.",
-      "trading_name": "Brightline",
+      "operator_id": "OPR-002",
+      "legal_name": "Kestrel Commerce, Inc.",
+      "trading_name": "Kestrel",
       "is_institution": false,
       "sponsoring_institution_id": "INST-001",
-      "sector": "dtc_home_goods",
+      "sector": "agentic_commerce_platform",
       "hq": "Austin, TX, US",
       "timezone": "America/Chicago",
-      "incorporated": "2019-06-11",
+      "incorporated": "2023-09-05",
       "standing": "good",
       "ownership_changes": [],
       "authorised_signatories": [
-        { "principal_id": "PRIN-BRL-0022", "name": "Marcus Oyelaran", "role": "Inventory Director" },
-        { "principal_id": "PRIN-BRL-0004", "name": "Renata Solberg", "role": "Chief Operating Officer" }
+        {
+          "principal_id": "PRIN-KST-0001",
+          "name": "Renata Solberg",
+          "role": "Chief Executive"
+        },
+        {
+          "principal_id": "PRIN-KST-0002",
+          "name": "Adaeze Nwachukwu",
+          "role": "Head of Risk"
+        }
       ],
-      "compliance_contact": { "name": "Renata Solberg", "role": "Chief Operating Officer" }
+      "compliance_contact": {
+        "name": "Adaeze Nwachukwu",
+        "role": "Head of Risk"
+      },
+      "notes": "Operates a consumer shopping agent under AP2. Its shoppers are retail consumers, so every purchase runs the human-present flow: the shopper's request becomes an Intent Mandate and they sign the exact cart.",
+      "licence_status": "not_licensed",
+      "authority_basis": "sponsored",
+      "sponsorship": {
+        "institution_id": "INST-001",
+        "status": "active",
+        "granted_at": "2026-02-10",
+        "expires_at": "2027-02-10",
+        "scope": "agent-initiated consumer card payments"
+      }
+    },
+    {
+      "operator_id": "OPR-003",
+      "legal_name": "Halcyon Retail Agents Ltd",
+      "trading_name": "Halcyon",
+      "is_institution": false,
+      "sponsoring_institution_id": "INST-001",
+      "sector": "agentic_commerce_platform",
+      "hq": "Manchester, GB",
+      "timezone": "Europe/London",
+      "incorporated": "2024-04-18",
+      "standing": "good",
+      "licence_status": "not_licensed",
+      "authority_basis": "sponsored",
+      "sponsorship": {
+        "institution_id": "INST-001",
+        "status": "active",
+        "granted_at": "2026-03-06",
+        "expires_at": "2027-03-06",
+        "scope": "agent-initiated consumer card payments"
+      },
+      "ownership_changes": [],
+      "authorised_signatories": [
+        {
+          "principal_id": "PRIN-HAL-0001",
+          "name": "Fenella Achterberg",
+          "role": "Managing Director"
+        }
+      ],
+      "compliance_contact": {
+        "name": "Fenella Achterberg",
+        "role": "Managing Director"
+      },
+      "notes": "A second consumer shopping agent sponsored by the same institution. Its merchant set overlaps Kestrel's, which is ordinary — and is what makes a genuinely shared counterparty distinguishable from ordinary popularity."
     }
   ]
 }

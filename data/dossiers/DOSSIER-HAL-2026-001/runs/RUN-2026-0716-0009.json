@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0716-0009",
+  "dossier_id": "DOSSIER-HAL-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-16T10:02:00-05:00",
+  "ended_at": "2026-07-16T10:04:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "salt fat acid heat hardback",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-HAL-0716-0009",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-16T10:02:00-05:00",
+    "expires_at": "2026-07-16T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper H009",
+      "role": "consumer",
+      "principal_id": "PRIN-H-H009",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-HAL-SHOP-01",
+      "agent_name": "Halcyon Buying Assistant",
+      "operator_firm": "Halcyon Retail Agents Ltd",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "salt fat acid heat hardback",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 40.0,
+      "max_cumulative_amount": 40.0,
+      "currency": "USD",
+      "valid_from": "2026-07-16T00:00:00-05:00",
+      "valid_until": "2026-07-16T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5942"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-16T10:02:00-05:00",
+      "device_id": "DEV-K-H009"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-H009",
+      "value": "AunZ8SRaMpquUZppVuJvx9PUC20u/D7gQQQESxtyegV9rDkx6uW/7cNlVx4As6+ZSLhHB3ySXudIOUhLpF5vCw==",
+      "signed_payload_hash": "sha256:17013e4789ff61cc96eb28ecb89083661235ca291ed032f7bca33c9bec391b4c",
+      "signed_at": "2026-07-16T10:02:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-003"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:dc955d3189ad0955d3c1dc069943df7ccd21472a0c9b9ce918cccd8d18b4b512",
+      "release_ref": "halcyon-buy-v1.9.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "salt fat acid heat hardback",
+          "max_price": 40.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:4b3f67f467cdee1f30cccb5bad3731619007d18f27ca09d60c79ec168e3c8dcf"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-COK-02"
+          ]
+        },
+        "result_digest": "sha256:b65ad8815c26df6ee326702e076a4b4980004d6037976a2ac8f3b7dbe1b3d809",
+        "result_excerpt": {
+          "source": "mcp://shop.pagegrove.co.uk",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "PAGEGROVE BOOKS LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-COK-02"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:e67e771b2557dfc6ca9f59fde6712ff8af16730e130d2c9ad1f2969a83d7c566"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-PGE-2201",
+          "lines": 1,
+          "total": 34.0
+        },
+        "result_digest": "sha256:edecc1cc94a4e9c09031f3ba5b90e20011279ae46652760c4d9e59a964bde018"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.halcyonagents.co.uk",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 34.0,
+          "currency": "USD",
+          "principal_id": "PRIN-H-H009"
+        },
+        "result_digest": "sha256:e18fe499fe0ccd13bb04036ce676d734c96840aba39c5df4e261930ea731dc74"
+      }
+    ],
+    "selection_context": {
+      "query": "salt fat acid heat hardback",
+      "selected_sku": "PGE-BOK-COK-02",
+      "alternatives_considered": [
+        {
+          "sku": "BRW-COF-BEA-1K",
+          "merchant_id": "MER-BRW-1177",
+          "price": 38.0,
+          "description": "Single-origin coffee beans, 1kg"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        },
+        {
+          "sku": "DSK-NTB-A5-10",
+          "merchant_id": "MER-DSK-3390",
+          "price": 42.0,
+          "description": "A5 dotted notebook, 10-pack"
+        },
+        {
+          "sku": "VLT-CAB-USB-03",
+          "merchant_id": "MER-VLT-7789",
+          "price": 24.0,
+          "description": "USB-C braided cable, 2m, 3-pack"
+        },
+        {
+          "sku": "KDO-PZL-1000-04",
+          "merchant_id": "MER-KDO-5573",
+          "price": 22.0,
+          "description": "1000-piece landscape puzzle"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-16T10:02:47-05:00",
+    "principal_id": "PRIN-H-H009",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 34.0,
+      "currency": "USD",
+      "merchant": "Pagegrove Books Ltd",
+      "line_items": [
+        {
+          "sku": "PGE-BOK-COK-02",
+          "qty": 1,
+          "unit_price": 34.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 40.0
+      }
+    },
+    "rendered_hash": "sha256:02a7ed1216e9e19d405e84605527424797320a6ab01e8768e58e2a4debbbbe69",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-HAL-0716-0009",
+    "chain_link": {
+      "prev_mandate_id": "IM-HAL-0716-0009",
+      "prev_mandate_hash": "sha256:17013e4789ff61cc96eb28ecb89083661235ca291ed032f7bca33c9bec391b4c"
+    },
+    "created_at": "2026-07-16T10:02:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-PGE-2201",
+      "name": "Pagegrove Books Ltd",
+      "mcc": "5942",
+      "country": "GB",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "PGE-BOK-COK-02",
+        "description": "Salt Fat Acid Heat, hardback",
+        "qty": 1,
+        "unit_price": 34.0
+      }
+    ],
+    "cart_total": 34.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Pagegrove Books Ltd's catalogue and selected the closest in-stock option at $34.00, within the stated $40.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "satFUCWZU6n/4VlviZPhR9GnaNAm0idipIlF1YFramzIWvs7mCgD0bklUIvAPzqoyu85WVFjZEcDmVei6XmCDA==",
+      "signed_payload_hash": "sha256:110258f0116c2c9631bbf07803624a2458f41106fdd737fb03b5be8c0be804c9",
+      "signed_at": "2026-07-16T10:02:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-HAL-0716-0009",
+    "chain_link": {
+      "prev_mandate_id": "CM-HAL-0716-0009",
+      "prev_mandate_hash": "sha256:110258f0116c2c9631bbf07803624a2458f41106fdd737fb03b5be8c0be804c9"
+    },
+    "authorized_at": "2026-07-16T10:04:19-05:00",
+    "amount": 34.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1008",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2008",
+      "scheme": "card_settlement",
+      "country": "GB",
+      "beneficiary_name_on_account": "Pagegrove Books Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "Y4lO482tqr7at/EDKn8Kay0rA3VOP2MhvozqHGq4W60sJWtoiTGn/ZmF4ClsFPE1elQJjBAtfyroWVsberJtBA==",
+      "signed_payload_hash": "sha256:88fa96ad567483730cb70c517d2247e091c7ff3366e6691251bffa03aba7752d",
+      "signed_at": "2026-07-16T10:04:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "HAL-CTL-001",
+      "evaluated_at": "2026-07-16T10:03:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-002",
+      "evaluated_at": "2026-07-16T10:03:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-003",
+      "evaluated_at": "2026-07-16T10:03:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-004",
+      "evaluated_at": "2026-07-16T10:03:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-005",
+      "evaluated_at": "2026-07-16T10:03:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-16T10:03:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-16T10:03:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-16T10:03:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-16T10:03:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

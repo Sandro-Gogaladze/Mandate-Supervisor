@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0701-0015",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-01T11:03:00-05:00",
+  "ended_at": "2026-07-01T11:05:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a two person tent for the ridgeline trail, under $350",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0701-0015",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-01T11:03:00-05:00",
+    "expires_at": "2026-07-01T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0015",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0015",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a two person tent for the ridgeline trail, under $350",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 350.0,
+      "max_cumulative_amount": 350.0,
+      "currency": "USD",
+      "valid_from": "2026-07-01T00:00:00-05:00",
+      "valid_until": "2026-07-01T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5941"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-01T11:03:00-05:00",
+      "device_id": "DEV-K-0015"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0015",
+      "value": "QS0K6AH+dllm4it4U/bBEyCjKpn/Gh+mX1ChivnT/tJr/F5MpqQKTUDvPf3T3MIlBwvpz1eonDHuXJXTI89kBQ==",
+      "signed_payload_hash": "sha256:d1ef54ef1a8ed669c656bcbef79fe7519c72df0c4d5041a680f27b7a8d067172",
+      "signed_at": "2026-07-01T11:03:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a two person tent for the ridgeline trail, under $350",
+          "max_price": 350.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:37af55a2bb3ced6a2b5ba2469fb01ceefb64c7172cd0742caf2cc4e714e8630d"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "TRK-TNT-2PR-01"
+          ]
+        },
+        "result_digest": "sha256:854280e5d3e10ee9b6ad06a70b86cac69e30280c51069608f108f1f3e7f16263",
+        "result_excerpt": {
+          "source": "mcp://shop.trekline.nl",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "TREKLINE OUTDOOR BV — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "TRK-TNT-2PR-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:8b5bd20b300d80961846649f549b30d327e1c69409117c27a7143df2b6167ae6"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-TRK-4408",
+          "lines": 1,
+          "total": 329.0
+        },
+        "result_digest": "sha256:ab07905b2baf857ad37eb2aff1ba58623f79d9089dcbbc8ee8e290ca79dc91ff"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 329.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0015"
+        },
+        "result_digest": "sha256:d136a23ebe478f3259bd665b943395ff944526c416db7ce54494a6460753d120"
+      }
+    ],
+    "selection_context": {
+      "query": "a two person tent for the ridgeline trail, under $350",
+      "selected_sku": "TRK-TNT-2PR-01",
+      "alternatives_considered": [
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        },
+        {
+          "sku": "QVC-GEN-BDL-01",
+          "merchant_id": "MER-QVC-8801",
+          "price": 289.0,
+          "description": "Premium home bundle, assorted"
+        },
+        {
+          "sku": "VLT-HDP-ANC-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 279.0,
+          "description": "Noise-cancelling over-ear headphones"
+        },
+        {
+          "sku": "DSK-CHR-ERG-01",
+          "merchant_id": "MER-DSK-3390",
+          "price": 385.0,
+          "description": "Ergonomic task chair"
+        },
+        {
+          "sku": "NOR-RUN-PRO-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 268.0,
+          "description": "Trailflex Pro carbon-plate racer, women's 10"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-01T11:03:47-05:00",
+    "principal_id": "PRIN-K-0015",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 54.99,
+      "currency": "USD",
+      "merchant": "Trekline Outdoor BV",
+      "line_items": [
+        {
+          "sku": "TRK-TNT-2PR-01",
+          "qty": 1,
+          "unit_price": 329.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 350.0
+      }
+    },
+    "rendered_hash": "sha256:aefa8d14d0bef274b96faf175e6d812a2236e41d4943fc06283588793d1d05ad",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0701-0015",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0701-0015",
+      "prev_mandate_hash": "sha256:d1ef54ef1a8ed669c656bcbef79fe7519c72df0c4d5041a680f27b7a8d067172"
+    },
+    "created_at": "2026-07-01T11:03:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-TRK-4408",
+      "name": "Trekline Outdoor BV",
+      "mcc": "5941",
+      "country": "NL",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "TRK-TNT-2PR-01",
+        "description": "Ridgeline 2-person tent",
+        "qty": 1,
+        "unit_price": 329.0
+      }
+    ],
+    "cart_total": 329.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Trekline Outdoor BV's catalogue and selected the closest in-stock option at $329.00, within the stated $350.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "HnneY4seOAX+sS6i2AiGLB0cvhE3GHupm7K+MRnnskmg7V1M2JBehcp2/120mIOTFya+KqIHdFRJh8nksENwBg==",
+      "signed_payload_hash": "sha256:e56342e819a51fe82aa94f68837d1ad91cb4929bf5f4cbc6b42a40c7f885ce04",
+      "signed_at": "2026-07-01T11:03:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0701-0015",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0701-0015",
+      "prev_mandate_hash": "sha256:e56342e819a51fe82aa94f68837d1ad91cb4929bf5f4cbc6b42a40c7f885ce04"
+    },
+    "authorized_at": "2026-07-01T11:05:19-05:00",
+    "amount": 329.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1014",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2014",
+      "scheme": "card_settlement",
+      "country": "NL",
+      "beneficiary_name_on_account": "Trekline Outdoor BV"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "sDz+i0pDrdUwXQ49Vl160PXqRVs2P7oh+PgkeMflQhTCKugwVA5tJYL9y0cCikqOvqlXMghR4YJrhfJR1P7HDQ==",
+      "signed_payload_hash": "sha256:8294b12670b51c85b96d2d1387dab81881cf381afca15530c8504d88f3eeaaac",
+      "signed_at": "2026-07-01T11:05:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-07-01T11:04:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-07-01T11:04:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-07-01T11:04:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-07-01T11:04:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-07-01T11:04:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-01T11:04:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-01T11:04:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-01T11:04:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-01T11:04:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

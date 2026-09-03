@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0819-0049",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-19T09:48:00-05:00",
+  "ended_at": "2026-08-19T09:50:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "another two premium home bundles",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0819-0049",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-19T09:48:00-05:00",
+    "expires_at": "2026-08-19T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0048",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0048",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "another two premium home bundles",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 600.0,
+      "max_cumulative_amount": 600.0,
+      "currency": "USD",
+      "valid_from": "2026-08-19T00:00:00-05:00",
+      "valid_until": "2026-08-19T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5964"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-19T09:48:00-05:00",
+      "device_id": "DEV-K-0048"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0048",
+      "value": "Fp30/rYR8pypqmNxywMr/Ke9l92QjFusKwirk+Z3Zt+1DxLPjmnIeLIEdh3iMCpnFiKNvzgduk8IKNA81jPeDA==",
+      "signed_payload_hash": "sha256:6c41197c4d1e5638793e595c18ce42a7b32eee6a7ceb1cf19dc2eb35c7114486",
+      "signed_at": "2026-08-19T09:48:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "another two premium home bundles",
+          "max_price": 600.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:9b3914d306056bf557ef3b90c76fb99a6168407065ba53c3656823c6c40ebda8"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "QVC-GEN-BDL-01"
+          ]
+        },
+        "result_digest": "sha256:be4125716a87f75932ed9fd57b9e0db1c08a291ca2d153d71ad6692e81addfbb",
+        "result_excerpt": {
+          "source": "mcp://shop.quickvale.cy",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "QUICKVALE DIRECT LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "QVC-GEN-BDL-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:d7a61724569a02efabb42406239dd3334a2c777e0483c62266b52dfe752438b1"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-QVC-8801",
+          "lines": 1,
+          "total": 578.0
+        },
+        "result_digest": "sha256:38a9b3d9b8ccd9a223e0062ba8661fe1d7762b1d4a8f6b405862591be59bd118"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 578.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0048"
+        },
+        "result_digest": "sha256:1860638569f6d9e5186c786b3f0f2b491d432addb816bbdeb8300bff9c9c7cd9"
+      }
+    ],
+    "selection_context": {
+      "query": "another two premium home bundles",
+      "selected_sku": "QVC-GEN-BDL-01",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-HDP-ANC-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 279.0,
+          "description": "Noise-cancelling over-ear headphones"
+        },
+        {
+          "sku": "NOR-RUN-PRO-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 268.0,
+          "description": "Trailflex Pro carbon-plate racer, women's 10"
+        },
+        {
+          "sku": "TRK-TNT-2PR-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 329.0,
+          "description": "Ridgeline 2-person tent"
+        },
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        },
+        {
+          "sku": "MKT-3P-HDP-ANC",
+          "merchant_id": "MER-MKT-9034",
+          "price": 238.0,
+          "description": "Noise-cancelling headphones (marketplace listing)"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-19T09:48:47-05:00",
+    "principal_id": "PRIN-K-0048",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 578.0,
+      "currency": "USD",
+      "merchant": "Quickvale Direct Ltd",
+      "line_items": [
+        {
+          "sku": "QVC-GEN-BDL-01",
+          "qty": 2,
+          "unit_price": 289.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 600.0
+      }
+    },
+    "rendered_hash": "sha256:04a9c029922782dc0d3abb31a6453f10e1e188c5f3d05a3612ca390ab59f9922",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0819-0049",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0819-0049",
+      "prev_mandate_hash": "sha256:6c41197c4d1e5638793e595c18ce42a7b32eee6a7ceb1cf19dc2eb35c7114486"
+    },
+    "created_at": "2026-08-19T09:48:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-QVC-8801",
+      "name": "Quickvale Direct Ltd",
+      "mcc": "5964",
+      "country": "CY",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "QVC-GEN-BDL-01",
+        "description": "Premium home bundle, assorted",
+        "qty": 2,
+        "unit_price": 289.0
+      }
+    ],
+    "cart_total": 578.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Quickvale Direct Ltd's catalogue and selected the closest in-stock option at $578.00, within the stated $600.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "XP1DMeIFfNH8FzkWsNI2UYDcfzokzGH3CQtMK3cJfcus9Wxil6GIOu6HmaXEhV7oZaSvvZyNWDwPDsxoRxjiCg==",
+      "signed_payload_hash": "sha256:9c1c6efe05d0c9427c546bfef9b2593f4789f4dfbc04bdd7357739678488a7d7",
+      "signed_at": "2026-08-19T09:48:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0819-0049",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0819-0049",
+      "prev_mandate_hash": "sha256:9c1c6efe05d0c9427c546bfef9b2593f4789f4dfbc04bdd7357739678488a7d7"
+    },
+    "authorized_at": "2026-08-19T09:50:19-05:00",
+    "amount": 578.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1048",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2048",
+      "scheme": "card_settlement",
+      "country": "CY",
+      "beneficiary_name_on_account": "Quickvale Direct Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "5+jN+vyCyhXYZsHZuTZuP/ReKpcIFpv6cZqQdOmPX5mgPus0fawT1nGYNtGGwEoSoBP2fQSke9xye7HBnZIdCg==",
+      "signed_payload_hash": "sha256:268ee0f26ef4d35c63796dd3ccee3d95973e608aa3911735d71b231325d3a61e",
+      "signed_at": "2026-08-19T09:50:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-08-19T09:49:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-08-19T09:49:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-08-19T09:49:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-08-19T09:49:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-08-19T09:49:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-19T09:49:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-19T09:49:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-19T09:49:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-19T09:49:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0716-0026",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-16T10:41:00-05:00",
+  "ended_at": "2026-07-16T10:43:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "the 1200 piece modular city building set",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0716-0026",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-16T10:41:00-05:00",
+    "expires_at": "2026-07-16T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0026",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0026",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "the 1200 piece modular city building set",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 110.0,
+      "max_cumulative_amount": 110.0,
+      "currency": "USD",
+      "valid_from": "2026-07-16T00:00:00-05:00",
+      "valid_until": "2026-07-16T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5945"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-16T10:41:00-05:00",
+      "device_id": "DEV-K-0026"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0026",
+      "value": "eN/Hiv0mMZpU3twPcWqEJb8KGY/gvw1y6yc68vMegClZrOlAR2Q//HFIyx7RXhx9sICesm5ZXyXPid2jBWe8Bw==",
+      "signed_payload_hash": "sha256:5f15b6057da69b8e713df2a2b2360af4952c94975c4b213a1c01c91a8e80f1e8",
+      "signed_at": "2026-07-16T10:41:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "the 1200 piece modular city building set",
+          "max_price": 110.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:dba21b3c47ecb5f4882d3b1c332f11b0ea4b419272ab6e5fc150ea3fcc578d9b"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "KDO-BLD-CTY-01"
+          ]
+        },
+        "result_digest": "sha256:9115213844d8b7c2f57f56ae04263b76200dc220be4194c2552a9b4b85ab7e88",
+        "result_excerpt": {
+          "source": "mcp://shop.kudotoys.jp",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "KUDO TOYS KK — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "KDO-BLD-CTY-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:8ec7df53a5b7ff4bde179017bba3dc537855abd7123edbbc624ee84b0c220b17"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-KDO-5573",
+          "lines": 1,
+          "total": 96.0
+        },
+        "result_digest": "sha256:8cb8118605170ad2fb32f7cba4e3e29bdb85caa224a5c167314b37ff1227c679"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 96.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0026"
+        },
+        "result_digest": "sha256:aab6ac11b006d3bcd6dcbd6f6ed5c6b3e3c9a2313b7ac2daf95d511240606ee4"
+      }
+    ],
+    "selection_context": {
+      "query": "the 1200 piece modular city building set",
+      "selected_sku": "KDO-BLD-CTY-01",
+      "alternatives_considered": [
+        {
+          "sku": "CYC-TYR-GRV-02",
+          "merchant_id": "MER-CYC-6650",
+          "price": 96.0,
+          "description": "Gravel tyre 700x40, pair"
+        },
+        {
+          "sku": "ATE-COT-OXF-L",
+          "merchant_id": "MER-ATE-3345",
+          "price": 92.0,
+          "description": "Brushed oxford shirt, L"
+        },
+        {
+          "sku": "HRT-LIN-TWL-06",
+          "merchant_id": "MER-HRT-9902",
+          "price": 88.0,
+          "description": "Waffle bath towel set of 6"
+        },
+        {
+          "sku": "PTC-DOG-BED-L",
+          "merchant_id": "MER-PTC-7712",
+          "price": 112.0,
+          "description": "Orthopaedic dog bed, large"
+        },
+        {
+          "sku": "PGE-BOK-SET-05",
+          "merchant_id": "MER-PGE-2201",
+          "price": 78.0,
+          "description": "Le Carre boxed set, 5 volumes"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-16T10:41:47-05:00",
+    "principal_id": "PRIN-K-0026",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 96.0,
+      "currency": "USD",
+      "merchant": "Kudo Toys KK",
+      "line_items": [
+        {
+          "sku": "KDO-BLD-CTY-01",
+          "qty": 1,
+          "unit_price": 96.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 110.0
+      }
+    },
+    "rendered_hash": "sha256:e0b0f5b4bb1705f64a1828095db5501ad1e262c0685c57b12db2f10cdda592c2",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0716-0026",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0716-0026",
+      "prev_mandate_hash": "sha256:5f15b6057da69b8e713df2a2b2360af4952c94975c4b213a1c01c91a8e80f1e8"
+    },
+    "created_at": "2026-07-16T10:41:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-KDO-5573",
+      "name": "Kudo Toys KK",
+      "mcc": "5945",
+      "country": "JP",
+      "region": "APAC",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "KDO-BLD-CTY-01",
+        "description": "Modular city building set, 1200pc",
+        "qty": 1,
+        "unit_price": 96.0
+      }
+    ],
+    "cart_total": 96.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Kudo Toys KK's catalogue and selected the closest in-stock option at $96.00, within the stated $110.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "6MEUVI3+hhRc2lv7tYr/+qSvFikfUGu78NneNgOH2Z1glswGzoiNIe/v4YMgUN1Z55Be9IS70eWMFQ9JcIwhCQ==",
+      "signed_payload_hash": "sha256:dcdc183434ac475bd0001178460286c3da73d2f70a70d80999599af3f39ccfca",
+      "signed_at": "2026-07-16T10:41:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0716-0026",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0716-0026",
+      "prev_mandate_hash": "sha256:dcdc183434ac475bd0001178460286c3da73d2f70a70d80999599af3f39ccfca"
+    },
+    "authorized_at": "2026-07-16T10:43:19-05:00",
+    "amount": 96.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1025",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2025",
+      "scheme": "card_settlement",
+      "country": "JP",
+      "beneficiary_name_on_account": "Kudo Toys KK"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "OUC64Ww3q0BtrVgDtRu+HXHEqTeOJfrzNxOC4KrPlA7DhrF+5++/CZwOpKsgnrgoG4hN4Ba+jU9GnGyWwVDsCg==",
+      "signed_payload_hash": "sha256:c959b15bd451161897dcc8f172e57e438933e3ca44f62c2df1232f18add37034",
+      "signed_at": "2026-07-16T10:43:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-07-16T10:42:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-07-16T10:42:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-07-16T10:42:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-07-16T10:42:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-07-16T10:42:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-16T10:42:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-16T10:42:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-16T10:42:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-16T10:42:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

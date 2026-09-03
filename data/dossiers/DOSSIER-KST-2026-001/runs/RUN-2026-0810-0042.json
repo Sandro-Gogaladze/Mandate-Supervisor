@@ -1,0 +1,292 @@
+{
+  "run_id": "RUN-2026-0810-0042",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-10T13:58:00-05:00",
+  "ended_at": "2026-08-10T13:59:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "boucle accent armchair, under $650",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0810-0042",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-10T13:58:00-05:00",
+    "expires_at": "2026-08-10T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0042",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0042",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "boucle accent armchair, under $650",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 650.0,
+      "max_cumulative_amount": 650.0,
+      "currency": "USD",
+      "valid_from": "2026-08-10T00:00:00-05:00",
+      "valid_until": "2026-08-10T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5712"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-10T13:58:00-05:00",
+      "device_id": "DEV-K-0042"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0042",
+      "value": "Zmgdc9Fz8zFfPil2qP6865jY1IzAaNXcQBaVHo/wckuJs6xEslY2h2qpCFg1TjgjvYg1m0biu8XykbJE0cs+Cw==",
+      "signed_payload_hash": "sha256:9f90be98673f95e44c674b8bbdee1d1260f7b0b6801ab22a437c20b4ab2545ad",
+      "signed_at": "2026-08-10T13:58:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.stillwaterhome.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "boucle accent armchair, under $650",
+          "max_price": 650.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:fada434aaa20df8dabae8a8e59b1c316db79c47b56b8543c5cfaf7436de91b44"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.stillwaterhome.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "STL-CHR-ACC-01"
+          ]
+        },
+        "result_digest": "sha256:40a835be825302888e690a61dd688a4ef0c03161dbcb2bfe0c076eef4f82982d",
+        "result_excerpt": {
+          "source": "mcp://shop.stillwaterhome.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "STILLWATER HOME GOODS — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.stillwaterhome.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "STL-CHR-ACC-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:9f4f674f1226c24d6d6d209dc4c561b5e9f089eb13fa0144b0bb7da3ee51cf67"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.stillwaterhome.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-STL-1193",
+          "lines": 1,
+          "total": 615.0
+        },
+        "result_digest": "sha256:8b57737b6ea86b357bebecf48735cb9a7ff77253bdb61a0f777e3545d8ba4108"
+      }
+    ],
+    "selection_context": {
+      "query": "boucle accent armchair, under $650",
+      "selected_sku": "STL-CHR-ACC-01",
+      "alternatives_considered": [
+        {
+          "sku": "AUR-AMP-INT-01",
+          "merchant_id": "MER-AUR-4471",
+          "price": 549.0,
+          "description": "Integrated stereo amplifier"
+        },
+        {
+          "sku": "ATE-WOL-COA-S",
+          "merchant_id": "MER-ATE-3345",
+          "price": 445.0,
+          "description": "Wool overcoat, charcoal, S"
+        },
+        {
+          "sku": "VLT-MON-27U-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 429.0,
+          "description": "27in 4K monitor, USB-C"
+        },
+        {
+          "sku": "AUR-SPK-BKS-02",
+          "merchant_id": "MER-AUR-4471",
+          "price": 398.0,
+          "description": "Bookshelf speaker pair"
+        },
+        {
+          "sku": "DSK-CHR-ERG-01",
+          "merchant_id": "MER-DSK-3390",
+          "price": 385.0,
+          "description": "Ergonomic task chair"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": null,
+  "cart": {
+    "cart_mandate_id": "CM-KST-0810-0042",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0810-0042",
+      "prev_mandate_hash": "sha256:9f90be98673f95e44c674b8bbdee1d1260f7b0b6801ab22a437c20b4ab2545ad"
+    },
+    "created_at": "2026-08-10T13:58:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-STL-1193",
+      "name": "Stillwater Home Goods",
+      "mcc": "5712",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "STL-CHR-ACC-01",
+        "description": "Accent armchair, boucle",
+        "qty": 1,
+        "unit_price": 615.0
+      }
+    ],
+    "cart_total": 615.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Stillwater Home Goods's catalogue and selected the closest in-stock option at $615.00, within the stated $650.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "zq+6WqCuKf2LKz/MtIh2InCVAjx1V+J+nJYSv/Exu/RwFvoL6z91yrBYsObj3VFQugavjq7IBc3KDo65eRghCA==",
+      "signed_payload_hash": "sha256:bacd0a0609dd8903cb691f9d26a7975a87a437e8b4ae926287eb1d9c50632323",
+      "signed_at": "2026-08-10T13:58:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0810-0042",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0810-0042",
+      "prev_mandate_hash": "sha256:bacd0a0609dd8903cb691f9d26a7975a87a437e8b4ae926287eb1d9c50632323"
+    },
+    "authorized_at": "2026-08-10T13:59:19-05:00",
+    "amount": 615.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1041",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2041",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Stillwater Home Goods"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "5hSIkiAoX+Fz455hYjsh40kQapSBEMfoVKflRW8F5f0abk70p0TQ2HY2S9hdSj3JrclcTXGDY1yq3FNUNLQBDg==",
+      "signed_payload_hash": "sha256:c108e3cfb615086e5b0892ba4c1f0cebc83b0f3fe2abefe86e3205023d248282",
+      "signed_at": "2026-08-10T13:59:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-08-10T13:59:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-08-10T13:59:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-08-10T13:59:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-08-10T13:59:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-08-10T13:59:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-10T13:59:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-10T13:59:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-10T13:59:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-10T13:59:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0717-0027",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-17T16:28:00-05:00",
+  "ended_at": "2026-07-17T16:30:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "1tb portable nvme ssd under $150",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0717-0027",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-17T16:28:00-05:00",
+    "expires_at": "2026-07-17T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0027",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0027",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "1tb portable nvme ssd under $150",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 150.0,
+      "max_cumulative_amount": 150.0,
+      "currency": "USD",
+      "valid_from": "2026-07-17T00:00:00-05:00",
+      "valid_until": "2026-07-17T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-17T16:28:00-05:00",
+      "device_id": "DEV-K-0027"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0027",
+      "value": "igITik2tcsT138JsSA8Njh1JckLX5Giu+P/zYoEK+4tTPjnf9yru1u7GXbELA3ImRU70vnjCV1JhImkO1+q7AA==",
+      "signed_payload_hash": "sha256:4ba7b8deecdfb532e72aac9e2492386155d9a6b8258285d068c816df8ed17649",
+      "signed_at": "2026-07-17T16:28:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "1tb portable nvme ssd under $150",
+          "max_price": 150.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:f9e73b29bd6408684347e841a57d184cd59be4a52a54667c5edbe3720727f053"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "VLT-SSD-1TB-01"
+          ]
+        },
+        "result_digest": "sha256:3a17c7c5828b2db24628ac0ea65682135485f0a5b36f9a07db6ce1029a73b3cf",
+        "result_excerpt": {
+          "source": "mcp://shop.voltic.de",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "VOLTIC ELEKTRONIK GMBH — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "VLT-SSD-1TB-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:33bd3ff769428d7119f57ac0896af5c334ef0101360768bffa8e94c7ff0cc6c4"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-VLT-7789",
+          "lines": 1,
+          "total": 132.0
+        },
+        "result_digest": "sha256:067586dbc55ce1e93783a63eec3594c84e1ba2467bad95cef59cd67b4c21633e"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 132.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0027"
+        },
+        "result_digest": "sha256:af82a5ed856764c3cb286b1466e340e9b642c57338252f383072b38a1cbbadea"
+      }
+    ],
+    "selection_context": {
+      "query": "1tb portable nvme ssd under $150",
+      "selected_sku": "VLT-SSD-1TB-01",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-RUN-RDW-09",
+          "merchant_id": "MER-NOR-1120",
+          "price": 134.5,
+          "description": "Roadwind running shoe, men's 9, grey"
+        },
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "merchant_id": "MER-CYC-6650",
+          "price": 128.0,
+          "description": "Road helmet, M"
+        },
+        {
+          "sku": "MKT-3P-CKW-DUT",
+          "merchant_id": "MER-MKT-9034",
+          "price": 141.0,
+          "description": "Enamelled dutch oven 5qt (marketplace listing)"
+        },
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "merchant_id": "MER-HRT-9902",
+          "price": 119.0,
+          "description": "8in chef's knife, forged"
+        },
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 118.0,
+          "description": "Trailflex running shoe, women's 10, white"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-17T16:28:47-05:00",
+    "principal_id": "PRIN-K-0027",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 132.0,
+      "currency": "USD",
+      "merchant": "Voltic Elektronik GmbH",
+      "line_items": [
+        {
+          "sku": "VLT-SSD-1TB-01",
+          "qty": 1,
+          "unit_price": 132.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 150.0
+      }
+    },
+    "rendered_hash": "sha256:64578aec74ac32249603f8f75bc909424ea79575737e32211aaff595d9e16d37",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0717-0027",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0717-0027",
+      "prev_mandate_hash": "sha256:4ba7b8deecdfb532e72aac9e2492386155d9a6b8258285d068c816df8ed17649"
+    },
+    "created_at": "2026-07-17T16:28:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-VLT-7789",
+      "name": "Voltic Elektronik GmbH",
+      "mcc": "5732",
+      "country": "DE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "VLT-SSD-1TB-01",
+        "description": "1TB portable NVMe SSD",
+        "qty": 1,
+        "unit_price": 132.0
+      }
+    ],
+    "cart_total": 132.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Voltic Elektronik GmbH's catalogue and selected the closest in-stock option at $132.00, within the stated $150.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "iDNAgDqyV5DtOYPyZxEnxAv/7IdPCUupti6c+bCowyCCRco0g9Aarm0DDDT95FCNHxo6y3GMRp4fQ31lL8bPCQ==",
+      "signed_payload_hash": "sha256:623a7b54cfa0c599c2b18a40dfb0c93c9c92f7952f8a3dc0479091189625e2ff",
+      "signed_at": "2026-07-17T16:28:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0717-0027",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0717-0027",
+      "prev_mandate_hash": "sha256:623a7b54cfa0c599c2b18a40dfb0c93c9c92f7952f8a3dc0479091189625e2ff"
+    },
+    "authorized_at": "2026-07-17T16:30:19-05:00",
+    "amount": 132.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1026",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2026",
+      "scheme": "card_settlement",
+      "country": "DE",
+      "beneficiary_name_on_account": "Voltic Elektronik GmbH"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "ZP7IGkOXh9Ivenmw84NBe7tg4gUfsGa8DHlqDgdp65sGAP+joI8KEtMIb+r4hDk7ceJATFn0ukX1GXXLMGB/DA==",
+      "signed_payload_hash": "sha256:b642a1f64d9562c9be5fc06be42ba82ebf06da3fc3e3c918c78e6fbe93d3bba0",
+      "signed_at": "2026-07-17T16:30:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-07-17T16:29:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-07-17T16:29:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-07-17T16:29:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-07-17T16:29:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-07-17T16:29:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-17T16:29:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-17T16:29:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-17T16:29:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-17T16:29:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

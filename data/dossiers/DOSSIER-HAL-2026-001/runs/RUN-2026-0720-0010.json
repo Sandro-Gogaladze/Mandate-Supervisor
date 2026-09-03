@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0720-0010",
+  "dossier_id": "DOSSIER-HAL-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-20T12:44:00-05:00",
+  "ended_at": "2026-07-20T12:46:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "road helmet medium",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-HAL-0720-0010",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-20T12:44:00-05:00",
+    "expires_at": "2026-07-20T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper H010",
+      "role": "consumer",
+      "principal_id": "PRIN-H-H010",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-HAL-SHOP-01",
+      "agent_name": "Halcyon Buying Assistant",
+      "operator_firm": "Halcyon Retail Agents Ltd",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "road helmet medium",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 140.0,
+      "max_cumulative_amount": 140.0,
+      "currency": "USD",
+      "valid_from": "2026-07-20T00:00:00-05:00",
+      "valid_until": "2026-07-20T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5940"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-20T12:44:00-05:00",
+      "device_id": "DEV-K-H010"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-H010",
+      "value": "CulYuLBiwXP+Nz9KCoEnDVG07R18KCzblE2yPQRuO7cZzhVltzKqkQDqgoSNLlcg7TAVJdRs04KZ0ph4BKX3AQ==",
+      "signed_payload_hash": "sha256:a5f591f00299bf01f877bf76d2c6963f43e2caf912984628379a0092b823af07",
+      "signed_at": "2026-07-20T12:44:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-003"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:dc955d3189ad0955d3c1dc069943df7ccd21472a0c9b9ce918cccd8d18b4b512",
+      "release_ref": "halcyon-buy-v1.9.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "road helmet medium",
+          "max_price": 140.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:52214bcab42d1d9dd82ddab0ef17a72f25be4d6d4a01137bf4d302e3cdf79a21"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "CYC-HLM-ROD-M"
+          ]
+        },
+        "result_digest": "sha256:0a70d845e2e4769bb9db76ce5fbd0dc08753a8a89a8e24536590fd1f62643731",
+        "result_excerpt": {
+          "source": "mcp://shop.cyclora.fr",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "CYCLORA CYCLES SAS — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "CYC-HLM-ROD-M"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:349b6d2bc21ed3a2113486110334385523ee5b5b3b0ae3ca0b9a2d23ef86b597"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-CYC-6650",
+          "lines": 1,
+          "total": 128.0
+        },
+        "result_digest": "sha256:3b4c9db0f2af7d606b1b751737f520af50dea1a045d3af789fa77c72d32e6b2a"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.halcyonagents.co.uk",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 128.0,
+          "currency": "USD",
+          "principal_id": "PRIN-H-H010"
+        },
+        "result_digest": "sha256:22eba4d0de435215343d6eb4824f58ea401232eb2a0615ede2b43cbc22c02d1b"
+      }
+    ],
+    "selection_context": {
+      "query": "road helmet medium",
+      "selected_sku": "CYC-HLM-ROD-M",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-SSD-1TB-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 132.0,
+          "description": "1TB portable NVMe SSD"
+        },
+        {
+          "sku": "NOR-RUN-RDW-09",
+          "merchant_id": "MER-NOR-1120",
+          "price": 134.5,
+          "description": "Roadwind running shoe, men's 9, grey"
+        },
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "merchant_id": "MER-HRT-9902",
+          "price": 119.0,
+          "description": "8in chef's knife, forged"
+        },
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 118.0,
+          "description": "Trailflex running shoe, women's 10, white"
+        },
+        {
+          "sku": "ATE-LIN-TRS-32",
+          "merchant_id": "MER-ATE-3345",
+          "price": 118.0,
+          "description": "Linen trouser, 32"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-20T12:44:47-05:00",
+    "principal_id": "PRIN-H-H010",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 128.0,
+      "currency": "USD",
+      "merchant": "Cyclora Cycles SAS",
+      "line_items": [
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "qty": 1,
+          "unit_price": 128.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 140.0
+      }
+    },
+    "rendered_hash": "sha256:cd0be1fdd9beec6afee0fa8d8843b17013cb4aceeab26a096738d6bb1ce7f756",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-HAL-0720-0010",
+    "chain_link": {
+      "prev_mandate_id": "IM-HAL-0720-0010",
+      "prev_mandate_hash": "sha256:a5f591f00299bf01f877bf76d2c6963f43e2caf912984628379a0092b823af07"
+    },
+    "created_at": "2026-07-20T12:44:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-CYC-6650",
+      "name": "Cyclora Cycles SAS",
+      "mcc": "5940",
+      "country": "FR",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "CYC-HLM-ROD-M",
+        "description": "Road helmet, M",
+        "qty": 1,
+        "unit_price": 128.0
+      }
+    ],
+    "cart_total": 128.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Cyclora Cycles SAS's catalogue and selected the closest in-stock option at $128.00, within the stated $140.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "fEtQ11HZJmhH2YkWgDqgKZ56h9O1xBSlYndrUAA0xOQIQCbf7mHTt14xg727feg3rElM5GtY+psA2uRdBRRBCw==",
+      "signed_payload_hash": "sha256:e337d93530c6fc66fa3c7ce880d017ed74c2b02e1bb4207e793e9110126f5e3c",
+      "signed_at": "2026-07-20T12:44:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-HAL-0720-0010",
+    "chain_link": {
+      "prev_mandate_id": "CM-HAL-0720-0010",
+      "prev_mandate_hash": "sha256:e337d93530c6fc66fa3c7ce880d017ed74c2b02e1bb4207e793e9110126f5e3c"
+    },
+    "authorized_at": "2026-07-20T12:46:19-05:00",
+    "amount": 128.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1009",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2009",
+      "scheme": "card_settlement",
+      "country": "FR",
+      "beneficiary_name_on_account": "Cyclora Cycles SAS"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "RxI6tS0MkCTQi07EwF8JjzmgiFhLOUSPRaP0QsuNmPtgOOmeb1HEX/6AekbJ2eQ4REvOeohS1MUrIKPJgmwLDw==",
+      "signed_payload_hash": "sha256:7e76430a9fadf4a4f4b577aa96ea6928f114be279197d406bdf315991c70b6bd",
+      "signed_at": "2026-07-20T12:46:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "HAL-CTL-001",
+      "evaluated_at": "2026-07-20T12:45:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-002",
+      "evaluated_at": "2026-07-20T12:45:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-003",
+      "evaluated_at": "2026-07-20T12:45:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-004",
+      "evaluated_at": "2026-07-20T12:45:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-005",
+      "evaluated_at": "2026-07-20T12:45:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-20T12:45:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-20T12:45:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-20T12:45:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-20T12:45:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

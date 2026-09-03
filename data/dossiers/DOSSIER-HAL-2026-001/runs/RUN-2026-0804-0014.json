@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0804-0014",
+  "dossier_id": "DOSSIER-HAL-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-04T16:22:00-05:00",
+  "ended_at": "2026-08-04T16:24:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "87 key mechanical keyboard under $160",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-HAL-0804-0014",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-04T16:22:00-05:00",
+    "expires_at": "2026-08-04T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper H014",
+      "role": "consumer",
+      "principal_id": "PRIN-H-H014",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-HAL-SHOP-01",
+      "agent_name": "Halcyon Buying Assistant",
+      "operator_firm": "Halcyon Retail Agents Ltd",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "87 key mechanical keyboard under $160",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 160.0,
+      "max_cumulative_amount": 160.0,
+      "currency": "USD",
+      "valid_from": "2026-08-04T00:00:00-05:00",
+      "valid_until": "2026-08-04T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-04T16:22:00-05:00",
+      "device_id": "DEV-K-H014"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-H014",
+      "value": "+EqZi2x1X/9xsm2dp8aLm+Ce5z7cZYMJ6o8z2+InfU1EOtGLkQYSR9ifWzHsLbVWiBpP4PNIc07yGcj4bADYDw==",
+      "signed_payload_hash": "sha256:0038113ee86867ef223ec2aa27c508ed994e65648520b25bf85a0b12c100e461",
+      "signed_at": "2026-08-04T16:22:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-003"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:dc955d3189ad0955d3c1dc069943df7ccd21472a0c9b9ce918cccd8d18b4b512",
+      "release_ref": "halcyon-buy-v1.9.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "87 key mechanical keyboard under $160",
+          "max_price": 160.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:1a107a4530a1f1404ad15f3e32bf0647c6c5cb73c6356e1884c752347133b6a2"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "VLT-KBD-MEC-87"
+          ]
+        },
+        "result_digest": "sha256:3a17c7c5828b2db24628ac0ea65682135485f0a5b36f9a07db6ce1029a73b3cf",
+        "result_excerpt": {
+          "source": "mcp://shop.voltic.de",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "VOLTIC ELEKTRONIK GMBH — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "VLT-KBD-MEC-87"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:e5a57a4ccbbf29e7f410895f18b305ffae57358cb78531ff37408d2fda58332e"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-VLT-7789",
+          "lines": 1,
+          "total": 149.0
+        },
+        "result_digest": "sha256:0e6eb4d3c17b6d28c92c11ceee382dbafe0e7f933927b5dbd04d7574ff3ffc13"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.halcyonagents.co.uk",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 149.0,
+          "currency": "USD",
+          "principal_id": "PRIN-H-H014"
+        },
+        "result_digest": "sha256:b6ce1e2bd47caac7a488f8fac0f18de74931516b731e33bb5fbb0dff1534df15"
+      }
+    ],
+    "selection_context": {
+      "query": "87 key mechanical keyboard under $160",
+      "selected_sku": "VLT-KBD-MEC-87",
+      "alternatives_considered": [
+        {
+          "sku": "ATE-KNT-MER-M",
+          "merchant_id": "MER-ATE-3345",
+          "price": 148.0,
+          "description": "Merino crew knit, oatmeal, M"
+        },
+        {
+          "sku": "PTC-CAT-TRE-01",
+          "merchant_id": "MER-PTC-7712",
+          "price": 148.0,
+          "description": "Sisal cat tree, 1.4m"
+        },
+        {
+          "sku": "BRW-GRN-BUR-01",
+          "merchant_id": "MER-BRW-1177",
+          "price": 154.0,
+          "description": "Conical burr grinder"
+        },
+        {
+          "sku": "MKT-3P-CKW-DUT",
+          "merchant_id": "MER-MKT-9034",
+          "price": 141.0,
+          "description": "Enamelled dutch oven 5qt (marketplace listing)"
+        },
+        {
+          "sku": "NOR-RUN-RDW-09",
+          "merchant_id": "MER-NOR-1120",
+          "price": 134.5,
+          "description": "Roadwind running shoe, men's 9, grey"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-04T16:22:47-05:00",
+    "principal_id": "PRIN-H-H014",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 149.0,
+      "currency": "USD",
+      "merchant": "Voltic Elektronik GmbH",
+      "line_items": [
+        {
+          "sku": "VLT-KBD-MEC-87",
+          "qty": 1,
+          "unit_price": 149.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 160.0
+      }
+    },
+    "rendered_hash": "sha256:524bf3d0e626293f7b3b7314b40ceeb652d8f0539bd72c58fa90cf4eefea5414",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-HAL-0804-0014",
+    "chain_link": {
+      "prev_mandate_id": "IM-HAL-0804-0014",
+      "prev_mandate_hash": "sha256:0038113ee86867ef223ec2aa27c508ed994e65648520b25bf85a0b12c100e461"
+    },
+    "created_at": "2026-08-04T16:22:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-VLT-7789",
+      "name": "Voltic Elektronik GmbH",
+      "mcc": "5732",
+      "country": "DE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "VLT-KBD-MEC-87",
+        "description": "87-key mechanical keyboard, tactile",
+        "qty": 1,
+        "unit_price": 149.0
+      }
+    ],
+    "cart_total": 149.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Voltic Elektronik GmbH's catalogue and selected the closest in-stock option at $149.00, within the stated $160.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "lsRl2uUGb0jpFi1xrNbHHhbfxMyo4kqrWFbS+hBvTY5WhyfhMTCLZIsUXbBYYwjhcsn8IfCp/h7XsFcM1Ca2Cg==",
+      "signed_payload_hash": "sha256:a84bc55219f93411d674e3f96b1a5c454fd957053f3d18045c8099785ed4ed3b",
+      "signed_at": "2026-08-04T16:22:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-HAL-0804-0014",
+    "chain_link": {
+      "prev_mandate_id": "CM-HAL-0804-0014",
+      "prev_mandate_hash": "sha256:a84bc55219f93411d674e3f96b1a5c454fd957053f3d18045c8099785ed4ed3b"
+    },
+    "authorized_at": "2026-08-04T16:24:19-05:00",
+    "amount": 149.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1013",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2013",
+      "scheme": "card_settlement",
+      "country": "DE",
+      "beneficiary_name_on_account": "Voltic Elektronik GmbH"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "DsrVBBgt1Ykv6lw783zrUkJLNXJSW9TcV6X1Jv08k4G89Ww3DW+Xqk2FEpFcuwAc6Hs1blebtQvGeF983UaBCA==",
+      "signed_payload_hash": "sha256:051abe7f66f81f07cb9d23e0cf073886c1d2ae187b82e57f759b8ecd517be6ac",
+      "signed_at": "2026-08-04T16:24:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "HAL-CTL-001",
+      "evaluated_at": "2026-08-04T16:23:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-002",
+      "evaluated_at": "2026-08-04T16:23:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-003",
+      "evaluated_at": "2026-08-04T16:23:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-004",
+      "evaluated_at": "2026-08-04T16:23:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-005",
+      "evaluated_at": "2026-08-04T16:23:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-04T16:23:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-04T16:23:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-04T16:23:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-04T16:23:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

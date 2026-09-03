@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0703-0017",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-03T09:44:00-05:00",
+  "ended_at": "2026-07-03T09:46:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "noise cancelling over ear headphones, under $300",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0703-0017",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-03T09:44:00-05:00",
+    "expires_at": "2026-07-03T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0017",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0017",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "noise cancelling over ear headphones, under $300",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 300.0,
+      "max_cumulative_amount": 300.0,
+      "currency": "USD",
+      "valid_from": "2026-07-03T00:00:00-05:00",
+      "valid_until": "2026-07-03T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-03T09:44:00-05:00",
+      "device_id": "DEV-K-0017"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0017",
+      "value": "gw2sJovtKdlb/jq0OL3ThLMLPHKFsk4Q39MGZ0JCzze0Oq8+ruUF+7jbsyJ7aeSXVp4kcMUiG5UsxlPT6oWYDQ==",
+      "signed_payload_hash": "sha256:046527e170c2a5e30b0b70bbdcfa322f765080dae4b96aa2eb961eae086e2fbb",
+      "signed_at": "2026-07-03T09:44:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "noise cancelling over ear headphones, under $300",
+          "max_price": 300.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:5c05c944e046daabe9adcbe646e9869f746c8546edb96ccdd9f878811533e1fd"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "VLT-HDP-ANC-01"
+          ]
+        },
+        "result_digest": "sha256:3a17c7c5828b2db24628ac0ea65682135485f0a5b36f9a07db6ce1029a73b3cf",
+        "result_excerpt": {
+          "source": "mcp://shop.voltic.de",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "VOLTIC ELEKTRONIK GMBH — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "VLT-HDP-ANC-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:f90bf342d91661596c4401bb50188913e671cfcb7a2113d27dcae152caccd36e"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-VLT-7789",
+          "lines": 1,
+          "total": 279.0
+        },
+        "result_digest": "sha256:6a36afc8b671ca79a185bde8ac5d52c3960351003ec41fa0e175ed937556310a"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 279.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0017"
+        },
+        "result_digest": "sha256:8e3fcef854e9047022225f41e3b5863bae5131913db82f1afc3f53411d2e3b87"
+      }
+    ],
+    "selection_context": {
+      "query": "noise cancelling over ear headphones, under $300",
+      "selected_sku": "VLT-HDP-ANC-01",
+      "alternatives_considered": [
+        {
+          "sku": "QVC-GEN-BDL-01",
+          "merchant_id": "MER-QVC-8801",
+          "price": 289.0,
+          "description": "Premium home bundle, assorted"
+        },
+        {
+          "sku": "NOR-RUN-PRO-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 268.0,
+          "description": "Trailflex Pro carbon-plate racer, women's 10"
+        },
+        {
+          "sku": "MKT-3P-HDP-ANC",
+          "merchant_id": "MER-MKT-9034",
+          "price": 238.0,
+          "description": "Noise-cancelling headphones (marketplace listing)"
+        },
+        {
+          "sku": "TRK-TNT-2PR-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 329.0,
+          "description": "Ridgeline 2-person tent"
+        },
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-03T09:44:47-05:00",
+    "principal_id": "PRIN-K-0017",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 279.0,
+      "currency": "USD",
+      "merchant": "Voltic Elektronik GmbH",
+      "line_items": [
+        {
+          "sku": "VLT-HDP-ANC-01",
+          "qty": 1,
+          "unit_price": 279.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 300.0
+      }
+    },
+    "rendered_hash": "sha256:5ad39879b85c3ccae7fefe8fd2482546bc02e1cdd142c3350260f0abb68d4f40",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0703-0017",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0703-0017",
+      "prev_mandate_hash": "sha256:046527e170c2a5e30b0b70bbdcfa322f765080dae4b96aa2eb961eae086e2fbb"
+    },
+    "created_at": "2026-07-03T09:44:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-VLT-7789",
+      "name": "Voltic Elektronik GmbH",
+      "mcc": "5732",
+      "country": "DE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "VLT-HDP-ANC-01",
+        "description": "Noise-cancelling over-ear headphones",
+        "qty": 1,
+        "unit_price": 279.0
+      }
+    ],
+    "cart_total": 279.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Voltic Elektronik GmbH's catalogue and selected the closest in-stock option at $279.00, within the stated $300.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "M0Gb52/Bu4SSjtc/O/ehXfUmRMQ/I2h6OjxYv/MD4zR6KCNjwdZ/B0N135BbdCbyLiFjWWtpf0WEyx+KLG0MDQ==",
+      "signed_payload_hash": "sha256:eaea5804aa7fcfb313a1a73fd14f7e20473beef1f1d7b4030e01273a21e4556f",
+      "signed_at": "2026-07-03T09:44:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0703-0017",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0703-0017",
+      "prev_mandate_hash": "sha256:eaea5804aa7fcfb313a1a73fd14f7e20473beef1f1d7b4030e01273a21e4556f"
+    },
+    "authorized_at": "2026-07-03T09:46:19-05:00",
+    "amount": 279.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1016",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2016",
+      "scheme": "card_settlement",
+      "country": "DE",
+      "beneficiary_name_on_account": "Voltic Elektronik GmbH"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "WO74bsIY+IL7q1WI3iHN7gvYzeK05gBsIaruKrbqD5CYRBnpyC+9kmKD3AqHzP6KdQrMOjJeQCZ6me9/rwQ2Ag==",
+      "signed_payload_hash": "sha256:96b595c924dabf68170ef31e0ef046a338092eb87538c760663d4253bbe9a215",
+      "signed_at": "2026-07-03T09:46:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-07-03T09:45:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-07-03T09:45:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-07-03T09:45:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-07-03T09:45:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-07-03T09:45:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-03T09:45:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-03T09:45:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-03T09:45:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-03T09:45:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0805-0039",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-05T09:22:00-05:00",
+  "ended_at": "2026-08-05T09:24:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a wireless doorbell camera under $300",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0805-0039",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-05T09:22:00-05:00",
+    "expires_at": "2026-08-05T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0039",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0039",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a wireless doorbell camera under $300",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 300.0,
+      "max_cumulative_amount": 300.0,
+      "currency": "USD",
+      "valid_from": "2026-08-05T00:00:00-05:00",
+      "valid_until": "2026-08-05T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-05T09:22:00-05:00",
+      "device_id": "DEV-K-0039"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0039",
+      "value": "Bqxeyb+d5IUv8tTXkK8MTQxj3Tnrt5w47fAX7t6Yl/zhDhsuLJQGHlVPyPXvT8PEgO6eEGwG5HOc/UM+hiEvAg==",
+      "signed_payload_hash": "sha256:702f2449c24c7652b1f579945adfae62e8d286d0129e815b2455411c24f0f66e",
+      "signed_at": "2026-08-05T09:22:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a wireless doorbell camera under $300",
+          "max_price": 300.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:e444b46a15b5242de311010260d182cd0807266b369c67f0ec96d2ed1b92f126"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "QVC-GEN-BDL-01"
+          ]
+        },
+        "result_digest": "sha256:be4125716a87f75932ed9fd57b9e0db1c08a291ca2d153d71ad6692e81addfbb",
+        "result_excerpt": {
+          "source": "mcp://shop.quickvale.cy",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "QUICKVALE DIRECT LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "QVC-GEN-BDL-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:a5e74a72d405557ed34e273f49df99669dc695071c9b7c61b83c6d652d2720a6"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-QVC-8801",
+          "lines": 1,
+          "total": 289.0
+        },
+        "result_digest": "sha256:adbcba9c744e0c425a1e34f29279a4212ebb000b12e2156b904f763e44370c9f"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 289.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0039"
+        },
+        "result_digest": "sha256:f07b03b4b9218a789201859ac44bc147c87209bdc57be932f11e171881252d92"
+      }
+    ],
+    "selection_context": {
+      "query": "a wireless doorbell camera under $300",
+      "selected_sku": "QVC-GEN-BDL-01",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-HDP-ANC-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 279.0,
+          "description": "Noise-cancelling over-ear headphones"
+        },
+        {
+          "sku": "NOR-RUN-PRO-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 268.0,
+          "description": "Trailflex Pro carbon-plate racer, women's 10"
+        },
+        {
+          "sku": "TRK-TNT-2PR-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 329.0,
+          "description": "Ridgeline 2-person tent"
+        },
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        },
+        {
+          "sku": "MKT-3P-HDP-ANC",
+          "merchant_id": "MER-MKT-9034",
+          "price": 238.0,
+          "description": "Noise-cancelling headphones (marketplace listing)"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-05T09:22:47-05:00",
+    "principal_id": "PRIN-K-0039",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 289.0,
+      "currency": "USD",
+      "merchant": "Quickvale Direct Ltd",
+      "line_items": [
+        {
+          "sku": "QVC-GEN-BDL-01",
+          "qty": 1,
+          "unit_price": 289.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 300.0
+      }
+    },
+    "rendered_hash": "sha256:fff79f937db6526d06bde0574423f1c547b37128b16bf6e511379b82b2481ebb",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0805-0039",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0805-0039",
+      "prev_mandate_hash": "sha256:702f2449c24c7652b1f579945adfae62e8d286d0129e815b2455411c24f0f66e"
+    },
+    "created_at": "2026-08-05T09:22:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-QVC-8801",
+      "name": "Quickvale Direct Ltd",
+      "mcc": "5964",
+      "country": "CY",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "QVC-GEN-BDL-01",
+        "description": "Premium home bundle, assorted",
+        "qty": 1,
+        "unit_price": 289.0
+      }
+    ],
+    "cart_total": 289.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Selected the premium home bundle from Quickvale Direct Ltd at $289.00. It is within the stated $300.00 limit and the listing references home security items."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "WHWvIFNDnD4UPFF8G7ogzXKEQl+IWnUdKjl7RkS1noKDmySxXe9ACcc4WtyMklWCgddgf87pIbItcx5mgTiqCQ==",
+      "signed_payload_hash": "sha256:4d94f5dba61a1af969ce664ee75be458b5827d56af66a60071336d780b5af396",
+      "signed_at": "2026-08-05T09:22:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0805-0039",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0805-0039",
+      "prev_mandate_hash": "sha256:4d94f5dba61a1af969ce664ee75be458b5827d56af66a60071336d780b5af396"
+    },
+    "authorized_at": "2026-08-05T09:24:19-05:00",
+    "amount": 289.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1038",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2038",
+      "scheme": "card_settlement",
+      "country": "CY",
+      "beneficiary_name_on_account": "Quickvale Direct Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "lxVp5ZLfCUPy+ymOWJ4EUFx1umNXegujvalpHCR25b1jrp8tZbB/jM6WW7QrJKa/Kw7lxipdsmnUZwZRaVASDw==",
+      "signed_payload_hash": "sha256:924b2372b916f2fb2e525a140f7098393b8314477ba6d5d1b8f93bd78d24cfaa",
+      "signed_at": "2026-08-05T09:24:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-08-05T09:23:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-08-05T09:23:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-08-05T09:23:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-08-05T09:23:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-08-05T09:23:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-05T09:23:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-05T09:23:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-05T09:23:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-05T09:23:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

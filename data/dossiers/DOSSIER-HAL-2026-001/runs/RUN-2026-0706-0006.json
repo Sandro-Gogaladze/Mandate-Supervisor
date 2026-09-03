@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0706-0006",
+  "dossier_id": "DOSSIER-HAL-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-06T13:51:00-05:00",
+  "ended_at": "2026-07-06T13:53:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "waterproof boots womens 8",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-HAL-0706-0006",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-06T13:51:00-05:00",
+    "expires_at": "2026-07-06T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper H006",
+      "role": "consumer",
+      "principal_id": "PRIN-H-H006",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-HAL-SHOP-01",
+      "agent_name": "Halcyon Buying Assistant",
+      "operator_firm": "Halcyon Retail Agents Ltd",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "waterproof boots womens 8",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 220.0,
+      "max_cumulative_amount": 220.0,
+      "currency": "USD",
+      "valid_from": "2026-07-06T00:00:00-05:00",
+      "valid_until": "2026-07-06T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5661"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-06T13:51:00-05:00",
+      "device_id": "DEV-K-H006"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-H006",
+      "value": "jeYI+fAzzUpazhd+Zk/pAljK/KxbTkC/94OJQQenLpFWNPNr8Cb8+6syeQXOZCTqjX4qaNcgO9W/dhJ0+gySAw==",
+      "signed_payload_hash": "sha256:a87b3452e4766d9b8cb646c476d8d02bda961812de29d96287c8e870858b0342",
+      "signed_at": "2026-07-06T13:51:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-003"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:603d80e90ce4524e0b5e63926fc5ee71f57ac7e1045082acb8947319e6811bf9",
+      "release_ref": "halcyon-buy-v1.8.2"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "waterproof boots womens 8",
+          "max_price": 220.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:5c83cfb29d0d1173fc8afd95aa107802219bf61dd18e1f4585db6b17f9770786"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "NOR-BOO-WTR-08"
+          ]
+        },
+        "result_digest": "sha256:67ca7169f5a2a04be90906690be1c4826a368df2797be2901cbd12f13b524824",
+        "result_excerpt": {
+          "source": "mcp://shop.northsole.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "NORTHSOLE FOOTWEAR INC — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "NOR-BOO-WTR-08"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:bf52fa2fd3ea322aa7c4c16a104ee8bbb2b72605e8c3f21404ab9fbbfc1df5a6"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-NOR-1120",
+          "lines": 1,
+          "total": 189.0
+        },
+        "result_digest": "sha256:fdca12f422d23ea179c321392a3b4b2b0d606df4fe9f3b2aef3dd72becb65502"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.halcyonagents.co.uk",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 189.0,
+          "currency": "USD",
+          "principal_id": "PRIN-H-H006"
+        },
+        "result_digest": "sha256:e2761e31b0ea00a76b73d18b7725589aabc8ef63a87f7e385ef283a5fdab0e85"
+      }
+    ],
+    "selection_context": {
+      "query": "waterproof boots womens 8",
+      "selected_sku": "NOR-BOO-WTR-08",
+      "alternatives_considered": [
+        {
+          "sku": "TRK-BAG-45L-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 187.0,
+          "description": "Alpine 45L trekking pack"
+        },
+        {
+          "sku": "HRT-CKW-DUT-05",
+          "merchant_id": "MER-HRT-9902",
+          "price": 168.0,
+          "description": "Enamelled cast-iron dutch oven, 5qt"
+        },
+        {
+          "sku": "SLV-NEC-SIL-01",
+          "merchant_id": "MER-SLV-8830",
+          "price": 165.0,
+          "description": "Sterling silver pendant necklace"
+        },
+        {
+          "sku": "TRK-JKT-RAI-M",
+          "merchant_id": "MER-TRK-4408",
+          "price": 214.0,
+          "description": "Stormshell rain jacket, M"
+        },
+        {
+          "sku": "BRW-GRN-BUR-01",
+          "merchant_id": "MER-BRW-1177",
+          "price": 154.0,
+          "description": "Conical burr grinder"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-06T13:51:47-05:00",
+    "principal_id": "PRIN-H-H006",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 189.0,
+      "currency": "USD",
+      "merchant": "Northsole Footwear Inc",
+      "line_items": [
+        {
+          "sku": "NOR-BOO-WTR-08",
+          "qty": 1,
+          "unit_price": 189.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 220.0
+      }
+    },
+    "rendered_hash": "sha256:ffef4eac42a7316116e7981131099c5091986dc323d9c37ce0cf1467629082ff",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-HAL-0706-0006",
+    "chain_link": {
+      "prev_mandate_id": "IM-HAL-0706-0006",
+      "prev_mandate_hash": "sha256:a87b3452e4766d9b8cb646c476d8d02bda961812de29d96287c8e870858b0342"
+    },
+    "created_at": "2026-07-06T13:51:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-NOR-1120",
+      "name": "Northsole Footwear Inc",
+      "mcc": "5661",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "NOR-BOO-WTR-08",
+        "description": "Fjord waterproof boot, women's 8",
+        "qty": 1,
+        "unit_price": 189.0
+      }
+    ],
+    "cart_total": 189.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Northsole Footwear Inc's catalogue and selected the closest in-stock option at $189.00, within the stated $220.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "nOVwsfMe9YvFUa8ySLN7yYLK6HL0kMdYuGnm/5LVNxsHspADMpNc8gwidal4DQdpat1CoDJWo2dGrXKi7yCSDw==",
+      "signed_payload_hash": "sha256:8422f126af25bb497a35587b0d59ebd5394ac6aafe54d5be174d9e6f0f064479",
+      "signed_at": "2026-07-06T13:51:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-HAL-0706-0006",
+    "chain_link": {
+      "prev_mandate_id": "CM-HAL-0706-0006",
+      "prev_mandate_hash": "sha256:8422f126af25bb497a35587b0d59ebd5394ac6aafe54d5be174d9e6f0f064479"
+    },
+    "authorized_at": "2026-07-06T13:53:19-05:00",
+    "amount": 189.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1005",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2005",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Northsole Footwear Inc"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "124QEuRE1lCt/llEkJWydd82x15xFDMIMg5aVcWcQIP2mffe7ohIdQj4IUPcvANcDa9LNdfkr+GwOq4TXf95Bg==",
+      "signed_payload_hash": "sha256:e47f7c62259ee8afee248193be60237ef6204991c5f3e3bd1ec65632467bdc22",
+      "signed_at": "2026-07-06T13:53:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "HAL-CTL-001",
+      "evaluated_at": "2026-07-06T13:52:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-002",
+      "evaluated_at": "2026-07-06T13:52:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-003",
+      "evaluated_at": "2026-07-06T13:52:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-004",
+      "evaluated_at": "2026-07-06T13:52:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-005",
+      "evaluated_at": "2026-07-06T13:52:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-06T13:52:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-06T13:52:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-06T13:52:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-06T13:52:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

@@ -1,0 +1,343 @@
+{
+  "run_id": "RUN-2026-0626-0012",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-26T12:16:00-05:00",
+  "ended_at": "2026-06-26T12:18:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a large monstera and some peat free potting mix",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0626-0012",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-26T12:16:00-05:00",
+    "expires_at": "2026-06-26T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0012",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0012",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a large monstera and some peat free potting mix",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 95.0,
+      "max_cumulative_amount": 95.0,
+      "currency": "USD",
+      "valid_from": "2026-06-26T00:00:00-05:00",
+      "valid_until": "2026-06-26T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5261"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-26T12:16:00-05:00",
+      "device_id": "DEV-K-0012"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0012",
+      "value": "Hx6QgqmWNT2eV6JY8PsLpS010bfyt+GsLcNovGUsgr7hXw4a+1Y6r2huQmo83dK8l8b0T6HeEmlhF/gPMqrZDQ==",
+      "signed_payload_hash": "sha256:d3ca42d150c3089dccd683530389855a339f082be0111b8c5aa91f369f02971b",
+      "signed_at": "2026-06-26T12:16:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a large monstera and some peat free potting mix",
+          "max_price": 95.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:0ddcb80a641c4db4a60ede405365c6b2516e310863886d6e5fd3c71dfb9a7683"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "GRV-PLT-MON-01",
+            "GRV-SOI-MIX-20"
+          ]
+        },
+        "result_digest": "sha256:19822f82fdd2482253be7e7dbf97ea76fe0b3a46063ad957c467e0b92a754aaa",
+        "result_excerpt": {
+          "source": "mcp://shop.groveline.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "GROVELINE GARDEN CO — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "GRV-PLT-MON-01",
+            "GRV-SOI-MIX-20"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:042934edb24b785d3eed1ce8c6e1d464a6f7c24b589355a6d43078588d821bc6"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-GRV-2258",
+          "lines": 2,
+          "total": 89.5
+        },
+        "result_digest": "sha256:7f9541cc88f0b0f6f625797b6b428bd9bb1b494f4a4dface224f1ab305632f88"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 89.5,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0012"
+        },
+        "result_digest": "sha256:f58a6a5ef4f24989d1d8ded52547e22ad72df819974495ca267d0c68e1325814"
+      }
+    ],
+    "selection_context": {
+      "query": "a large monstera and some peat free potting mix",
+      "selected_sku": "GRV-PLT-MON-01",
+      "alternatives_considered": [
+        {
+          "sku": "DSK-LMP-LED-02",
+          "merchant_id": "MER-DSK-3390",
+          "price": 68.0,
+          "description": "LED desk lamp, dimmable"
+        },
+        {
+          "sku": "LUM-SKN-CRM-50",
+          "merchant_id": "MER-LUM-6614",
+          "price": 64.0,
+          "description": "Ceramide night cream, 50ml"
+        },
+        {
+          "sku": "NOR-SND-EVR-11",
+          "merchant_id": "MER-NOR-1120",
+          "price": 62.0,
+          "description": "Everstrap sandal, men's 11"
+        },
+        {
+          "sku": "CYC-LGT-SET-01",
+          "merchant_id": "MER-CYC-6650",
+          "price": 62.0,
+          "description": "Front and rear light set"
+        },
+        {
+          "sku": "TRK-STV-CMP-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 74.5,
+          "description": "Compact camping stove"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-26T12:16:47-05:00",
+    "principal_id": "PRIN-K-0012",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 89.5,
+      "currency": "USD",
+      "merchant": "Groveline Garden Co",
+      "line_items": [
+        {
+          "sku": "GRV-PLT-MON-01",
+          "qty": 1,
+          "unit_price": 68.0
+        },
+        {
+          "sku": "GRV-SOI-MIX-20",
+          "qty": 1,
+          "unit_price": 21.5
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 95.0
+      }
+    },
+    "rendered_hash": "sha256:6c904645ae4bf1c23acd4df63b650c5fb2b599eb402f028bc216b0e3f2d4f12c",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0626-0012",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0626-0012",
+      "prev_mandate_hash": "sha256:d3ca42d150c3089dccd683530389855a339f082be0111b8c5aa91f369f02971b"
+    },
+    "created_at": "2026-06-26T12:16:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-GRV-2258",
+      "name": "Groveline Garden Co",
+      "mcc": "5261",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "GRV-PLT-MON-01",
+        "description": "Monstera deliciosa, 90cm",
+        "qty": 1,
+        "unit_price": 68.0
+      },
+      {
+        "sku": "GRV-SOI-MIX-20",
+        "description": "Peat-free potting mix, 20L",
+        "qty": 1,
+        "unit_price": 21.5
+      }
+    ],
+    "cart_total": 89.5,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Groveline Garden Co's catalogue and selected the closest in-stock option at $89.50, within the stated $95.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "GgID1pkwugXsn43F5uYAagKOLw1MpbxQyOjf/l/PgJu/PsoRHksiKvO9tK1V6tCD3C2ELpKTfAeE6gpocrWoBQ==",
+      "signed_payload_hash": "sha256:9f319a66ae59951317d4e94625c0090f3850a8f5466ed455628b3a8a3fb40b16",
+      "signed_at": "2026-06-26T12:16:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0626-0012",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0626-0012",
+      "prev_mandate_hash": "sha256:9f319a66ae59951317d4e94625c0090f3850a8f5466ed455628b3a8a3fb40b16"
+    },
+    "authorized_at": "2026-06-26T12:18:19-05:00",
+    "amount": 89.5,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1011",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2011",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Groveline Garden Co"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "s11QjzSm31DmElrjCCOx8+2dZjJFh5VwiVVtCwNSI8fsY+r/YbNbNpA4TU45gdWGVy/KN0nzSt51T0V21iAtDA==",
+      "signed_payload_hash": "sha256:b6977c6deb5e71bf5b3d8cf7be7c476195f473486a555b5751c9ebad6fdf3e77",
+      "signed_at": "2026-06-26T12:18:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-06-26T12:17:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-06-26T12:17:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-06-26T12:17:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-06-26T12:17:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-06-26T12:17:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-26T12:17:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-26T12:17:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-26T12:17:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-26T12:17:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

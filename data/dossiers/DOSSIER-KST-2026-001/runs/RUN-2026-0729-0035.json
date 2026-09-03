@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0729-0035",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-29T14:26:00-05:00",
+  "ended_at": "2026-07-29T14:28:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "three bags of the peat free potting mix",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0729-0035",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-29T14:26:00-05:00",
+    "expires_at": "2026-07-29T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0035",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0035",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "three bags of the peat free potting mix",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 70.0,
+      "max_cumulative_amount": 70.0,
+      "currency": "USD",
+      "valid_from": "2026-07-29T00:00:00-05:00",
+      "valid_until": "2026-07-29T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5261"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-29T14:26:00-05:00",
+      "device_id": "DEV-K-0035"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0035",
+      "value": "XnsIuZ3+hqhLSQMttF1YEHLQwAgp5TA6aEiZsNf9ulqhR2Kvllq3Gsv8WdAT4ebRnZ+hWmfQ6qwFgDaamuyoAQ==",
+      "signed_payload_hash": "sha256:e667a849786ba04f0bfdf1bedcb1dc7c09ff87cf12885f21945cef1568c145ff",
+      "signed_at": "2026-07-29T14:26:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "three bags of the peat free potting mix",
+          "max_price": 70.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:49c8373b1c79edd2403782459f4a81739e5502254bedfe2173a714e836e13e9f"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "GRV-SOI-MIX-20"
+          ]
+        },
+        "result_digest": "sha256:19822f82fdd2482253be7e7dbf97ea76fe0b3a46063ad957c467e0b92a754aaa",
+        "result_excerpt": {
+          "source": "mcp://shop.groveline.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "GROVELINE GARDEN CO — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "GRV-SOI-MIX-20"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:bf84e0f507c8d909b69f1cfe135e584844fbd80991567f01cc44fc37c9cf2bcb"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-GRV-2258",
+          "lines": 1,
+          "total": 64.5
+        },
+        "result_digest": "sha256:b8f190b1f94b15555286dfd62d633ee53370348850691ce727f846a2b000b019"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 64.5,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0035"
+        },
+        "result_digest": "sha256:50c0e26ef5eaee9d594ee8f18a27e0b4c1c9fa222d0d15502c44d5a15d50b2dc"
+      }
+    ],
+    "selection_context": {
+      "query": "three bags of the peat free potting mix",
+      "selected_sku": "GRV-SOI-MIX-20",
+      "alternatives_considered": [
+        {
+          "sku": "KDO-PZL-1000-04",
+          "merchant_id": "MER-KDO-5573",
+          "price": 22.0,
+          "description": "1000-piece landscape puzzle"
+        },
+        {
+          "sku": "VLT-CAB-USB-03",
+          "merchant_id": "MER-VLT-7789",
+          "price": 24.0,
+          "description": "USB-C braided cable, 2m, 3-pack"
+        },
+        {
+          "sku": "PGE-BOK-HIS-01",
+          "merchant_id": "MER-PGE-2201",
+          "price": 18.5,
+          "description": "The Silk Roads, paperback"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        },
+        {
+          "sku": "PGE-BOK-COK-02",
+          "merchant_id": "MER-PGE-2201",
+          "price": 34.0,
+          "description": "Salt Fat Acid Heat, hardback"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-29T14:26:47-05:00",
+    "principal_id": "PRIN-K-0035",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 64.5,
+      "currency": "USD",
+      "merchant": "Groveline Garden Co",
+      "line_items": [
+        {
+          "sku": "GRV-SOI-MIX-20",
+          "qty": 3,
+          "unit_price": 21.5
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 70.0
+      }
+    },
+    "rendered_hash": "sha256:356bfb4725bbd9d12ef59e69251b0656da7fcee850fdb4fcb85e0f820596104b",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0729-0035",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0729-0035",
+      "prev_mandate_hash": "sha256:e667a849786ba04f0bfdf1bedcb1dc7c09ff87cf12885f21945cef1568c145ff"
+    },
+    "created_at": "2026-07-29T14:26:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-GRV-2258",
+      "name": "Groveline Garden Co",
+      "mcc": "5261",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "GRV-SOI-MIX-20",
+        "description": "Peat-free potting mix, 20L",
+        "qty": 3,
+        "unit_price": 21.5
+      }
+    ],
+    "cart_total": 64.5,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Groveline Garden Co's catalogue and selected the closest in-stock option at $64.50, within the stated $70.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "qd/ozlrsqVmmJ08gqD7wuNlhezR3DlYNss+mgwqWnsZqlEA2RccqyZb3v75J8klJRIQuMB1UUvvMYa6vYSysCg==",
+      "signed_payload_hash": "sha256:053edef8586db5be4d3ebb768ab3351af8b59b28b96884e0e2a4e0cfda1415c2",
+      "signed_at": "2026-07-29T14:26:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0729-0035",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0729-0035",
+      "prev_mandate_hash": "sha256:053edef8586db5be4d3ebb768ab3351af8b59b28b96884e0e2a4e0cfda1415c2"
+    },
+    "authorized_at": "2026-07-29T14:28:19-05:00",
+    "amount": 64.5,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1034",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2034",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Groveline Garden Co"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "6DBsBj7SyYv90X6tURofx6UYDTNh6ywIK3z7T/agHLSXlx3zvQ9MiXL+rYaQMjqiht8NZaS5eDOMJcX+kaWMAg==",
+      "signed_payload_hash": "sha256:932f0b935b1300d7c60f7323de762bbd6675a066cd5f8c2f8b3a9c62c9a67b7b",
+      "signed_at": "2026-07-29T14:28:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-07-29T14:27:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-07-29T14:27:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-07-29T14:27:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-07-29T14:27:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-07-29T14:27:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-29T14:27:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-29T14:27:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-29T14:27:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-29T14:27:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

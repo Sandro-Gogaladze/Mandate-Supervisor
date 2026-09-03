@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0617-0003",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-17T10:22:00-05:00",
+  "ended_at": "2026-06-17T10:24:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a 3-pack of 2m usb-c cables, cheapest decent one",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0617-0003",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-17T10:22:00-05:00",
+    "expires_at": "2026-06-17T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0003",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0003",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a 3-pack of 2m usb-c cables, cheapest decent one",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 35.0,
+      "max_cumulative_amount": 35.0,
+      "currency": "USD",
+      "valid_from": "2026-06-17T00:00:00-05:00",
+      "valid_until": "2026-06-17T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-17T10:22:00-05:00",
+      "device_id": "DEV-K-0003"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0003",
+      "value": "QStJK8AaF0GNPsF1gkC5c1FvGuj8PGa1OHsaooA0Wq7DMrKSRSeD0enJ3fx7Q44GAkXOyzwttADI9XX0et25DQ==",
+      "signed_payload_hash": "sha256:bb12389a4d6a372e490f553573635e7fb260d8c98cbbc6212f7c928d77ccc97e",
+      "signed_at": "2026-06-17T10:22:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a 3-pack of 2m usb-c cables, cheapest decent one",
+          "max_price": 35.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:2b9efc28ab1ade72253bec8fbf7de4d5b7d001e06469d825688d2529bb7122ba"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "VLT-CAB-USB-03"
+          ]
+        },
+        "result_digest": "sha256:3a17c7c5828b2db24628ac0ea65682135485f0a5b36f9a07db6ce1029a73b3cf",
+        "result_excerpt": {
+          "source": "mcp://shop.voltic.de",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "VOLTIC ELEKTRONIK GMBH — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "VLT-CAB-USB-03"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:7baca48b174ec6dbeaa1bc94e78d6e42410a2ea186d4a1ecaeaf57db17706619"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-VLT-7789",
+          "lines": 1,
+          "total": 24.0
+        },
+        "result_digest": "sha256:e7fd14776b5447c8d865171f451d9c8bdcd75d6c4a50e769b41f3afd976727c4"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 24.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0003"
+        },
+        "result_digest": "sha256:eb82dd4d28367c5024bd3a2f8532d63957f61579a8c052f1f37229225c2e0477"
+      }
+    ],
+    "selection_context": {
+      "query": "a 3-pack of 2m usb-c cables, cheapest decent one",
+      "selected_sku": "VLT-CAB-USB-03",
+      "alternatives_considered": [
+        {
+          "sku": "KDO-PZL-1000-04",
+          "merchant_id": "MER-KDO-5573",
+          "price": 22.0,
+          "description": "1000-piece landscape puzzle"
+        },
+        {
+          "sku": "GRV-SOI-MIX-20",
+          "merchant_id": "MER-GRV-2258",
+          "price": 21.5,
+          "description": "Peat-free potting mix, 20L"
+        },
+        {
+          "sku": "PGE-BOK-HIS-01",
+          "merchant_id": "MER-PGE-2201",
+          "price": 18.5,
+          "description": "The Silk Roads, paperback"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        },
+        {
+          "sku": "PGE-BOK-COK-02",
+          "merchant_id": "MER-PGE-2201",
+          "price": 34.0,
+          "description": "Salt Fat Acid Heat, hardback"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-17T10:22:47-05:00",
+    "principal_id": "PRIN-K-0003",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 24.0,
+      "currency": "USD",
+      "merchant": "Voltic Elektronik GmbH",
+      "line_items": [
+        {
+          "sku": "VLT-CAB-USB-03",
+          "qty": 1,
+          "unit_price": 24.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 35.0
+      }
+    },
+    "rendered_hash": "sha256:51c9896d365cafe038997641893921e222a692b915d31c3afed47697470d0d2a",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0617-0003",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0617-0003",
+      "prev_mandate_hash": "sha256:bb12389a4d6a372e490f553573635e7fb260d8c98cbbc6212f7c928d77ccc97e"
+    },
+    "created_at": "2026-06-17T10:22:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-VLT-7789",
+      "name": "Voltic Elektronik GmbH",
+      "mcc": "5732",
+      "country": "DE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "VLT-CAB-USB-03",
+        "description": "USB-C braided cable, 2m, 3-pack",
+        "qty": 1,
+        "unit_price": 24.0
+      }
+    ],
+    "cart_total": 24.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Voltic Elektronik GmbH's catalogue and selected the closest in-stock option at $24.00, within the stated $35.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "HWdt6ggNvJq8Agr1bbz9aJlVBPV3r+lxbAOZk+U9JhZSsZ7b+YiC/mzUv8ku9YYHuMI+sboiOiDUaV/6xzKRBw==",
+      "signed_payload_hash": "sha256:801f5d82d61ee3be05a73d971f57933857bd8b0288928ca15ec4b86aa4b06763",
+      "signed_at": "2026-06-17T10:22:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0617-0003",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0617-0003",
+      "prev_mandate_hash": "sha256:801f5d82d61ee3be05a73d971f57933857bd8b0288928ca15ec4b86aa4b06763"
+    },
+    "authorized_at": "2026-06-17T10:24:19-05:00",
+    "amount": 24.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1002",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2002",
+      "scheme": "card_settlement",
+      "country": "DE",
+      "beneficiary_name_on_account": "Voltic Elektronik GmbH"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "s/zmb4G4vCNANhZuLpKfr2RQhAdeRXeJdHXYGKkuoMfRcoM51f42f2y/SQa/oMzOInC0HECewD4pDDAPM5t/Bg==",
+      "signed_payload_hash": "sha256:873cf2ebe21c650de25e3a1452dacc28b587766364edcc927f02ddb51e457a9b",
+      "signed_at": "2026-06-17T10:24:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-06-17T10:23:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-06-17T10:23:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-06-17T10:23:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-06-17T10:23:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-06-17T10:23:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-17T10:23:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-17T10:23:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-17T10:23:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-17T10:23:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

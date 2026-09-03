@@ -1,0 +1,288 @@
+{
+  "run_id": "RUN-2026-0624-0010",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-24T15:41:00-05:00",
+  "ended_at": "2026-06-24T15:43:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "two 1000 piece landscape puzzles for my niece",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0624-0010",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-24T15:41:00-05:00",
+    "expires_at": "2026-06-24T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0010",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0010",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "two 1000 piece landscape puzzles for my niece",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 50.0,
+      "max_cumulative_amount": 50.0,
+      "currency": "USD",
+      "valid_from": "2026-06-24T00:00:00-05:00",
+      "valid_until": "2026-06-24T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5945"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-24T15:41:00-05:00",
+      "device_id": "DEV-K-0010"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0010",
+      "value": "xsM5ElZorSkq+gjn4YHTa+Ku9gej85pLgSt1vE1PYVqEqzrsmFeoe9JJdxQpntjkZUmUoirKThcMANUTYLYvAQ==",
+      "signed_payload_hash": "sha256:f97c19bebb69d791005e4c3068d413e2556262eec7c2b51608173fa68b60291c",
+      "signed_at": "2026-06-24T15:41:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "two 1000 piece landscape puzzles for my niece",
+          "max_price": 50.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:9f1096b077eed6a171ec12d608ee79a719cfcc18c35cd158089a124a37af12d6"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "KDO-PZL-1000-04"
+          ]
+        },
+        "result_digest": "sha256:9115213844d8b7c2f57f56ae04263b76200dc220be4194c2552a9b4b85ab7e88",
+        "result_excerpt": {
+          "source": "mcp://shop.kudotoys.jp",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "KUDO TOYS KK — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "KDO-PZL-1000-04"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:8930496ea7fb920bded327cf8e4ea09acec417ba753a6352524bf30a6f709621"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-KDO-5573",
+          "lines": 1,
+          "total": 44.0
+        },
+        "result_digest": "sha256:5bd4ee6d341830f030a75d2f7516fa04b0169acb28235cfd1e6ff5855fef719f"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 44.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0010"
+        },
+        "result_digest": "sha256:f2d48ccab9ac6cbad3d6ae6214d7ef3987b3d6f76c1aad1edac1ae757e94b7ad"
+      }
+    ],
+    "selection_context": {
+      "query": "two 1000 piece landscape puzzles for my niece",
+      "selected_sku": "KDO-PZL-1000-04",
+      "alternatives_considered": [
+        {
+          "sku": "GRV-SOI-MIX-20",
+          "merchant_id": "MER-GRV-2258",
+          "price": 21.5,
+          "description": "Peat-free potting mix, 20L"
+        },
+        {
+          "sku": "VLT-CAB-USB-03",
+          "merchant_id": "MER-VLT-7789",
+          "price": 24.0,
+          "description": "USB-C braided cable, 2m, 3-pack"
+        },
+        {
+          "sku": "PGE-BOK-HIS-01",
+          "merchant_id": "MER-PGE-2201",
+          "price": 18.5,
+          "description": "The Silk Roads, paperback"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        },
+        {
+          "sku": "PGE-BOK-COK-02",
+          "merchant_id": "MER-PGE-2201",
+          "price": 34.0,
+          "description": "Salt Fat Acid Heat, hardback"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": false,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-24T15:41:47-05:00",
+    "principal_id": "PRIN-K-0010",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": null,
+    "rendered_hash": "sha256:2159d92b18908834a918b7a18f12ab002a285fbb00bb2192201baeb78609dc43",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0624-0010",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0624-0010",
+      "prev_mandate_hash": "sha256:f97c19bebb69d791005e4c3068d413e2556262eec7c2b51608173fa68b60291c"
+    },
+    "created_at": "2026-06-24T15:41:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-KDO-5573",
+      "name": "Kudo Toys KK",
+      "mcc": "5945",
+      "country": "JP",
+      "region": "APAC",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "KDO-PZL-1000-04",
+        "description": "1000-piece landscape puzzle",
+        "qty": 2,
+        "unit_price": 22.0
+      }
+    ],
+    "cart_total": 44.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Kudo Toys KK's catalogue and selected the closest in-stock option at $44.00, within the stated $50.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "lnc1DzZnK13BQYco40mLC775uyk0J0WUCA6HgaeGScoxaM7LWYtx6sVzVxNRG1vuLQMZJluCRcDbDHp/oqqBCw==",
+      "signed_payload_hash": "sha256:d8d7d5683b2be75c88069367b201c16e067e8139c6c75d794b8fe92b3f233ddb",
+      "signed_at": "2026-06-24T15:41:00-05:00"
+    }
+  },
+  "payment": null,
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-06-24T15:42:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-06-24T15:42:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-06-24T15:42:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-06-24T15:42:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-06-24T15:42:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-24T15:42:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-24T15:42:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-24T15:42:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-24T15:42:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "abandoned"
+}

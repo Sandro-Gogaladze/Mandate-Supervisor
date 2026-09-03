@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0731-0037",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-31T16:55:00-05:00",
+  "ended_at": "2026-07-31T16:57:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "wool overcoat charcoal small, under $500",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0731-0037",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-31T16:55:00-05:00",
+    "expires_at": "2026-07-31T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0037",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0037",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "wool overcoat charcoal small, under $500",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 500.0,
+      "max_cumulative_amount": 500.0,
+      "currency": "USD",
+      "valid_from": "2026-07-31T00:00:00-05:00",
+      "valid_until": "2026-07-31T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5651"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-31T16:55:00-05:00",
+      "device_id": "DEV-K-0037"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0037",
+      "value": "PbR17TtbwuMcPDXDJe9xvtdvx4TT/RbX/rJ6t+7FdsLMTVrh77gdmsF8qWLty3BPMuqiVifcmkxC3fogjLZBAg==",
+      "signed_payload_hash": "sha256:ae02ba8d448dd5239b0e78f2bb2ca6e137d3826715502e9255ee1050c95adcff",
+      "signed_at": "2026-07-31T16:55:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "wool overcoat charcoal small, under $500",
+          "max_price": 500.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:4c2fcd6d9b029b7ad945bac2d34962da3c822b1a1ac5c4cdbdace15c7c52fa34"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "ATE-WOL-COA-S"
+          ]
+        },
+        "result_digest": "sha256:653346c8fd909cab3b16803d98ebfe41ab4b0971c0d3d6dbc3ae55df14d0b9ba",
+        "result_excerpt": {
+          "source": "mcp://shop.ateliernord.se",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "ATELIER NORD AB — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "ATE-WOL-COA-S"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:0864a37e5304568511b2cb74ef03871a4737550ceb18acdeca95f22a2e9eb5f0"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-ATE-3345",
+          "lines": 1,
+          "total": 445.0
+        },
+        "result_digest": "sha256:7f5036722efb129be30ace5b36e9da6d901c5df108a25f881ef18a5eb4a9573f"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 445.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0037"
+        },
+        "result_digest": "sha256:7fb3fd5c67b6dce454d47fd678674c0daa046197e7fd646286593dc226a78999"
+      }
+    ],
+    "selection_context": {
+      "query": "wool overcoat charcoal small, under $500",
+      "selected_sku": "ATE-WOL-COA-S",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-MON-27U-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 429.0,
+          "description": "27in 4K monitor, USB-C"
+        },
+        {
+          "sku": "STL-RUG-WOL-57",
+          "merchant_id": "MER-STL-1193",
+          "price": 420.0,
+          "description": "Hand-woven wool rug 5x7"
+        },
+        {
+          "sku": "AUR-SPK-BKS-02",
+          "merchant_id": "MER-AUR-4471",
+          "price": 398.0,
+          "description": "Bookshelf speaker pair"
+        },
+        {
+          "sku": "DSK-CHR-ERG-01",
+          "merchant_id": "MER-DSK-3390",
+          "price": 385.0,
+          "description": "Ergonomic task chair"
+        },
+        {
+          "sku": "AUR-AMP-INT-01",
+          "merchant_id": "MER-AUR-4471",
+          "price": 549.0,
+          "description": "Integrated stereo amplifier"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-31T16:55:47-05:00",
+    "principal_id": "PRIN-K-0037",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 445.0,
+      "currency": "USD",
+      "merchant": "Atelier Nord AB",
+      "line_items": [
+        {
+          "sku": "ATE-WOL-COA-S",
+          "qty": 1,
+          "unit_price": 445.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 500.0
+      }
+    },
+    "rendered_hash": "sha256:0d781446fd3c504ed434293b99498c82666d8d26648dec63b167862ea6cd22b3",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0731-0037",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0731-0037",
+      "prev_mandate_hash": "sha256:ae02ba8d448dd5239b0e78f2bb2ca6e137d3826715502e9255ee1050c95adcff"
+    },
+    "created_at": "2026-07-31T16:55:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-ATE-3345",
+      "name": "Atelier Nord AB",
+      "mcc": "5651",
+      "country": "SE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "ATE-WOL-COA-S",
+        "description": "Wool overcoat, charcoal, S",
+        "qty": 1,
+        "unit_price": 445.0
+      }
+    ],
+    "cart_total": 445.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Atelier Nord AB's catalogue and selected the closest in-stock option at $445.00, within the stated $500.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "4YRzFoKGGQ+vAuqNG8q0aRE6bcZTIRQGXYn2m/7P+j95iDdf9azh+ROoukmdLfM9PnIcB8H8KLaSkILNCJ3bDQ==",
+      "signed_payload_hash": "sha256:b9e6344d465ba96c3c87820b7e8b4e5985d0a1ff083f96bc4be004782f9ba69c",
+      "signed_at": "2026-07-31T16:55:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0731-0037",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0731-0037",
+      "prev_mandate_hash": "sha256:b9e6344d465ba96c3c87820b7e8b4e5985d0a1ff083f96bc4be004782f9ba69c"
+    },
+    "authorized_at": "2026-07-31T16:57:19-05:00",
+    "amount": 445.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1036",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2036",
+      "scheme": "card_settlement",
+      "country": "SE",
+      "beneficiary_name_on_account": "Atelier Nord AB"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "k79rdbl15ta6vOE2af4jQCDkqXbfdlyHz1Cg1AINa6VyoMrXIdP9M2loSiZlDiiqtkM5CAAchGgvpYFcOdM1CQ==",
+      "signed_payload_hash": "sha256:60f2dcfdbd0d7ed044f6b2ce9d52dd4972d96bf84448a94d8a76111a0ea97d7b",
+      "signed_at": "2026-07-31T16:57:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-07-31T16:56:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-07-31T16:56:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-07-31T16:56:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-07-31T16:56:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-07-31T16:56:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-31T16:56:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-31T16:56:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-31T16:56:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-31T16:56:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

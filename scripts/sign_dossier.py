@@ -12,6 +12,7 @@ Usage: python scripts/sign_corpus.py  (signs cases and dossiers together)
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -24,21 +25,28 @@ from data.canonical import canonical_bytes, sha256_hex  # noqa: E402
 DOSSIERS_DIR = ROOT / "data" / "dossiers"
 
 
-def sign_envelope(obj: dict, payload: dict, keyring) -> None:
-    """Sign `payload` into the SignatureEnvelope already sitting on `obj`."""
-    env = obj["signature"]
-    digest = sha256_hex(canonical_bytes(payload))
-    env["signed_payload_hash"] = f"sha256:{digest}"
-    env["value"] = base64.b64encode(
-        keyring.private_key_for(env["signer_key_id"]).sign(canonical_bytes(payload))).decode()
-
-
 def strip_sig(obj: dict) -> dict:
     return {k: v for k, v in obj.items() if k != "signature"}
 
 
-def sign_dossier_file(path: Path, keyring) -> tuple[int, int]:
-    d = json.loads(path.read_text(encoding="utf-8"))
+def sign_envelope(obj: dict, payload: dict, keyring) -> None:
+    """Sign `payload` into the SignatureEnvelope already sitting on `obj`."""
+    env = obj["signature"]
+    env["signed_payload_hash"] = f"sha256:{sha256_hex(canonical_bytes(payload))}"
+    env["value"] = base64.b64encode(
+        keyring.private_key_for(env["signer_key_id"]).sign(canonical_bytes(payload))).decode()
+
+
+def sign_dossier_dir(directory: Path, keyring) -> tuple[int, int]:
+    """Sign a dossier directory in place, then rebuild its run index.
+
+    Order matters. Signing rewrites every run file, which changes its bytes,
+    which invalidates the digest the index attests to. So the index is rebuilt
+    last, from what is actually on disk — otherwise the loader would reject the
+    very dossier this just produced.
+    """
+    dossier_path = directory / "dossier.json"
+    d = json.loads(dossier_path.read_text(encoding="utf-8"))
 
     for cred in [d["kya_credential"], *d["credential_history"]]:
         for link in cred["delegation_chain"]:
@@ -47,18 +55,18 @@ def sign_dossier_file(path: Path, keyring) -> tuple[int, int]:
                     canonical_bytes(strip_sig(link)))).decode()
         sign_envelope(cred, strip_sig(cred), keyring)
 
-    intent = d["intent_mandate"]
-    sign_envelope(intent, strip_sig(intent), keyring)
-    intent_hash = intent["signature"]["signed_payload_hash"]
-
     carts = payments = 0
-    for run in d["runs"]:
+    for ref in d["run_index"]:
+        path = directory / ref["file"]
+        run = json.loads(path.read_text(encoding="utf-8"))
+        # One chain per run: the shopper's own intent, their cart, their payment.
+        intent = run["intent_mandate"]
+        sign_envelope(intent, strip_sig(intent), keyring)
         if cart := run.get("cart"):
-            # The chain is what makes tampering detectable: each link names the
-            # hash of the artifact it descends from, so editing a cart after
-            # the fact breaks the payment that points at it.
+            # Each link names the hash of what it descends from, so editing a
+            # cart after the fact breaks the payment that points at it.
             cart["chain_link"]["prev_mandate_id"] = intent["intent_mandate_id"]
-            cart["chain_link"]["prev_mandate_hash"] = intent_hash
+            cart["chain_link"]["prev_mandate_hash"] = intent["signature"]["signed_payload_hash"]
             sign_envelope(cart, strip_sig(cart), keyring)
             carts += 1
             if pay := run.get("payment"):
@@ -66,12 +74,16 @@ def sign_dossier_file(path: Path, keyring) -> tuple[int, int]:
                 pay["chain_link"]["prev_mandate_hash"] = cart["signature"]["signed_payload_hash"]
                 sign_envelope(pay, strip_sig(pay), keyring)
                 payments += 1
+        path.write_text(json.dumps(run, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        ref["sha256"] = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
-    path.write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    dossier_path.write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return carts, payments
 
 
 def sign_all_dossiers(keyring) -> None:
-    for path in sorted(DOSSIERS_DIR.glob("*.json")) if DOSSIERS_DIR.exists() else []:
-        carts, payments = sign_dossier_file(path, keyring)
-        print(f"Signed {path.name}: {carts} carts, {payments} payments.")
+    for directory in sorted(DOSSIERS_DIR.iterdir()) if DOSSIERS_DIR.exists() else []:
+        if not (directory / "dossier.json").exists():
+            continue
+        carts, payments = sign_dossier_dir(directory, keyring)
+        print(f"Signed {directory.name}: {carts} carts, {payments} payments, index rebuilt.")

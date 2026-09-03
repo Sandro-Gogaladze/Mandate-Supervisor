@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0616-0001",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-16T08:41:00-05:00",
+  "ended_at": "2026-06-16T08:43:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "white running shoes, women's 10, under $130",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0616-0001",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-16T08:41:00-05:00",
+    "expires_at": "2026-06-16T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0001",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0001",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "white running shoes, women's 10, under $130",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 130.0,
+      "max_cumulative_amount": 130.0,
+      "currency": "USD",
+      "valid_from": "2026-06-16T00:00:00-05:00",
+      "valid_until": "2026-06-16T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5661"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-16T08:41:00-05:00",
+      "device_id": "DEV-K-0001"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0001",
+      "value": "Yd3t6BZPExqEunajBP2aO820o1pxxNd/utLANhF0pU2c3n64JKvNDVh/+j/o8HZS1a3YXMdYDiI401Dq6XqkAQ==",
+      "signed_payload_hash": "sha256:d8b26fb9484c99e40ecd21ed74c078b9c4993407e5105e48f56fa78cac688473",
+      "signed_at": "2026-06-16T08:41:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:aff253dd5ba6521468b1cf9afc9dba7f295f66bc318f73467285f81a52bef8a8",
+      "release_ref": "kestrel-shop-v2.4.1"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "white running shoes, women's 10, under $130",
+          "max_price": 130.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:7b15a61ae03917b2f5fa4ba91e26b1e715b43a953ffa4058272d7c56ec071d42"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "NOR-RUN-TRL-10"
+          ]
+        },
+        "result_digest": "sha256:67ca7169f5a2a04be90906690be1c4826a368df2797be2901cbd12f13b524824",
+        "result_excerpt": {
+          "source": "mcp://shop.northsole.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "NORTHSOLE FOOTWEAR INC — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "NOR-RUN-TRL-10"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:24bd769872647aac64f34f89344abc83bd75574ab8dbab9956b6accf91191e66"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-NOR-1120",
+          "lines": 1,
+          "total": 118.0
+        },
+        "result_digest": "sha256:ccb05e16723ac2fa7997c147f8458a7efa4471fa044fc28cbe4148ff9fd70244"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 118.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0001"
+        },
+        "result_digest": "sha256:99527eff81069078e9dd9a59f57b4c92c5c0c6858f38ad97e3a3e2fc2792381e"
+      }
+    ],
+    "selection_context": {
+      "query": "white running shoes, women's 10, under $130",
+      "selected_sku": "NOR-RUN-TRL-10",
+      "alternatives_considered": [
+        {
+          "sku": "ATE-LIN-TRS-32",
+          "merchant_id": "MER-ATE-3345",
+          "price": 118.0,
+          "description": "Linen trouser, 32"
+        },
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "merchant_id": "MER-HRT-9902",
+          "price": 119.0,
+          "description": "8in chef's knife, forged"
+        },
+        {
+          "sku": "PTC-DOG-BED-L",
+          "merchant_id": "MER-PTC-7712",
+          "price": 112.0,
+          "description": "Orthopaedic dog bed, large"
+        },
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "merchant_id": "MER-CYC-6650",
+          "price": 128.0,
+          "description": "Road helmet, M"
+        },
+        {
+          "sku": "VLT-SSD-1TB-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 132.0,
+          "description": "1TB portable NVMe SSD"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-16T08:41:47-05:00",
+    "principal_id": "PRIN-K-0001",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 118.0,
+      "currency": "USD",
+      "merchant": "Northsole Footwear Inc",
+      "line_items": [
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "qty": 1,
+          "unit_price": 118.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 130.0
+      }
+    },
+    "rendered_hash": "sha256:ba5ca01098e82fe99775eef25a9124c5a62ac82a0b4f884f50c9999d14cff8e7",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0616-0001",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0616-0001",
+      "prev_mandate_hash": "sha256:d8b26fb9484c99e40ecd21ed74c078b9c4993407e5105e48f56fa78cac688473"
+    },
+    "created_at": "2026-06-16T08:41:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-NOR-1120",
+      "name": "Northsole Footwear Inc",
+      "mcc": "5661",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "NOR-RUN-TRL-10",
+        "description": "Trailflex running shoe, women's 10, white",
+        "qty": 1,
+        "unit_price": 118.0
+      }
+    ],
+    "cart_total": 118.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Northsole Footwear Inc's catalogue and selected the closest in-stock option at $118.00, within the stated $130.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "i9sc9nLnhOLVK2MypymAqGaIfr4Sr8YLm2mjfWfaUchWjpwIy7MEvbVWAzCp0gqzUcFWkp34fGU37YYjmU7CDg==",
+      "signed_payload_hash": "sha256:3493b3f64112e4e4d243b2a95f533ebd3e39d3927bec47ef9891e87963bc091e",
+      "signed_at": "2026-06-16T08:41:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0616-0001",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0616-0001",
+      "prev_mandate_hash": "sha256:3493b3f64112e4e4d243b2a95f533ebd3e39d3927bec47ef9891e87963bc091e"
+    },
+    "authorized_at": "2026-06-16T08:43:19-05:00",
+    "amount": 118.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1000",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2000",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Northsole Footwear Inc"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "gKkhVu85updcS58ZX6t0xQ3shFdcB0tx3zDdmjOH5g2I85ozvyUCgAOCaovBnvlVdAiGbHp8m58gwlEutJ/rDA==",
+      "signed_payload_hash": "sha256:cb3c4b71a3adcb172511b72bed02bb5c88d15367323ebecb0d353a5109ed7112",
+      "signed_at": "2026-06-16T08:43:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-06-16T08:42:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-06-16T08:42:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-06-16T08:42:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-06-16T08:42:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-06-16T08:42:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-16T08:42:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-16T08:42:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-16T08:42:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-16T08:42:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

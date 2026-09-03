@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0702-0005",
+  "dossier_id": "DOSSIER-HAL-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-02T11:28:00-05:00",
+  "ended_at": "2026-07-02T11:30:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "45 litre trekking pack under $200",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-HAL-0702-0005",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-02T11:28:00-05:00",
+    "expires_at": "2026-07-02T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper H005",
+      "role": "consumer",
+      "principal_id": "PRIN-H-H005",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-HAL-SHOP-01",
+      "agent_name": "Halcyon Buying Assistant",
+      "operator_firm": "Halcyon Retail Agents Ltd",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "45 litre trekking pack under $200",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 200.0,
+      "max_cumulative_amount": 200.0,
+      "currency": "USD",
+      "valid_from": "2026-07-02T00:00:00-05:00",
+      "valid_until": "2026-07-02T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5941"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-02T11:28:00-05:00",
+      "device_id": "DEV-K-H005"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-H005",
+      "value": "iGefvW0natuO/gKNngimMJViLxgbE1CSCQgAtgMFGIo9Rui2cwWPh1zg0PBhqFlk0FEeEWb03eiJvFzJMUR9Dg==",
+      "signed_payload_hash": "sha256:6738e800dec2f59755c9ec89835c88d33238125b74e26152c866f08784f1ebca",
+      "signed_at": "2026-07-02T11:28:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-003"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:603d80e90ce4524e0b5e63926fc5ee71f57ac7e1045082acb8947319e6811bf9",
+      "release_ref": "halcyon-buy-v1.8.2"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "45 litre trekking pack under $200",
+          "max_price": 200.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:35c1dbeb2d86ff4a4ae0db93ab99f1e945b01d0176180539ae3be06e759358ce"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "TRK-BAG-45L-01"
+          ]
+        },
+        "result_digest": "sha256:854280e5d3e10ee9b6ad06a70b86cac69e30280c51069608f108f1f3e7f16263",
+        "result_excerpt": {
+          "source": "mcp://shop.trekline.nl",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "TREKLINE OUTDOOR BV — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "TRK-BAG-45L-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:eebce91de9e13acefe3a3f1e3cce1c322c09883b4027672c95ad9f8521f084e0"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-TRK-4408",
+          "lines": 1,
+          "total": 187.0
+        },
+        "result_digest": "sha256:cd2ca9e0db74301a2d5c2a6ca87c1946bf5dd2d3677a5ea3d265afce1bd41191"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.halcyonagents.co.uk",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 187.0,
+          "currency": "USD",
+          "principal_id": "PRIN-H-H005"
+        },
+        "result_digest": "sha256:58a59dab6acccd1dde7b02b55859231cb3025d7e775e81df3a3822dc3d01ed20"
+      }
+    ],
+    "selection_context": {
+      "query": "45 litre trekking pack under $200",
+      "selected_sku": "TRK-BAG-45L-01",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-BOO-WTR-08",
+          "merchant_id": "MER-NOR-1120",
+          "price": 189.0,
+          "description": "Fjord waterproof boot, women's 8"
+        },
+        {
+          "sku": "HRT-CKW-DUT-05",
+          "merchant_id": "MER-HRT-9902",
+          "price": 168.0,
+          "description": "Enamelled cast-iron dutch oven, 5qt"
+        },
+        {
+          "sku": "SLV-NEC-SIL-01",
+          "merchant_id": "MER-SLV-8830",
+          "price": 165.0,
+          "description": "Sterling silver pendant necklace"
+        },
+        {
+          "sku": "BRW-GRN-BUR-01",
+          "merchant_id": "MER-BRW-1177",
+          "price": 154.0,
+          "description": "Conical burr grinder"
+        },
+        {
+          "sku": "VLT-KBD-MEC-87",
+          "merchant_id": "MER-VLT-7789",
+          "price": 149.0,
+          "description": "87-key mechanical keyboard, tactile"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-02T11:28:47-05:00",
+    "principal_id": "PRIN-H-H005",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 187.0,
+      "currency": "USD",
+      "merchant": "Trekline Outdoor BV",
+      "line_items": [
+        {
+          "sku": "TRK-BAG-45L-01",
+          "qty": 1,
+          "unit_price": 187.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 200.0
+      }
+    },
+    "rendered_hash": "sha256:046637db20fc040be9b23539e2dfe260bef4441bfaf5f55e0d072aaa3d605f35",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-HAL-0702-0005",
+    "chain_link": {
+      "prev_mandate_id": "IM-HAL-0702-0005",
+      "prev_mandate_hash": "sha256:6738e800dec2f59755c9ec89835c88d33238125b74e26152c866f08784f1ebca"
+    },
+    "created_at": "2026-07-02T11:28:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-TRK-4408",
+      "name": "Trekline Outdoor BV",
+      "mcc": "5941",
+      "country": "NL",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "TRK-BAG-45L-01",
+        "description": "Alpine 45L trekking pack",
+        "qty": 1,
+        "unit_price": 187.0
+      }
+    ],
+    "cart_total": 187.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Trekline Outdoor BV's catalogue and selected the closest in-stock option at $187.00, within the stated $200.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "1WyPqyJO2Y+1vBpGGy9VKBr6asSC6uCa/IIvhfaMDyAFDNvq0uzzkJ/fhUDcVvQ+IY8+pvNMw+YbIGHk1cu5BA==",
+      "signed_payload_hash": "sha256:8e37e01194a197fe8ad76e43a73ad217aaeb0e340fe1a65848362d463133d1e4",
+      "signed_at": "2026-07-02T11:28:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-HAL-0702-0005",
+    "chain_link": {
+      "prev_mandate_id": "CM-HAL-0702-0005",
+      "prev_mandate_hash": "sha256:8e37e01194a197fe8ad76e43a73ad217aaeb0e340fe1a65848362d463133d1e4"
+    },
+    "authorized_at": "2026-07-02T11:30:19-05:00",
+    "amount": 187.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1004",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2004",
+      "scheme": "card_settlement",
+      "country": "NL",
+      "beneficiary_name_on_account": "Trekline Outdoor BV"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "/K0oSN6Ky5Ehh+SCgUaqDD6Y/I1s9BznrvxBNDSpU3OLtceJNQLGoSggrXKPutyaMl0ZeBomHW5lTizOj8OVAw==",
+      "signed_payload_hash": "sha256:084a2d53e397a5bdeeddca436b02fa557e37e5f829859791e64c1d3ed024217f",
+      "signed_at": "2026-07-02T11:30:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "HAL-CTL-001",
+      "evaluated_at": "2026-07-02T11:29:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-002",
+      "evaluated_at": "2026-07-02T11:29:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-003",
+      "evaluated_at": "2026-07-02T11:29:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-004",
+      "evaluated_at": "2026-07-02T11:29:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-005",
+      "evaluated_at": "2026-07-02T11:29:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-02T11:29:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-02T11:29:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-02T11:29:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-02T11:29:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

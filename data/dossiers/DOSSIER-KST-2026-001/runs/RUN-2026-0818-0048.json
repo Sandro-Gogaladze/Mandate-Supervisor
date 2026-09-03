@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0818-0048",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-18T16:33:00-05:00",
+  "ended_at": "2026-08-18T16:35:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "ceramide night cream 50ml",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0817-0047",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-18T16:33:00-05:00",
+    "expires_at": "2026-08-18T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0047",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0047",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "ceramide night cream 50ml",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 70.0,
+      "max_cumulative_amount": 70.0,
+      "currency": "USD",
+      "valid_from": "2026-08-18T00:00:00-05:00",
+      "valid_until": "2026-08-18T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5977"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 2
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-18T16:33:00-05:00",
+      "device_id": "DEV-K-0047"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0047",
+      "value": "nzlEbR8YZ/Z8G3c6n6HMLI7tmeN+VN4tnUcuc7G37pujXKAU79zTyPa64QcSbxfj7q6wrsuVMsNlXqU2MeCFBw==",
+      "signed_payload_hash": "sha256:045730f5829a90f0c9ba9711cbc1a7fb0bb1d9e0bd2382533a3e9a631e95411f",
+      "signed_at": "2026-08-18T16:33:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "ceramide night cream 50ml",
+          "max_price": 70.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:10bdd7eee7db012b3f6a69aa0a2d1face736b66e8ddeb5f3136643d6c8ee0765"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "LUM-SKN-CRM-50"
+          ]
+        },
+        "result_digest": "sha256:89b493bd07df4318be74d0c451c63f21b84ddab46781ea16d88349b89d69775f",
+        "result_excerpt": {
+          "source": "mcp://shop.lumenbeauty.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "LUMEN BEAUTY CO — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "LUM-SKN-CRM-50"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:b3e3c18c3d9f2c4bee4f7b4a5aeabea5c2dcbd88a7543614912f4020d6250585"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-LUM-6614",
+          "lines": 1,
+          "total": 64.0
+        },
+        "result_digest": "sha256:24ea3b382843b654641a1b57d095f5c5a512768687b544d3499e0e040a337b97"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 64.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0047"
+        },
+        "result_digest": "sha256:75b8dc0280b0a6ef7cc993004443e8afea0ad321dfae313b3894a20201cdd08a"
+      }
+    ],
+    "selection_context": {
+      "query": "ceramide night cream 50ml",
+      "selected_sku": "LUM-SKN-CRM-50",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-SND-EVR-11",
+          "merchant_id": "MER-NOR-1120",
+          "price": 62.0,
+          "description": "Everstrap sandal, men's 11"
+        },
+        {
+          "sku": "CYC-LGT-SET-01",
+          "merchant_id": "MER-CYC-6650",
+          "price": 62.0,
+          "description": "Front and rear light set"
+        },
+        {
+          "sku": "DSK-LMP-LED-02",
+          "merchant_id": "MER-DSK-3390",
+          "price": 68.0,
+          "description": "LED desk lamp, dimmable"
+        },
+        {
+          "sku": "GRV-PLT-MON-01",
+          "merchant_id": "MER-GRV-2258",
+          "price": 68.0,
+          "description": "Monstera deliciosa, 90cm"
+        },
+        {
+          "sku": "KDO-PLU-BEA-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 54.0,
+          "description": "Handmade wool bear"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-18T16:33:47-05:00",
+    "principal_id": "PRIN-K-0047",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 64.0,
+      "currency": "USD",
+      "merchant": "Lumen Beauty Co",
+      "line_items": [
+        {
+          "sku": "LUM-SKN-CRM-50",
+          "qty": 1,
+          "unit_price": 64.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 70.0
+      }
+    },
+    "rendered_hash": "sha256:07aeeb7f90e91f849b259d260a094574cb7ce6017133478f95c36cab5fcf3cee",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0818-0048",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0817-0047",
+      "prev_mandate_hash": "sha256:045730f5829a90f0c9ba9711cbc1a7fb0bb1d9e0bd2382533a3e9a631e95411f"
+    },
+    "created_at": "2026-08-18T16:33:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-LUM-6614",
+      "name": "Lumen Beauty Co",
+      "mcc": "5977",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "LUM-SKN-CRM-50",
+        "description": "Ceramide night cream, 50ml",
+        "qty": 1,
+        "unit_price": 64.0
+      }
+    ],
+    "cart_total": 64.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Lumen Beauty Co's catalogue and selected the closest in-stock option at $64.00, within the stated $70.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "C9NQA4MEC7IXLlKOst00AAZdXXmfVm3ti2kPe/XDFtcE5i/6sQvOBpWkzpA8Gn+livvoaEJKEr1I7J3FddqjCw==",
+      "signed_payload_hash": "sha256:e3e914a01cadfef37e9dbe0a69fa50a0ec5697fe44ab9ebc05511594d9286ed4",
+      "signed_at": "2026-08-18T16:33:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0818-0048",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0818-0048",
+      "prev_mandate_hash": "sha256:e3e914a01cadfef37e9dbe0a69fa50a0ec5697fe44ab9ebc05511594d9286ed4"
+    },
+    "authorized_at": "2026-08-18T16:35:19-05:00",
+    "amount": 64.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1047",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2047",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Lumen Beauty Co"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "zALnTdViadgxlPhqajH3Kole2JLaJywp0mRkx79RERJrn8PsyKzd+IoouYTS7ll3ETLgs2aOtQz+rPj+t+uBBw==",
+      "signed_payload_hash": "sha256:06fc9782a4b2acb47a1375f4719edbd46b6e97c005b734adfcd21424efffaafc",
+      "signed_at": "2026-08-18T16:35:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-08-18T16:34:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-08-18T16:34:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-08-18T16:34:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-08-18T16:34:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-08-18T16:34:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-18T16:34:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-18T16:34:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-18T16:34:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-18T16:34:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

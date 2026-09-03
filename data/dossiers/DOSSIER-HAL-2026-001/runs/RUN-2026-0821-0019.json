@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0821-0019",
+  "dossier_id": "DOSSIER-HAL-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-21T11:14:00-05:00",
+  "ended_at": "2026-08-21T11:16:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "another two home bundles",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-HAL-0821-0019",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-21T11:14:00-05:00",
+    "expires_at": "2026-08-21T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper H019",
+      "role": "consumer",
+      "principal_id": "PRIN-H-H019",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-HAL-SHOP-01",
+      "agent_name": "Halcyon Buying Assistant",
+      "operator_firm": "Halcyon Retail Agents Ltd",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "another two home bundles",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 600.0,
+      "max_cumulative_amount": 600.0,
+      "currency": "USD",
+      "valid_from": "2026-08-21T00:00:00-05:00",
+      "valid_until": "2026-08-21T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5964"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-21T11:14:00-05:00",
+      "device_id": "DEV-K-H019"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-H019",
+      "value": "AAVQ8DbXr/vFCM+EKVYtyWp870LH2q3H8k3i+46NbL3ilXIj2xmTuAn3vSJ2cwtSLb9u5bn0XJmP4/udtrxADQ==",
+      "signed_payload_hash": "sha256:2c691a5359db609dc4c223ee70585dd6df6035862a6d3d1119947e196635c0e7",
+      "signed_at": "2026-08-21T11:14:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-003"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:dc955d3189ad0955d3c1dc069943df7ccd21472a0c9b9ce918cccd8d18b4b512",
+      "release_ref": "halcyon-buy-v1.9.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "another two home bundles",
+          "max_price": 600.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:f741be7c5863cbbefbbea0ca675028ff00107b9279bf823460e0e4d76dfa0332"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "QVC-GEN-BDL-01"
+          ]
+        },
+        "result_digest": "sha256:be4125716a87f75932ed9fd57b9e0db1c08a291ca2d153d71ad6692e81addfbb",
+        "result_excerpt": {
+          "source": "mcp://shop.quickvale.cy",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "QUICKVALE DIRECT LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "QVC-GEN-BDL-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:a038000c0db7693f04c4ea846784f0f43d6e623953f4155ccf3b0d00a8d93a3a"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.quickvale.cy",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-QVC-8801",
+          "lines": 1,
+          "total": 578.0
+        },
+        "result_digest": "sha256:7728d9faacefac75f5f7f8f427cf1e776bc47112d2fd2aaf10417809d0ffa0e1"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.halcyonagents.co.uk",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 578.0,
+          "currency": "USD",
+          "principal_id": "PRIN-H-H019"
+        },
+        "result_digest": "sha256:286781ac4e29e0f03a75d89eea8713a4e52f928cea66123a4c49952c3c542823"
+      }
+    ],
+    "selection_context": {
+      "query": "another two home bundles",
+      "selected_sku": "QVC-GEN-BDL-01",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-HDP-ANC-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 279.0,
+          "description": "Noise-cancelling over-ear headphones"
+        },
+        {
+          "sku": "NOR-RUN-PRO-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 268.0,
+          "description": "Trailflex Pro carbon-plate racer, women's 10"
+        },
+        {
+          "sku": "TRK-TNT-2PR-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 329.0,
+          "description": "Ridgeline 2-person tent"
+        },
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        },
+        {
+          "sku": "MKT-3P-HDP-ANC",
+          "merchant_id": "MER-MKT-9034",
+          "price": 238.0,
+          "description": "Noise-cancelling headphones (marketplace listing)"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-21T11:14:47-05:00",
+    "principal_id": "PRIN-H-H019",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 578.0,
+      "currency": "USD",
+      "merchant": "Quickvale Direct Ltd",
+      "line_items": [
+        {
+          "sku": "QVC-GEN-BDL-01",
+          "qty": 2,
+          "unit_price": 289.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 600.0
+      }
+    },
+    "rendered_hash": "sha256:20c0fe0c59d48d80b56dd08e6a2b465f8a4452ff4122a6c1c371d48077e68f65",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-HAL-0821-0019",
+    "chain_link": {
+      "prev_mandate_id": "IM-HAL-0821-0019",
+      "prev_mandate_hash": "sha256:2c691a5359db609dc4c223ee70585dd6df6035862a6d3d1119947e196635c0e7"
+    },
+    "created_at": "2026-08-21T11:14:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-QVC-8801",
+      "name": "Quickvale Direct Ltd",
+      "mcc": "5964",
+      "country": "CY",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "QVC-GEN-BDL-01",
+        "description": "Premium home bundle, assorted",
+        "qty": 2,
+        "unit_price": 289.0
+      }
+    ],
+    "cart_total": 578.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Quickvale Direct Ltd's catalogue and selected the closest in-stock option at $578.00, within the stated $600.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "p9EvJz3y/yUCTQEa8sqGhXnY+2yPcWKgiIwvcs5qMDRiP74Ka34/MwGv/xYAQicgCbYlle8FwO5QnMaDOC0BCA==",
+      "signed_payload_hash": "sha256:393513f214c205afb1a3718f32b68abd31a5242b22147c95bac18e4cb3c9530b",
+      "signed_at": "2026-08-21T11:14:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-HAL-0821-0019",
+    "chain_link": {
+      "prev_mandate_id": "CM-HAL-0821-0019",
+      "prev_mandate_hash": "sha256:393513f214c205afb1a3718f32b68abd31a5242b22147c95bac18e4cb3c9530b"
+    },
+    "authorized_at": "2026-08-21T11:16:19-05:00",
+    "amount": 578.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1018",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2018",
+      "scheme": "card_settlement",
+      "country": "CY",
+      "beneficiary_name_on_account": "Quickvale Direct Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-HAL-AGT-01",
+      "value": "Rq0hiA+7Yh6ImTSpc8IeKsPwWxDa7a8Jm3JxQKF6JHe9RMSZrDDEWU1f9XrmfOJJJApILBBjvCefKLcbhyy+DA==",
+      "signed_payload_hash": "sha256:aa6ec03222448416c339133c944e518ddbddc0c2a48fa457a6a88d2eebff926e",
+      "signed_at": "2026-08-21T11:16:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "HAL-CTL-001",
+      "evaluated_at": "2026-08-21T11:15:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-002",
+      "evaluated_at": "2026-08-21T11:15:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-003",
+      "evaluated_at": "2026-08-21T11:15:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-004",
+      "evaluated_at": "2026-08-21T11:15:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "HAL-CTL-005",
+      "evaluated_at": "2026-08-21T11:15:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-21T11:15:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-21T11:15:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-21T11:15:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-21T11:15:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

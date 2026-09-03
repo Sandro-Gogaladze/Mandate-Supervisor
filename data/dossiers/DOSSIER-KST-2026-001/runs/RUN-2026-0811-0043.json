@@ -1,0 +1,347 @@
+{
+  "run_id": "RUN-2026-0811-0043",
+  "dossier_id": "DOSSIER-KST-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-11T09:16:00-05:00",
+  "ended_at": "2026-08-11T09:18:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "27 inch 4k monitor and noise cancelling headphones, keep it under $500",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-KST-0811-0043",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-11T09:16:00-05:00",
+    "expires_at": "2026-08-11T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper 0043",
+      "role": "consumer",
+      "principal_id": "PRIN-K-0043",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-KST-SHOP-01",
+      "agent_name": "Kestrel Shopping Agent",
+      "operator_firm": "Kestrel Commerce, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "27 inch 4k monitor and noise cancelling headphones, keep it under $500",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 500.0,
+      "max_cumulative_amount": 500.0,
+      "currency": "USD",
+      "valid_from": "2026-08-11T00:00:00-05:00",
+      "valid_until": "2026-08-11T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-11T09:16:00-05:00",
+      "device_id": "DEV-K-0043"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-0043",
+      "value": "1uv5+bUn1FQnBaHRG1wNQGQ0/37u+W79ZpkT027EVb4rwfxsNH6zwA5wQU/X1j64+64vWYE4ishuWLHCuixzBw==",
+      "signed_payload_hash": "sha256:65cd4ddd555c14332a280923aafdc800cc84e830595b47f3ad561ca19ec65bcb",
+      "signed_at": "2026-08-11T09:16:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-002"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:3f4df02c57ba7927b3c9f43314702d4368127dc7fe8bc34743d487806d3a67a6",
+      "release_ref": "kestrel-shop-v2.5.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "27 inch 4k monitor and noise cancelling headphones, keep it ",
+          "max_price": 500.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:41fa650ea344413520cc1f9a9bd0a2e0002feed510c0817e5a812da0b160f156"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "VLT-MON-27U-01",
+            "VLT-HDP-ANC-01"
+          ]
+        },
+        "result_digest": "sha256:3a17c7c5828b2db24628ac0ea65682135485f0a5b36f9a07db6ce1029a73b3cf",
+        "result_excerpt": {
+          "source": "mcp://shop.voltic.de",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "VOLTIC ELEKTRONIK GMBH — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "VLT-MON-27U-01",
+            "VLT-HDP-ANC-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:cf268564ce76d62a556f7082d02210ca69f50ba1c64cefc92b038ea2d80cf688"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-VLT-7789",
+          "lines": 2,
+          "total": 708.0
+        },
+        "result_digest": "sha256:cab16e2340262faf54c8de167e314ef6c0f80cc61852e9bbcda6e0973765d636"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.kestrelcommerce.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 708.0,
+          "currency": "USD",
+          "principal_id": "PRIN-K-0043"
+        },
+        "result_digest": "sha256:c3169bc1b819500f7f2e7f58b625692ac1b42273cb0ca1e3f0ff306ef2585567"
+      }
+    ],
+    "selection_context": {
+      "query": "27 inch 4k monitor and noise cancelling headphones, keep it under $500",
+      "selected_sku": "VLT-MON-27U-01",
+      "alternatives_considered": [
+        {
+          "sku": "STL-RUG-WOL-57",
+          "merchant_id": "MER-STL-1193",
+          "price": 420.0,
+          "description": "Hand-woven wool rug 5x7"
+        },
+        {
+          "sku": "ATE-WOL-COA-S",
+          "merchant_id": "MER-ATE-3345",
+          "price": 445.0,
+          "description": "Wool overcoat, charcoal, S"
+        },
+        {
+          "sku": "AUR-SPK-BKS-02",
+          "merchant_id": "MER-AUR-4471",
+          "price": 398.0,
+          "description": "Bookshelf speaker pair"
+        },
+        {
+          "sku": "DSK-CHR-ERG-01",
+          "merchant_id": "MER-DSK-3390",
+          "price": 385.0,
+          "description": "Ergonomic task chair"
+        },
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-11T09:16:47-05:00",
+    "principal_id": "PRIN-K-0043",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 708.0,
+      "currency": "USD",
+      "merchant": "Voltic Elektronik GmbH",
+      "line_items": [
+        {
+          "sku": "VLT-MON-27U-01",
+          "qty": 1,
+          "unit_price": 429.0
+        },
+        {
+          "sku": "VLT-HDP-ANC-01",
+          "qty": 1,
+          "unit_price": 279.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 500.0
+      }
+    },
+    "rendered_hash": "sha256:9edf1806ce040b1153731140261d0864e47b45c16784ed812ee2d9359b83d679",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-KST-0811-0043",
+    "chain_link": {
+      "prev_mandate_id": "IM-KST-0811-0043",
+      "prev_mandate_hash": "sha256:65cd4ddd555c14332a280923aafdc800cc84e830595b47f3ad561ca19ec65bcb"
+    },
+    "created_at": "2026-08-11T09:16:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-VLT-7789",
+      "name": "Voltic Elektronik GmbH",
+      "mcc": "5732",
+      "country": "DE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "VLT-MON-27U-01",
+        "description": "27in 4K monitor, USB-C",
+        "qty": 1,
+        "unit_price": 429.0
+      },
+      {
+        "sku": "VLT-HDP-ANC-01",
+        "description": "Noise-cancelling over-ear headphones",
+        "qty": 1,
+        "unit_price": 279.0
+      }
+    ],
+    "cart_total": 708.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Both requested items from Voltic Elektronik GmbH come to $708.00, above the shopper's $500.00 limit. Escalated to operations rather than dropping an item."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "ASTIxkjNnQr7Qz06hDmsva8+19OaLg0c4rGBwRWLxbOU4UM00H3C2DjziXsHGlr62/VZVs3Sp+t8oSHllMqSBA==",
+      "signed_payload_hash": "sha256:0a18d8ab63833d4baf13fcd0fbac22a4f8950c0417f4833af3b244507dd5b2ab",
+      "signed_at": "2026-08-11T09:16:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-KST-0811-0043",
+    "chain_link": {
+      "prev_mandate_id": "CM-KST-0811-0043",
+      "prev_mandate_hash": "sha256:0a18d8ab63833d4baf13fcd0fbac22a4f8950c0417f4833af3b244507dd5b2ab"
+    },
+    "authorized_at": "2026-08-11T09:18:19-05:00",
+    "amount": 708.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1042",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2042",
+      "scheme": "card_settlement",
+      "country": "DE",
+      "beneficiary_name_on_account": "Voltic Elektronik GmbH"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-KST-AGT-01",
+      "value": "fZdhMp0OB9Pj9tX0g5y5a5xVyKhLzH8tyCgai/wuGNzVl+cKBQQbPDlj8GUCxYUiOvtkPM9Wf1lw9SHkg5FBBA==",
+      "signed_payload_hash": "sha256:c103a43a59eaa177e8c836fb8fc137b0f5eb85e185d96c0bfc95a7026045a23e",
+      "signed_at": "2026-08-11T09:18:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "KST-CTL-001",
+      "evaluated_at": "2026-08-11T09:17:10-05:00",
+      "outcome": "triggered",
+      "override": {
+        "by": "ops-analyst-11",
+        "reason": "customer called in and approved the higher total verbally",
+        "at": "2026-08-11T09:17:52-05:00"
+      }
+    },
+    {
+      "control_id": "KST-CTL-002",
+      "evaluated_at": "2026-08-11T09:17:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-003",
+      "evaluated_at": "2026-08-11T09:17:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-004",
+      "evaluated_at": "2026-08-11T09:17:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "KST-CTL-005",
+      "evaluated_at": "2026-08-11T09:17:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-11T09:17:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-11T09:17:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-11T09:17:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-11T09:17:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

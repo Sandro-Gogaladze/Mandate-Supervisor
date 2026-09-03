@@ -1,5 +1,5 @@
 {
-  "registry_version": "2026.3",
+  "registry_version": "2026.4",
   "as_of": "2026-08-24",
   "issuers": [
     {
@@ -8,7 +8,13 @@
       "trust_level": "primary",
       "status": "active",
       "accredited_since": "2025-11-02",
-      "notes": "Regulator-operated root issuer for agent identity credentials in-scope for NBG supervision."
+      "notes": "Regulator-operated root issuer for agent identity credentials in-scope for NBG supervision.",
+      "authorised_classifications": [
+        "consumer_shopping",
+        "inventory_replenishment",
+        "treasury",
+        "marketplace_reseller"
+      ]
     },
     {
       "issuer_id": "ISS-002",
@@ -16,7 +22,12 @@
       "trust_level": "recognized",
       "status": "active",
       "accredited_since": "2026-01-15",
-      "notes": "Cross-border industry issuer backed by participating card networks under the AP2 rollout; recognized via mutual-trust agreement, not NBG-operated."
+      "notes": "Cross-border industry issuer backed by participating card networks under the AP2 rollout; recognized via mutual-trust agreement, not NBG-operated.",
+      "authorised_classifications": [
+        "consumer_shopping",
+        "inventory_replenishment",
+        "marketplace_reseller"
+      ]
     },
     {
       "issuer_id": "ISS-003",
@@ -24,7 +35,10 @@
       "trust_level": "recognized",
       "status": "active",
       "accredited_since": "2026-02-20",
-      "notes": "Regional accredited issuer serving Georgian and South Caucasus fintechs."
+      "notes": "Regional accredited issuer serving Georgian and South Caucasus fintechs.",
+      "authorised_classifications": [
+        "inventory_replenishment"
+      ]
     },
     {
       "issuer_id": "ISS-004",
@@ -34,7 +48,10 @@
       "accredited_since": "2025-12-01",
       "revoked_at": "2026-06-01",
       "revocation_reason": "Key management deficiencies identified during routine re-accreditation review; credentials issued after 2026-06-01 are invalid regardless of signature validity.",
-      "notes": "Do not treat as trusted for any credential issued_at on or after the revocation date."
+      "notes": "Do not treat as trusted for any credential issued_at on or after the revocation date.",
+      "authorised_classifications": [
+        "consumer_shopping"
+      ]
     }
   ],
   "registry_notes": "Only issuers listed here are trusted for KYA purposes. An issuer_id referenced by a credential but absent from this file (e.g. 'ISS-099') has no standing whatsoever — this is distinct from an explicit revocation and should be treated as at least as severe a finding."
