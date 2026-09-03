@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 
 from .kya import KYACredential
 from .mandate import CartMandate, IntentMandate, PaymentMandate
-from .submission import ConsentCeremony, SelectionContext, ToolCall
+from .submission import ConsentCeremony, ConstructionContext
 from .transaction import TransactionLogEntry
 
 FailureId = Annotated[str, StringConstraints(pattern=r"^F\d{1,2}$")]
@@ -86,30 +86,13 @@ class ControlExecution(BaseModel):
 # the run
 # ---------------------------------------------------------------------------
 
-class AgentVersion(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    prompt_hash: str      # the SYSTEM prompt at this run — F36
-    release_ref: str      # must appear in the agent's approved_prompt_releases
-
-
-class ModelAttestation(BaseModel):
-    """Self-declared, and honestly labelled as such: no major provider
-    cryptographically signs "this response came from model X". A declaration
-    the operator is accountable for catches misconfiguration and silent
-    upgrades. It does not catch a determined liar."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    declared_version: str
-    observed_version: str
-    provider: str
-
-
 class Run(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     run_id: str
+    # A run file is filed on its own and must be readable on its own, so it
+    # names its dossier rather than relying on which directory it sits in.
+    dossier_id: str
     environment: Literal["sandbox", "production_pilot"]
     started_at: str
     ended_at: str
@@ -122,11 +105,23 @@ class Run(BaseModel):
     # is the reviewed release, the other is what somebody typed today.
     user_prompt: str
 
-    agent_version: AgentVersion
-    model: ModelAttestation
+    # AP2's human-present flow: the shopper states what they want, and THAT
+    # becomes an Intent Mandate for this shopping task — not a standing
+    # entitlement. So the mandate lives on the run, and every run file is a
+    # complete, self-contained chain: intent → cart → payment, one shopper.
+    #
+    # It is also what makes F49 ("within the rules but not what the person
+    # meant") a real test. Checking a cart against a three-month envelope is
+    # nearly vacuous; checking it against "white running shoes, size 10, under
+    # $120" is not.
+    intent_mandate: IntentMandate
 
-    tool_calls: list[ToolCall] = Field(default_factory=list)
-    selection_context: SelectionContext | None = None
+    # The data contract's block, kept as a named block with its own field names
+    # (coverage-model.md Part 3.1). It is published as "the minimum reporting
+    # schema for supervised agentic payments", so its shape is the deliverable
+    # — flattening it here would make the corpus and the schema disagree.
+    construction_context: ConstructionContext
+
     consent_ceremony: ConsentCeremony | None = None
 
     cart: CartMandate | None = None
@@ -232,7 +227,72 @@ class GroundTruth(BaseModel):
 # the dossier
 # ---------------------------------------------------------------------------
 
+class AgentCard(BaseModel):
+    """The agent's own signed capability descriptor.
+
+    Provenance's cross-check needs four sources that should all agree: the
+    card, the KYA credential, the agent registry, and the tool calls actually
+    observed. Any pair disagreeing is a finding — an agent calling a server its
+    own card never declared is a different failure from one calling a server
+    the *regulator* never authorised.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    url: str
+    card_hash: str
+    declared_capabilities: list[str] = Field(default_factory=list)
+    declared_tool_servers: list[str] = Field(default_factory=list)
+    signature: dict = Field(default_factory=dict)
+
+
+class ChangeEvent(BaseModel):
+    """Something the operator changed, with a timestamp.
+
+    Drift can already find a change-point. F65 is the *causal* version — "the
+    agent does not behave like it used to, AND SOMETHING SPECIFIC CHANGED IT" —
+    which needs something for the onset estimate to land on. Without this log,
+    Drift can only ever say "something changed", which is the finding a
+    supervisor can do least with.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    at: str
+    kind: Literal["prompt_release", "model_version", "control_version",
+                  "credential_reissue", "tool_server", "merchant_onboarded",
+                  "policy_change"]
+    ref: str
+    detail: str | None = None
+
+
+class RunRef(BaseModel):
+    """One entry in the case's run index.
+
+    The digest is what makes the index an attestation rather than a table of
+    contents: the case says which runs were filed and what each contained, so a
+    run added, removed or edited after submission is detectable. That turns S2
+    (partial submission) from a number the operator declares about itself into
+    something structural.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str
+    file: str                    # relative to the dossier directory
+    sha256: str
+
+
 class Dossier(BaseModel):
+    """The case: everything the 50 runs share, plus the index of those runs.
+
+    Runs live in their own files because that is how they are produced — one
+    execution, one moment, one record. What stays here is what is genuinely
+    common to all of them: one Intent Mandate, one credential series, one set
+    of controls. Copying those into every run file would duplicate them and,
+    worse, let them drift out of agreement with each other.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     dossier_id: str
@@ -249,29 +309,47 @@ class Dossier(BaseModel):
     # single credential by definition — F20/F21/F22/F23 all need the series.
     credential_history: list[KYACredential] = Field(default_factory=list)
 
-    intent_mandate: IntentMandate      # ONE — the authority the runs sit under
+    # No mandate here. Each run carries its own — see Run.intent_mandate.
+    agent_card: AgentCard | None = None
     controls: Controls
-    runs: list[Run]
-
-    # Deliberately wider than the runs. The institution holds the full ledger
-    # but detailed run records only for the submitted period, and DRIFT-* needs
-    # 30+ transactions for a baseline/comparison split — ten runs would leave a
-    # third of the rulebook permanently `absent`. Every entry carries run_ref,
-    # so the join is checkable both ways, and a transaction with no run_ref is
-    # itself a finding: money moved outside any recorded episode.
-    transaction_history: list[TransactionLogEntry] = Field(default_factory=list)
-
-    ground_truth: GroundTruth | None = None
+    change_log: list[ChangeEvent] = Field(default_factory=list)
+    run_index: list[RunRef]
 
     @model_validator(mode="after")
     def _run_ids_unique(self) -> Dossier:
-        ids = [r.run_id for r in self.runs]
+        ids = [r.run_id for r in self.run_index]
         if len(ids) != len(set(ids)):
-            raise ValueError("duplicate run_id in dossier")
+            raise ValueError("duplicate run_id in the run index")
+        return self
+
+
+class LoadedDossier(BaseModel):
+    """A dossier with its runs, ledger and (for eval only) ground truth read in.
+
+    Assembled by data/dossier_loader.py. Ground truth lives in its own file, so
+    withholding it from the pipeline is "do not read that file" rather than a
+    code path someone can forget to call.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    dossier: Dossier
+    runs: list[Run]
+    transaction_history: list[TransactionLogEntry] = Field(default_factory=list)
+    ground_truth: GroundTruth | None = None
+
+    @model_validator(mode="after")
+    def _index_matches_runs(self) -> LoadedDossier:
+        indexed = {r.run_id for r in self.dossier.run_index}
+        loaded = {r.run_id for r in self.runs}
+        if missing := indexed - loaded:
+            raise ValueError(f"indexed but not loaded: {sorted(missing)}")
+        if extra := loaded - indexed:
+            raise ValueError(f"run files present but not in the index: {sorted(extra)}")
         return self
 
     @model_validator(mode="after")
-    def _ground_truth_covers_every_run(self) -> Dossier:
+    def _ground_truth_covers_every_run(self) -> LoadedDossier:
         if self.ground_truth is None:
             return self
         ids = {r.run_id for r in self.runs}
@@ -285,7 +363,3 @@ class Dossier(BaseModel):
                 f"unclassified: {sorted(unclassified)}"
             )
         return self
-
-    def for_pipeline(self) -> Dossier:
-        """The dossier as the pipeline must see it: no answer key."""
-        return self.model_copy(update={"ground_truth": None})

@@ -10,11 +10,15 @@ specialist was ever dispatched.
 """
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-FindingAgent = Literal["mandate", "kya", "log", "drift"]
+# Was a closed four-value Literal. architecture-v3 has eleven specialists, so
+# the enum would need editing every time one lands — and the real constraint is
+# that a Finding names an agent that actually ran, which the dispatcher already
+# enforces. Same argument as RuleType and Ruleset.domain.
+FindingAgent = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]*$", max_length=32)]
 
 
 class Finding(BaseModel):

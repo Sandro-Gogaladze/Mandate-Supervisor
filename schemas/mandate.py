@@ -15,6 +15,19 @@ from .submission import SubMerchant
 class Principal(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    # KYA-ACC-02 asserts the delegation chain terminates in the principal who
+    # signed the Intent. That holds for corporate delegation, where one officer
+    # both delegates to the agent and signs the mandate. It is structurally
+    # false for consumer shopping: the shopper signs their own Intent, while
+    # the agent's credential chain terminates at the OPERATOR's accountable
+    # officer. Different people, by design.
+    #
+    # So the rule needs a scope rather than a fudge. For a consumer principal
+    # the equivalent assurance is not the delegation chain at all — it is that
+    # the consent ceremony records the same principal who signed, which is SCA
+    # evidence the bank already holds.
+    principal_type: Literal["consumer", "delegated_officer"] = "delegated_officer"
+
     name: str
     role: str
     principal_id: str
@@ -37,6 +50,22 @@ class AllowedCounterparty(BaseModel):
     name: str
 
 
+class MandateUsage(BaseModel):
+    """How many times this authority may be drawn on.
+
+    Without it F50 ("the same authorisation was used twice") has no baseline to
+    violate — a mandate that never says how often it may be used cannot be
+    used too often. In AP2's human-present flow a task mandate is single-use by
+    nature: the user approved *this* basket, not a standing entitlement.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["single_use", "recurring"]
+    max_uses: int | None = None
+    uses_consumed: int = 0
+
+
 class AuthorizationScope(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -53,6 +82,7 @@ class AuthorizationScope(BaseModel):
     counterparty_policy: str | None = None
     geographic_scope: str
     human_presence_required: bool
+    usage: MandateUsage | None = None
 
 
 class Consent(BaseModel):
@@ -126,11 +156,31 @@ class CartMandate(BaseModel):
 
 
 class PaymentMethod(BaseModel):
+    """The instrument the money left FROM."""
+
     model_config = ConfigDict(extra="forbid")
 
     type: str
     instrument_id_masked: str
     issuer: str
+
+
+class Payee(BaseModel):
+    """Where the money went TO.
+
+    `payment_method` describes the payer's card; nothing in the signed record
+    said anything about the destination, which is precisely what F51 ("nobody
+    knows who was paid") and F53 ("a wallet with no identifiable owner") are
+    about. Comparing `beneficiary_name_on_account` against the merchant's legal
+    name is also Confirmation-of-Payee, which banks already run.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    settlement_account_masked: str
+    scheme: str                          # SEPA | FPS | ACH | card_settlement | ...
+    country: str
+    beneficiary_name_on_account: str | None = None
 
 
 class PaymentMandate(BaseModel):
@@ -142,6 +192,7 @@ class PaymentMandate(BaseModel):
     amount: float
     currency: str
     payment_method: PaymentMethod
+    payee: Payee | None = None
     settlement_status: Literal["settled", "declined", "reversed"]
     signature: SignatureEnvelope
 

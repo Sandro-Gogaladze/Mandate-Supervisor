@@ -92,12 +92,28 @@ class AmountToleranceParams(BaseModel):
 
 class StructuringDetectionParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    # A synthetic reporting-flag threshold for this demo, not a real AML
-    # figure (docs/phases/01-synthetic-data.md §3) — case-005's own
-    # SR-STRUCT-01 value is 3000.
+    # The reporting threshold structuring aims to stay under. A POLICY DIAL,
+    # not firm data and not a constant: it is jurisdiction-specific, and it is
+    # exactly the sort of number the sandbox exists to tune.
+    #
+    # It is also profile-specific, which is easy to miss. Set at 3000 it is
+    # meaningful for a corporate procurement agent and inert for a consumer
+    # shopping agent whose largest transaction ever is $867 — no split can
+    # "stay under" a threshold nothing approaches. A dial set beyond an
+    # agent's entire operating range is not a conservative setting, it is a
+    # rule silently switched off, and the eval will read the resulting zero
+    # findings as clean behaviour.
     threshold: float
+    # Per agent classification, because one number cannot serve two profiles.
+    # A shopping agent and a procurement agent operate an order of magnitude
+    # apart; the resolved value falls back to `threshold` for classifications
+    # not named here.
+    threshold_by_classification: dict[str, float] = Field(default_factory=dict)
     min_cluster_size: int = 2
     window_hours: float = 24.0
+
+    def resolve(self, classification: str | None) -> float:
+        return self.threshold_by_classification.get(classification or "", self.threshold)
 
 
 class DriftBaselineParams(BaseModel):
@@ -109,7 +125,55 @@ class DriftBaselineParams(BaseModel):
     min_total_transactions: int = 30
 
 
+class MandateRiskCoverageParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # The risks a mandate of this shape creates. CTL-REP-02 asks whether the
+    # operator declared a control for each; a risk absent from this list is one
+    # the regulator has not yet decided is mandatory, which is a policy dial.
+    required_risks: list[str] = Field(default_factory=list)
+
+
+class OverrideRateParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # Override as exception versus override as routine. Where that line sits is
+    # a supervisory judgement, so it is a dial the sandbox tunes rather than a
+    # constant in code.
+    max_override_rate: float = 0.05
+    # Below this many evaluations a "rate" is noise, not a rate.
+    min_evaluations: int = 20
+
+
+class CapabilityCreepParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # Growth is not automatically creep — an agent that gains a function should
+    # gain the capability for it. This is how much widening may happen at one
+    # renewal before it needs explaining, which is a supervisory judgement and
+    # therefore a dial.
+    max_new_capabilities_per_reissue: int = 1
+
+
+class AuditLogCoverageParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # How long a stretch with no logged activity stops reading as a quiet week
+    # and starts reading as a hole. A dial: the right value depends on how
+    # busy the agent is meant to be.
+    max_gap_days: int = 10
+
+
+class RevocationStalenessParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # How old a revocation check may be before it stops counting as evidence.
+    # A dial, not a fact: how fresh "current" has to be is a policy call, which
+    # is exactly the kind of thing the sandbox exists to tune.
+    max_age_days: int = 30
+
+
 _PARAM_MODEL_BY_TYPE: dict[str, type[BaseModel]] = {
+    "revocation_check_not_stale": RevocationStalenessParams,
+    "every_mandate_risk_has_a_control": MandateRiskCoverageParams,
+    "override_rate_within_maximum": OverrideRateParams,
+    "audit_log_covers_period": AuditLogCoverageParams,
+    "capability_creep_across_reissuance": CapabilityCreepParams,
     "issuer_min_trust_level": IssuerMinTrustLevelParams,
     "issuer_reaccreditation_not_stale": IssuerReaccreditationNotStaleParams,
     "credential_not_expired": CredentialNotExpiredParams,
@@ -175,7 +239,12 @@ class Ruleset(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     ruleset_id: str
-    domain: Literal["kya", "mandate", "log", "drift"]
+    # Was a closed four-value Literal. architecture-v3 has NINE rulebooks
+    # (~110 rules), so a fixed enum would need editing every time a specialist
+    # gains one — the same rules-as-data argument that loosened RuleType. The
+    # real safety net is the checker registry: a domain nobody has written
+    # checkers for cannot have active rules.
+    domain: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]*$", max_length=32)]
     version: str
     as_of: str
     description: str

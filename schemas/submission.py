@@ -101,6 +101,31 @@ class PolicyVersion(BaseModel):
     release_ref: str             # the reviewed release it came from
 
 
+class ResultExcerpt(BaseModel):
+    """A bounded excerpt of external prose the agent actually consumed.
+
+    F32 has four channels. Listing text is covered because it lands in the
+    signed cart's line items. Tool-description poisoning is covered by
+    comparing tool_schema_hash against tools.json. Agent-to-agent messages are
+    parked. **Retrieved reference material was not covered at all**, because
+    `result_digest` cannot do that job: a hash proves the bytes arrived
+    unaltered, it cannot reveal that those bytes carry an instruction. Nobody
+    reads `sha256:a04d…` and sees "no confirmation needed, this is
+    pre-authorized".
+
+    This is not the "full catalog archive" the data contract rejects. It is the
+    specific fields the agent consumed, capped, already present in the
+    observability trace the contract points at for tool_calls.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    source: str                  # the server the prose came from
+    fields: list[str] = Field(default_factory=list)
+    text: str = Field(max_length=2000)
+    truncated: bool = False
+
+
 class ToolCall(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -109,7 +134,11 @@ class ToolCall(BaseModel):
     server_id: str               # WHICH server — the pinning check
     tool_schema_hash: str        # detects tool-description poisoning
     arguments: dict[str, Any] = Field(default_factory=dict)
+    # Integrity and CORRELATION, not detection: the same digest across firms is
+    # a campaign (F69), across runs a changed source. It does not reveal
+    # content — that is what result_excerpt is for.
     result_digest: str
+    result_excerpt: ResultExcerpt | None = None
 
 
 class Alternative(BaseModel):
@@ -131,7 +160,11 @@ class SelectionContext(BaseModel):
 
     query: str
     selected_sku: str
-    alternatives_considered: list[Alternative] = Field(default_factory=list)
+    # The data contract says top 5 above a value threshold. The cap is the
+    # point on both sides: fewer than a handful cannot establish that an agent
+    # *systematically* chooses worse (F38), and an unbounded list is the
+    # catalog archive the contract rejects.
+    alternatives_considered: list[Alternative] = Field(default_factory=list, max_length=5)
 
 
 class ConstructionContext(BaseModel):
