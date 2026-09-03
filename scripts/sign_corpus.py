@@ -23,6 +23,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from data.canonical import canonical_bytes, sha256_hex  # noqa: E402
 from data.keystore import save_public_keys  # noqa: E402
@@ -162,6 +163,11 @@ def main() -> None:
 
     for path, signed in signed_cases:
         path.write_text(json.dumps(signed, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    # Dossiers share this keyring — see scripts/sign_dossier.py for why they
+    # cannot be signed in a separate pass.
+    from sign_dossier import sign_all_dossiers  # noqa: E402
+    sign_all_dossiers(keyring)
 
     save_public_keys(keyring.public_keys())
 

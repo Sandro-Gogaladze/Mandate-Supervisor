@@ -33,7 +33,7 @@
         "signature": {
           "alg": "Ed25519",
           "signer_key_id": "did:key:z6MkRioAgent01",
-          "value": "AGKHPA4Li9FbGwilac58FtMIdchkjTz+z8WL+CQNok2m82sMQgAdCchK9lSnxCNRT1kuEunHzfVv7h7vD/HsBA=="
+          "value": "uuIrfGrREl9TIhfodJ5IDqT05kwXK1R7cGuq2OivHMPVIE4rliascSFjDVS10w8W9HBb2754/HMXv129c6nyAg=="
         }
       },
       {
@@ -44,7 +44,7 @@
         "signature": {
           "alg": "Ed25519",
           "signer_key_id": "did:key:z6MkRioOrg03",
-          "value": "8P85EXOsVgCJl7jApbEPhp2+PRymTm3tuXbfHFsj6FRJpUUPVER3TYlPZUT6w0a7x0JpaXvwNkhQPCEQD2prBw=="
+          "value": "BL+jFQDpVGN3b+/1IR8jNSF51ocedSnRBqExp8ieeq1POspx5/jAxiopJYkJIi49/ah1pnuGD5S06DkEiqF8DQ=="
         }
       },
       {
@@ -55,15 +55,15 @@
         "signature": {
           "alg": "Ed25519",
           "signer_key_id": "did:key:z6MkEkaKavtaradze22",
-          "value": "iFCq+4JjZMfDamnutT3eTPyOqESDB9jh0fnsBMqWVepcGd9R9WgHCCex7hR2+Eb5WBGSreiOgukcX4PTvabqAQ=="
+          "value": "luR2DgvH9yQTz0QPIZYJgB9YfyFhgZjSNT493kuPJAcU+8LZ6tjLJpZYr14r9IjN/K2vIoYvVQI2CwGYF3diAQ=="
         }
       }
     ],
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "did:key:z6MkNBGIssuer01",
-      "signed_payload_hash": "sha256:f12b881f6a7eeb178807588206153f1e22e61a6677ad88fc387fb2a91a68c95b",
-      "value": "vUpd3R/Gpxg+cXYsosRRSURlyystiv/aziAJd9eXPwJsNh5elj/HpLrqdB10GNo3KtRhhGYJWHwKS415y9aqCg==",
+      "signed_payload_hash": "sha256:6b7235551418e0a13d3d9005fd81d7d9873db737b32724b4ad2eef0138b52847",
+      "value": "xrt7/gcqWbH0oEXF4qDaM919lajp1RzIvvanGO3WpeO9TO9gDuGxKw/R01nR19RVIM34sAkZ7qsKsQG3FC8eAw==",
       "signed_at": "2026-06-25T09:00:05+04:00"
     }
   },
@@ -118,7 +118,7 @@
         "alg": "Ed25519",
         "signer_key_id": "did:key:z6MkEkaKavtaradze22",
         "signed_payload_hash": "sha256:b5a278d4d51077e0ec57ea66b0149a9917b5a8203ca9aef4a6f25d251565da20",
-        "value": "3IZKsoZGK5GaOFwcuVEgAsXOM91fdZjdWNthU9x/IMvqTiZycsmUuqI8rwcINRgRN7roVXW8GLArVrQNsh7+Dw==",
+        "value": "PntAkUjntY5YUnSHKB39/oj+VdrpJemJdWO0Al207RZ89O/FyPWCOWwtfZItJ0/GWAJJ7OmD/4tkL9euKPgYDw==",
         "signed_at": "2026-07-01T09:00:03+04:00"
       }
     },
@@ -158,7 +158,7 @@
         "alg": "Ed25519",
         "signer_key_id": "did:key:z6MkRioAgent01",
         "signed_payload_hash": "sha256:69307c622f63d43dab7397977d7ebbdef2aa5e798a9fa6f3fef855d3d5057e18",
-        "value": "y4wigath3o115JB0WJoUzEJML/T1CMd4+i91N/QiUPm5TsygsF6/WDPqc2Er0JpzDv26iivJeMH9592NOGZrAQ==",
+        "value": "QFYLIpeOfd4FnM7/drRaLfVYplILrjP5n3fFyrXAy2znTuArtWpJccDyLNdzWivvZo7Y66vtjCDpMfv8AHNgDw==",
         "signed_at": "2026-08-05T11:20:04+04:00"
       }
     },
@@ -182,7 +182,7 @@
         "alg": "Ed25519",
         "signer_key_id": "did:key:z6MkRioAgent01",
         "signed_payload_hash": "sha256:cf66a73b0cfc8236302150b72e2ac8ae977c9894a7c63f36dce1771107153e43",
-        "value": "1ZdW5JAfQsc5GywXE87ftXXmexAuEAwMdB8380YVL+FFtvciPsa0ZFoK99NsIiIlYYm09NZFwyS78n+DQ+HMAg==",
+        "value": "OIcqyCFsvULv5ho/jSTtsW8jvfT19aY9i1MOKn9wikal2/fPIgHJmRsxWVtHLxqMq1VCd2EOW/w6b3fVvrhNCw==",
         "signed_at": "2026-08-05T11:21:41+04:00"
       }
     }
