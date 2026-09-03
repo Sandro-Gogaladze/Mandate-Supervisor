@@ -1,0 +1,17 @@
+{
+  "registry_version": "2026.1",
+  "as_of": "2026-09-01",
+  "description": "Model versions that must not be in production for agents that move money. An agent pinned to a blocked version is F19 — a known-vulnerable model still authorising payments.",
+  "blocked": [
+    {
+      "model_version": "claude-sonnet-4-5-20250929",
+      "blocked_at": "2026-03-02",
+      "reason": "Superseded; no longer receiving safety updates from the provider."
+    },
+    {
+      "model_version": "gpt-4o-2024-05-13",
+      "blocked_at": "2026-04-17",
+      "reason": "Superseded; documented susceptibility to indirect prompt injection in tool-result content."
+    }
+  ]
+}

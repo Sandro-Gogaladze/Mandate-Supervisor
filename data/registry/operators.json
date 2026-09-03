@@ -1,0 +1,25 @@
+{
+  "registry_version": "2026.1",
+  "as_of": "2026-09-01",
+  "description": "Agent operators. NOT regulated entities — they appear here because an institution sponsors them, and the institution is accountable for what it authorises on their behalf.",
+  "operators": [
+    {
+      "operator_id": "OPR-001",
+      "legal_name": "Brightline Retail Group, Inc.",
+      "trading_name": "Brightline",
+      "is_institution": false,
+      "sponsoring_institution_id": "INST-001",
+      "sector": "dtc_home_goods",
+      "hq": "Austin, TX, US",
+      "timezone": "America/Chicago",
+      "incorporated": "2019-06-11",
+      "standing": "good",
+      "ownership_changes": [],
+      "authorised_signatories": [
+        { "principal_id": "PRIN-BRL-0022", "name": "Marcus Oyelaran", "role": "Inventory Director" },
+        { "principal_id": "PRIN-BRL-0004", "name": "Renata Solberg", "role": "Chief Operating Officer" }
+      ],
+      "compliance_contact": { "name": "Renata Solberg", "role": "Chief Operating Officer" }
+    }
+  ]
+}

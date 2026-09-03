@@ -1,0 +1,17 @@
+{
+  "registry_version": "2026.1",
+  "as_of": "2026-09-01",
+  "description": "Institutions inside the supervisory perimeter. The submitter of an authorisation dossier is always one of these — an agent operator is not a regulated entity anywhere, so the obligation attaches here. See docs/synthetic-data-spec.md Part 0.2.",
+  "institutions": [
+    {
+      "institution_id": "INST-001",
+      "legal_name": "Northgate Payments Ltd",
+      "licence_type": "payment_service_provider",
+      "licence_status": "active",
+      "supervised_since": "2021-04-19",
+      "reporting_contact": { "name": "Adaeze Nwachukwu", "role": "Head of Regulatory Reporting" },
+      "agentic_products": ["Northgate Agentic Checkout API v2"],
+      "notes": "Processes card-not-present and agent-initiated commerce for mid-market merchants. Its Agentic Checkout API requires the mandate chain and run record as a condition of processing, which is why it can produce construction context it does not itself generate."
+    }
+  ]
+}

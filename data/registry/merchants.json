@@ -1,0 +1,153 @@
+{
+  "registry_version": "2026.1",
+  "as_of": "2026-09-01",
+  "description": "Counterparty reference data. beneficial_owner is what makes F51/F53 answerable; parent_platform_id is what makes F52 answerable — a marketplace identity conceals the seller that actually set the terms, and every check otherwise runs against the platform's clean reputation.",
+  "merchants": [
+    {
+      "merchant_id": "MER-KLN-3318",
+      "legal_name": "Kiln & Co Ceramics LLC",
+      "mcc": "5023",
+      "country": "US",
+      "region": "NA",
+      "parent_platform_id": null,
+      "beneficial_owner": "Elena Marchetti",
+      "first_seen": "2024-03-11",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-TXW-7742",
+      "legal_name": "Textilworks Portugal Lda",
+      "mcc": "5023",
+      "country": "PT",
+      "region": "EMEA",
+      "parent_platform_id": null,
+      "beneficial_owner": "Joana Ferreira",
+      "first_seen": "2024-05-02",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-ARB-5091",
+      "legal_name": "Arbor Woodcraft LLC",
+      "mcc": "5023",
+      "country": "US",
+      "region": "NA",
+      "parent_platform_id": null,
+      "beneficial_owner": "Daniel Okonkwo",
+      "first_seen": "2024-08-19",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-LMN-2264",
+      "legal_name": "Lumen Lighting Supply Inc",
+      "mcc": "5023",
+      "country": "US",
+      "region": "NA",
+      "parent_platform_id": null,
+      "beneficial_owner": "Priya Raghunathan",
+      "first_seen": "2025-01-27",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-VSL-8807",
+      "legal_name": "Vessel Glassworks BV",
+      "mcc": "5023",
+      "country": "NL",
+      "region": "EMEA",
+      "parent_platform_id": null,
+      "beneficial_owner": "Wouter Claassen",
+      "first_seen": "2025-02-14",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-NDL-4412",
+      "legal_name": "Needlepoint Textiles Sp. z o.o.",
+      "mcc": "5023",
+      "country": "PL",
+      "region": "EMEA",
+      "parent_platform_id": null,
+      "beneficial_owner": "Agnieszka Wozniak",
+      "first_seen": "2025-04-08",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-CST-6690",
+      "legal_name": "Casa Terra Ceramica S.A. de C.V.",
+      "mcc": "5023",
+      "country": "MX",
+      "region": "LATAM",
+      "parent_platform_id": null,
+      "beneficial_owner": "Rodrigo Beltran",
+      "first_seen": "2025-06-30",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-HRB-1155",
+      "legal_name": "Harbour & Fold Home Ltd",
+      "mcc": "5719",
+      "country": "GB",
+      "region": "EMEA",
+      "parent_platform_id": null,
+      "beneficial_owner": "Fiona Delacroix",
+      "first_seen": "2025-09-16",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-PKW-6603",
+      "legal_name": "Packworks Rotterdam BV",
+      "mcc": "5085",
+      "country": "NL",
+      "region": "EMEA",
+      "parent_platform_id": null,
+      "beneficial_owner": "Sander de Vries",
+      "first_seen": "2025-11-04",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-ATL-2280",
+      "legal_name": "Atlas Freight Services Inc",
+      "mcc": "4214",
+      "country": "US",
+      "region": "NA",
+      "parent_platform_id": null,
+      "beneficial_owner": "Grace Yamamoto",
+      "first_seen": "2025-11-04",
+      "watchlist_flags": []
+    },
+    {
+      "merchant_id": "MER-MKT-9034",
+      "legal_name": "Meridian Home Marketplace Pte Ltd",
+      "mcc": "5719",
+      "country": "SG",
+      "region": "APAC",
+      "parent_platform_id": null,
+      "beneficial_owner": "platform",
+      "first_seen": "2026-02-23",
+      "watchlist_flags": [
+        "marketplace"
+      ]
+    },
+    {
+      "merchant_id": "MER-QSF-7781",
+      "legal_name": "Quiet Sound Furnishings Co Ltd",
+      "mcc": "5023",
+      "country": "VN",
+      "region": "APAC",
+      "parent_platform_id": null,
+      "beneficial_owner": "Tran Minh Hieu",
+      "first_seen": "2026-08-07",
+      "watchlist_flags": [
+        "new_counterparty_2026"
+      ]
+    }
+  ],
+  "sub_merchants": [
+    {
+      "id": "SUB-MKT-20714",
+      "parent_platform_id": "MER-MKT-9034",
+      "legal_name": "Nordwald Ceramics OU",
+      "country": "EE",
+      "relationship": "marketplace_seller",
+      "beneficial_owner": "Kadri Tamm"
+    }
+  ]
+}

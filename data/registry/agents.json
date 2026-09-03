@@ -1,0 +1,54 @@
+{
+  "registry_version": "2026.1",
+  "as_of": "2026-09-01",
+  "description": "The agent registry. THIS DOES NOT EXIST IN ANY JURISDICTION — it is the policy proposal (architecture-v3 Part X.5 B). It records which agents were authorised, under what mandate, on what evidence, and when the authorisation lapses. approved_prompt_releases is what makes F36 detectable: a run executed on a release absent from this list ran on instructions that never went through review.",
+  "agents": [
+    {
+      "agent_id": "AGT-BRL-REPL-01",
+      "agent_name": "Brightline Replenishment Agent",
+      "operator_id": "OPR-001",
+      "registered_at": "2026-01-20",
+      "classification": "inventory_replenishment",
+      "risk_class": "medium",
+      "declared_purpose": "Reorders home-goods inventory from approved vendors when sell-through leaves under six weeks of cover. Every order is confirmed by a named buyer before the mandate is signed.",
+      "authorisation_status": "pending",
+      "authorisation_expires": null,
+      "pinned_model_versions": [
+        "claude-sonnet-5"
+      ],
+      "approved_prompt_releases": [
+        {
+          "release_ref": "brightline-repl-v3.1.0",
+          "approved_at": "2026-01-20",
+          "prompt_hash": "sha256:082a0c9a92b5950c6df1e78922d5a8e6e25e20c7d35e23d3daac5293a50804fa"
+        },
+        {
+          "release_ref": "brightline-repl-v3.1.1",
+          "approved_at": "2026-05-04",
+          "prompt_hash": "sha256:cd5b26f2ea4b4cd5b6b87fcaeb400a010f90c76b364a48b0e6df0e66e7ddc159"
+        },
+        {
+          "release_ref": "brightline-repl-v3.2.0",
+          "approved_at": "2026-07-13",
+          "prompt_hash": "sha256:e9d11ea3f89ff83cd16ede2a3b0738ea825826fb99c2bf5f8992872abf968e6a"
+        }
+      ],
+      "validation_evidence": [
+        {
+          "model_version": "claude-sonnet-5",
+          "validated_at": "2026-01-14",
+          "method": "operator_self_assessment"
+        }
+      ],
+      "declared_tool_servers": [
+        "mcp://ops.brightline.internal",
+        "mcp://catalog.kilnandco.com",
+        "mcp://catalog.textilworks.pt",
+        "mcp://catalog.lumensupply.com",
+        "mcp://catalog.arborwoodcraft.com",
+        "mcp://catalog.vesselglass.com",
+        "mcp://booking.atlasfreight.com"
+      ]
+    }
+  ]
+}

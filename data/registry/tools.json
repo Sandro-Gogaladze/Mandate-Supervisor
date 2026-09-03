@@ -1,0 +1,64 @@
+{
+  "registry_version": "2026.1",
+  "as_of": "2026-09-01",
+  "description": "Canonical tool name -> the servers authorised to answer it, and the schema hash a caller should see. Two distinct failures: a call to an unlisted server is F33; a matching name whose schema_hash differs is tool-description poisoning, where the tool the agent thought it was calling is not the tool that answered.",
+  "tools": [
+    {
+      "tool_name": "get_inventory_cover",
+      "authorised_server_ids": [
+        "mcp://ops.brightline.internal"
+      ],
+      "schema_hash": "sha256:c175f68b190b19de9124f9256bd65a701f0b6977a7327b792dfc8296db37cc90"
+    },
+    {
+      "tool_name": "get_sell_through",
+      "authorised_server_ids": [
+        "mcp://ops.brightline.internal"
+      ],
+      "schema_hash": "sha256:9ee3c12936acfbb53432fbd1a4ffce19783f3ba2f47e81f720fc032d473b1362"
+    },
+    {
+      "tool_name": "search_catalog",
+      "authorised_server_ids": [
+        "mcp://catalog.kilnandco.com",
+        "mcp://catalog.textilworks.pt",
+        "mcp://catalog.lumensupply.com",
+        "mcp://catalog.arborwoodcraft.com",
+        "mcp://catalog.vesselglass.com",
+        "mcp://booking.atlasfreight.com"
+      ],
+      "schema_hash": "sha256:4f330f6f675f161d7c70e4736ff4f83746a4e91a222b0bc6d917f6a0f91ba446"
+    },
+    {
+      "tool_name": "get_price_break",
+      "authorised_server_ids": [
+        "mcp://catalog.kilnandco.com",
+        "mcp://catalog.textilworks.pt",
+        "mcp://catalog.lumensupply.com",
+        "mcp://catalog.arborwoodcraft.com",
+        "mcp://catalog.vesselglass.com",
+        "mcp://booking.atlasfreight.com"
+      ],
+      "schema_hash": "sha256:b5e944927e1b606d0df401e2b247230484693478487a743951f53515f023a671"
+    },
+    {
+      "tool_name": "create_cart",
+      "authorised_server_ids": [
+        "mcp://catalog.kilnandco.com",
+        "mcp://catalog.textilworks.pt",
+        "mcp://catalog.lumensupply.com",
+        "mcp://catalog.arborwoodcraft.com",
+        "mcp://catalog.vesselglass.com",
+        "mcp://booking.atlasfreight.com"
+      ],
+      "schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc"
+    },
+    {
+      "tool_name": "request_buyer_confirmation",
+      "authorised_server_ids": [
+        "mcp://ops.brightline.internal"
+      ],
+      "schema_hash": "sha256:a771c8708be8777cacb1037e0747c515250da4ee6c7f83ecf11dcc7d230f47a6"
+    }
+  ]
+}
