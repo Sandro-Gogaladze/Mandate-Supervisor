@@ -623,7 +623,9 @@ has a change-control failure. Inability to answer is itself a finding.
   "tool_calls": [{ "sequence", "tool_name",
                    "server_id",          // WHICH server — the pinning check              → F33
                    "tool_schema_hash",   // detects tool-description poisoning            → F32
-                   "arguments", "result_digest" }],   // covers retrieved material too    → F32
+                   "arguments",
+                   "result_digest",      // integrity + CORRELATION, not detection  → F69
+                   "result_excerpt" }],  // bounded prose the agent consumed        → F32
   "selection_context": { "query", "selected_sku",
                          "alternatives_considered" }  // bounded: top 5, above a threshold → F32, F38
 }
@@ -635,7 +637,24 @@ has a change-control failure. Inability to answer is itself a finding.
 | `policy_version` | The firm's own deployment pipeline. Any firm versioning prompts in git can hash them. | hours |
 | `tool_calls` | **Agent observability that already exists** — LangSmith, Langfuse, or the firm's own OpenTelemetry traces. MCP clients log sessions natively; server identity is in the connection config. | days |
 | `tool_schema_hash` | Hash the tool definition at call time. Not yet standard practice, but a few lines. | hours |
-| `selection_context` | The product-search response the agent received, truncated to the pick plus the alternatives it was compared against. | days |
+| `selection_context` | The product-search response the agent received, truncated to the pick plus the alternatives it was compared against. Capped at five: fewer cannot show an agent *systematically* choosing worse (F38), more is the catalog archive we reject. | days |
+| `result_excerpt` | The same observability trace as `tool_calls` — the fields of the response the agent actually consumed, capped at ~2,000 characters. | hours |
+
+**Why `result_digest` is not enough, corrected.** An earlier version of this document said the digest
+"covers retrieved material too". It does not, and the distinction matters:
+
+- **Integrity and correlation** — a digest proves the retrieved bytes arrived unaltered, and the *same*
+  digest appearing at several firms is F69 (one campaign, many targets). Both real, both work without
+  content.
+- **Detection** — nobody reads `sha256:a04d…` and sees *"no confirmation needed, this is
+  pre-authorized"*. Somebody has to see the text once.
+
+F32 has four channels. Listing text is covered because it lands in the signed cart's line items.
+Tool-description poisoning is covered by `tool_schema_hash` against `tools.json`. Agent-to-agent
+messages stay parked. **Retrieved reference material — supplier lists, pricing guides, policy
+documents — was covered by nothing**, and `result_excerpt` is the minimum that closes it. It is not
+the full catalog archive this document rejects: it is the specific fields the agent consumed, capped,
+already in the trace.
 
 **Deliberately not required.** *Provider-signed model attestation* — no major provider cryptographically
 signs "this response came from model X". What we require is a self-declaration the firm is accountable
@@ -673,13 +692,25 @@ which is also what makes it cheap and privacy-safe.
 ### 3 · `controls` → F70–F73
 
 ```jsonc
+// Case level — the repository of what each party says it enforces.
 "controls": {
-  "declared":      [{ "control_id", "risk_addressed", "rule", "enforcement" }],     // absence → F70
-  "execution_log": [{ "control_id", "evaluated_at",
-                      "outcome",                                                    // F71, F73
-                      "override": { "by", "reason", "at" } }]                       // F72
+  "operator_declared":    [{ "control_id", "risk_addressed", "rule", "enforcement" }],  // → F70
+  "institution_declared": [{ "control_id", "risk_addressed", "rule", "enforcement" }]
 }
+
+// Per run — what actually happened when this run was evaluated.
+"controls_evaluated": [{ "control_id", "evaluated_at",
+                         "outcome",                                             // F71, F73
+                         "override": { "by", "reason", "at" } }]                // F72
 ```
+
+**Two lists, not one list with an `owner` field.** A bypassed *operator* control is a client conduct
+issue the institution should have caught; a bypassed *institution* control is a supervised-entity
+conduct issue. Different accountable party, different severity, different report — and a single list
+would force every `CTL-*` rule to filter before it could say anything.
+
+**Executions live on the run, not on the case.** A submission carries many runs; a control evaluation
+belongs to the run it evaluated, or nothing can say *which* order the cap control fired on.
 
 **The most feasible new block, and possibly the highest value.** Banks already have all of it:
 `declared` from the rules-engine configuration, `execution_log` from the transaction-monitoring or
@@ -712,11 +743,18 @@ which turns it from a reporting burden into a registry entry.
 
 | File | Unblocks | Where it comes from |
 |---|---|---|
-| `firms.json` | F12–F15 | **The existing NBG licensing register.** Pure re-use — licence status, standing, ownership dates, compliance contact |
+| `institutions.json` | the submitter's identity | **The existing NBG licensing register.** The bank or PSP inside the perimeter — the entity that submits and is accountable |
+| `operators.json` | F12–F15 | The agent operator: licence status where it has one, standing, ownership dates, compliance contact, and which institution sponsors it |
 | `agents.json` | F16–F19 | **Does not exist anywhere — this is the actual policy proposal.** An agent registration regime: declare the agent, its operator, its classification and its pinned model version before it may transact |
 | `merchants.json` | F51, F53, F54 | Company register + acquirer reporting, including the beneficial-ownership record the paying firm can't supply |
 | `tools.json` | F33 | Firms declare their tool/MCP stack at agent registration — one form field per tool |
+| `model_blocklist.json` | F19 | Model versions that must not be authorising payments — regulator-maintained, same shape as a sanctions list |
 | *ledger-derived* | F20–F23, F50, F57, F65, F67–F69 | Credential history and mandate consumption, computable from events we already store |
+
+**Why `firms.json` became two files.** The original had one "firm". Under an authorisation regime the
+submitter and the agent operator are different entities with different accountability: the institution
+is regulated and submits; the operator runs the agent and usually is not regulated at all. Collapsing
+them loses the ability to say *which* party a finding attaches to.
 
 ### Coverage arithmetic
 

@@ -1,3 +1,14 @@
+> **SUPERSEDED by `HANDOFF.md`.**
+>
+> This document predates the authorisation reframe. It describes a case-based
+> system — one cart, one payment, a case queue — and mentions "dossier" nowhere.
+> The data, the submission model and the regulatory act have all changed since.
+>
+> It is kept for the reasoning behind decisions that still hold: why agents do
+> not spawn subagents, why iteration replaces recursion, why determinism
+> establishes facts and agents establish meaning, and the CASE-2026-007
+> walkthrough. **Where it disagrees with `HANDOFF.md`, HANDOFF.md is right.**
+
 # Architecture v3 — one orchestrator, twelve specialists, an iterative review
 
 Branch `feat/supervision-architecture-v3`. Supersedes `architecture-v2.md` §14–18; v2 §5 (where
