@@ -77,6 +77,20 @@ _LOG_ANALYSIS_TOOL = {
 }
 
 
+def _classification(case: IngestedCase) -> str | None:
+    """This agent's registered classification, or None if it is not registered.
+
+    None falls back to the ruleset's default threshold, which is the right
+    behaviour: an agent the regulator has never heard of is a finding for KYA
+    to make, not a reason for Log to guess at a number.
+    """
+    from data.registries import load_agents
+
+    agent_id = case.case.kya_credential.agent_id
+    record = load_agents().get(agent_id)
+    return record.get("classification") if record else None
+
+
 def structured_view(case: IngestedCase, structuring_rule: Rule) -> dict:
     """Log's canonical evidence — see agents/kya_reasoning.structured_view."""
     df = to_dataframe(case.case.transaction_history)
@@ -89,7 +103,11 @@ def structured_view(case: IngestedCase, structuring_rule: Rule) -> dict:
     return {
         "purpose_category": scope.purpose_category,
         "approved_counterparty_count": len(scope.allowed_counterparties) or "unrestricted (category-governed)",
-        "reporting_flag_threshold": params.threshold,
+        # Resolved for THIS agent's classification. A threshold set beyond an
+        # agent's entire operating range is not a lenient rule, it is a rule
+        # switched off — and the eval would read its silence as clean
+        # behaviour rather than as a dial pointing at nothing.
+        "reporting_flag_threshold": params.resolve(_classification(case)),
         "candidate_structuring_clusters": candidate_clusters,
         "counterparty_breakdown": counterparty_breakdown(df),
         "velocity_stats": velocity_stats(df),
