@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from data.loader import iter_corpus_labeled
 from schemas import typed_params
 from registry.loader import active_rules, load_kya_ruleset, rules_by_finding_type
 from schemas import Rule, Ruleset, typed_params
@@ -44,11 +43,11 @@ def test_active_vs_draft_split() -> None:
     # LIF-04) and construction_context (TEC-02..06). That is what a draft rule
     # IS here: one whose evidence the submission cannot yet carry.
     #
-    # The 11 still draft need cross-case ledger history (IDN-04/05), judgement
-    # the sandbox has to tune (CAP-03/04, REG-03), or data deliberately not
-    # required of firms.
-    assert len(rs.rules) == 42
-    assert len(active) == 37
+    # The 5 still draft need cross-case ledger history (IDN-04/05), judgement
+    # the sandbox has to tune (CAP-03/04), or data deliberately not required
+    # of firms. TEC-02/05/06 left for the Provenance book in Phase 4 (ids kept).
+    assert len(rs.rules) == 39
+    assert len(active) == 34
     assert len(draft) == 5
     # every draft rule must explain what blocks it
     assert all(r.notes for r in draft)

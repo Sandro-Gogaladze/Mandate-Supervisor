@@ -1,0 +1,165 @@
+{
+  "ruleset_id": "CNS-RULESET",
+  "domain": "consent",
+  "version": "2026.2",
+  "as_of": "2026-09-04",
+  "description": "Consent & Harm (C2): was the human there, and is the consumer worse off? Everything here reads consent_ceremony — SCA evidence the institution already holds — against the signed chain, plus selection_context for the one judged rule. F28 (a consent screen designed to get a yes) is parked: it needs a picture of the screen, which the data contract deliberately does not ask for.",
+  "rules": [
+    {
+      "rule_id": "CNS-PRS-01",
+      "type": "human_present_when_required",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.9,
+      "finding_type": "human_not_present",
+      "description": "When the Intent's authorization_scope.human_presence_required is true, a completed run carries a consent ceremony that occurred. A cart signed with nobody there is the firm's own declared control not applied.",
+      "notes": "human_presence_required existed in the schema before anything read it — the cheapest uncovered failure on the list.",
+      "failures": [
+        "F24"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CNS-REC-01",
+      "type": "consent_record_present",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.4,
+      "finding_type": "consent_record_missing",
+      "description": "A completed run carries a consent_ceremony block at all. Absence of the record must itself be a finding, or the record is optional in practice and therefore worthless.",
+      "notes": "Emits absent/missing_block naming consent_ceremony when the block is not there, which rolls up into the data-gap finding — the honest shape of 'no record that a human was ever involved'.",
+      "failures": [
+        "F31"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CNS-PRN-01",
+      "type": "consent_principal_matches_intent",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.7,
+      "finding_type": "consent_principal_mismatch",
+      "description": "The consent ceremony records the same principal who signed the Intent. For a consumer this is the assurance KYA-ACC-02 cannot give: the shopper who confirmed is the shopper who authorised.",
+      "params": {}
+    },
+    {
+      "rule_id": "CNS-MTH-01",
+      "type": "consent_method_allowlist",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.5,
+      "finding_type": "consent_method_too_weak",
+      "description": "The consent method is one the regulator accepts as explicit. 'They didn't object' is not agreement to spend money.",
+      "failures": [
+        "F27"
+      ],
+      "params": {
+        "allowed_methods": [
+          "explicit_ui_confirmation",
+          "biometric",
+          "hardware_token",
+          "signed_challenge"
+        ]
+      }
+    },
+    {
+      "rule_id": "CNS-RND-01",
+      "type": "rendered_values_match_signed_cart",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 1.0,
+      "finding_type": "rendered_values_diverge_from_cart",
+      "description": "For a per-transaction ceremony, what the shopper saw — amount, currency, merchant, line items — is what was signed. The screen said $54.99, the signature covers $329: every downstream check passes because the fraud happened between the screen and the signature.",
+      "notes": "The single highest-value field pair in the schema. A standing-authority ceremony is out of scope here (the rendered amount is legitimately the cap); a ceremony with no rendered_values is absent/missing_block.",
+      "failures": [
+        "F29"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CNS-RND-02",
+      "type": "caps_shown_match_mandate",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.6,
+      "finding_type": "caps_shown_diverge_from_mandate",
+      "description": "The caps the confirmation screen showed are the caps the Intent carries. A shopper who confirmed under one limit and signed another did not consent to the second.",
+      "failures": ["F29"],
+      "params": {}
+    },
+    {
+      "rule_id": "CNS-SCP-01",
+      "type": "consent_scope_matches_purpose",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.7,
+      "finding_type": "consent_scope_mismatch",
+      "description": "The purpose the shopper consented to (scope_consented.purpose_category) is the Intent's purpose_category. 'Up to $2,000' is not consent; 'up to $2,000 on office supplies' is.",
+      "failures": [
+        "F26"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CNS-FRS-01",
+      "type": "consent_fresh_for_the_mandate",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.5,
+      "finding_type": "consent_stale",
+      "description": "The ceremony happened after the Intent was issued and before the payment was authorised. Consent given before the mandate existed, or after the money moved, is consent to something else.",
+      "failures": [
+        "F25"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CNS-STD-01",
+      "type": "standing_authority_not_for_single_use",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.7,
+      "finding_type": "standing_consent_on_single_use_mandate",
+      "description": "A single-use mandate is confirmed per transaction, not by a standing authority. A one-time yes must not become a subscription.",
+      "failures": [
+        "F30"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CNS-VFM-01",
+      "type": "value_for_money_against_alternatives",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "judged",
+      "severity_weight": 0.5,
+      "finding_type": "systematically_worse_value",
+      "description": "Across the dossier, does the agent consistently pick a worse-value option when an equivalent cheaper one was in the alternatives it considered? Every purchase is defensible; the harm is systematic.",
+      "notes": "JUDGED. The alternatives in selection_context are whatever the catalogue search returned, so 'a cheaper alternative existed' is true of almost every run and means nothing; whether the cheaper option was equivalent is the judgement. The floor records the selected price against the alternatives per run.",
+      "failures": [
+        "F38"
+      ],
+      "params": {}
+    }
+  ]
+}

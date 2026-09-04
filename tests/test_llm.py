@@ -8,7 +8,26 @@ from __future__ import annotations
 
 import logging
 
+import agents.llm as llm
 from agents.llm import parse_observations
+
+
+def test_live_model_is_configured_to_stream(monkeypatch):
+    """The AG-UI adapter cannot invent deltas from a buffered model call."""
+    captured = {}
+
+    class StubChatAnthropic:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setattr(llm, "ChatAnthropic", StubChatAnthropic)
+
+    llm.get_model()
+
+    assert captured["streaming"] is True
+    assert captured["thinking"] == {"type": "adaptive"}
+    assert captured["max_tokens"] == 16000
 
 
 def test_parses_well_formed_entries():
@@ -50,3 +69,45 @@ def test_custom_cited_key_for_kya_schema():
 
 def test_empty_input_returns_empty_list():
     assert parse_observations([], case_id="CASE-5", agent="mandate") == []
+
+
+# --------------------------------------------------------------- caching
+# Prompt caching fails silently: a broken prefix raises nothing, it just
+# costs money. These lock the two things that can quietly stop working —
+# the breakpoints being present, and langchain-anthropic still carrying
+# them through to the wire shape Anthropic reads.
+
+
+def test_the_system_prompt_and_the_briefing_each_carry_a_breakpoint():
+    system = llm.system_message("You are the KYA specialist.")
+    briefing = llm.briefing_message({"dossier_id": "D-1", "runs": []})
+
+    assert system.content == [{"type": "text", "text": "You are the KYA specialist.",
+                               "cache_control": {"type": "ephemeral"}}]
+    assert briefing.content[0]["cache_control"] == {"type": "ephemeral"}
+    assert llm.message_text(briefing) == '{\n  "dossier_id": "D-1",\n  "runs": []\n}'
+
+
+def test_a_volatile_payload_can_opt_out_of_a_breakpoint():
+    """The orchestrator's payload changes every turn; a breakpoint after
+    volatile bytes only ever pays the write premium."""
+    assert "cache_control" not in llm.briefing_message({"request": "run it"}, cache=False).content[0]
+
+
+def test_langchain_carries_the_breakpoints_through_to_the_wire_shape():
+    from langchain_anthropic.chat_models import _format_messages
+
+    system, messages = _format_messages([
+        llm.system_message("frozen instructions"),
+        llm.briefing_message({"evidence": "…"}),
+    ])
+
+    assert system[0]["cache_control"] == {"type": "ephemeral"}
+    assert messages[0]["content"][0]["cache_control"] == {"type": "ephemeral"}
+
+
+def test_message_text_reads_both_shapes():
+    from langchain_core.messages import HumanMessage
+
+    assert llm.message_text(HumanMessage(content="plain")) == "plain"
+    assert llm.message_text(llm.system_message("blocked")) == "blocked"

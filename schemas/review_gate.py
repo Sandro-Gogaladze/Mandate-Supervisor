@@ -28,6 +28,7 @@ class ReviewerDirective(BaseModel):
 
     instructions: str = Field(min_length=1)
     target_agents: list[FindingAgent] = Field(min_length=1)
+    run_scope: list[str] = Field(default_factory=list)
 
 
 class ReviewerDecision(BaseModel):

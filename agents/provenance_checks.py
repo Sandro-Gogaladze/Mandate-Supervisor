@@ -1,43 +1,63 @@
 """Deterministic checkers for the Provenance specialist (B1).
 
-Owns `KYA-TEC-02/05/06` — the three TEC rules answered from
-`construction_context` rather than from the agent registry. The family splits
-across two agents on **evidence, not topic**: an agent should never be asked a
-question its own brief cannot answer. Splitting this way also removed a real
-duplication, where F37 (model substitution) was assigned to Provenance in the
-coverage model and would have been re-asserted by KYA.
+Reads `provenance.json`: the three TEC rules answered from
+`construction_context` (moved here from the KYA book with their ids kept —
+the family splits across two agents on **evidence, not topic**), the
+card-versus-credential rule, and the measurement behind the judged
+reconciliation of the four sources that should agree: the agent card, the
+credential, the register, and the tool calls actually observed.
 
 Provenance asks one question: *was this mandate built from inputs anyone should
-trust?* Everything here is per-run, because construction is a per-run event.
+trust?* The construction rules are run-level — construction is a per-run event
+— so each produces one fact per run; the card and the reconciliation are
+properties of the dossier.
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+from dataclasses import dataclass
 
 from data.registries import load_agents, load_model_blocklist, load_tools
-from registry.loader import active_rules_by_type
-from schemas import Finding, Rule, Ruleset
-from schemas.dossier import LoadedDossier
+from schemas import EvidenceRef, Fact, FactBuilder, Rule, Ruleset
+from schemas.dossier import LoadedDossier, Run
+
+from .facts import evaluate_ruleset
+
+DOMAIN = "provenance"
 
 
-class _Counter:
-    def __init__(self, dossier_id: str) -> None:
-        self._id, self._n = dossier_id, 0
-
-    def next(self) -> str:
-        self._n += 1
-        return f"{self._id}-PRV-{self._n:03d}"
-
-
-def _finding(counter: _Counter, dossier_id: str, rule: Rule, summary: str,
-             details: dict | None = None) -> Finding:
-    return Finding(
-        finding_id=counter.next(), case_id=dossier_id, agent="provenance",
-        type=rule.finding_type, rule_id=rule.rule_id,
-        severity_weight=rule.severity_weight, summary=summary, details=details or {})
+@dataclass
+class ProvenanceContext:
+    fb: FactBuilder
+    agent_id: str
+    agent: dict | None             # the register entry for the agent under review
+    tools: dict[str, dict]         # tool_name -> {authorised_server_ids, ...}
+    blocklist: dict[str, dict]
+    declared_servers: set[str] | None   # from the agent card; None when no card was filed
+    card: object = None
+    credential_capabilities: list[str] = None  # type: ignore[assignment]
+    runs: list = None  # type: ignore[assignment]
+    deployment_target: dict = None  # type: ignore[assignment]
 
 
-def _tec_02(d: LoadedDossier, rule, counter):
+def build_context(d: LoadedDossier, *, agents: dict | None = None, tools: dict | None = None,
+                  blocklist: dict | None = None) -> ProvenanceContext:
+    """Registries are injectable so the sandbox and the tests can run the same
+    checkers against a different regulator-side state."""
+    agents = agents if agents is not None else load_agents()
+    card = d.dossier.agent_card
+    return ProvenanceContext(
+        fb=FactBuilder(d.dossier.dossier_id, DOMAIN),
+        agent_id=d.dossier.agent_id,
+        agent=agents.get(d.dossier.agent_id),
+        tools=tools if tools is not None else load_tools(),
+        blocklist=blocklist if blocklist is not None else load_model_blocklist(),
+        declared_servers=set(card.declared_tool_servers) if card else None,
+        card=card, credential_capabilities=list(d.dossier.kya_credential.capabilities),
+        runs=list(d.runs), deployment_target=d.dossier.submission_context.deployment_target.model_dump(),
+    )
+
+
+def _tec_02(rule: Rule, run: Run, ctx: ProvenanceContext) -> Fact:
     """The model that answered is the model that was declared.
 
     Self-attested on both sides, and the data contract is explicit that this
@@ -49,26 +69,26 @@ def _tec_02(d: LoadedDossier, rule, counter):
     barred model that actually authorised payments is a different order of
     problem from one merely named on a form.
     """
-    blocked = load_model_blocklist()
-    offenders = []
-    for r in d.runs:
-        m = r.construction_context.model
-        if m.declared_version != m.observed_version:
-            note = " and is blocklisted" if m.observed_version in blocked else ""
-            offenders.append(f"{r.run_id}: declared {m.declared_version}, "
-                             f"observed {m.observed_version}{note}")
-    if offenders:
-        return _finding(counter, d.dossier.dossier_id, rule,
-            f"{len(offenders)} run(s) were built by a model other than the one declared: "
-            + "; ".join(offenders) + ".",
-            details={"runs": offenders,
-                     "blocklisted_observed": sorted({
-                         r.construction_context.model.observed_version for r in d.runs
-                         if r.construction_context.model.observed_version in blocked})})
-    return None
+    m = run.construction_context.model
+    refs = [EvidenceRef(kind="field", ref="construction_context.model.declared_version",
+                        value=m.declared_version),
+            EvidenceRef(kind="field", ref="construction_context.model.observed_version",
+                        value=m.observed_version)]
+    blocked = m.observed_version in ctx.blocklist
+    values = {"declared_version": m.declared_version, "observed_version": m.observed_version,
+              "observed_blocklisted": blocked}
+    if m.declared_version != m.observed_version:
+        return ctx.fb.breach(
+            rule, f"{run.run_id} was built by {m.observed_version}, not the declared "
+                  f"{m.declared_version}" + (", and the observed model is blocklisted." if blocked
+                                             else "."),
+            run_ref=run.run_id, values=values, refs=refs)
+    return ctx.fb.satisfied(
+        rule, f"{run.run_id}: the observed model {m.observed_version} is the declared one.",
+        run_ref=run.run_id, values=values, refs=refs)
 
 
-def _tec_05(d: LoadedDossier, rule, counter):
+def _tec_05(rule: Rule, run: Run, ctx: ProvenanceContext) -> Fact:
     """The prompt is bound to a release someone actually reviewed.
 
     F36. The regulator holds `approved_prompt_releases`, not the operator, which
@@ -76,55 +96,63 @@ def _tec_05(d: LoadedDossier, rule, counter):
     was approved is not evidence. A run on an unlisted release executed on
     instructions that never went through review.
     """
-    agent = load_agents().get(d.dossier.agent_id)
-    if agent is None:
-        return None
-    approved = {r["release_ref"]: r for r in agent.get("approved_prompt_releases", [])}
-    offenders, tampered = [], []
-    for r in d.runs:
-        pv = r.construction_context.policy_version
-        if pv.release_ref not in approved:
-            offenders.append(f"{r.run_id}: {pv.release_ref}")
-        elif approved[pv.release_ref].get("prompt_hash") not in (None, pv.prompt_hash):
-            # The release is approved but the bytes are not the approved bytes.
-            tampered.append(f"{r.run_id}: {pv.release_ref}")
-    if offenders or tampered:
-        parts = []
-        if offenders:
-            parts.append(f"{len(offenders)} run(s) executed on an unapproved release "
-                         f"({'; '.join(offenders)})")
-        if tampered:
-            parts.append(f"{len(tampered)} run(s) claim an approved release whose prompt hash "
-                         f"does not match the approved artifact ({'; '.join(tampered)})")
-        return _finding(counter, d.dossier.dossier_id, rule, "; ".join(parts) + ".",
-                        details={"unapproved": offenders, "hash_mismatch": tampered,
-                                 "approved_releases": sorted(approved)})
-    return None
+    pv = run.construction_context.policy_version
+    refs = [EvidenceRef(kind="field", ref="construction_context.policy_version.release_ref",
+                        value=pv.release_ref),
+            EvidenceRef(kind="field", ref="construction_context.policy_version.prompt_hash",
+                        value=pv.prompt_hash)]
+    if ctx.agent is None:
+        return ctx.fb.absent(
+            rule, "no_registry_record",
+            f"{run.run_id}: {ctx.agent_id} has no entry in the agent register, so no approved "
+            f"prompt release exists to check {pv.release_ref} against.",
+            missing=f"registry:agents[{ctx.agent_id}]", run_ref=run.run_id)
+    approved = {r["release_ref"]: r for r in ctx.agent.get("approved_prompt_releases", [])}
+    values = {"release_ref": pv.release_ref, "prompt_hash": pv.prompt_hash,
+              "approved_releases": sorted(approved)}
+    if pv.release_ref not in approved:
+        return ctx.fb.breach(
+            rule, f"{run.run_id} executed on release {pv.release_ref}, which is not among the "
+                  f"agent's approved prompt releases.",
+            run_ref=run.run_id, values={**values, "approved": False}, refs=refs)
+    expected = approved[pv.release_ref].get("prompt_hash")
+    if expected not in (None, pv.prompt_hash):
+        return ctx.fb.breach(
+            rule, f"{run.run_id} claims approved release {pv.release_ref} but its prompt hash "
+                  f"does not match the approved artifact.",
+            run_ref=run.run_id, refs=refs,
+            values={**values, "approved": True, "hash_matches": False, "approved_hash": expected})
+    return ctx.fb.satisfied(
+        rule, f"{run.run_id} executed on approved release {pv.release_ref}"
+              + (" with a matching prompt hash." if expected else "."),
+        run_ref=run.run_id, refs=refs,
+        values={**values, "approved": True, "hash_matches": expected is not None or None})
 
 
-def _tec_06(d: LoadedDossier, rule, counter):
+def _tec_06(rule: Rule, run: Run, ctx: ProvenanceContext) -> Fact:
     """Every tool server used was declared and is authorised.
 
     Two separate failures with one shape. A server the *regulator* never
     authorised for that tool is F33. A server the *operator's own AgentCard*
     never declared is a different problem — the agent is reaching somewhere its
-    own published description does not admit to — and the summary distinguishes
-    them, because the supervisory response differs.
+    own published description does not admit to — and the statement
+    distinguishes them, because the supervisory response differs.
 
     The tool NAME in an unauthorised call is almost always one the agent may
     legitimately call. That is precisely why the server is what gets pinned.
     """
-    tools = load_tools()
-    card = d.dossier.agent_card
-    declared = set(card.declared_tool_servers) if card else set()
-    unauthorised, undeclared = [], []
-    for r in d.runs:
-        for tc in r.construction_context.tool_calls:
-            spec = tools.get(tc.tool_name)
-            if spec and tc.server_id not in spec["authorised_server_ids"]:
-                unauthorised.append(f"{r.run_id}: {tc.tool_name} -> {tc.server_id}")
-            elif declared and tc.server_id not in declared:
-                undeclared.append(f"{r.run_id}: {tc.tool_name} -> {tc.server_id}")
+    unauthorised, undeclared, refs = [], [], []
+    for tc in run.construction_context.tool_calls:
+        refs.append(EvidenceRef(kind="tool_call", ref=f"tool_calls[{tc.sequence}]",
+                                value=f"{tc.tool_name} -> {tc.server_id}"))
+        spec = ctx.tools.get(tc.tool_name)
+        if spec and tc.server_id not in spec["authorised_server_ids"]:
+            unauthorised.append(f"{tc.tool_name} -> {tc.server_id}")
+        elif ctx.declared_servers is not None and tc.server_id not in ctx.declared_servers:
+            undeclared.append(f"{tc.tool_name} -> {tc.server_id}")
+    values = {"tool_calls": len(run.construction_context.tool_calls),
+              "unauthorised": unauthorised, "undeclared": undeclared,
+              "agent_card_filed": ctx.declared_servers is not None}
     if unauthorised or undeclared:
         parts = []
         if unauthorised:
@@ -133,28 +161,95 @@ def _tec_06(d: LoadedDossier, rule, counter):
         if undeclared:
             parts.append(f"{len(undeclared)} call(s) to a server the agent's own card does not "
                          f"declare ({'; '.join(undeclared)})")
-        return _finding(counter, d.dossier.dossier_id, rule, "; ".join(parts) + ".",
-                        details={"unauthorised": unauthorised, "undeclared": undeclared})
-    return None
+        return ctx.fb.breach(rule, f"{run.run_id}: " + "; ".join(parts) + ".",
+                             run_ref=run.run_id, values=values, refs=refs)
+    if ctx.declared_servers is None:
+        return ctx.fb.absent(
+            rule, "missing_block",
+            f"{run.run_id}: every tool server called is authorised for its tool, but no agent "
+            f"card was filed, so whether the agent declared them cannot be checked.",
+            missing="agent_card.declared_tool_servers", run_ref=run.run_id, values=values)
+    return ctx.fb.satisfied(
+        rule, f"{run.run_id}: all {len(refs)} tool call(s) went to servers that are both "
+              f"authorised for the tool and declared on the agent card.",
+        run_ref=run.run_id, values=values, refs=refs)
 
 
-_PROVENANCE_CHECKERS: dict[str, Callable] = {
+def _crd_01(rule: Rule, ctx: ProvenanceContext) -> Fact:
+    """F34 — the card claims what the credential never granted, or is unsigned."""
+    card = ctx.card
+    if card is None:
+        return ctx.fb.absent(rule, "missing_block", "No agent card was filed, so the operator's own "
+                             "description of the agent cannot be compared to its credential.",
+                             missing="agent_card")
+    granted = set(ctx.credential_capabilities)
+    excess = sorted(set(card.declared_capabilities) - granted)
+    unsigned = not card.signature
+    problems = []
+    if excess:
+        problems.append(f"the card declares {', '.join(excess)}, which the credential does not grant")
+    if unsigned:
+        problems.append("the card carries no signature")
+    return ctx.fb.verdict(
+        rule, bool(problems),
+        "The agent card and the credential disagree: " + "; ".join(problems) + ".",
+        f"The agent card's {len(card.declared_capabilities)} declared capability(ies) are within the "
+        f"credential's grant, and the card is signed.",
+        values={"declared_capabilities": card.declared_capabilities, "credential_capabilities": sorted(granted),
+                "excess": excess, "signed": not unsigned},
+        refs=[EvidenceRef(kind="field", ref="agent_card.declared_capabilities", value=card.declared_capabilities)])
+
+
+def _rec_01(rule: Rule, ctx: ProvenanceContext) -> Fact:
+    """PRV-REC-01's evidence: the four sources side by side."""
+    card = ctx.card
+    observed_servers = sorted({tc.server_id for r in ctx.runs for tc in r.construction_context.tool_calls})
+    observed_models = sorted({r.construction_context.model.observed_version for r in ctx.runs})
+    declared_models = sorted({r.construction_context.model.declared_version for r in ctx.runs})
+    observed_releases = sorted({r.construction_context.policy_version.release_ref for r in ctx.runs})
+    agent = ctx.agent or {}
+    return ctx.fb.measurement(
+        "four_sources",
+        f"Card, credential, register and {len(ctx.runs)} run(s) of observed calls laid side by side.",
+        rule=rule,
+        values={
+            "agent_card": {"filed": card is not None,
+                           "declared_capabilities": card.declared_capabilities if card else None,
+                           "declared_tool_servers": card.declared_tool_servers if card else None,
+                           "signed": bool(card and card.signature)},
+            "credential": {"capabilities": ctx.credential_capabilities},
+            "register": {"present": ctx.agent is not None, "classification": agent.get("classification"),
+                         "approved_prompt_releases": [r.get("release_ref") for r in agent.get("approved_prompt_releases", [])],
+                         "validated_models": [v.get("model_version") for v in agent.get("validation_evidence", [])]},
+            "observed": {"tool_servers": observed_servers, "models": observed_models,
+                         "declared_models": declared_models, "prompt_releases": observed_releases},
+            "deployment_target": ctx.deployment_target,
+        })
+
+
+_RUN_CHECKERS = {
     "observed_model_matches_declared": _tec_02,
     "prompt_bound_to_released_artifact": _tec_05,
     "tool_servers_declared": _tec_06,
 }
 
-# The rules Provenance owns out of the KYA rulebook. KYA runs the other 39, and
-# this split is on evidence rather than topic — see kya-ruleset.md Part 3.5.
-PROVENANCE_RULE_TYPES = frozenset(_PROVENANCE_CHECKERS)
+_DOSSIER_CHECKERS = {
+    "agent_card_matches_credential": _crd_01,
+    "four_sources_reconcile": _rec_01,
+}
+
+_PROVENANCE_CHECKERS = {**_RUN_CHECKERS, **_DOSSIER_CHECKERS}
+
+# The three rules that read construction_context and once lived in the KYA
+# book. KYA's dispatcher skips these types if it ever meets them again — the
+# split is on evidence rather than topic, see kya-ruleset.md Part 3.5.
+PROVENANCE_RULE_TYPES = frozenset(_RUN_CHECKERS)
 
 
-def run_provenance_checks(dossier: LoadedDossier, ruleset: Ruleset) -> list[Finding]:
-    counter = _Counter(dossier.dossier.dossier_id)
-    findings: list[Finding] = []
-    for rule_type, rule in active_rules_by_type(ruleset).items():
-        if rule_type not in PROVENANCE_RULE_TYPES:
-            continue
-        if (f := _PROVENANCE_CHECKERS[rule_type](dossier, rule, counter)) is not None:
-            findings.append(f)
-    return findings
+def run_provenance_checks(dossier: LoadedDossier, ruleset: Ruleset, *,
+                          ctx: ProvenanceContext | None = None) -> list[Fact]:
+    """Every rule in the Provenance book, over the dossier."""
+    ctx = ctx or build_context(dossier)
+    return evaluate_ruleset(ruleset, builder=ctx.fb, ctx=ctx, runs=dossier.runs,
+                            dossier_checkers=_DOSSIER_CHECKERS, run_checkers=_RUN_CHECKERS,
+                            module="agents/provenance_checks.py")

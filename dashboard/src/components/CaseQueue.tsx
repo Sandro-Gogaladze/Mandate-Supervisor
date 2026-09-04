@@ -1,3 +1,4 @@
+import { DISPOSITION_LABEL } from '@/lib/supervision-types'
 import { useEffect, useState } from 'react'
 import { Building2, ChevronRight, ClipboardList, Gauge } from 'lucide-react'
 import { listCases } from '@/lib/api'
@@ -111,6 +112,7 @@ export function CaseQueue({ onSelect }: { onSelect: (c: CaseSummary) => void }) 
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
+                  {(c.authorisation_decision || c.recommendation) && <Badge variant="outline" className="text-[10px]">{DISPOSITION_LABEL[(c.authorisation_decision || c.recommendation)!]}{!c.authorisation_decision && ' · proposed'}</Badge>}
                   {c.risk_total !== null && c.risk_tier !== null && (
                     <Badge variant="outline" className={cn('gap-1 font-mono text-[11px]', TIER_TONE[c.risk_tier])}>
                       <Gauge className="size-3" />

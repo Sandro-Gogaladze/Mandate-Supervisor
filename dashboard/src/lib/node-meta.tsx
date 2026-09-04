@@ -3,6 +3,7 @@
 // can't drift into three different sets of labels for the same node.
 import {
   Inbox,
+  ScanEye, ShieldAlert, Store, HeartHandshake, ShieldEllipsis, Network, FlaskConical,
   ListChecks,
   SearchCheck,
   Waypoints,
@@ -11,7 +12,6 @@ import {
   ScrollText,
   TrendingUp,
   GitMerge,
-  RotateCcw,
   FileText,
   FileCheck2,
   Gauge,
@@ -57,8 +57,14 @@ export const NODE_META: Record<string, NodeMeta> = {
     color: 'orange',
     blurb: 'Compares recent behaviour against the agent’s own established baseline — amounts, cadence, counterparty mix.',
   },
-  escalate_check: { label: 'Escalate check', icon: GitMerge, color: 'slate' },
-  bump_round: { label: 'Bump round', icon: RotateCcw, color: 'slate' },
+  provenance: { label: 'Provenance', icon: ScanEye, color: 'violet', blurb: 'Do the card, credential, registry and observed tools agree?' },
+  injection: { label: 'Injection', icon: ShieldAlert, color: 'orange', blurb: 'Did the agent act on an instruction hidden in material it read, and through which channel?' },
+  counterparty: { label: 'Counterparty', icon: Store, color: 'teal', blurb: 'Who received the money, and does the payee match the merchant?' },
+  consent: { label: 'Consent & Harm', icon: HeartHandshake, color: 'blue', blurb: 'Was the shopper present, did they see what they signed, and were they harmed?' },
+  control_assurance: { label: 'Controls', icon: ShieldEllipsis, color: 'indigo', blurb: 'Did declared controls hold when peer checks establish that a risk materialised?' },
+  systemic: { label: 'Systemic', icon: Network, color: 'teal', blurb: 'Which shared exposures or payloads connect multiple dossiers?' },
+  red_team: { label: 'Red Team', icon: FlaskConical, color: 'orange', blurb: 'Which probe scenarios lack declared control coverage? These are not executed agent tests.' },
+  specialists_done: { label: 'Specialists done', icon: GitMerge, color: 'slate' },
   critic: {
     label: 'Critic',
     icon: FileCheck2,
@@ -81,7 +87,7 @@ export const NODE_META: Record<string, NodeMeta> = {
   orchestrate: { label: 'Orchestrate', icon: Waypoints, color: 'slate' },
   record: { label: 'Record', icon: ScrollText, color: 'slate' },
   load_record: { label: 'Load record', icon: Inbox, color: 'slate' },
-  findings: { label: 'Findings / Observations', icon: ListChecks, color: 'slate' },
+  findings: { label: 'Facts / Assessments', icon: ListChecks, color: 'slate' },
   supervisor: { label: 'Supervisor', icon: UserRoundCheck, color: 'indigo' },
   orchestrator: { label: 'Orchestrator', icon: Waypoints, color: 'indigo' },
   draft_report: {
@@ -96,7 +102,7 @@ export const NODE_META: Record<string, NodeMeta> = {
 }
 
 /** The four review agents, in display order. */
-export const SPECIALISTS = ['mandate', 'kya', 'log', 'drift'] as const
+export const SPECIALISTS = ['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'control_assurance', 'systemic', 'red_team'] as const
 
 export function nodeMeta(id: string): NodeMeta {
   return NODE_META[id] ?? { label: id, icon: Waypoints, color: 'slate' }

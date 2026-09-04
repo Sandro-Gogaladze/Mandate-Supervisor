@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator, field_validator
 
 from .kya import KYACredential
 from .mandate import CartMandate, IntentMandate, PaymentMandate
@@ -282,6 +282,16 @@ class RunRef(BaseModel):
     file: str                    # relative to the dossier directory
     sha256: str
 
+    @field_validator("file")
+    @classmethod
+    def _safe_run_path(cls, value: str) -> str:
+        from pathlib import PurePosixPath
+        path = PurePosixPath(value)
+        if ("\\" in value or path.is_absolute() or ".." in path.parts
+                or len(path.parts) != 2 or path.parts[0] != "runs" or path.suffix != ".json"):
+            raise ValueError("run file must be a direct runs/*.json path inside the dossier")
+        return value
+
 
 class Dossier(BaseModel):
     """The case: everything the 50 runs share, plus the index of those runs.
@@ -337,6 +347,15 @@ class LoadedDossier(BaseModel):
     runs: list[Run]
     transaction_history: list[TransactionLogEntry] = Field(default_factory=list)
     ground_truth: GroundTruth | None = None
+    # The submission exactly as filed, for cryptographic verification: a
+    # signature covers the canonical bytes of what was signed, and a model
+    # dump adds defaults the file never carried. None when a dossier was
+    # constructed rather than loaded; intake refuses to verify such a thing.
+    raw_dossier: dict | None = None
+    raw_runs: dict[str, dict] = Field(default_factory=dict)
+    run_file_bytes: dict[str, bytes] = Field(default_factory=dict, exclude=True)
+    related_runs: list[Run] = Field(default_factory=list, exclude=True)
+    related_transactions: list[TransactionLogEntry] = Field(default_factory=list, exclude=True)
 
     @model_validator(mode="after")
     def _index_matches_runs(self) -> LoadedDossier:

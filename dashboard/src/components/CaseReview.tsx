@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useCoAgent } from '@copilotkit/react-core'
-// useAgent isn't re-exported from the v1-compat root path (only used
-// internally there) but resolves the same shared registry instance either
-// way — see the agents below.
 import { useAgent } from '@copilotkit/react-core/v2'
 import { toast } from 'sonner'
 import {
@@ -11,7 +8,10 @@ import {
   FolderOpen,
   History,
   ListChecks,
+  MessageSquarePlus,
   MessageSquareText,
+  PanelRightClose,
+  PanelRightOpen,
   Waypoints,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { closeCase, getCase, getFullMap, getLedgerEvents } from '@/lib/api'
+import { closeCase, getCase, getFullMap, getLedgerEvents, getDossier, resetReviewHistory } from '@/lib/api'
 import type {
   CaseDetail,
   CaseRecord,
@@ -38,13 +38,17 @@ import type {
 import { EMPTY_AGENT_STATE, type SupervisionAgentState } from '@/lib/agent-state'
 import { usePipelineFeed } from '@/hooks/usePipelineFeed'
 import { SupervisionMap, type NodeStatus } from '@/components/SupervisionMap'
-import { Conversation } from '@/components/Conversation'
+import { CaseChat } from '@/components/CaseChat'
+import { ReportCard } from '@/components/ReportCard'
 import { ResultsPanel } from '@/components/ResultsPanel'
-import { CaseFilePanel } from '@/components/CaseFilePanel'
 import { CaseTimeline } from '@/components/CaseTimeline'
-import { PromptOverridesDialog } from '@/components/PromptOverridesDialog'
 import type { GateSubmission } from '@/components/ReviewGate'
+import { ExecutionRuns, ExecutionInspector } from '@/components/ExecutionRuns'
+import { AuthorisationPanel } from '@/components/AuthorisationPanel'
+import { turnAnchor } from '@/components/AgentTurn'
+import type { DossierDetail, SpecialistProgress } from '@/lib/supervision-types'
 import { cn } from '@/lib/utils'
+import { useOfficer } from '@/lib/officer'
 
 const TRIAGE_AGENT = 'mandate_supervisor'
 const SESSION_AGENT = 'supervisor_session'
@@ -57,14 +61,13 @@ const DRAFTER_AGENT = 'report_drafter'
 // act — there is no separate dispatch box; the hub fans straight out.
 const STEP_ALIAS: Record<string, string | null> = {
   orchestrate: 'orchestrator',
-  load_context: 'orchestrator',
   record: 'orchestrator',
   ingest: 'orchestrator',
-  dispatch: 'orchestrator',
-  bump_round: 'orchestrator',
-  escalate_check: 'findings',
+  // The join after the fan-out is graph plumbing, not Control Assurance
+  // starting; aliasing it there lit that node "complete" before Control
+  // Assurance had begun. It lights from its own step instead.
+  specialists_done: null,
   critic: 'findings',
-  risk_score: 'orchestrator',
   load_record: 'draft_report',
 }
 
@@ -74,10 +77,17 @@ const STEP_ALIAS: Record<string, string | null> = {
 // goes active on its first step and STAYS active until the run moves past
 // the fan (any non-worker step starting = the join), when every active
 // worker settles at once — which is what actually happened.
-const WORKER_NODES = new Set(['mandate', 'kya', 'log', 'drift', 'investigator'])
+const WORKER_NODES = new Set(['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'investigator', 'systemic', 'red_team'])
 
 function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; onBack: () => void }) {
   const caseId = caseSummary.case_id
+  const [tab, setTab] = useState('room')
+  const [dossier, setDossier] = useState<DossierDetail | null>(null)
+  const [selectedRun, setSelectedRun] = useState<string | null>(null)
+  const [progress, setProgress] = useState<Record<string, SpecialistProgress>>({})
+  const [mapOpen, setMapOpen] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth >= 1280)
+  const [focusedStep, setFocusedStep] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState('')
   const [map, setMap] = useState<FullMap | null>(null)
   const [detail, setDetail] = useState<CaseDetail | null>(null)
   const [record, setRecord] = useState<CaseRecord | null>(null)
@@ -86,7 +96,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
   const [gate, setGate] = useState<{ id: string; context: GateContext } | null>(null)
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null)
   const [promptOverrides, setPromptOverrides] = useState<Record<string, string>>({})
-  const [officer, setOfficer] = useState('Case officer')
+  const [officer] = useOfficer()
   const [closeOpen, setCloseOpen] = useState(false)
   const [closeOfficer, setCloseOfficer] = useState('')
   const pendingRerun = useRef<ReviewerDirective | null>(null)
@@ -100,10 +110,11 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
         setRecord(d.record)
         setRefreshKey((k) => k + 1)
       })
-      .catch(() => undefined)
+      .catch(err => setLoadError(String(err)))
+    getDossier(caseId).then(d => { setDossier(d); setLoadError('') }).catch(err => setLoadError(String(err)))
     getLedgerEvents(caseId)
       .then(setLedger)
-      .catch(() => undefined)
+      .catch(err => setLoadError(String(err)))
   }, [caseId])
 
   useEffect(() => {
@@ -152,6 +163,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     (stepName: string, status: 'inProgress' | 'complete') => {
       const target = stepName in STEP_ALIAS ? STEP_ALIAS[stepName] : stepName
       if (!target) return
+      if (status === 'inProgress') feed.markStep(target)
       if (WORKER_NODES.has(target)) {
         if (status === 'inProgress') {
           activeWorkers.current.add(target)
@@ -175,13 +187,44 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
   // the supervision map read the same stream.
   useEffect(() => {
     const handlers = {
+      onCustomEvent: ({ event }: any) => {
+        if (event.name !== 'specialist_progress') return
+        const p = event.value as SpecialistProgress
+        setProgress(previous => ({ ...previous, [p.agent]: p }))
+        if (p.events.length) {
+          setLedger(previous => [...new Map([...(previous ?? []), ...p.events].map(e => [e.seq, e])).values()].sort((a, b) => a.seq - b.seq))
+        }
+        if (p.status === 'reasoning' && WORKER_NODES.has(p.agent)) {
+          // The floor has landed and the model call is starting — the
+          // specialist's own word that it is working, independent of how
+          // the step stream interleaves the parallel nodes.
+          activeWorkers.current.add(p.agent)
+          feed.recordNodeEvent(p.agent, 'inProgress')
+        }
+        if (p.status === 'complete') {
+          activeWorkers.current.delete(p.agent)
+          feed.recordNodeEvent(p.agent, 'complete')
+        }
+      },
+      onRunErrorEvent: ({ event }: any) => { toast.error(event.message ?? 'Review failed'); refreshRecord() },
       onStepStartedEvent: ({ event }: any) => recordStep(event.stepName, 'inProgress'),
       onStepFinishedEvent: ({ event }: any) => recordStep(event.stepName, 'complete'),
-      onToolCallStartEvent: ({ event }: any) => feed.recordToolEvent(event.toolCallName, 'inProgress', {}),
-      onToolCallArgsEvent: ({ toolCallName, partialToolCallArgs }: any) =>
-        feed.recordToolEvent(toolCallName, 'executing', partialToolCallArgs),
-      onToolCallEndEvent: ({ toolCallName, toolCallArgs }: any) =>
-        feed.recordToolEvent(toolCallName, 'complete', toolCallArgs),
+      // The AG-UI event stream, read directly: the library's typed tool-call
+      // callbacks fire only when it can find the call's parent message, and
+      // these runs carry no messages.
+      onEvent: ({ event }: any) => {
+        switch (event.type) {
+          case 'REASONING_MESSAGE_START': feed.recordReasoning(event.messageId, 'start'); break
+          case 'REASONING_MESSAGE_CONTENT': feed.recordReasoning(event.messageId, 'delta', event.delta ?? ''); break
+          case 'REASONING_MESSAGE_END': feed.recordReasoning(event.messageId, 'end'); break
+          case 'TEXT_MESSAGE_START': feed.recordText(event.messageId, 'start'); break
+          case 'TEXT_MESSAGE_CONTENT': feed.recordText(event.messageId, 'delta', event.delta ?? ''); break
+          case 'TEXT_MESSAGE_END': feed.recordText(event.messageId, 'end'); break
+          case 'TOOL_CALL_START': feed.startTool(event.toolCallId, event.toolCallName); break
+          case 'TOOL_CALL_ARGS': feed.toolArgs(event.toolCallId, event.delta ?? ''); break
+          case 'TOOL_CALL_END': feed.endTool(event.toolCallId); break
+        }
+      },
     }
     const subs = [triageAgent, sessionAgent].map((agent) =>
       agent.subscribe({ ...handlers, onRunFinishedEvent: () => refreshRecord() }),
@@ -191,6 +234,12 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
       // The human gate arrives as a run finishing with an interrupt outcome.
       onRunFinishedEvent: (params: any) => {
         refreshRecord()
+        // The report is written before the graph reaches its human gate, so
+        // this fires with an interrupt outcome on the ordinary path. Take the
+        // reviewer to the document either way — it is something to read, not
+        // another entry to scroll back to in the transcript. A rerun is the
+        // exception: no report was issued, the case goes back for analysis.
+        if (drafterAgent.state?.draft_report && !pendingRerun.current) setTab('findings')
         if ('interrupts' in params && params.interrupts.length > 0) {
           const intr = params.interrupts[0] as { id: string; metadata?: { langgraph?: { raw?: GateContext } } }
           const context = intr.metadata?.langgraph?.raw
@@ -236,8 +285,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     // event was lost across the SSE relay.
     feed.recordNodeEvent('orchestrator', 'complete')
     const intent = (session.state.orchestrator_decision as { intent?: string } | undefined)?.intent
-    if (intent === 'run_triage') handleRun()
-    else if (intent === 'draft_report') handleDraft()
+    if (intent === 'draft_report') handleDraft()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.running])
 
@@ -247,6 +295,10 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     setGate(null)
     resetAgent(triageAgent, {
       case_id: caseId,
+      first_pass: true,
+      // The rules-only switch was a developer affordance in a supervisor's
+      // console. A review without its judged rules is not a review.
+      deterministic_only: false,
       ...(Object.keys(promptOverrides).length ? { prompt_overrides: promptOverrides } : {}),
     })
     triageAgent.runAgent()
@@ -271,6 +323,44 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     resetAgent(sessionAgent, { case_id: caseId, officer_message: text, officer })
     sessionAgent.runAgent()
   }
+
+  // A genuinely clean slate. Hiding the transcript was never enough: every
+  // run after the first is seeded from the case record, so a re-run inherited
+  // the previous one's assessments and its observations piled up without
+  // bound (measured: 0 -> 169 over twenty runs). This asks the server to
+  // clear the review history too, so the next run starts from the submission
+  // alone. Nothing is deleted — the ledger is append-only, the reset itself
+  // is an event, and the timeline tab still shows all of it.
+  const handleNewChat = async () => {
+    for (const agent of [triageAgent, sessionAgent, drafterAgent]) {
+      try { (agent as unknown as { abortRun?: () => void }).abortRun?.() } catch { /* nothing running */ }
+    }
+    feed.reset()
+    activeWorkers.current.clear()
+    setProgress({})
+    setGate(null)
+    setPendingQuestion(null)
+    setFocusedStep(null)
+    pendingRerun.current = null
+    resetAgent(triageAgent, { case_id: caseId })
+    resetAgent(sessionAgent, { case_id: caseId })
+    resetAgent(drafterAgent, { case_id: caseId })
+    try {
+      await resetReviewHistory(caseId)
+      refreshRecord()
+      toast('Cleared — the next run starts fresh. Every event stays on the timeline.')
+    } catch (e) {
+      // The view is already clear; say plainly that the record is not, so
+      // nobody reads a stale score as a fresh one.
+      toast(`View cleared, but the record was not: ${e instanceof Error ? e.message : 'reset failed'}`)
+    }
+  }
+  // The server decides what the case room sees, so the transcript is simply
+  // whatever it returned. A cleared case comes back with its submission and
+  // nothing else — the first-run state, not a hidden one.
+  const visibleLedger = ledger
+  const hiddenCount = 0
+  const showEarlier = () => {}
 
   const handleDecision = (decision: GateSubmission) => {
     if (!gate) return
@@ -325,6 +415,16 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     return base
   }, [feed.nodeStatus, anyRunning, session.running, gate])
 
+  // Settled specialists show what they returned. Memoised so the map gets
+  // the same object between changes — it updates node data in place.
+  const mapNodeStatus = useMemo<Record<string, NodeStatus>>(() => Object.fromEntries(Object.entries(displayNodeStatus).map(([name, status]) => {
+    if (status !== 'done' || !progress[name]) return [name, status]
+    const p = progress[name]
+    const verdicts = (ledger ?? []).filter(e => e.run_id === p.run_id && e.event_type === 'assessment_recorded' && e.payload.agent === name).map(e => String(e.payload.verdict))
+    // breach or concern → findings; only open judgements → unresolved; else clean
+    return [name, verdicts.some(v => v === 'breach' || v === 'concern') ? 'findings' : verdicts.includes('inconclusive') ? 'unresolved' : 'clean']
+  })), [displayNodeStatus, progress, ledger])
+
   const liveLabel = triage.running
     ? 'Full review pass running'
     : session.running
@@ -333,15 +433,20 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
         ? 'Drafting the report'
         : null
 
-  const pendingReply =
-    session.running && typeof session.state.orchestrator_reply === 'string' && session.state.orchestrator_reply
-      ? session.state.orchestrator_reply
-      : null
+  // The orchestrator's message to the officer, as soon as it has decided —
+  // for a question and for a first pass alike; the ledger's copy replaces it.
+  const pendingReply = (() => {
+    for (const a of [session, triage]) {
+      if (a.running && typeof a.state.orchestrator_reply === 'string' && a.state.orchestrator_reply) return a.state.orchestrator_reply
+    }
+    return null
+  })()
 
   const view = useMemo(() => {
     if (triage.running) {
       return {
         findings: triage.state.findings ?? [],
+        failure_occurrences: triage.state.failure_occurrences ?? [],
         observations: triage.state.observations ?? [],
         correlations: triage.state.correlations ?? [],
         dispatch_plan: triage.state.dispatch_plan,
@@ -352,6 +457,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     const lastTriage = record?.runs.filter((r) => r.kind === 'triage').at(-1)
     return {
       findings: record?.findings ?? [],
+      failure_occurrences: record?.failure_occurrences ?? [],
       observations: record?.observations ?? [],
       correlations: record?.correlations ?? [],
       dispatch_plan: lastTriage?.plan ?? undefined,
@@ -361,7 +467,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
   }, [triage.running, triage.state, record])
 
   const headerMeta = detail
-    ? [detail.raw.firm.sector.replace(/_/g, ' '), detail.raw.firm.hq, `${detail.raw.transaction_history.length} transactions on record`]
+    ? [(detail.raw.firm.sector ?? '').replace(/_/g, ' '), detail.raw.firm.hq, `${detail.raw.transaction_history.length} transactions on record`]
         .filter(Boolean)
         .join(' · ')
     : null
@@ -371,7 +477,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
   const findingsBadge = view.findings.length + view.observations.length
 
   return (
-    <Tabs defaultValue="room" className="flex h-full min-h-0 flex-col gap-0">
+    <Tabs value={tab} onValueChange={setTab} className="flex h-full min-h-0 flex-col gap-0">
       <header className="shrink-0 border-b bg-card px-5 pt-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
@@ -386,13 +492,13 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
               </p>
             </div>
           </div>
-          <PromptOverridesDialog overrides={promptOverrides} onChange={setPromptOverrides} />
         </div>
         <TabsList className="mt-2 h-auto gap-1 bg-transparent p-0">
           {[
             { value: 'room', icon: MessageSquareText, label: 'Case room', badge: 0 },
             { value: 'findings', icon: ListChecks, label: 'Findings', badge: findingsBadge },
-            { value: 'file', icon: FolderOpen, label: 'Case file', badge: 0 },
+            { value: 'runs', icon: FolderOpen, label: 'Submission', badge: dossier?.dossier.submission_context.runs_submitted ?? 0 },
+            { value: 'decision', icon: BadgeCheck, label: 'Decision', badge: 0 },
             { value: 'timeline', icon: History, label: 'Timeline', badge: 0 },
           ].map(({ value, icon: Icon, label, badge }) => (
             <TabsTrigger
@@ -415,68 +521,106 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
           conversation as the working surface. Findings live in their own
           tab; the transcript already carries them in context. */}
       <TabsContent value="room" className="min-h-0 flex-1">
-        <div className="flex h-full min-h-0">
-          <aside className="hidden w-[380px] shrink-0 border-r bg-card/40 lg:block xl:w-[430px]">
-            <div className="flex items-center gap-2 border-b px-4 py-2.5 text-xs font-semibold text-muted-foreground">
-              <Waypoints className="size-3.5" />
-              Supervision loop
-              {anyRunning && (
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
-                </span>
-              )}
-              <span className={cn('ml-auto font-normal', !liveLabel && 'text-muted-foreground/60')}>
-                {liveLabel ?? 'idle'}
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="flex shrink-0 items-center gap-2 border-b bg-card/60 px-4 py-1.5 text-xs text-muted-foreground">
+            <MessageSquareText className="size-3.5" />
+            {liveLabel ? (
+              <span className="inline-flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
+                <span className="size-1.5 animate-pulse rounded-full bg-blue-500" />
+                {liveLabel}
               </span>
+            ) : <span>idle</span>}
+            <span className="ml-auto flex items-center gap-1">
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleNewChat} disabled={anyRunning && false}>
+                <MessageSquarePlus data-icon="inline-start" />
+                Clear
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setMapOpen((v) => !v)} aria-pressed={mapOpen}>
+                {mapOpen ? <PanelRightClose data-icon="inline-start" /> : <PanelRightOpen data-icon="inline-start" />}
+                Map
+              </Button>
+            </span>
+          </div>
+          <div className="flex min-h-0 flex-1">
+            <div className="min-h-0 min-w-0 flex-1">
+              <CaseChat
+                events={visibleLedger}
+                factsSource={ledger}
+                hiddenCount={hiddenCount}
+                onShowEarlier={showEarlier}
+                live={feed.events}
+                running={triage.running ? 'triage' : session.running ? 'session' : drafter.running ? 'drafting' : null}
+                progress={progress}
+                pendingQuestion={pendingQuestion}
+                pendingReply={pendingReply}
+                gate={gate}
+                gateRisk={drafter.state.risk_score ?? record?.risk_score ?? null}
+                findingsCount={view.findings.length}
+                officer={officer}
+                focusedStep={focusedStep}
+                onOpenRun={setSelectedRun}
+                onDecision={() => setTab('decision')}
+                onDecide={handleDecision}
+                onSend={handleSend}
+                onRun={handleRun}
+                onDraft={handleDraft}
+                onCloseCase={() => setCloseOpen(true)}
+                busy={anyRunning}
+                hasTriage={hasTriage}
+                closable={closable}
+              />
             </div>
-            <div className="h-[calc(100%-2.4rem)]">
-              {map ? (
-                <SupervisionMap map={map} nodeStatus={displayNodeStatus} nodeStartSeq={feed.nodeStartSeq} />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading map…</div>
-              )}
-            </div>
-          </aside>
-
-          <div className="min-h-0 min-w-0 flex-1">
-            <Conversation
-              events={ledger}
-              liveEvents={feed.events}
-              liveLabel={liveLabel}
-              pendingQuestion={pendingQuestion}
-              pendingReply={pendingReply}
-              gate={gate}
-              gateRisk={drafter.state.risk_score ?? record?.risk_score ?? null}
-              findingsCount={view.findings.length}
-              officer={officer}
-              onOfficerChange={setOfficer}
-              onDecide={handleDecision}
-              onSend={handleSend}
-              onRun={handleRun}
-              onDraft={handleDraft}
-              onCloseCase={() => setCloseOpen(true)}
-              busy={anyRunning}
-              hasTriage={hasTriage}
-              closable={closable}
-            />
+            {mapOpen && (
+              <aside className="hidden w-[360px] shrink-0 border-l bg-card/40 lg:block xl:w-[400px]">
+                <div className="flex items-center gap-2 border-b px-4 py-2.5 text-xs font-semibold text-muted-foreground">
+                  <Waypoints className="size-3.5" />
+                  Supervision loop
+                  <span className={cn('ml-auto font-normal', !liveLabel && 'text-muted-foreground/60')}>{liveLabel ?? 'idle'}</span>
+                </div>
+                <div className="h-[calc(100%-2.4rem)]">
+                  {map ? (
+                    <SupervisionMap map={map} nodeStatus={mapNodeStatus} nodeStartSeq={feed.nodeStartSeq} onNodeClick={name => {
+                      const last = [...(ledger ?? [])].reverse().find(e => e.event_type === 'dispatch_recorded' && e.payload.target === name)
+                      if (!last?.run_id) { toast('This specialist has no turn on this dossier yet.'); return }
+                      setFocusedStep(null)
+                      requestAnimationFrame(() => setFocusedStep(turnAnchor(name, last.run_id!)))
+                    }} />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading map…</div>
+                  )}
+                </div>
+              </aside>
+            )}
           </div>
         </div>
       </TabsContent>
 
+      {loadError && <p role="alert" className="px-5 py-2 text-xs text-destructive">{loadError}</p>}
+      <TabsContent value="runs" className="min-h-0 flex-1">
+        <ExecutionRuns caseId={caseId} dossier={dossier} refreshKey={refreshKey} onOpenRun={setSelectedRun} />
+      </TabsContent>
+      <TabsContent value="decision" className="min-h-0 flex-1">
+        <AuthorisationPanel caseId={caseId} dossier={dossier} officer={officer} busy={anyRunning} onSaved={refreshRecord} onOpenRun={setSelectedRun} />
+      </TabsContent>
+      <ExecutionInspector caseId={caseId} runId={selectedRun} onClose={() => setSelectedRun(null)} dossier={dossier} onOpenRun={setSelectedRun} onInvestigate={run => { setSelectedRun(null); setTab('room'); handleSend(`Review ${run} in depth. Re-dispatch only the relevant specialists, scoped to this execution, and explain its findings.`) }} />
       <TabsContent value="findings" className="min-h-0 flex-1">
-        <div className="mx-auto h-full max-w-3xl">
+        <div className="mx-auto h-full max-w-3xl overflow-y-auto">
+          {record?.draft_report && (
+            <div className="px-4 pt-4">
+              <ReportCard
+                report={record.draft_report}
+                firm={record.firm}
+                blocked={record.report_blocked}
+                groundingProblems={record.grounding_problems}
+                signed={(record.decisions ?? []).length > 0}
+                onSign={() => setTab('decision')}
+              />
+            </div>
+          )}
           <ResultsPanel view={view} answers={record?.answers ?? []} />
         </div>
       </TabsContent>
 
-      <TabsContent value="file" className="min-h-0 flex-1">
-        {detail ? (
-          <CaseFilePanel raw={detail.raw} label={caseSummary.label} />
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading case file…</div>
-        )}
-      </TabsContent>
 
       <TabsContent value="timeline" className="min-h-0 flex-1">
         <CaseTimeline caseId={caseId} refreshKey={refreshKey} />

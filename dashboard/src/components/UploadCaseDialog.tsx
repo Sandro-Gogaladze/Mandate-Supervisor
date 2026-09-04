@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { FileJson, Loader2, TriangleAlert, Upload } from 'lucide-react'
 import { toast } from 'sonner'
+import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -17,6 +18,7 @@ import { CaseUploadError, uploadCase } from '@/lib/api'
 import type { CaseSummary } from '@/lib/types'
 
 export function UploadCaseDialog({ onUploaded }: { onUploaded: (c: CaseSummary) => void }) {
+  const [token, setToken] = useState('')
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -24,6 +26,7 @@ export function UploadCaseDialog({ onUploaded }: { onUploaded: (c: CaseSummary) 
   const inputRef = useRef<HTMLInputElement>(null)
 
   const reset = () => {
+    setToken('')
     setFile(null)
     setError(null)
     setSubmitting(false)
@@ -35,7 +38,7 @@ export function UploadCaseDialog({ onUploaded }: { onUploaded: (c: CaseSummary) 
     setSubmitting(true)
     setError(null)
     try {
-      const summary = await uploadCase(file)
+      const summary = await uploadCase(file, token)
       toast.success('Case submitted', { description: `${summary.firm} — ${summary.case_id}` })
       setOpen(false)
       reset()
@@ -58,34 +61,33 @@ export function UploadCaseDialog({ onUploaded }: { onUploaded: (c: CaseSummary) 
       <DialogTrigger asChild>
         <Button variant="outline">
           <Upload data-icon="inline-start" />
-          Submit a case
+          Submit a dossier
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Submit a case for review</DialogTitle>
+          <DialogTitle>Submit a dossier for review</DialogTitle>
           <DialogDescription>
-            Upload the mandate chain and transaction history a firm submitted — the same JSON bundle shape as the
-            cases already in the queue (Intent, Cart, and Payment mandates, the KYA credential, and the transaction
-            log).
+            Submit a ZIP containing dossier.json, runs/*.json and transactions.json. The institution token must match the dossier. Every indexed run, signature and chain is verified before acceptance.
           </DialogDescription>
         </DialogHeader>
 
         <FieldGroup>
+          <Field><FieldLabel htmlFor="institution-token">Institution submission token</FieldLabel><Input id="institution-token" type="password" autoComplete="off" value={token} onChange={e => setToken(e.target.value)} /><FieldDescription>Issued to the submitting institution. Kept only for this upload.</FieldDescription></Field>
           <Field>
-            <FieldLabel htmlFor="case-file">Case bundle (.json)</FieldLabel>
+            <FieldLabel htmlFor="case-file">Dossier archive (.zip)</FieldLabel>
             <input
               ref={inputRef}
               id="case-file"
               type="file"
-              accept=".json,application/json"
+              accept=".zip,application/zip"
               onChange={(e) => {
                 setFile(e.target.files?.[0] ?? null)
                 setError(null)
               }}
               className="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1.5 text-sm shadow-xs outline-none file:mr-3 file:h-full file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground selection:bg-primary selection:text-primary-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
-            <FieldDescription>Never seen a bundle before? Open any case in the queue and use its data as a template.</FieldDescription>
+            <FieldDescription>Open a dossier’s Runs tab to export its evidence structure. Ground truth is never used in a review.</FieldDescription>
           </Field>
 
           {file && !error && (
@@ -107,7 +109,7 @@ export function UploadCaseDialog({ onUploaded }: { onUploaded: (c: CaseSummary) 
         </FieldGroup>
 
         <DialogFooter>
-          <Button onClick={handleSubmit} disabled={!file || submitting}>
+          <Button onClick={handleSubmit} disabled={!file || !token.trim() || submitting}>
             {submitting ? <Loader2 data-icon="inline-start" className="animate-spin" /> : <Upload data-icon="inline-start" />}
             {submitting ? 'Submitting…' : 'Submit for review'}
           </Button>

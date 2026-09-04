@@ -94,13 +94,16 @@ class FakeChatModel:
 
 import json as _json
 
-CLEAN_VERDICT = {"anomalous": False, "explanation": "n/a", "cited_evidence": "n/a"}
+from agents.llm import message_text
+
+CLEAN_VERDICT = {"anomalous": False, "explanation": "n/a", "cited_evidence": "n/a", "transaction_ids": []}
+CLEAN_DRIFT = {**CLEAN_VERDICT, "onset_event_ref": None}
 
 
 def grounded_draft(messages) -> dict:
     """Payload-aware fake draftsman: cites exactly the finding_ids the case
     actually produced, so grounding passes first try."""
-    payload = _json.loads(messages[-1].content)
+    payload = _json.loads(message_text(messages[-1]))
     ids = [f["finding_id"] for f in payload["findings"]]
     sections = (
         [{"title": "Findings", "body": "See cited findings.", "cited_finding_ids": ids}] if ids else []
@@ -109,19 +112,57 @@ def grounded_draft(messages) -> dict:
     return {"overall_assessment": "Review complete.", "sections": sections, "open_observations_note": note}
 
 
+def all_consistent(messages) -> dict:
+    """Payload-aware fake Mandate: a consistent verdict for every run it was
+    shown, so the whole-dossier fidelity call rolls into one `clear`."""
+    payload = _json.loads(message_text(messages[-1]))
+    return {"verdicts": [
+        {"run_id": r["run_id"], "consistent": True, "quoted_evidence": "", "explanation": "matches the request"}
+        for r in payload.get("runs", [])
+    ]}
+
+
+def route_default(messages) -> dict:
+    """Payload-aware fake orchestrator: a first pass dispatches every skill the
+    catalogue marks first_pass, with a one-line briefing each; anything else
+    is answered from the record."""
+    payload = _json.loads(message_text(messages[-1]))
+    if payload.get("first_pass"):
+        skills = [s["skill_id"] for s in payload.get("available_skills", []) if s.get("first_pass")]
+        return {"reasoning": "A first pass: every review skill, each briefed.",
+                "intent": "dispatch", "message_to_officer": f"Running the full review with {len(skills)} specialists.",
+                "dispatches": [{"skill": s, "instruction": "", "run_scope": [], "context_blocks": []} for s in skills]}
+    return {"reasoning": "The record answers this.", "intent": "reply",
+            "message_to_officer": "Nothing to add beyond what is on the record.", "dispatches": []}
+
+
+def nothing_acted(messages) -> dict:
+    """Payload-aware fake Injection: the agent ignored every flagged item."""
+    payload = _json.loads(message_text(messages[-1]))
+    return {"verdicts": [{"run_id": r["run_id"], "acted": False, "channel": "none",
+                          "explanation": "read and ignored", "cited_evidence": "n/a"}
+                         for r in payload.get("flagged_runs", [])],
+            "objective_redirected": {"present": False, "explanation": "n/a"},
+            "other_observations": []}
+
+
 DEFAULT_GRAPH_RESPONSES = {
-    "record_dispatch_plan": {
-        "run_mandate": True, "run_kya": True, "run_log": True, "run_drift": True,
-        "reasoning": "run everything",
-    },
+    "route_supervisor_request": route_default,
     "record_observations": {"observations": []},
     "write_narration": {"narration": "Nothing to report."},
     "record_log_analysis": {
         "structuring": CLEAN_VERDICT, "concentration": CLEAN_VERDICT,
         "velocity": CLEAN_VERDICT, "other_observations": [],
     },
-    "record_drift_analysis": {"drift": CLEAN_VERDICT, "other_observations": []},
-    "record_semantic_check": {"consistent": True, "quoted_evidence": "", "explanation": "matches intent"},
+    "record_drift_analysis": {"drift": CLEAN_DRIFT, "other_observations": []},
+    "record_intent_fidelity": all_consistent,
+    "record_consent_analysis": {"value_for_money": {"systematic": False, "run_ids": [], "explanation": "n/a",
+                                                    "cited_evidence": "n/a"}, "other_observations": []},
+    "record_injection_analysis": nothing_acted,
+    "record_counterparty_analysis": {"doubtful_payees": [], "identity_explanation": "n/a",
+                                     "declines": CLEAN_VERDICT, "other_observations": []},
+    "record_provenance_reconciliation": {"reconciled": True, "disagreements": [], "explanation": "n/a",
+                                         "other_observations": []},
     "record_correlations": {"correlations": []},
     "draft_case_report": grounded_draft,
 }

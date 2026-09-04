@@ -58,6 +58,31 @@ def test_rule_outcomes_must_name_their_rule():
         _fact(rule_id=None)
 
 
+def test_a_gap_must_name_what_is_missing():
+    """'Could not evaluate' without saying why is not a supervisory fact."""
+    with pytest.raises(ValidationError, match="must name what is missing"):
+        _fact(kind="absent", absent_reason="missing_block")
+    fact = _fact(kind="absent", absent_reason="missing_block",
+                 missing="consent_ceremony.rendered_values")
+    assert fact.missing == "consent_ceremony.rendered_values"
+
+
+def test_rules_that_do_not_apply_name_nothing():
+    """`out_of_scope` and `rule_draft` are about the rule, not a gap."""
+    assert _fact(kind="absent", absent_reason="out_of_scope").missing is None
+    assert _fact(kind="absent", absent_reason="rule_draft").missing is None
+
+
+def test_missing_is_only_valid_on_an_absent_fact():
+    with pytest.raises(ValidationError, match="only valid when kind='absent'"):
+        _fact(kind="breach", missing="something")
+
+
+def test_a_fact_may_cite_its_run():
+    fact = _fact(run_ref="RUN-2026-0811-0043")
+    assert fact.run_ref == "RUN-2026-0811-0043"
+
+
 def test_measurements_need_no_rule():
     """Log's rules are all judged, so its check() emits measurements — which
     is what stops its model reasoning over raw rows."""
@@ -137,6 +162,15 @@ def test_floor_and_assessed_totals_diverge_only_upward():
 
 
 # --- Assessment: scope and supersession -----------------------------------
+
+def test_run_scope_must_name_its_runs():
+    """A whole-dossier call is only viable if every claim can be checked
+    against a specific run."""
+    with pytest.raises(ValidationError, match="must name the runs"):
+        _assessment(scope="run")
+    a = _assessment(scope="run", run_refs=["RUN-2026-0811-0043"])
+    assert a.run_refs == ["RUN-2026-0811-0043"]
+
 
 def test_portfolio_scope_must_name_its_cases():
     with pytest.raises(ValidationError, match="must list the case ids"):

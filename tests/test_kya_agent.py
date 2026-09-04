@@ -1,184 +1,97 @@
-import pytest
+"""KYA's review: floor, ceiling and narration, on the dossier."""
+from __future__ import annotations
 
-# PARKED — migration-plan.md Phase 2/3.
-#
-# These cover the KYA agent, which is real and still wanted. They are parked because
-# their FIXTURE is gone: every one built its case from data/cases/*.json, and
-# the corpus is now two dossiers with a different shape.
-#
-# Parked rather than deleted, and loudly rather than quietly: the logic under
-# test did not stop mattering, and a silently shrinking suite is how a
-# migration loses coverage nobody notices. Each comes back when the pipeline
-# consumes a Dossier and a dossier fixture exists to replace the case one.
-pytestmark = pytest.mark.skip(reason="fixture removed with the case corpus — migration Phase 2/3")
+import json
 
 import pytest
 
-from agents.kya import KYAAgent, KYAReview
-from agents.kya_checks import run_policy_checks
-from agents.kya_reasoning import ModelDidNotCallTool, Observation, narrate_findings, reason_about_case
-from agents.llm import THINKING_EFFORT, LLMUnavailable, get_model
-from data.loader import CASES_DIR, DATA_DIR, load_manifest
-from ingestion.normalize import normalize_case
+from agents.kya import KYAAgent
+from agents.kya_reasoning import ModelDidNotCallTool, narrate_findings, reason_about_case
+from agents.llm import LLMUnavailable, get_model, message_text
 from registry.loader import load_kya_ruleset
-from schemas import Rule
 from tests.fakes import FakeChatModel
 
-FULL_FLOOR_EXPECTED = {
-    "CASE-2026-001": [],
-    "CASE-2026-002": [],
-    "CASE-2026-003": [],
-    "CASE-2026-004": [
-        "issuer_not_in_trust_registry",
-        "delegation_chain_no_human_terminus",
-        "delegation_terminus_principal_mismatch",
-    ],
-    "CASE-2026-005": [],
-    "CASE-2026-006": [],
-    "CASE-2026-007": [],
-    "CASE-2026-101": [],
-    "CASE-2026-102": [],
-    "CASE-2026-103": [],
-}
 
-
-def test_full_floor_matches_ground_truth_across_the_corpus() -> None:
-    ruleset = load_kya_ruleset()
-    agent = KYAAgent()
-    for entry in load_manifest():
-        case = normalize_case(DATA_DIR / entry["file"])
-        findings = agent.run(case, ruleset)
-        assert [f.type for f in findings] == FULL_FLOOR_EXPECTED[entry["case_id"]], entry["case_id"]
-        assert all(f.agent == "kya" for f in findings)
-
-
-def test_finding_ids_unique_across_crypto_and_policy_passes() -> None:
-    ruleset = load_kya_ruleset()
-    case = normalize_case(CASES_DIR / "case-004-synthetic-identity.json")
-    findings = KYAAgent().run(case, ruleset)
-    ids = [f.finding_id for f in findings]
-    assert len(ids) == len(set(ids))
-    # crypto pass and policy pass use visibly different id schemes
-    assert any("-KYC-" in i for i in ids)
-    assert any("-POL-" in i for i in ids)
-
-
-def test_coverage_gap_raises_loudly_not_silently_skipped() -> None:
-    ruleset = load_kya_ruleset()
-    case = normalize_case(CASES_DIR / "case-001-compliant.json")
-    broken = ruleset.model_copy(deep=True)
-    fabricated = Rule.model_validate({
-        "rule_id": "KYA-FAKE-01",
-        "type": "issuer_trust_required",  # placeholder to pass validation
-        "version": 1,
-        "status": "active",
-        "effective_from": "2026-08-01",
-        "severity_weight": 0.5,
-        "finding_type": "made_up_finding",
-        "description": "test-only rule with a type nothing checks for",
-        "params": {},
+async def test_review_returns_floor_assessments_observations_and_narration(kst) -> None:
+    fake = FakeChatModel({
+        "record_observations": {"observations": [
+            {"note": "Issuer name resembles a well-known consortium.", "cited_field": "kya_credential.issuer.issuer_name"}]},
+        "write_narration": {"narration": "One credential overlap; nothing else."},
     })
-    object.__setattr__(fabricated, "type", "this_type_has_no_checker")
-    broken.rules.append(fabricated)
-
-    with pytest.raises(NotImplementedError):
-        run_policy_checks(case.case, broken)
-
-
-def test_reference_date_is_the_case_payment_date_not_wallclock() -> None:
-    from agents.kya_checks import build_policy_context
-
-    case = normalize_case(CASES_DIR / "case-001-compliant.json")
-    ctx = build_policy_context(case.case)
-    assert ctx.reference_date.isoformat() == case.case.mandate_chain.payment.authorized_at[:10]
+    review = await KYAAgent().review(kst, load_kya_ruleset(), model=fake)
+    assert [a.rule_id for a in review.assessments] == ["KYA-LIF-04"]
+    (obs,) = review.observations
+    assert obs.agent == "kya" and obs.cited_evidence == "kya_credential.issuer.issuer_name"
+    assert review.narration == "One credential overlap; nothing else."
+    assert fake.call_log == ["record_observations", "write_narration"]
 
 
-def test_get_model_raises_clearly_without_api_key(monkeypatch) -> None:
-    # .env may genuinely have a key now (agents/llm.py loads it at import
-    # time) — force the no-key scenario explicitly rather than relying on
-    # the environment happening to be empty.
+async def test_the_ceiling_sees_the_credential_and_the_floors_outcomes_not_facts(kst) -> None:
+    fake = FakeChatModel({"record_observations": {"observations": []}})
+    facts = KYAAgent().run(kst, load_kya_ruleset())
+    await reason_about_case(kst, facts, model=fake)
+    payload = json.loads(message_text(fake.last_messages_for("record_observations")[1]))
+    assert payload["credential"]["issuer_id"] == "ISS-002"
+    assert payload["already_flagged_by_fixed_rules"] == ["KYA-LIF-04"]
+    assert payload["rule_outcomes"]["KYA-LIF-01"] == {"satisfied": 50}
+    assert "facts" not in payload
+    # REG-03's evidence widening: the activity summary and the register's classification
+    assert payload["registered_classification"] == "consumer_shopping"
+    assert payload["activity_summary"]["transactions"] == 102 and payload["activity_summary"]["largest_single"] == 867.0
+
+
+async def test_malformed_observation_is_skipped_not_fatal(kst) -> None:
+    fake = FakeChatModel({"record_observations": {"observations": [
+        "just a string", {"note": "fine", "cited_field": "capabilities"}]}})
+    observations, judged = await reason_about_case(kst, [], model=fake)
+    assert [o.note for o in observations] == ["fine"] and judged == []
+
+
+async def test_model_that_does_not_call_the_tool_is_a_clear_error(kst) -> None:
+    with pytest.raises(ModelDidNotCallTool):
+        await reason_about_case(kst, [], model=FakeChatModel({}))
+
+
+async def test_narration_is_grounded_in_assessments_only(kst) -> None:
+    fake = FakeChatModel({"write_narration": {"narration": "n"}})
+    review_assessments = KYAAgent().assess(KYAAgent().run(kst, load_kya_ruleset()), load_kya_ruleset(), kst)
+    await narrate_findings("DOSSIER-KST-2026-001", review_assessments, model=fake)
+    payload = json.loads(message_text(fake.last_messages_for("write_narration")[1]))
+    assert [f["rule_id"] for f in payload["findings"]] == ["KYA-LIF-04"]
+    assert "credential" not in payload  # never raw case data
+
+
+async def test_review_can_skip_the_model_entirely(kst) -> None:
+    review = await KYAAgent().review(kst, load_kya_ruleset(), reason=False, narrate=False)
+    assert review.observations == [] and review.narration is None and review.assessments
+
+
+async def test_reg_03_is_judged_only_when_promoted(kst) -> None:
+    """The one judged KYA rule. Draft: the tool does not ask and no verdict
+    exists. Active (the sandbox promotes it): the ceiling judges activity
+    against the registered classification, citing the floor's measurement."""
+    book = load_kya_ruleset()
+    facts = KYAAgent().run(kst, book)
+    by_kind = {f.kind: f for f in facts if f.rule_id == "KYA-REG-03"}
+    assert set(by_kind) == {"absent", "measurement"}  # draft, and the evidence it would judge over
+    measurement = by_kind["measurement"]
+    assert measurement.values["distinct_counterparties"] == 18
+
+    fake = FakeChatModel({"record_observations": {"observations": []}})
+    _, judged = await reason_about_case(kst, facts, model=fake, ruleset=book)
+    assert judged == [] and "classification_fit" not in json.dumps(fake.last_bind_kwargs["tools"])
+
+    promoted = book.model_copy(update={"rules": [
+        r.model_copy(update={"status": "active"}) if r.rule_id == "KYA-REG-03" else r for r in book.rules]})
+    fake = FakeChatModel({"record_observations": {"observations": [], "classification_fit": {
+        "consistent": False, "explanation": "Direct-marketing MCC 5964 sits outside a consumer shopping purpose.",
+        "cited_evidence": "mccs"}}})
+    _, (a,) = await reason_about_case(kst, KYAAgent().run(kst, promoted), model=fake, ruleset=promoted)
+    assert (a.rule_id, a.verdict, a.fact_ids) == ("KYA-REG-03", "breach", [measurement.fact_id])
+    assert "classification_fit" in json.dumps(fake.last_bind_kwargs["tools"])
+
+
+def test_get_model_without_a_key_raises_clearly(monkeypatch) -> None:
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     with pytest.raises(LLMUnavailable):
         get_model()
-
-
-async def test_reason_about_case_parses_fake_tool_response() -> None:
-    case = normalize_case(CASES_DIR / "case-004-synthetic-identity.json")
-    fake = FakeChatModel({
-        "record_observations": {
-            "observations": [
-                {"note": "Issuer name resembles a trusted one", "cited_field": "kya_credential.issuer.issuer_name"},
-            ]
-        }
-    })
-
-    observations = await reason_about_case(case, [], model=fake)
-
-    assert len(observations) == 1
-    assert isinstance(observations[0], Observation)
-    assert observations[0].case_id == "CASE-2026-004"
-    assert not hasattr(observations[0], "rule_id")
-    assert not hasattr(observations[0], "severity_weight")
-    # forced tool_choice isn't compatible with thinking — must be "auto"
-    assert fake.call_log == ["record_observations"]
-
-
-async def test_reason_about_case_empty_observations_is_fine() -> None:
-    case = normalize_case(CASES_DIR / "case-001-compliant.json")
-    fake = FakeChatModel({"record_observations": {"observations": []}})
-
-    observations = await reason_about_case(case, [], model=fake)
-
-    assert observations == []
-
-
-async def test_narrate_findings_parses_fake_tool_response() -> None:
-    fake = FakeChatModel({"write_narration": {"narration": "Everything checked out for this credential."}})
-
-    narration = await narrate_findings("CASE-2026-001", [], model=fake)
-
-    assert narration == "Everything checked out for this credential."
-
-
-async def test_model_not_calling_tool_raises_clearly() -> None:
-    """Without forced tool_choice, the model could in principle respond
-    with only plain text. That must surface as a clear, specific error,
-    not an opaque failure to find a matching tool call."""
-
-    class _NoToolCallModel:
-        def bind(self, **kwargs):
-            return self
-
-        async def ainvoke(self, messages):
-            from tests.fakes import FakeAIMessage
-            return FakeAIMessage(tool_calls=[])
-
-    with pytest.raises(ModelDidNotCallTool):
-        await narrate_findings("CASE-2026-001", [], model=_NoToolCallModel())
-
-
-async def test_review_combines_floor_ceiling_and_narration_with_fake_client() -> None:
-    case = normalize_case(CASES_DIR / "case-004-synthetic-identity.json")
-    ruleset = load_kya_ruleset()
-    fake = FakeChatModel({
-        "record_observations": {"observations": []},
-        "write_narration": {"narration": "Two identity concerns were found on this credential."},
-    })
-
-    review = await KYAAgent().review(case, ruleset, model=fake)
-
-    assert isinstance(review, KYAReview)
-    assert len(review.findings) == 3
-    assert review.observations == []
-    assert review.narration == "Two identity concerns were found on this credential."
-
-
-async def test_review_skips_llm_calls_when_disabled() -> None:
-    case = normalize_case(CASES_DIR / "case-001-compliant.json")
-    ruleset = load_kya_ruleset()
-
-    review = await KYAAgent().review(case, ruleset, reason=False, narrate=False)
-
-    assert review.findings == []
-    assert review.observations == []
-    assert review.narration is None

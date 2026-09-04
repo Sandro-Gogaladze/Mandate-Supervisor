@@ -6,6 +6,7 @@ import type {
   DispatchPlan,
   DraftReport,
   Finding,
+  FailureOccurrence,
   Observation,
   ReportStatus,
   ReviewerDecision,
@@ -16,8 +17,12 @@ import type {
 export interface SupervisionAgentState {
   case_id: string
   run_id?: string
+  deterministic_only?: boolean
+  // True on the "run the review" turn: the orchestrator briefs every review skill.
+  first_pass?: boolean
   prompt_overrides?: Record<string, string>
   findings?: Finding[]
+  failure_occurrences?: FailureOccurrence[]
   observations?: Observation[]
   correlations?: Correlation[]
   dispatch_plan?: DispatchPlan
@@ -36,11 +41,10 @@ export interface SupervisionAgentState {
   officer?: string
   question_id?: string
   orchestrator_decision?: {
-    intent: 'dispatch' | 'reply' | 'run_triage' | 'draft_report'
-    targets: string[]
-    instruction: string
-    context_blocks: string[]
+    reasoning?: string
+    intent: 'dispatch' | 'reply' | 'draft_report'
     message_to_officer: string
+    dispatches: { skill: string; instruction: string; run_scope: string[]; context_blocks: string[] }[]
   }
   orchestrator_reply?: string
 }
@@ -48,5 +52,6 @@ export interface SupervisionAgentState {
 export const EMPTY_AGENT_STATE: SupervisionAgentState = {
   case_id: '',
   findings: [],
+  failure_occurrences: [],
   observations: [],
 }

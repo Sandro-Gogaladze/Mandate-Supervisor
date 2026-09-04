@@ -1,12 +1,15 @@
 """Typed finding — CLAUDE.md cross-cutting rule 2: "every agent returns a
 typed Finding, never a print statement or loose dict."
 
-Ingestion (this phase) is the first producer: a broken chain or a bad
-signature must turn into a Finding, not an exception. `agent` attributes a
-finding to whichever specialist domain owns that concern (matching the
-corpus's own ground truth in data/corpus_manifest.json) even when, as here,
-the check actually ran deterministically during ingestion before that
-specialist was ever dispatched.
+Since migration-plan.md Phase 1 a Finding is a PROJECTION of an Assessment
+(agents/assess.py::project_finding), not something an agent produces
+directly: checkers produce `Fact`s, agents turn facts into `Assessment`s,
+and this is the view of an assessment that scoring, the ledger's
+`finding_recorded` event and the report consume. `finding_id` is the
+assessment id, so a re-derived assessment is the same finding to the state
+reducer and the ledger. `agent` attributes it to the specialist domain that
+owns the concern. Ingestion's cryptographic checks still mint Findings
+directly until Phase 2 moves them onto the fact contract.
 """
 from __future__ import annotations
 

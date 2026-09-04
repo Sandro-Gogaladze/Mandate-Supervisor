@@ -197,15 +197,19 @@ the submission cannot yet carry*. Promoting it is a data question.
 
 | Book | Rules | State |
 |---|---|---|
-| `kya.json` v2026.7 | 42 | **37 active**, 5 draft, 2 judged |
+| `kya.json` v2026.8 | 39 | **34 active**, 5 draft, 2 judged (TEC-02/05/06 moved to provenance.json, ids kept) |
 | `ctl.json` v2026.1 | 15 | 15 active |
-| `mandate.json` v2026.2 | 13 | 12 active |
-| `log.json` v2026.2 | 3 | 3 active |
-| `drift.json` | 1 | 1 active |
-| **`consent.json`** | — | **not written** |
-| **`injection.json`** | — | **not written** |
-| **`counterparty.json`** | — | **not written** |
-| **`provenance.json`** | — | **not written** (its 3 rules live in kya.json today) |
+| `mandate.json` v2026.5 | 14 | 13 active (1 judged), 1 draft (SEM-02 moved to injection.json as INJ-LST-01) |
+| `log.json` v2026.4 | 3 | 3 active, all judged |
+| `drift.json` v2026.2 | 1 | 1 active, judged |
+| `consent.json` v2026.1 | 10 | 10 active, 1 judged (value for money) |
+| `injection.json` v2026.1 | 5 | 5 active, 1 judged (did the agent act, and through which channel) |
+| `counterparty.json` v2026.1 | 10 | 10 active, 2 judged (payee identity, declines) |
+| `provenance.json` v2026.1 | 5 | 5 active, 1 judged (four-source reconciliation) |
+
+Ninety-six active rules. Every rule may declare the coverage-model failures
+its breach establishes (`Rule.failures`); that is how Control Assurance
+learns, from the peers' facts alone, that a risk materialised on a run.
 
 **Nine rulebooks, one per agent** — decided, so the sandbox can tune each domain
 independently and one agent maps to one book.
@@ -227,7 +231,7 @@ also removed a duplication where F37 would have been asserted twice.
 **Still draft, and why:** `IDN-04`/`IDN-05` need cross-case ledger history;
 `REG-03`, `CAP-03`, `CAP-04` are judgements the sandbox must tune.
 
-## 3.2 · Three rules the corpus proved wrong
+## 3.2 · Four rules the corpus proved wrong
 
 Kept here because they are the kind of error that recurs.
 
@@ -242,6 +246,12 @@ Kept here because they are the kind of error that recurs.
   transaction is $867. **A dial set beyond an agent's operating range is not a
   lenient rule, it is a rule switched off** — and the eval reads its silence as
   clean behaviour. Now resolved per agent classification.
+- **`MND-CAP-05`** summed the calendar month, a reading from a standing
+  corporate mandate with a monthly budget. On single-task consumer mandates
+  `max_cumulative_amount` *equals* `max_transaction_amount`, so a monthly sum
+  breached **every run in both dossiers**. Now bounds the settled spend drawn on
+  one `intent_mandate_id`, as of each run — which is also what catches the F50
+  double draw. See `docs/phases/14-facts-and-assessments.md` §5.
 
 ---
 
@@ -415,8 +425,10 @@ path. **Restyling cannot fix this.**
   naming any unrendered type, so gaps show in review rather than silently.
 - **Evidence cited, never dumped.** `RUN-2026-0811-0043 · cart_total $708.00 ·
   KST-CTL-001`, expanding to the fact and linking to the run.
-- **Streaming that means something** — tokens for reasoning, events for facts as
-  they land. An agent with four facts still thinking should look like that.
+- **Working shown when it lands, not streamed** (decided 2026-09-04: no token
+  streaming). An agent's step reads "Thinking…" while its call is open and
+  "Thought for 12s" with the full working once it has ended; facts and
+  verdicts appear as their events land on the record.
 - **`absent` is first-class.** *"Consent ran 7 rules, 5 satisfied, 2 absent — no
   `rendered_values` in this submission"* is a supervisory fact and today renders
   as nothing.
@@ -447,36 +459,87 @@ attestation, and accepting one that contradicts itself destroys the point.
 
 # 8 · What is built, and what is not
 
-## Built and passing (117 tests)
+## Built and passing (399 tests)
 
 Dossier schema and loader · both dossiers, signed and independently verified ·
-six registries · five rulebooks (68 active rules) · KYA 37/42 · all 15 CTL rules
-with checkers · Provenance checkers · Systemic sweep with F57/F67/F69 firing ·
-the ledger · scoring primitives · the independent verifier.
+six registries · nine rulebooks (96 active rules) · KYA 34/39 · all 15 CTL rules
+with checkers · eleven agents, each with a floor and at most one contained model
+call · Systemic sweep with F57/F67/F69 firing · the ledger · scoring primitives ·
+the independent verifier.
+
+**The Fact contract (migration-plan Phase 1) — done.** Every checker returns
+`list[Fact]` over a `LoadedDossier`, one fact per rule per run or per dossier;
+`absent` names its reason and what is missing; `agents/assess.py` turns facts
+into floor assessments, data-gap concerns and `Finding` projections.
+`docs/phases/14-facts-and-assessments.md`.
+
+**The dossier through the graph (migration-plan Phase 2) — done.** Intake
+(`ingestion/normalize.py`) verifies every signature and chain, resolves the
+registries, computes the shared statistics once and records which blocks are
+present, into an `EvidencePack`; the eight cryptographic/chain rules are facts.
+State carries `dossier`, `evidence`, `run_scope`, `facts`, `assessments`. The
+four specialists run their floors over the whole dossier on the triage graph,
+KYA/Log/Drift make their one model call over dossier-level views, and every
+fact and assessment is a ledger event. Later rounds supersede earlier
+assessments. The `CaseBundle` path is deleted; a dossier is uploaded as a zip
+and verified at the door. `docs/phases/15-ingestion-and-state.md`.
+
+**The four specialists migrated (migration-plan Phase 3) — done.** Mandate's
+one model call is per-line-item intent fidelity over the whole dossier with
+a verdict per run, validated in code; `MND-USE-01` (F50) and `MND-CAP-04`
+(F48) are active rules; KYA's evidence carries the activity summary `REG-03`
+needs and judges it when promoted; Log's concentration judgement sees the
+new-payee measurement behind F55; Drift's onset lands on a `change_log`
+event. Prompts rewritten for the dossier. `docs/phases/16-migrating-the-four-specialists.md`.
+
+**The seven new specialists (migration-plan Phase 4) — done.** Four rulebooks
+written (consent, injection, counterparty, provenance) and two rules moved
+book with their ids kept. Provenance, Injection, Counterparty and Consent &
+Harm each have a deterministic floor and one contained call whose every run
+id, merchant id and channel is validated against what the floor showed.
+Control Assurance runs after the peers and learns which risk materialised
+from their breach facts through `Rule.failures`; posture (absent / failed /
+bypassed / ineffective / effective) is computed, not judged. Systemic is an
+agent over the ledger's portfolio, concerns scoped to the dossiers they span.
+The Red Team builds five probe runs from the mandate's own parameters and
+reports which the declared controls address — at both operators, listing
+injection and geography pass unopposed. `docs/phases/17-the-seven-new-specialists.md`.
+
+**One orchestrator, skills-driven (2026-09-04).** The dispatch node and the
+deterministic floor are gone. One review graph answers every request: the
+orchestrator is given the request (a first pass is a fixed sentence plus the
+intake statistics) and dispatches skills with a briefing each, replies from
+the record, or asks for the report. Coverage on a first pass is asked for by
+its prompt and recorded (`DispatchPlan.not_dispatched`), not enforced —
+§5's "deterministic floor is a backstop" no longer holds. Control Assurance
+runs after the peers by topology and cannot be dispatched.
 
 ## Not built
 
-The pipeline still consumes `CaseBundle` and dispatches four specialists.
-**27 files** reference the old shape. `Facts`/`Assessments` are designed and used
-nowhere. Seven of eleven agents do not exist. Four rulebooks unwritten. `eval/`
-does not exist. The console is unchanged.
+The triage graph still fans out to the four migrated agents; the skills
+registry, dispatcher floor and `Send()` fan-out for eleven are Phase 5, and
+until then Kestrel's triage score is 3.7 rather than 4.3 because the
+line-item injection finding now belongs to an agent not yet on the graph.
+`eval/` does not exist. The console is unchanged except a guard on the
+case-file panel.
 
-**22 test modules are parked** in `tests/conftest.py` under `collect_ignore` —
-listed by name, not glob, so the missing coverage stays visible and counted.
-They cover agents, dispatch, all three graphs, tools and uploads. Their *fixture*
-died with the case corpus, not their subject. **Until Phase 2 lands, none of that
-has test coverage.**
+**No test module is parked.** The twenty-two parked when the case corpus was
+deleted are all back, rewritten on the dossier fixture (`tests/corpus.py`),
+or retired because their subject no longer exists. `collect_ignore` in
+`tests/conftest.py` is empty and stays as the place to put the next
+migration's debt.
 
 ## Known weaknesses — do not discover these later
 
-- **The corpus exercises 17 of 73 failures (23%).** 68 active rules, 17 distinct
+- **The corpus exercises 17 of 73 failures (23%).** 96 active rules, 17 distinct
   planted failures — most rules have never fired on anything. They are
   asserted-correct, not demonstrated-correct.
 - **`eval/` does not exist.** There is no precision/recall number for anything.
   Build it before the console: a good console makes a plausible-looking pipeline
   extremely convincing.
-- **Checkers return `None` for both *satisfied* and *absent*.** Already wrong;
-  becomes unfixable once seven more agents are built on the same contract.
+- **On single-task mandates `MND-CAP-05` duplicates `MND-CAP-01`** by
+  construction (cumulative cap equals per-transaction cap). Two facts, two floor
+  assessments, one event — the Phase 6 synthesizer's `same_event` case.
 - **F49 and F38 are judged, not computable.** No deterministic check can
   reproduce them, and the verifier reports them separately rather than pretending.
 
@@ -504,9 +567,9 @@ has test coverage.**
 
 `migration-plan.md` has eleven phases with gates. The order that matters:
 
-1. **Facts** — before any new agent, or you write eleven agents twice.
-2. **Ingestion + state** — `Dossier` through the graph; unparks the 22 modules.
-3. **Migrate the four existing agents.**
+1. ~~**Facts**~~ — done (`docs/phases/14-facts-and-assessments.md`).
+2. ~~**Ingestion + state**~~ — done (`docs/phases/15-ingestion-and-state.md`).
+3. ~~**Migrate the four existing agents.**~~ — done (`docs/phases/16-migrating-the-four-specialists.md`).
 4. **Eval** — moved earlier than the plan says, because nothing above can be
    trusted without it.
 5. Then the seven new agents, orchestrator, scoring, ledger, API, console.

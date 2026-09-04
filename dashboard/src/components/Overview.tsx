@@ -53,7 +53,7 @@ export function Overview({
           </h1>
           <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
             The National Bank of Georgia's supervision console. Every submitted mandate chain is checked against what
-            the agent was actually authorised to do — by four specialist review agents, live, with every step of their
+            the agent was actually authorised to do — by eight domain specialists and Control Assurance, live, with every step of their
             reasoning on the record.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">

@@ -1,26 +1,29 @@
-"""The Orchestrator's propose-enforce dispatch plan (PLAN item 9).
+"""What the orchestrator decided for one turn, and one specialist's briefing.
 
-CLAUDE.md: "Propose–enforce: LLM proposes a DispatchPlan, a deterministic
-validator enforces a mandatory floor (Mandate+KYA always run; Log+Drift
-run when history >= 30 tx)." `DispatchPlan` is the LLM's proposal;
-`pipeline/dispatch.py::enforce_floor()` is the deterministic validator —
-it can only ever turn a `False` into `True` (add a specialist the LLM
-didn't propose but the floor requires), never the reverse. The LLM cannot
-skip a mandatory specialist by proposing not to run it.
+`DispatchPlan` is the orchestrator's own act on the record: which skills it
+briefed, what it told each, which runs it scoped them to, and — on a first
+pass — which review skills it left out. Coverage is the orchestrator's to
+decide and the record's to show; nothing is added behind its back. The model
+is lenient on read so the boolean plans of the four-specialist era still
+project from older ledgers.
 """
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DispatchPlan(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
-    run_mandate: bool
-    run_kya: bool
-    run_log: bool
-    run_drift: bool
-    reasoning: str
+    reasoning: str = ""
+    intent: str = "dispatch"                     # dispatch | reply | draft_report
+    first_pass: bool = False
+    skills: list[str] = Field(default_factory=list)
+    briefings: dict[str, str] = Field(default_factory=dict)          # skill -> what it was asked
+    run_scope: dict[str, list[str]] = Field(default_factory=dict)    # skill -> runs; absent = whole dossier
+    context_blocks: dict[str, list[str]] = Field(default_factory=dict)
+    not_dispatched: list[str] = Field(default_factory=list)          # first pass: review skills left out
+    message_to_officer: str = ""
 
 
 class DispatchRecord(BaseModel):
@@ -29,15 +32,15 @@ class DispatchRecord(BaseModel):
     possible). `context_blocks` is the verbatim payload the agent received —
     the answer to "what did the orchestrator give to whom"; `context_digest`
     is its SHA-256 so two runs can be compared cheaply. `instruction` is any
-    steering text appended to the agent's own system prompt (an escalation
-    addendum, a reviewer directive, an orchestrator briefing) — empty string
-    when the agent ran on its canonical brief alone."""
+    steering text appended to the agent's own system prompt (the
+    orchestrator's briefing, an escalation addendum, a reviewer directive) —
+    empty string when the agent ran on its canonical brief alone."""
 
     model_config = ConfigDict(extra="forbid")
 
     case_id: str
     run_id: str
-    target: str          # agent name: mandate | kya | log | drift | investigator
+    target: str          # agent name
     skill: str           # skill_id from agents/skills.py
     instruction: str
     context_blocks: dict

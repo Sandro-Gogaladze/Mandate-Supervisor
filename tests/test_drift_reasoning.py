@@ -1,147 +1,72 @@
+"""Drift's judged verdict becomes an assessment citing the baseline measurement."""
+from __future__ import annotations
+
 import pytest
 
-# PARKED — migration-plan.md Phase 2/3.
-#
-# These cover Drift's prompt, which is real and still wanted. They are parked because
-# their FIXTURE is gone: every one built its case from data/cases/*.json, and
-# the corpus is now two dossiers with a different shape.
-#
-# Parked rather than deleted, and loudly rather than quietly: the logic under
-# test did not stop mattering, and a silently shrinking suite is how a
-# migration loses coverage nobody notices. Each comes back when the pipeline
-# consumes a Dossier and a dossier fixture exists to replace the case one.
-pytestmark = pytest.mark.skip(reason="fixture removed with the case corpus — migration Phase 2/3")
-
-from agents.drift import DriftAgent, DriftReview
+from agents.drift import DriftAgent
 from agents.drift_reasoning import analyze_drift
-from agents.llm import THINKING_EFFORT
-from data.loader import DATA_DIR
-from ingestion.normalize import normalize_case
+from agents.llm import ModelDidNotCallTool, message_text
 from registry.loader import load_drift_ruleset
-from schemas import Finding, Observation
+from schemas import Observation
 from tests.fakes import FakeChatModel
 
 
 def _rule():
-    ruleset = load_drift_ruleset()
-    return next(r for r in ruleset.rules if r.type == "behavioral_drift_detected")
+    return next(r for r in load_drift_ruleset().rules if r.type == "behavioral_drift_detected")
 
 
-_CLEAN_RESULT = {
-    "drift": {"anomalous": False, "explanation": "n/a", "cited_evidence": "n/a"},
-    "other_observations": [],
-}
+_CLEAN = {"drift": {"anomalous": False, "explanation": "n/a", "cited_evidence": "n/a",
+                    "transaction_ids": [], "onset_event_ref": None}, "other_observations": []}
 
 
-async def test_no_finding_when_not_anomalous() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-006-drift.json")
-    fake = FakeChatModel({"record_drift_analysis": _CLEAN_RESULT})
-
-    findings, observations = await analyze_drift(case, _rule(), model=fake)
-
-    assert findings == []
-    assert observations == []
+async def test_clean_judgement_is_a_clear_assessment(kst) -> None:
+    facts = DriftAgent().run(kst, load_drift_ruleset())
+    (a,), observations = await analyze_drift(kst, facts, _rule(), model=FakeChatModel({"record_drift_analysis": _CLEAN}))
+    assert a.verdict == "clear" and not a.scores
+    assert a.fact_ids == [facts[0].fact_id] and observations == []
 
 
-async def test_finding_when_model_judges_drift_present() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-006-drift.json")
-    result = {
-        "drift": {
-            "anomalous": True,
-            "explanation": "Average transaction size grew from ₾187.95 to ₾316.51 (z=7.15), with a new vendor and category dominating the mix.",
-            "cited_evidence": "z_score=7.15, counterparty_mix_psi=5.86, mcc_mix_psi=2.02",
-        },
-        "other_observations": [],
-    }
+async def test_drift_judged_present_is_a_breach(kst) -> None:
+    result = {"drift": {"anomalous": True, "explanation": "Counterparty mix PSI 1.1608 is a major shift.",
+                        "cited_evidence": "psi 1.1608", "transaction_ids": ["TXN-KST-0045"],
+                        "onset_event_ref": "MER-QVC-8801"}, "other_observations": []}
+    (a,), _ = await analyze_drift(kst, DriftAgent().run(kst, load_drift_ruleset()), _rule(),
+                                  model=FakeChatModel({"record_drift_analysis": result}))
+    assert a.verdict == "breach" and a.weighted() == pytest.approx(0.6 * 0.7)
+
+
+async def test_other_observations_and_addenda(kst) -> None:
+    result = {**_CLEAN, "other_observations": [{"note": "New MCC entered in August.", "cited_evidence": "mcc mix"}]}
     fake = FakeChatModel({"record_drift_analysis": result})
-
-    findings, _ = await analyze_drift(case, _rule(), model=fake)
-
-    assert len(findings) == 1
-    assert isinstance(findings[0], Finding)
-    assert findings[0].agent == "drift"
-    assert findings[0].rule_id == "DRIFT-BHV-01"
-    assert findings[0].severity_weight == _rule().severity_weight
+    prior = [Observation(case_id="DOSSIER-KST-2026-001", agent="drift", note="earlier note", cited_evidence="x")]
+    _, observations = await analyze_drift(kst, DriftAgent().run(kst, load_drift_ruleset()), _rule(),
+                                          model=fake, prior_observations=prior, reviewer_directive="Check August.")
+    assert [o.note for o in observations] == ["New MCC entered in August."]
+    system = message_text(fake.last_messages_for("record_drift_analysis")[0])
+    assert "earlier note" in system and "Check August." in system
 
 
-async def test_other_observations_become_unscored_observation_objects() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-006-drift.json")
-    result = {
-        **_CLEAN_RESULT,
-        "other_observations": [
-            {"note": "New vendor Batumi Express Freight might warrant its own KYA look.", "cited_evidence": "17 of 35 comparison-window transactions"},
-        ],
-    }
-    fake = FakeChatModel({"record_drift_analysis": result})
+async def test_the_onset_lands_on_a_logged_event_and_never_an_invented_one(kst) -> None:
+    """F65: 'something specific changed it'. A valid ref becomes the
+    assessment's subject and an evidence ref; an invented one is dropped."""
+    facts = DriftAgent().run(kst, load_drift_ruleset())
+    assert [c["ref"] for c in facts[0].values["change_points"] if c["evaluable"]][-1] == "MER-QVC-8801"
 
-    findings, observations = await analyze_drift(case, _rule(), model=fake)
+    def verdict(ref):
+        return FakeChatModel({"record_drift_analysis": {"drift": {
+            "anomalous": True, "explanation": "Counterparty mix PSI 6.3423 after the onboarding.",
+            "cited_evidence": "psi 6.3423", "transaction_ids": ["TXN-KST-0045"],
+            "onset_event_ref": ref}, "other_observations": []}})
 
-    assert findings == []
-    assert len(observations) == 1
-    assert isinstance(observations[0], Observation)
-    assert observations[0].agent == "drift"
-    assert not hasattr(observations[0], "rule_id")
-
-
-async def test_uses_high_thinking_effort_and_auto_tool_choice() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-006-drift.json")
-    fake = FakeChatModel({"record_drift_analysis": _CLEAN_RESULT})
-
-    await analyze_drift(case, _rule(), model=fake)
-
-    assert fake.last_bind_kwargs["tool_choice"] == {"type": "auto"}
-    assert fake.last_bind_kwargs["output_config"] == {"effort": THINKING_EFFORT}
+    (a,), _ = await analyze_drift(kst, facts, _rule(), model=verdict("MER-QVC-8801"))
+    assert a.subject == "MER-QVC-8801" and [r.ref for r in a.evidence_refs] == ["change_log[MER-QVC-8801]", "TXN-KST-0045"]
+    assert a.run_refs == ["RUN-2026-0813-0045"] and a.failure_ids == ["F65"]
+    assert "Onset: MER-QVC-8801 (merchant_onboarded, 2026-08-05)" in a.narrative
+    (a,), _ = await analyze_drift(kst, facts, _rule(), model=verdict("an-event-nobody-logged"))
+    assert a.subject == "psi 6.3423" and [r.ref for r in a.evidence_refs] == ["TXN-KST-0045"]
+    assert a.failure_ids == [] and "Onset" not in a.narrative
 
 
-async def test_prompt_includes_real_psi_and_zscore_numbers() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-006-drift.json")
-    fake = FakeChatModel({"record_drift_analysis": _CLEAN_RESULT})
-
-    await analyze_drift(case, _rule(), model=fake)
-
-    payload = fake.last_messages[1].content
-    assert "counterparty_mix_psi" in payload
-    assert "z_score" in payload
-    assert "7.15" in payload
-
-
-async def test_review_flags_insufficient_baseline_below_min_transactions() -> None:
-    """case-007 has only 7 transactions, far under the 30-tx minimum —
-    review() must report insufficient_baseline without calling the model
-    at all, not attempt a judgment on a meaningless sample."""
-    case = normalize_case(DATA_DIR / "cases" / "case-007-prompt-injection.json")
-    ruleset = load_drift_ruleset()
-    fake = FakeChatModel({"record_drift_analysis": _CLEAN_RESULT})
-
-    review = await DriftAgent().review(case, ruleset, model=fake)
-
-    assert isinstance(review, DriftReview)
-    assert review.insufficient_baseline is True
-    assert review.findings == []
-    assert fake.last_bind_kwargs is None  # never called
-
-
-async def test_review_runs_full_analysis_when_sufficient_history() -> None:
-    """case-006 has 49 transactions — comfortably over the 30-tx floor."""
-    case = normalize_case(DATA_DIR / "cases" / "case-006-drift.json")
-    ruleset = load_drift_ruleset()
-    result = {
-        "drift": {"anomalous": True, "explanation": "flagged", "cited_evidence": "x"},
-        "other_observations": [],
-    }
-    fake = FakeChatModel({"record_drift_analysis": result})
-
-    review = await DriftAgent().review(case, ruleset, model=fake)
-
-    assert review.insufficient_baseline is False
-    assert len(review.findings) == 1
-
-
-async def test_review_without_ruleset_does_not_call_the_model() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-006-drift.json")
-    fake = FakeChatModel({"record_drift_analysis": _CLEAN_RESULT})
-
-    review = await DriftAgent().review(case, None, model=fake)
-
-    assert review.findings == []
-    assert fake.last_bind_kwargs is None
+async def test_model_that_does_not_call_the_tool_is_a_clear_error(kst) -> None:
+    with pytest.raises(ModelDidNotCallTool):
+        await analyze_drift(kst, [], _rule(), model=FakeChatModel({}))

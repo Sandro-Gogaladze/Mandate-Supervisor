@@ -19,11 +19,11 @@ specialists. Everything above runs from scripts and tests, not from the graph.
 
 | Layer | Today | Target |
 |---|---|---|
-| Ingestion | `CaseBundle` → `IngestedCase` | `Dossier` → **EvidencePack** |
-| State | `case: IngestedCase` | `dossier: LoadedDossier` + per-run scope |
+| Ingestion | ~~`CaseBundle` → `IngestedCase`~~ **done:** `Dossier` → `EvidencePack` | `Dossier` → **EvidencePack** |
+| State | ~~`case: IngestedCase`~~ **done:** `dossier` + `evidence` + `run_scope` | `dossier: LoadedDossier` + per-run scope |
 | Skills | 5 registered | **11 specialists + 4 support** |
 | Specialists on the graph | mandate · kya · log · drift | **+ provenance · injection · counterparty · consent · control-assurance · hunter** |
-| Findings | `Finding` only | **`Fact` → `Assessment` → `Finding`** |
+| Findings | ~~`Finding` only~~ **done:** `Fact` → `Assessment` → `Finding` (checkers; ingestion's 8 rules pending) | **`Fact` → `Assessment` → `Finding`** |
 | Scoring | 3 tiers, sum of weights | **4 dispositions incl. `monitor`**, per-run and per-dossier |
 | Ledger | 22 event types, case-scoped | **+ run scope, + portfolio run kind** |
 | Systemic | a script | **a scheduled run kind** |
@@ -106,6 +106,15 @@ contract the next phase changes.
 
 ## Phase 1 — Facts and Assessments  *(the foundation)*
 
+> **Status (2026-09-03): done.** `docs/phases/14-facts-and-assessments.md`.
+> One deviation from the letter of this section: `kya_checks` and
+> `mandate_checks` now take a `LoadedDossier`, not a `CaseBundle` — no
+> `CaseBundle` corpus exists, so a checker migrated on that input could not
+> have been run, and Phase 3 would have rewritten it. Nothing else of Phase 3
+> was pulled forward. Two absent reasons were added to the four below
+> (`no_registry_record`, `awaiting_peers`); the 8 cryptographic/chain rules stay
+> on `Finding` until Phase 2 rewrites ingestion.
+
 **Why first:** it changes the return contract of every checker. Doing it after
 the new specialists means writing eleven agents twice.
 
@@ -130,6 +139,15 @@ by rule-family with the suite green between each.
 
 ## Phase 2 — Ingestion and state
 
+> **Status (2026-09-03): done.** `docs/phases/15-ingestion-and-state.md`.
+> The four specialists run on the triage graph over the dossier; KYA, Log and
+> Drift make their one model call over dossier-level views (their evidence
+> was dossier-level already), Mandate's is Phase 3. Twenty-one of the
+> twenty-two parked modules are back; `test_mandate_reasoning` waits for
+> Phase 3. Two additions beyond this section: a `clear` verdict for a judged
+> rule found clean, and `review_round` / `supersedes` so a later pass's
+> assessment replaces an earlier one's on the record without editing it.
+
 5. `ingestion/normalize.py` gains `normalize_dossier()`: verify every signature
    and chain, resolve all six registries, **compute shared statistics once**
    (counterparty profiles, drift baselines, timing distributions, control
@@ -151,6 +169,14 @@ four existing specialists and produces the same findings the scripts do.
 
 ## Phase 3 — Migrate the four existing specialists
 
+> **Status (2026-09-03): done.** `docs/phases/16-migrating-the-four-specialists.md`.
+> The gate, honestly: the four agents find every planted defect that is
+> theirs and computable (F42, F44, F50, F21, the line-item channel of F32) on
+> the graph; F49 and F55 are theirs and judged, so they need a live model;
+> the rest are Phase 4's agents. One corpus slip found: Halcyon's `change_log`
+> names Kestrel's prompt release.
+
+
 8. **Mandate** — per-run now. Scope comes from `run.intent_mandate`, not one
    standing mandate. Add `usage`/F50 and `merchant.region`/F48. Its LLM call
    becomes per-line-item intent fidelity against *the shopper's own sentence*,
@@ -168,18 +194,25 @@ found by agents on the graph, not by `verify_dossier.py`.
 
 ## Phase 4 — The seven new specialists
 
+> **Status (2026-09-03): done.** `docs/phases/17-the-seven-new-specialists.md`.
+> The gate, honestly: all eleven agents review a dossier and return
+> assessments citing facts, with ids that never collide — as agents, called
+> directly. Dispatching them from the graph is Phase 5. Posture and the
+> Red Team's verdicts turned out computable, so neither makes a model call.
+> The eval is deliberately skipped for now.
+
 Each is a deterministic floor plus at most one contained LLM call, per the house
 pattern. Checkers for three already exist.
 
 | | Agent | Checkers | LLM does |
 |---|---|---|---|
-| B1 | **Provenance** | ✅ `provenance_checks.py` | agent-card vs credential vs registry reconciliation |
-| B2 | **Injection** | new | which of the four channels, and did the agent act |
-| C1 | **Counterparty** | new | is this payee what it appears to be |
-| C2 | **Consent & Harm** | new | value-for-money against `selection_context` |
-| E1 | **Control Assurance** | ✅ `control_checks.py` | classify posture: absent/failed/bypassed/ineffective |
-| E2 | **Systemic** | ✅ `systemic.py` | concentration judgement |
-| E3 | **Red Team** | new | generates cases from the mandate's own parameters |
+| B1 | **Provenance** | ✅ `provenance_checks.py` | ✅ four-source reconciliation (PRV-REC-01) |
+| B2 | **Injection** | ✅ `injection_checks.py` | ✅ did the agent act, and through which channel (INJ-ACT-01) |
+| C1 | **Counterparty** | ✅ `counterparty_checks.py` | ✅ is this payee what it appears; do declines cluster |
+| C2 | **Consent & Harm** | ✅ `consent_checks.py` | ✅ value-for-money against `selection_context` (CNS-VFM-01) |
+| E1 | **Control Assurance** | ✅ `control_checks.py` | none — posture is computed from the CTL facts |
+| E2 | **Systemic** | ✅ `systemic.py` | none — the sweep's three conditions are the judgement |
+| E3 | **Red Team** | ✅ `red_team.py` | none — probes run through the deterministic floors |
 
 11. `agents/injection.py`, `counterparty.py`, `consent.py` + their check modules.
 12. Wrap the three existing check modules in agents.

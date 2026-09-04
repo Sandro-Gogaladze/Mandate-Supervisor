@@ -97,6 +97,13 @@ def shared_counterparty_concentration(
         if not recent:
             continue
         n += 1
+        hits = {
+            d.dossier.dossier_id: sorted({
+                t.run_ref for t in d.transaction_history
+                if t.counterparty_id == cp and t.run_ref and t.status == "settled"
+            })
+            for d in dossiers if d.dossier.dossier_id in qualifying
+        }
         findings.append(PortfolioFinding(
             finding_id=f"PORT-F57-{n:03d}", failure="F57",
             subject=record.get("legal_name", cp), subject_refs=sorted(qualifying),
@@ -109,6 +116,7 @@ def shared_counterparty_concentration(
             details={"counterparty_id": cp, "shares": shares, "first_seen": first_seen,
                      "beneficial_owner": record.get("beneficial_owner"),
                      "watchlist_flags": record.get("watchlist_flags", []),
+                     "hits": hits,
                      "min_share": min_share, "recent_days": recent_days}))
     return findings
 
@@ -196,3 +204,67 @@ def sweep(dossiers: list[LoadedDossier]) -> list[PortfolioFinding]:
     return [*shared_counterparty_concentration(dossiers),
             *model_monoculture(dossiers),
             *shared_attack_content(dossiers)]
+
+
+# ---------------------------------------------------------------------------
+# The agent (E2)
+# ---------------------------------------------------------------------------
+
+from schemas import Assessment, EvidencePack, Fact, FactBuilder, Ruleset  # noqa: E402
+
+from .base import SpecialistReview  # noqa: E402
+
+
+class SystemicAgent:
+    """The only specialist whose evidence is many dossiers. Given a
+    portfolio of at least two it runs the sweep; its findings are
+    portfolio-scoped `concern`s naming the dossiers they span — none of
+    F57, F67, F69 is a refusal of any one operator. Given fewer, the one fact
+    it records is that there was no portfolio to look from. It has no
+    rulebook: its three failures are properties of the population."""
+
+    name = "systemic"
+
+    def run(self, dossier: LoadedDossier, ruleset: Ruleset | None = None, *,
+            evidence: EvidencePack | None = None,
+            portfolio: list[LoadedDossier] | None = None) -> list[Fact]:
+        fb = FactBuilder(dossier.dossier.dossier_id, self.name)
+        portfolio = portfolio or [dossier]
+        ids = sorted(d.dossier.dossier_id for d in portfolio)
+        if len(portfolio) < 2:
+            return [fb.measurement("portfolio", "One submission on the ledger: there is no portfolio to "
+                                                "look from, and nothing here would read as 'nothing found'.",
+                                   values={"portfolio": ids, "size": len(ids), "swept": False})]
+        facts = [fb.measurement("portfolio", f"{len(ids)} submissions swept.",
+                                values={"portfolio": ids, "size": len(ids), "swept": True})]
+        for pf in sweep(portfolio):
+            facts.append(fb.measurement(
+                pf.finding_id, pf.summary,
+                values={"failure": pf.failure, "subject": pf.subject, "subject_refs": pf.subject_refs, **pf.details}))
+        return facts
+
+    def assess(self, facts: list[Fact], ruleset: Ruleset | None, dossier: LoadedDossier, *,
+               round: int = 1) -> list[Assessment]:
+        case_id = dossier.dossier.dossier_id
+        out = []
+        for f in facts:
+            if not f.fact_id.split("#")[-1].startswith("PORT-"):
+                continue
+            hits = f.values.get("hits", {})
+            run_refs = sorted({run_id for ids in hits.values() for run_id in ids}) if isinstance(hits, dict) else []
+            out.append(Assessment(
+                assessment_id=f"{case_id}:systemic:{f.values['failure']}:{f.values['subject']}:r{round}",
+                case_id=case_id, round=round, scope="portfolio", agent=self.name, rule_id=None,
+                fact_ids=[f.fact_id], verdict="concern", confidence="probable",
+                subject=f"{f.values['failure']}:{f.values['subject']}", subject_refs=f.values["subject_refs"],
+                run_refs=run_refs,
+                run_refs_by_case=hits if isinstance(hits, dict) else {},
+                narrative=f.statement))
+        return out
+
+    async def review(self, dossier: LoadedDossier, ruleset: Ruleset | None = None, *,
+                     evidence: EvidencePack | None = None, model=None,
+                     portfolio: list[LoadedDossier] | None = None, round: int = 1,
+                     **_ignored) -> SpecialistReview:
+        facts = self.run(dossier, ruleset, evidence=evidence, portfolio=portfolio)
+        return SpecialistReview(facts=facts, assessments=self.assess(facts, ruleset, dossier, round=round))

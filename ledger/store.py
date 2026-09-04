@@ -20,6 +20,7 @@ not fork the chain.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import sqlite3
 import threading
@@ -42,6 +43,11 @@ LEDGER_PATH = Path(
 )
 
 _SCHEMA = """
+CREATE TABLE IF NOT EXISTS artifacts (digest TEXT PRIMARY KEY, content BLOB NOT NULL);
+CREATE TRIGGER IF NOT EXISTS artifacts_no_update BEFORE UPDATE ON artifacts
+BEGIN SELECT RAISE(ABORT, 'artifacts are immutable'); END;
+CREATE TRIGGER IF NOT EXISTS artifacts_no_delete BEFORE DELETE ON artifacts
+BEGIN SELECT RAISE(ABORT, 'artifacts are immutable'); END;
 CREATE TABLE IF NOT EXISTS events (
   seq          INTEGER PRIMARY KEY,
   case_id      TEXT NOT NULL,
@@ -83,9 +89,11 @@ def event_hash(
     actor: str,
     recorded_at: str,
     prev_hash: str,
+    run_ref: str | None = None,
 ) -> str:
     return payload_hash(
         {
+            **({"run_ref": run_ref} if run_ref else {}),
             "seq": seq,
             "case_id": case_id,
             "run_id": run_id,
@@ -104,6 +112,7 @@ def _row_to_event(row: sqlite3.Row) -> LedgerEvent:
         seq=row["seq"],
         case_id=row["case_id"],
         run_id=row["run_id"],
+        run_ref=row["run_ref"],
         event_type=row["event_type"],
         payload=json.loads(row["payload"]),
         actor=row["actor"],
@@ -120,6 +129,8 @@ class LedgerStore:
         self._lock = _lock_for(self.path)
         with self._connect() as conn:
             conn.executescript(_SCHEMA)
+            if "run_ref" not in {r[1] for r in conn.execute("PRAGMA table_info(events)")}:
+                conn.execute("ALTER TABLE events ADD COLUMN run_ref TEXT")
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.path)
@@ -136,6 +147,7 @@ class LedgerStore:
         payload: dict,
         actor: str,
         run_id: str | None = None,
+        run_ref: str | None = None,
     ) -> LedgerEvent:
         if event_type not in EVENT_TYPES:
             raise ValueError(f"unknown event_type {event_type!r}")
@@ -152,16 +164,16 @@ class LedgerStore:
                 digest = event_hash(
                     seq=seq, case_id=case_id, run_id=run_id, event_type=event_type,
                     payload=payload, actor=actor, recorded_at=recorded_at,
-                    prev_hash=prev_hash,
+                    prev_hash=prev_hash, run_ref=run_ref,
                 )
                 conn.execute(
                     "INSERT INTO events (seq, case_id, run_id, event_type, payload,"
-                    " actor, recorded_at, prev_hash, hash)"
-                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    " actor, recorded_at, prev_hash, hash, run_ref)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         seq, case_id, run_id, event_type,
                         json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True),
-                        actor, recorded_at, prev_hash, digest,
+                        actor, recorded_at, prev_hash, digest, run_ref,
                     ),
                 )
                 conn.commit()
@@ -170,8 +182,23 @@ class LedgerStore:
         return LedgerEvent(
             seq=seq, case_id=case_id, run_id=run_id, event_type=event_type,
             payload=payload, actor=actor, recorded_at=recorded_at,
-            prev_hash=prev_hash, hash=digest,
+            prev_hash=prev_hash, hash=digest, run_ref=run_ref,
         )
+
+    def put_artifact(self, content: bytes) -> str:
+        digest = 'sha256:' + hashlib.sha256(content).hexdigest()
+        with self._lock, self._connect() as conn:
+            conn.execute('INSERT OR IGNORE INTO artifacts VALUES (?, ?)', (digest, content))
+        return digest
+
+    def artifact(self, digest: str) -> bytes:
+        with self._connect() as conn:
+            row = conn.execute('SELECT content FROM artifacts WHERE digest=?', (digest,)).fetchone()
+        if row is None: raise ValueError(f'Missing run artifact {digest}')
+        content = bytes(row[0])
+        if 'sha256:' + hashlib.sha256(content).hexdigest() != digest:
+            raise ValueError(f'Artifact digest mismatch: {digest}')
+        return content
 
     # -- read -------------------------------------------------------------
 
@@ -232,10 +259,18 @@ class LedgerStore:
                 seq=event.seq, case_id=event.case_id, run_id=event.run_id,
                 event_type=event.event_type, payload=event.payload,
                 actor=event.actor, recorded_at=event.recorded_at,
-                prev_hash=event.prev_hash,
+                prev_hash=event.prev_hash, run_ref=event.run_ref,
             )
             if recomputed != event.hash:
                 problems.append(f"event {event.seq}: hash does not recompute — payload altered")
+            basis = event.payload.get('review_basis', {})
+            digests = [*event.payload.get('run_artifacts', {}).values(), *basis.get('rulebook_artifacts', {}).values()]
+            if basis.get('policy_artifact'): digests.append(basis['policy_artifact'])
+            for digest in digests:
+                try:
+                    self.artifact(digest)
+                except ValueError as exc:
+                    problems.append(f"event {event.seq}: {exc}")
             prev_hash = event.hash
             expected_seq += 1
         return problems

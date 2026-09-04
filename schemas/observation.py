@@ -13,11 +13,12 @@ rather than duplicated per agent.
 """
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from typing import Literal
 
 from .finding import FindingAgent
+from .failure import FailureId
 
 # An Observation can come from the four specialists OR the investigator —
 # unlike FindingAgent, which stays the four specialists only: the type system
@@ -32,3 +33,9 @@ class Observation(BaseModel):
     agent: ObservationAgent
     note: str
     cited_evidence: str
+    # Optional typed candidate metadata for open-ended hunting. This remains
+    # unverified and unscored, but lets a reviewer see exactly which catalogue
+    # failure and executions the specialist suspects.
+    failure_id: FailureId | None = None
+    run_refs: list[str] = Field(default_factory=list)
+    transaction_refs: list[str] = Field(default_factory=list)

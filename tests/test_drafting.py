@@ -9,11 +9,11 @@ import json
 import pytest
 
 from agents.drafting import draft_case_report
-from agents.llm import ModelDidNotCallTool
+from agents.llm import ModelDidNotCallTool, message_text
 from schemas import DispatchPlan, DraftReport, Finding, Observation
 from tests.fakes import FakeChatModel
 
-_PLAN = DispatchPlan(run_mandate=True, run_kya=True, run_log=False, run_drift=False, reasoning="thin history")
+_PLAN = DispatchPlan(skills=["mandate.review", "kya.review"], reasoning="thin history", first_pass=True)
 
 _DRAFT_ARGS = {
     "overall_assessment": "One breach found.",
@@ -48,7 +48,7 @@ async def test_payload_is_structured_record_only():
         observations=[Observation(case_id="CASE-T", agent="log", note="hunch", cited_evidence="e")],
         dispatch_plan=_PLAN, escalation_round=1, model=fake,
     )
-    payload = json.loads(fake.last_messages[-1].content)
+    payload = json.loads(message_text(fake.last_messages[-1]))
     # The structured record, and nothing else — most importantly no slot a
     # raw firm-authored string (natural_language_intent, line items,
     # prompt playback) could arrive through.
@@ -65,7 +65,7 @@ async def test_retry_feedback_lands_in_system_prompt():
         dispatch_plan=_PLAN, escalation_round=0, model=fake,
         prior_problems=["Finding 'F-1' is not cited by any section."],
     )
-    system = fake.last_messages[0].content
+    system = message_text(fake.last_messages[0])
     assert "FAILED grounding validation" in system
     assert "Finding 'F-1' is not cited" in system
 
@@ -76,7 +76,7 @@ async def test_first_attempt_has_no_retry_addendum():
         case_id="CASE-T", firm_name="Kolkheti", findings=[], observations=[],
         dispatch_plan=_PLAN, escalation_round=0, model=fake,
     )
-    assert "FAILED grounding validation" not in fake.last_messages[0].content
+    assert "FAILED grounding validation" not in message_text(fake.last_messages[0])
 
 
 async def test_model_not_calling_tool_raises_clearly():

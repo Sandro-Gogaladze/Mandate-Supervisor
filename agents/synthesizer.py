@@ -16,11 +16,13 @@ from __future__ import annotations
 import json
 import logging
 
-from langchain_core.messages import HumanMessage, SystemMessage
 
 from schemas import Correlation, Finding
 
-from .llm import THINKING_EFFORT, get_model, get_tool_call
+from .llm import (
+    briefing_message, get_model, get_tool_call, log_cache_usage, system_message,
+    THINKING_EFFORT, with_reasoning,
+)
 from .prompts import assemble
 
 logger = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ logger = logging.getLogger(__name__)
 PROMPT_ID = "SYNTHESIZER"
 SYSTEM_PROMPT = assemble(PROMPT_ID).effective
 
-_CORRELATIONS_TOOL = {
+_CORRELATIONS_TOOL = with_reasoning({
     "name": "record_correlations",
     "description": "Record zero or more relationships between this case's findings.",
     "input_schema": {
@@ -47,7 +49,7 @@ _CORRELATIONS_TOOL = {
                             "type": "string",
                             "enum": ["same_event", "causal", "corroborating", "contradictory"],
                         },
-                        "explanation": {"type": "string"},
+                        "explanation": {"type": "string", "description": "One sentence."},
                     },
                     "required": ["finding_ids", "relationship", "explanation"],
                 },
@@ -55,7 +57,7 @@ _CORRELATIONS_TOOL = {
         },
         "required": ["correlations"],
     },
-}
+})
 
 
 def _structured_view(findings: list[Finding]) -> dict:
@@ -94,15 +96,29 @@ async def synthesize(
     )
 
     response = await bound.ainvoke([
-        SystemMessage(content=system_prompt or SYSTEM_PROMPT),
-        HumanMessage(content=json.dumps(_structured_view(findings), indent=2)),
+        system_message(system_prompt or SYSTEM_PROMPT),
+        briefing_message(_structured_view(findings)),
     ])
+    log_cache_usage(response, "synthesizer")
 
     result = get_tool_call(response, "record_correlations")
     real_ids = {f.finding_id for f in findings}
 
+    raw_entries = result.get("correlations", [])
+    if isinstance(raw_entries, str):
+        try:
+            raw_entries = json.loads(raw_entries)
+            if isinstance(raw_entries, dict):
+                raw_entries = raw_entries.get("correlations", [])
+        except json.JSONDecodeError:
+            logger.warning("Skipping malformed correlations payload for %s", case_id)
+            raw_entries = []
+    if not isinstance(raw_entries, list):
+        logger.warning("Skipping non-list correlations payload for %s: %r", case_id, type(raw_entries).__name__)
+        raw_entries = []
+
     correlations: list[Correlation] = []
-    for entry in result.get("correlations", []):
+    for entry in raw_entries:
         if not isinstance(entry, dict):
             logger.warning("Skipping malformed correlation for %s: %r", case_id, entry)
             continue

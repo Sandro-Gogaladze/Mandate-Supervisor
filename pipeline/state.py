@@ -1,58 +1,52 @@
-"""LangGraph state shape (PLAN item 4, extended PLAN item 9).
+"""LangGraph state shape — the dossier through the graph (migration Phase 2).
 
-`findings` and `observations` use a dedup-aware reducer, not plain
-`operator.add`, so LangGraph concatenates each specialist node's returned
-list into the running total on fan-in, rather than the last node to finish
-clobbering the others — same idea as `operator.add`, but idempotent
-against a node contributing the same finding/observation twice.
+`facts`, `assessments`, `findings` and `observations` use dedup-aware
+reducers, not plain `operator.add`, so LangGraph concatenates each
+specialist node's returned list into the running total on fan-in rather
+than the last node to finish clobbering the others — and stays idempotent
+against a node contributing the same item twice.
 
 That case is real, not hypothetical: LangGraph's default retry policy
 re-executes a node function from scratch on a transient error (e.g. a
-flaky LLM call inside a specialist's agentic ceiling, after its
-deterministic floor already computed real findings) — confirmed live via
-a raw `/agent` trace showing the same node's STARTED/FINISHED events
-repeat several times in one run, and, more concretely, via the frontend
-rendering two `Finding`s with an identical `finding_id` after exactly such
-a retry. `operator.add` has no way to know a retried node's output is a
-repeat rather than something new; this reducer does, by identity
-(`finding_id` for `Finding`, the full field tuple for `Observation`, which
-has no id of its own).
+flaky LLM call inside a specialist's reasoning pass, after its deterministic
+floor already computed real facts) — confirmed live via a raw `/agent`
+trace showing the same node's STARTED/FINISHED events repeat several times
+in one run. `operator.add` has no way to know a retried node's output is a
+repeat; these reducers do, by identity. Fact and assessment ids are
+deterministic (`<case>:<rule>[:<run>]`), which is what makes this work.
 
-`ingestion_findings` is kept separate from `findings` on purpose: it's
-ingestion's own gate-level check (PLAN item 3), informational, not the
-authoritative supervisory output. The Mandate/KYA specialist nodes
-independently re-verify (against whatever ruleset they're given) rather
-than replay it.
+`dossier` is the submission as loaded; `evidence` is what intake established
+about it (signatures, registries, shared statistics, which blocks are
+present); `run_scope` names the runs a round concerns — empty means the
+whole dossier (round 1), a list means the orchestrator narrowed it (round 2,
+Phase 5). `findings` are the projection of `assessments` the synthesis tail
+(critic, synthesizer, scoring, drafting) still reads.
 
-`dispatch_plan` / `escalation_round` are PLAN item 9: which specialists
-the propose-enforce dispatch selected, and whether this is the one
-permitted extra round (0 = first pass, 1 = the escalation round, capped
-there — see pipeline/graph.py). On the escalation round, a re-dispatched
-specialist node only contributes to `observations`, never `findings` — its
-rule-backed verdicts were already decided in round 0; re-adding them would
-duplicate what's already in state, not add anything new. See
-docs/phases/09-dispatch-and-escalation.md.
+`dispatch_plan` / `escalation_round`: which specialists the propose-enforce
+dispatch selected, and whether this is the one permitted extra round. On the
+escalation round a re-dispatched specialist only contributes to
+`observations`, never `assessments` — its rule-backed verdicts were decided
+in round 0.
 
 `messages` (via `MessagesState`) is otherwise unused by this pipeline —
 there's no chat loop — but CopilotKit's AG-UI protocol is built around a
-message-thread abstraction even for non-chat, state-driven UIs (confirmed
-against the official AG-UI LangGraph examples before adding this; the
-"agentic generative ui" reference example keeps `messages` for exactly
-this reason). Present so the UI layer (PLAN item 10) can attach.
+message-thread abstraction even for non-chat, state-driven UIs.
 """
 from __future__ import annotations
 
+import operator
 from typing import Annotated
 
 from langgraph.graph import MessagesState
 
-import operator
-
-from ingestion.normalize import IngestedCase
 from schemas import (
+    Assessment,
     Correlation,
     DispatchPlan,
     DraftReport,
+    EvidencePack,
+    Fact,
+    FailureOccurrence,
     Finding,
     Observation,
     ReportStatus,
@@ -60,11 +54,29 @@ from schemas import (
     ReviewerDirective,
     RiskScore,
 )
+from schemas.dossier import LoadedDossier
+
+
+def _add_facts(existing: list[Fact], new: list[Fact]) -> list[Fact]:
+    seen = {f.fact_id for f in existing}
+    return existing + [f for f in new if f.fact_id not in seen]
+
+
+def _add_assessments(existing: list[Assessment], new: list[Assessment]) -> list[Assessment]:
+    seen = {a.assessment_id for a in existing}
+    return existing + [a for a in new if a.assessment_id not in seen]
 
 
 def _add_findings(existing: list[Finding], new: list[Finding]) -> list[Finding]:
     seen = {f.finding_id for f in existing}
     return existing + [f for f in new if f.finding_id not in seen]
+
+
+def _add_failure_occurrences(
+    existing: list[FailureOccurrence], new: list[FailureOccurrence]
+) -> list[FailureOccurrence]:
+    seen = {o.occurrence_id for o in existing}
+    return existing + [o for o in new if o.occurrence_id not in seen]
 
 
 def _add_observations(existing: list[Observation], new: list[Observation]) -> list[Observation]:
@@ -85,22 +97,29 @@ def _merge_dispatch_contexts(existing: dict, new: dict) -> dict:
 
 class SupervisionState(MessagesState, total=False):
     # The case is addressed by id and read from the ledger's case_submitted
-    # event — never by filesystem path. (The old case_path was client-
-    # controlled state fed to a file read; architecture-v2 §14.1.)
+    # event — never by filesystem path.
     case_id: str
-    # Run bookkeeping (architecture-v2 §10.5): run_id groups this run's
-    # ledger events; prompts is the assembled per-run prompt set recorded on
-    # run_started; pass_number 1 = first triage (floor applies), 2 = a
-    # directed pass (targets exactly what the human named).
-    case: IngestedCase
-    ingestion_findings: list[Finding]
+    dossier: LoadedDossier
+    evidence: EvidencePack
+    run_scope: list[str]
+    deterministic_only: bool
+    facts: Annotated[list[Fact], _add_facts]
+    assessments: Annotated[list[Assessment], _add_assessments]
     findings: Annotated[list[Finding], _add_findings]
+    failure_occurrences: Annotated[list[FailureOccurrence], _add_failure_occurrences]
     observations: Annotated[list[Observation], _add_observations]
+    # Run bookkeeping: run_id groups this run's ledger events; prompts is the
+    # assembled per-run prompt set recorded on run_started; pass_number 1 =
+    # first triage (floor applies), 2 = a directed pass.
     run_id: str
     pass_number: int
+    # 1 on the first triage; each later triage or investigation pass is a
+    # new round, and an assessment it makes of a claim an earlier round
+    # already made supersedes the earlier one (agents/assess.py).
+    review_round: int
     firm_name: str
-    # Investigation-run keys (architecture-v2 §14.2): the officer's message
-    # and identity, the orchestrator's routing decision, and its reply.
+    # Investigation-run keys: the officer's message and identity, the
+    # orchestrator's routing decision, and its reply.
     officer_message: str
     officer: str
     question_id: str
@@ -110,29 +129,28 @@ class SupervisionState(MessagesState, total=False):
     prompts: dict
     dispatch_plan: DispatchPlan
     selected_skills: list[str]
+    # True on the "run the review" turn: the graph uses the deterministic
+    # complete first-pass dispatch instead of calling the routing model.
+    first_pass: bool
+    # agent -> {skill, instruction, run_scope, context_blocks}: the
+    # orchestrator's briefing for each specialist it dispatched this turn.
+    dispatch_briefings: dict
     escalation_round: int
     # agent -> the exact composed context it received (recorded on
     # dispatch_recorded; the critic reads this).
     dispatch_contexts: Annotated[dict, _merge_dispatch_contexts]
-    # Deterministic critic results + validated synthesizer output — plain
-    # overwrites, each is produced once per pass through the tail.
     critic_results: list[dict]
     correlations: list[Correlation]
-    # PLAN item 12 — the drafting/grounding tail. All plain overwrites, no
-    # reducers: exactly one draft is current at a time (a grounding retry
-    # *replaces* the failed draft, it doesn't accumulate next to it).
+    # The drafting/grounding tail. Plain overwrites: exactly one draft is
+    # current at a time (a grounding retry *replaces* the failed draft).
     draft_report: DraftReport
     draft_attempts: int
     grounding_problems: list[str]
     report_blocked: bool
-    # PLAN item 11 — the pure-function score; recomputed on every pass
-    # through the tail (a reviewer-directed re-analysis may change findings,
-    # so the number must follow them). Plain overwrite.
+    # The pure-function score; recomputed on every pass through the tail.
     risk_score: RiskScore
-    # PLAN item 13 — the human gate. Decisions accumulate (an audit trail
-    # of every named call made on this case); the directive is transient
-    # steering for exactly one re-analysis pass, cleared once consumed;
-    # status/rounds are plain overwrites.
+    # The human gate. Decisions accumulate; the directive is transient
+    # steering for exactly one re-analysis pass, cleared once consumed.
     reviewer_decisions: Annotated[list[ReviewerDecision], operator.add]
     reviewer_directive: ReviewerDirective | None
     reviewer_rounds: int

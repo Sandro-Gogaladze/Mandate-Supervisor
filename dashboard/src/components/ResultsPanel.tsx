@@ -1,7 +1,9 @@
-import { AlertTriangle, CircleSlash, Eye, Gauge, GitMerge, ListChecks, Route, SearchCheck } from 'lucide-react'
+import { useState } from 'react'
+import { AlertTriangle, ChevronRight, CircleSlash, Eye, Gauge, GitMerge, ListChecks, Route, SearchCheck } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { FailureList } from '@/components/FailureList'
 import { nodeMeta, AGENT_TONE } from '@/lib/node-meta'
 import { cn } from '@/lib/utils'
 import type {
@@ -10,6 +12,7 @@ import type {
   DispositionTier,
   Finding,
   FindingAgent,
+  FailureOccurrence,
   InvestigationAnswer,
   Observation,
   ObservationAgent,
@@ -26,6 +29,7 @@ export const TIER_TONE: Record<DispositionTier, string> = {
  * triage overlay while a run streams (CaseReview builds it). */
 export interface ResultsView {
   findings: Finding[]
+  failure_occurrences: FailureOccurrence[]
   observations: Observation[]
   correlations: Correlation[]
   dispatch_plan?: DispatchPlan
@@ -102,9 +106,36 @@ const RELATIONSHIP_LABEL: Record<Correlation['relationship'], string> = {
   contradictory: 'contradictory',
 }
 
+/** Everything that is not the headline. Six sections all open at once was
+ * the complaint: a reviewer scanning a case wants the failures, and reaches
+ * for the plan, the correlations or the unscored notes only when a failure
+ * makes them want to. */
+function Drawer({ icon, title, children }: { icon: typeof AlertTriangle; title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div>
+      <Separator className="mb-3" />
+      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-1.5 text-left">
+        <ChevronRight className={cn('size-3.5 text-muted-foreground transition-transform', open && 'rotate-90')} />
+        <SectionTitle icon={icon}>{title}</SectionTitle>
+      </button>
+      {open && <div className="mt-2">{children}</div>}
+    </div>
+  )
+}
+
+
 export function ResultsPanel({ view, answers }: { view: ResultsView; answers: InvestigationAnswer[] }) {
-  const { findings, observations, correlations, dispatch_plan: plan, risk_score } = view
-  const hasAnything = plan || findings.length > 0 || observations.length > 0 || risk_score || answers.length > 0
+  const { findings, failure_occurrences, observations, correlations, dispatch_plan: plan, risk_score } = view
+  // Grouped by the specialist that established them, because "which agent
+  // found this" is the first question a reviewer asks of a failure list.
+  const byDomain = Object.entries(
+    failure_occurrences.reduce<Record<string, FailureOccurrence[]>>((acc, o) => {
+      (acc[o.domain] ??= []).push(o)
+      return acc
+    }, {}),
+  )
+  const hasAnything = plan || failure_occurrences.length > 0 || findings.length > 0 || observations.length > 0 || risk_score || answers.length > 0
 
   if (!hasAnything) {
     return (
@@ -121,20 +152,23 @@ export function ResultsPanel({ view, answers }: { view: ResultsView; answers: In
         {risk_score && <ScoreCard score={risk_score} />}
 
         {plan && (
-          <div>
-            <SectionTitle icon={Route}>Dispatch plan</SectionTitle>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {(['run_mandate', 'run_kya', 'run_log', 'run_drift'] as const).map((key) => {
-                const agent = key.replace('run_', '') as FindingAgent
+          <Drawer icon={Route} title="Dispatch plan">
+            <div className="flex flex-wrap gap-1.5">
+              {(plan.skills ?? []).map((skill) => {
+                const agent = skill.split('.')[0] as FindingAgent
                 const meta = nodeMeta(agent)
                 const Icon = meta.icon
                 return (
-                  <Badge
-                    key={key}
-                    variant={plan[key] ? 'default' : 'outline'}
-                    className={cn('gap-1', !plan[key] && 'text-muted-foreground/60 line-through')}
-                  >
+                  <Badge key={skill} variant="default" className="gap-1">
                     <Icon className="size-3" />
+                    {meta.label}
+                  </Badge>
+                )
+              })}
+              {(plan.not_dispatched ?? []).map((skill) => {
+                const meta = nodeMeta(skill.split('.')[0])
+                return (
+                  <Badge key={skill} variant="outline" className={cn('gap-1 text-muted-foreground/60 line-through')}>
                     {meta.label}
                   </Badge>
                 )
@@ -146,14 +180,30 @@ export function ResultsPanel({ view, answers }: { view: ResultsView; answers: In
               )}
             </div>
             <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{plan.reasoning}</p>
+          </Drawer>
+        )}
+
+        {failure_occurrences.length > 0 && (
+          <div>
+            <Separator className="mb-4" />
+            <SectionTitle icon={AlertTriangle}>Detected failures ({failure_occurrences.length})</SectionTitle>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Exact catalogue failures, projected from rule assessments and linked to their supporting facts and runs.
+            </p>
+            <div className="mt-2 flex flex-col gap-3">
+              {byDomain.map(([domain, group]) => (
+                <div key={domain}>
+                  <AgentChip agent={domain as ObservationAgent} />
+                  <div className="mt-1.5"><FailureList occurrences={group} /></div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {findings.length > 0 && (
-          <div>
-            <Separator className="mb-4" />
-            <SectionTitle icon={AlertTriangle}>Findings ({findings.length})</SectionTitle>
-            <div className="mt-2 flex flex-col gap-2">
+          <Drawer icon={AlertTriangle} title={`All findings (${findings.length}) — including those mapping to no catalogue failure`}>
+            <div className="flex flex-col gap-2">
               {findings.map((f) => (
                 <div key={f.finding_id} className="rounded-lg border p-3 text-sm">
                   <div className="flex items-center justify-between gap-2">
@@ -172,14 +222,12 @@ export function ResultsPanel({ view, answers }: { view: ResultsView; answers: In
                 </div>
               ))}
             </div>
-          </div>
+          </Drawer>
         )}
 
         {correlations.length > 0 && (
-          <div>
-            <Separator className="mb-4" />
-            <SectionTitle icon={GitMerge}>Correlations ({correlations.length})</SectionTitle>
-            <p className="mt-1 text-[11px] text-muted-foreground">
+          <Drawer icon={GitMerge} title={`Correlations (${correlations.length})`}>
+            <p className="text-[11px] text-muted-foreground">
               Relationships between findings — validated against real finding ids, never scored.
             </p>
             <div className="mt-2 flex flex-col gap-2">
@@ -199,14 +247,12 @@ export function ResultsPanel({ view, answers }: { view: ResultsView; answers: In
                 </div>
               ))}
             </div>
-          </div>
+          </Drawer>
         )}
 
         {answers.length > 0 && (
-          <div>
-            <Separator className="mb-4" />
-            <SectionTitle icon={SearchCheck}>Investigation answers ({answers.length})</SectionTitle>
-            <div className="mt-2 flex flex-col gap-2">
+          <Drawer icon={SearchCheck} title={`Investigation answers (${answers.length})`}>
+            <div className="flex flex-col gap-2">
               {answers.map((a) => (
                 <div key={a.question_id} className="rounded-lg border border-teal-500/25 bg-teal-500/[0.04] p-3 text-sm">
                   <p className="text-[13px] font-medium">“{a.question}”</p>
@@ -219,14 +265,12 @@ export function ResultsPanel({ view, answers }: { view: ResultsView; answers: In
                 </div>
               ))}
             </div>
-          </div>
+          </Drawer>
         )}
 
         {observations.length > 0 && (
-          <div>
-            <Separator className="mb-4" />
-            <SectionTitle icon={Eye}>Observations ({observations.length})</SectionTitle>
-            <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+          <Drawer icon={Eye} title={`Unverified observations (${observations.length})`}>
+            <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
               <CircleSlash className="size-3" />
               Unverified model hunches — surfaced for a human reviewer, never scored.
             </p>
@@ -239,7 +283,7 @@ export function ResultsPanel({ view, answers }: { view: ResultsView; answers: In
                 </div>
               ))}
             </div>
-          </div>
+          </Drawer>
         )}
       </div>
     </ScrollArea>

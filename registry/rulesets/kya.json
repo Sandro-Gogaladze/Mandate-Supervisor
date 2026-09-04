@@ -1,9 +1,9 @@
 {
   "ruleset_id": "KYA-RULESET",
   "domain": "kya",
-  "version": "2026.7",
-  "as_of": "2026-09-02",
-  "description": "Agent identity and accountability requirements (industry term: KYA). Designed in docs/kya-ruleset.md; eight families, ids readable by subject. Every rule declares its own evaluation mode: 'computable' runs in KYAAgent.check(), 'judged' in its reasoning pass. The 18 active rules preserve their v2026.1 types, severities and finding_types exactly, so this restructure changes no case's score — re-weighting is dial 11 and belongs in the policy sandbox, not in a refactor. The 24 draft rules each say what blocks them.",
+  "version": "2026.9",
+  "as_of": "2026-09-04",
+  "description": "Agent identity and accountability requirements (industry term: KYA). Designed in docs/kya-ruleset.md; eight families, ids readable by subject. Every rule declares its own evaluation mode. v2026.8 (migration Phase 4): TEC-02/05/06 moved to provenance.json — the TEC family is answered from two evidence blocks, and those three read construction_context, which is Provenance's; they keep their ids. 39 rules, 34 active.",
   "rules": [
     {
       "rule_id": "KYA-IDN-01",
@@ -56,6 +56,7 @@
       "finding_type": "idn_04",
       "description": "The signer key backs no other agent identity.",
       "notes": "Needs credential history across cases — derivable from the ledger's case_submitted events (architecture-v3 Stage 2).",
+      "failures": ["F22"],
       "params": {}
     },
     {
@@ -69,6 +70,7 @@
       "finding_type": "idn_05",
       "description": "The credential id is unique across the register.",
       "notes": "Needs credential history across cases.",
+      "failures": ["F23"],
       "params": {}
     },
     {
@@ -81,6 +83,7 @@
       "severity_weight": 1.0,
       "finding_type": "issuer_not_in_trust_registry",
       "description": "Issuer is present in the trust registry.",
+      "failures": ["F1"],
       "params": {}
     },
     {
@@ -93,6 +96,7 @@
       "severity_weight": 1.0,
       "finding_type": "issuer_revoked_as_of_issuance",
       "description": "Issuer was not revoked as at the credential's issue date.",
+      "failures": ["F2"],
       "params": {}
     },
     {
@@ -105,6 +109,7 @@
       "severity_weight": 0.3,
       "finding_type": "issuer_below_minimum_trust_level",
       "description": "Issuer trust tier meets the minimum for this mandate.",
+      "failures": ["F3"],
       "params": {
         "min_trust_level": "recognized"
       }
@@ -119,6 +124,7 @@
       "severity_weight": 0.2,
       "finding_type": "issuer_reaccreditation_stale",
       "description": "Issuer accreditation reviewed within the maximum age.",
+      "failures": ["F4"],
       "params": {
         "max_reaccreditation_age_days": 730
       }
@@ -146,7 +152,10 @@
       "severity_weight": 1.0,
       "finding_type": "delegation_chain_no_human_terminus",
       "description": "The delegation chain terminates in a natural person or legally liable entity.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F6"
+      ]
     },
     {
       "rule_id": "KYA-ACC-02",
@@ -158,6 +167,7 @@
       "severity_weight": 0.6,
       "finding_type": "delegation_terminus_principal_mismatch",
       "description": "Chain terminus is the principal that signed the Intent.",
+      "failures": ["F7"],
       "params": {}
     },
     {
@@ -170,6 +180,7 @@
       "severity_weight": 0.85,
       "finding_type": "delegation_entry_signature_invalid",
       "description": "Every delegation entry signature verifies.",
+      "failures": ["F8"],
       "params": {}
     },
     {
@@ -182,6 +193,7 @@
       "severity_weight": 0.5,
       "finding_type": "delegation_chain_duplicate_holder",
       "description": "No holder appears twice in the chain.",
+      "failures": ["F9"],
       "params": {}
     },
     {
@@ -194,6 +206,7 @@
       "severity_weight": 0.35,
       "finding_type": "delegation_chain_too_deep",
       "description": "Chain depth is within the maximum.",
+      "failures": ["F10"],
       "params": {
         "max_depth": 4
       }
@@ -209,7 +222,10 @@
       "finding_type": "acc_06",
       "description": "No link grants authority exceeding what the granting holder itself holds.",
       "notes": null,
-      "params": {}
+      "params": {},
+      "failures": [
+        "F11"
+      ]
     },
     {
       "rule_id": "KYA-ACC-07",
@@ -235,6 +251,7 @@
       "finding_type": "opf_01",
       "description": "The operator firm holds a current licence or registration.",
       "notes": "Blocked on data/registry/firms.json.",
+      "failures": ["F12"],
       "params": {}
     },
     {
@@ -248,6 +265,7 @@
       "finding_type": "opf_02",
       "description": "The firm's standing is not in a barring state.",
       "notes": null,
+      "failures": ["F13"],
       "params": {}
     },
     {
@@ -261,7 +279,10 @@
       "finding_type": "opf_03",
       "description": "No unnotified change of control since the credential was issued.",
       "notes": null,
-      "params": {}
+      "params": {},
+      "failures": [
+        "F14"
+      ]
     },
     {
       "rule_id": "KYA-OPF-04",
@@ -274,6 +295,7 @@
       "finding_type": "opf_04",
       "description": "A named compliance contact is on record and current.",
       "notes": null,
+      "failures": ["F15"],
       "params": {}
     },
     {
@@ -287,7 +309,10 @@
       "finding_type": "reg_01",
       "description": "The agent was registered before its first transaction.",
       "notes": null,
-      "params": {}
+      "params": {},
+      "failures": [
+        "F16"
+      ]
     },
     {
       "rule_id": "KYA-REG-02",
@@ -300,6 +325,7 @@
       "finding_type": "reg_02",
       "description": "A risk classification is declared for this agent.",
       "notes": null,
+      "failures": ["F17"],
       "params": {}
     },
     {
@@ -351,20 +377,10 @@
       "severity_weight": 0.45,
       "finding_type": "tec_01",
       "description": "A model version is declared on the mandate.",
-      "params": {}
-    },
-    {
-      "rule_id": "KYA-TEC-02",
-      "type": "observed_model_matches_declared",
-      "version": 1,
-      "status": "active",
-      "effective_from": "2026-09-03",
-      "evaluation": "computable",
-      "severity_weight": 0.85,
-      "finding_type": "tec_02",
-      "description": "The observed model version matches the declared one.",
-      "notes": null,
-      "params": {}
+      "params": {},
+      "failures": [
+        "F18"
+      ]
     },
     {
       "rule_id": "KYA-TEC-03",
@@ -377,7 +393,10 @@
       "finding_type": "tec_03",
       "description": "The model version is not on the blocklist.",
       "notes": null,
-      "params": {}
+      "params": {},
+      "failures": [
+        "F19"
+      ]
     },
     {
       "rule_id": "KYA-TEC-04",
@@ -389,32 +408,6 @@
       "severity_weight": 0.5,
       "finding_type": "tec_04",
       "description": "Validation evidence is on file for this model version where the risk class requires it.",
-      "notes": null,
-      "params": {}
-    },
-    {
-      "rule_id": "KYA-TEC-05",
-      "type": "prompt_bound_to_released_artifact",
-      "version": 1,
-      "status": "active",
-      "effective_from": "2026-09-03",
-      "evaluation": "computable",
-      "severity_weight": 0.55,
-      "finding_type": "tec_05",
-      "description": "The prompt/policy version is bound to a released artifact.",
-      "notes": null,
-      "params": {}
-    },
-    {
-      "rule_id": "KYA-TEC-06",
-      "type": "tool_servers_declared",
-      "version": 1,
-      "status": "active",
-      "effective_from": "2026-09-03",
-      "evaluation": "computable",
-      "severity_weight": 0.7,
-      "finding_type": "tec_06",
-      "description": "Every tool server used is on the agent's declared tool list.",
       "notes": null,
       "params": {}
     },
@@ -492,7 +485,10 @@
       "notes": null,
       "params": {
         "max_new_capabilities_per_reissue": 1
-      }
+      },
+      "failures": [
+        "F20"
+      ]
     },
     {
       "rule_id": "KYA-LIF-01",
@@ -518,6 +514,7 @@
       "severity_weight": 0.6,
       "finding_type": "credential_dates_malformed",
       "description": "issued_at precedes expires_at.",
+      "failures": ["F5"],
       "params": {}
     },
     {
@@ -530,6 +527,7 @@
       "severity_weight": 0.25,
       "finding_type": "credential_validity_window_too_short",
       "description": "The validity window meets the minimum.",
+      "failures": ["F5"],
       "params": {
         "min_validity_days": 30
       }
@@ -545,7 +543,10 @@
       "finding_type": "lif_04",
       "description": "No two credentials for one agent are valid simultaneously.",
       "notes": null,
-      "params": {}
+      "params": {},
+      "failures": [
+        "F21"
+      ]
     },
     {
       "rule_id": "KYA-LIF-05",

@@ -5,7 +5,9 @@ import { AppSidebar, type SectionName } from '@/components/AppSidebar'
 import { Overview } from '@/components/Overview'
 import { CaseQueue } from '@/components/CaseQueue'
 import { CaseReview } from '@/components/CaseReview'
-import { listCases } from '@/lib/api'
+import { PortfolioPanel } from '@/components/PortfolioPanel'
+import { listCases, getCase } from '@/lib/api'
+import { toast } from 'sonner'
 import type { CaseSummary } from '@/lib/types'
 
 function App() {
@@ -38,7 +40,7 @@ function App() {
     ? `Case queue · ${openCase.case_id}`
     : section === 'overview'
       ? 'Overview'
-      : 'Case queue'
+      : section === 'portfolio' ? 'Portfolio' : 'Case queue'
 
   return (
     <SidebarProvider>
@@ -52,11 +54,19 @@ function App() {
         </header>
         <div className="min-h-0 flex-1">
           {openCase ? (
-            <CaseReview caseSummary={openCase} onBack={() => setOpenCase(null)} />
+            // Keyed by case: the CopilotKit agents are registry SINGLETONS shared
+            // by every case, and without a remount switching dossiers only ran an
+            // effect over that shared state. Subscriptions, in-flight runs and the
+            // agent's own case_id could then belong to the case you just left —
+            // which is how a review fired against one dossier while the console
+            // was showing another.
+            <CaseReview key={openCase.case_id} caseSummary={openCase} onBack={() => setOpenCase(null)} />
           ) : section === 'overview' ? (
             <div className="h-full overflow-auto">
               <Overview onOpenQueue={() => navigate('queue')} onOpenCase={handleOpenCase} />
             </div>
+          ) : section === 'portfolio' ? (
+            <div className="h-full overflow-auto"><PortfolioPanel onOpenDossier={id => { getCase(id).then(handleOpenCase).catch(e => toast.error(String(e))) }} /></div>
           ) : (
             <div className="h-full overflow-auto">
               <CaseQueue onSelect={handleOpenCase} />

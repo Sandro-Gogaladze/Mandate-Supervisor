@@ -9,8 +9,8 @@ import type { GraphStructure } from '@/lib/types'
 export type NodeStatus = 'pending' | 'active' | 'done' | 'awaiting'
 
 // Fixed layout: the graph's own shape (pipeline/graph.py) is small and
-// stable — dispatch fans out to four specialists, which join at
-// escalate_check, which may loop back through bump_round. A hardcoded
+// stable — dispatch fans out to the specialists, which join at
+// specialists_done and go straight on to Control Assurance. A hardcoded
 // layout reads far more clearly than an auto-layout pass would for eight
 // nodes, and the structure itself (nodes/edges) still comes from
 // `/graph` -> `graph.get_graph()`, never hand-maintained. Spacing is wide —
@@ -25,8 +25,7 @@ const POSITIONS: Record<string, { x: number; y: number }> = {
   kya: { x: 660, y: 190 },
   log: { x: 660, y: 380 },
   drift: { x: 660, y: 570 },
-  escalate_check: { x: 1040, y: 280 },
-  bump_round: { x: 1360, y: 60 },
+  specialists_done: { x: 1040, y: 280 },
   critic: { x: 1360, y: 280 },
   synthesizer: { x: 1680, y: 280 },
   risk_score: { x: 2000, y: 280 },

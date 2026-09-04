@@ -1,15 +1,13 @@
-"""The skill registry and the mandatory floor (architecture-v2 §13).
+"""The skill registry.
 
-The orchestrator selects work by skill — semantic matching by a model, which
-is allowed to be creative because the floor is not: `enforce_skill_floor()`
-is a deterministic function that can only ADD. On pass 1, Mandate and KYA
-run whatever the orchestrator proposed and whatever any prompt said; Log and
-Drift are added whenever each has enough history to say anything (their
-minimums differ — see pipeline/dispatch.py's module docstring for why the
-single "30 tx" number was split per agent).
+The orchestrator selects work by skill — semantic matching by a model. A
+skill's description is written for that reader: what the skill answers,
+not how it works. Adding a specialist means adding a Skill entry here, not
+editing a routing function.
 
-Adding a sixth specialist later means adding a Skill entry here, not editing
-a routing function.
+A first pass is comprehensive by code policy: every review skill is selected
+without a routing model call. Later officer requests are matched to skills by
+the orchestrator model.
 """
 from __future__ import annotations
 
@@ -17,9 +15,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ingestion.normalize import IngestedCase
-from registry.loader import load_drift_ruleset
-from schemas import Ruleset, typed_params
 
 
 class Skill(BaseModel):
@@ -32,7 +27,7 @@ class Skill(BaseModel):
     description: str
     produces: Literal["finding", "observation"]
     # Declarative data-availability note (shown to the orchestrator);
-    # enforcement is `eligible()` below, in code.
+    # enforcement is `enforce_skill_floor()` below, in code.
     requires: dict = Field(default_factory=dict)
     context_blocks: list[str] = Field(default_factory=list)
 
@@ -44,10 +39,9 @@ SKILLS: dict[str, Skill] = {
             skill_id="mandate.review",
             agent="mandate",
             description=(
-                "Check this specific transaction against the human-signed Intent: "
-                "caps, merchant category, counterparty, currency, validity window, "
-                "chain-hash integrity, and whether the agent's cart semantically "
-                "matches what the human actually asked for."
+                "Check every run's cart and payment against the Intent Mandate the shopper "
+                "signed for that task: caps, merchant category, counterparty, currency, "
+                "validity window, cumulative draw on the mandate, chain-hash integrity."
             ),
             produces="finding",
             context_blocks=["mandate_canonical"],
@@ -57,9 +51,9 @@ SKILLS: dict[str, Skill] = {
             agent="kya",
             description=(
                 "Verify the agent's identity credential: Ed25519 signatures, issuer "
-                "trust and revocation, delegation chain to an accountable human, "
-                "capabilities and consent — plus an open look for anything the fixed "
-                "rules would not catch (impersonation, structural oddities)."
+                "trust and revocation, delegation chain to an accountable human, the "
+                "operator's and agent's register entries, capabilities, lifecycle — plus "
+                "an open look for anything the fixed rules would not catch."
             ),
             produces="finding",
             context_blocks=["kya_canonical"],
@@ -68,9 +62,9 @@ SKILLS: dict[str, Skill] = {
             skill_id="log.analyze",
             agent="log",
             description=(
-                "Judge the transaction PATTERN: structuring under a reporting "
-                "threshold, counterparty concentration relative to the mandate's own "
-                "scope, and velocity bursts — over pre-computed statistics."
+                "Judge the transaction PATTERN across the whole history: structuring under "
+                "a reporting threshold, counterparty concentration, velocity bursts — over "
+                "pre-computed statistics."
             ),
             produces="finding",
             requires={"min_transactions": 1},
@@ -91,7 +85,7 @@ SKILLS: dict[str, Skill] = {
             skill_id="investigator.lookup",
             agent="investigator",
             description=(
-                "Answer an open question about this case with read-only lookups: "
+                "Answer an open question about this dossier with read-only lookups: "
                 "transactions, counterparty profiles, issuer records, rule text, "
                 "recomputed statistics. Produces unscored observations, never a "
                 "rule verdict — dispatch a specialist for that."
@@ -102,8 +96,22 @@ SKILLS: dict[str, Skill] = {
     ]
 }
 
-# Canonical display/dispatch order — deterministic output ordering everywhere.
-_SKILL_ORDER = ["mandate.review", "kya.review", "log.analyze", "drift.analyze", "investigator.lookup"]
+for name, question in {
+    "provenance": "Reconcile the declared, observed, registered and deployment versions and tools.",
+    "injection": "Did untrusted content redirect the agent, and through which channel?",
+    "counterparty": "Who actually received payment, and are they the represented merchant?",
+    "consent": "Did the shopper see and authorise this exact purchase; was value distorted?",
+    "control_assurance": "After the peer review, did the institution's and operator's controls work?",
+    "systemic": "Sweep accepted dossiers for shared dependencies, exposures and attack payloads.",
+    "red_team": "Probe declared control coverage with synthetic mutations; does not execute the operator runtime.",
+}.items():
+    sid = f"{name}.review"
+    SKILLS[sid] = Skill(skill_id=sid, agent=name, description=question, produces="finding",
+                        context_blocks=[f"{name}_canonical"])
+
+_SKILL_ORDER = ["mandate.review", "kya.review", "provenance.review", "injection.review",
+                "counterparty.review", "consent.review", "log.analyze", "drift.analyze",
+                "control_assurance.review", "systemic.review", "red_team.review", "investigator.lookup"]
 
 SPECIALIST_SKILLS_BY_AGENT = {
     "mandate": "mandate.review",
@@ -111,42 +119,18 @@ SPECIALIST_SKILLS_BY_AGENT = {
     "log": "log.analyze",
     "drift": "drift.analyze",
 }
+SPECIALIST_SKILLS_BY_AGENT.update({s.agent: s.skill_id for s in SKILLS.values() if s.produces == "finding"})
 
 
 def skill_catalog() -> list[Skill]:
     return [SKILLS[sid] for sid in _SKILL_ORDER]
 
 
-def _drift_minimum(drift_ruleset: Ruleset | None) -> int:
-    drift_ruleset = drift_ruleset or load_drift_ruleset()
-    rule = next(
-        (r for r in drift_ruleset.rules if r.type == "behavioral_drift_detected" and r.status == "active"),
-        None,
-    )
-    return typed_params(rule).min_total_transactions if rule else 30
 
-
-def enforce_skill_floor(
-    selected: list[str],
-    case: IngestedCase,
-    *,
-    pass_number: int = 1,
-    drift_ruleset: Ruleset | None = None,
-) -> list[str]:
-    """The deterministic validator. Can only ADD — never silently drop a
-    skill the orchestrator proposed. Applies on pass 1 only: a directed or
-    investigative pass targets exactly what the human or orchestrator named,
-    because coverage was already guaranteed when the case first arrived."""
-    unknown = [s for s in selected if s not in SKILLS]
-    if unknown:
-        raise ValueError(f"unknown skill id(s): {unknown} — the registry is {sorted(SKILLS)}")
-
-    result = set(selected)
-    if pass_number == 1:
-        result |= {"mandate.review", "kya.review"}  # mandatory, no exceptions
-        tx_count = len(case.case.transaction_history)
-        if tx_count > 0:
-            result.add("log.analyze")
-        if tx_count >= _drift_minimum(drift_ruleset):
-            result.add("drift.analyze")
-    return [sid for sid in _SKILL_ORDER if sid in result]
+# The skills a first pass covers: every reviewing specialist. Control
+# Assurance is not dispatched — the graph runs it after the peers, because
+# CTL-EFF-01 needs their findings. Systemic and the Red Team are on request.
+REVIEW_SKILLS: tuple[str, ...] = tuple(
+    sid for sid in _SKILL_ORDER
+    if SKILLS[sid].produces == "finding" and SKILLS[sid].agent not in ("control_assurance", "systemic", "red_team")
+)

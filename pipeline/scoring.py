@@ -26,7 +26,7 @@ __all__ = ["score_findings"]
 
 def score_findings(case_id: str, findings: list[Finding], config: ScoringConfig) -> RiskScore:
     factors = []
-    for agent in _AGENTS:
+    for agent in dict.fromkeys([*_AGENTS, *(f.agent for f in findings)]):
         agent_findings = [f for f in findings if f.agent == agent]
         factors.append(RiskFactor(
             agent=agent,

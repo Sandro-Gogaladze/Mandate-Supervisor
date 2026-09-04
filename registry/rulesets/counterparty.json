@@ -1,0 +1,167 @@
+{
+  "ruleset_id": "CPT-RULESET",
+  "domain": "counterparty",
+  "version": "2026.1",
+  "as_of": "2026-09-03",
+  "description": "Counterparty (C1): who received this money? We verify the payer exhaustively and, until now, the payee not at all. Everything here reads payment.payee, cart.merchant and the regulator's merchant register, which holds what the paying firm cannot supply — ownership, first-seen, watchlist flags.",
+  "rules": [
+    {
+      "rule_id": "CPT-REG-01",
+      "type": "payee_in_merchant_register",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.8,
+      "finding_type": "payee_unregistered",
+      "description": "The merchant paid is in the regulator's merchant register. A recipient that appears in no registry is nobody knowing who was paid.",
+      "failures": [
+        "F51"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CPT-SUB-01",
+      "type": "marketplace_discloses_sub_merchant",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.75,
+      "finding_type": "sub_merchant_undisclosed",
+      "description": "A cart whose merchant is a marketplace or payment facilitator discloses the sub-merchant who actually set the terms. Every check otherwise runs against the platform's reputation while the real counterparty is invisible.",
+      "notes": "A marketplace is one the register flags as such or that has a parent_platform_id. Sub-merchant reporting is already a card-scheme requirement; it simply is not surfaced to the paying side.",
+      "failures": [
+        "F52"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CPT-COP-01",
+      "type": "beneficiary_name_matches_merchant",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.7,
+      "finding_type": "beneficiary_name_mismatch",
+      "description": "The name on the settlement account (payee.beneficiary_name_on_account) is the merchant's registered legal name or trading name. This is Confirmation of Payee, which banks already run.",
+      "failures": [
+        "F51"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CPT-CTY-01",
+      "type": "payee_country_matches_merchant",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.4,
+      "finding_type": "payee_country_mismatch",
+      "description": "The country the money settled to is the merchant's country. Settlement elsewhere is not wrong by itself, but it is the shape of an intermediary nobody declared.",
+      "params": {}
+    },
+    {
+      "rule_id": "CPT-LST-01",
+      "type": "payee_not_on_a_barring_list",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 1.0,
+      "finding_type": "payee_barred",
+      "description": "The merchant carries no barring flag on the register — sanctioned, prohibited, frozen. A hard legal prohibition, not a risk judgement; a human-initiated payment would be screened as a matter of course.",
+      "failures": [
+        "F54"
+      ],
+      "params": {
+        "barring_flags": [
+          "sanctioned",
+          "prohibited",
+          "frozen"
+        ]
+      }
+    },
+    {
+      "rule_id": "CPT-BEN-01",
+      "type": "payees_have_identifiable_owners",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.5,
+      "finding_type": "payee_owner_unidentified",
+      "description": "Every payee paid in the review window has an identifiable beneficial owner on the register. Dossier-level: names the payees without one and the share of in-window spend they took.",
+      "notes": "Dossier-level rather than per run: a payee's ownership is a property of the payee, and pricing every run that paid an unresolved owner as a breach would blame the runs for the register.",
+      "failures": [
+        "F53"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CPT-NEW-01",
+      "type": "new_payee_concentration",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.6,
+      "finding_type": "new_payee_taking_most_of_the_money",
+      "description": "A payee the register first saw inside the review window holds at least new_payee_min_share_pct of the latest month's in-window spend. Legitimate supplier relationships build gradually; instant dominance by an unknown recipient is the signature of a diverted flow or a compromised agent.",
+      "notes": "The fact is attached to the latest run that paid the payee, with every run that did in its values — the same convention the independent verifier uses. Log judges the same signal as concentration; this is the computable half.",
+      "failures": [
+        "F55"
+      ],
+      "params": {
+        "new_payee_min_share_pct": 20.0
+      }
+    },
+    {
+      "rule_id": "CPT-SPL-01",
+      "type": "payees_not_split_identities",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.6,
+      "finding_type": "payee_split_identity",
+      "description": "No two merchant ids paid in the window share a settlement account or a beneficial owner. Split one payee into four and a 25% concentration rule never fires while all the money goes to one place.",
+      "failures": [
+        "F56"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CPT-DCL-01",
+      "type": "declines_not_clustered",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "judged",
+      "severity_weight": 0.5,
+      "finding_type": "declines_clustered",
+      "description": "Declines and reversals do not cluster before a success at the same counterparty. Repeated small failures followed by a success is the signature of probing what will go through.",
+      "notes": "JUDGED over the decline/reversal timeline the floor records per counterparty.",
+      "failures": [
+        "F58"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "CPT-IDN-01",
+      "type": "payee_is_what_it_appears",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "judged",
+      "severity_weight": 0.6,
+      "finding_type": "payee_identity_doubtful",
+      "description": "Taking each payee's profile together — registered name against settlement name, ownership, first seen, share, countries, flags — is this payee what it appears to be, or a front?",
+      "notes": "JUDGED over the per-payee profile measurement. This broad front-company judgment has no direct F mapping: CPT-REG-01/CPT-COP-01, CPT-SUB-01 and CPT-BEN-01 emit the precise F51/F52/F53 occurrences. Mapping any doubtful profile to all three would over-label the evidence.",
+      "failures": [],
+      "params": {}
+    }
+  ]
+}

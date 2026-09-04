@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { CopilotKit } from '@copilotkit/react-core'
+import { CopilotKit } from '@copilotkit/react-core/v2'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
 import App from './App.tsx'

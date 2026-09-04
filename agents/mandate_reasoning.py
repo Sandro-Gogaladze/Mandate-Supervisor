@@ -1,88 +1,119 @@
-"""The Mandate agent's one contained LLM call (CLAUDE.md: "Mandate is
-deterministic checks + one contained LLM call, prompt_playback vs. Cart
-semantic match").
+"""Mandate's one contained model call — per-line-item intent fidelity against
+the shopper's own sentence, over the whole dossier (HANDOFF §5.1).
 
-Unlike agents/kya_reasoning.py's ceiling, this produces a real `Finding`,
-not an unverified `Observation`. That's a deliberate difference, not an
-inconsistency: KYA's ceiling was optional, additive, free-form exploration
-we chose to add beyond the original plan, over an unbounded search space
-where "nothing to weight a hunch by" was the honest description. This
-check is a required, scoped, first-class part of Mandate's job — CLAUDE.md
-names it as such, it corresponds to an actual rule (MND-SEM-01) with a
-real rule_id and severity_weight, and it compares exactly two specific
-pieces of text a human reviewer could independently re-check the same way.
-The judgment isn't a hunch about an open-ended search; it's the one thing
-no deterministic rule can do (semantic comparison of free text) standing
-in for a rule that's otherwise identical in kind to every other Mandate
-rule.
+`MND-SEM-01`, and the only source of F49: *technically within the rules, but
+not what the person meant.* Checking a cart against a three-month envelope
+is nearly vacuous; checking it against "vitamin c serum, around $50" is not,
+which is why the mandate lives on the run and why this call exists.
 
-Cart.line_items[].description is the one field in the whole schema
-allowed to carry adversarial content (docs/phases/01-synthetic-data.md
-§2.3) — delimited explicitly below and the system prompt states outright
-that it is data, never an instruction, matching CLAUDE.md's injection-
-containment rule. This is deliberately independent of
-agents/mandate_checks.py's line_item_description_injection_heuristic —
-two different mechanisms (LLM judgment vs. deterministic pattern match)
-so a manipulated semantic check doesn't leave injection detection with a
-single point of failure.
+One call, every run that reached a cart, a verdict per run. Code does the
+enforcing: every `run_id` the model returns must be one it was shown (an
+invented id is dropped and logged), a run it did not judge is recorded as
+`inconclusive` rather than silently passed, the consistent runs roll into
+one `clear` assessment citing them all, and each mismatch is its own
+`breach` citing the run and the measurement the floor recorded for it. An
+assessment about run-level behaviour that names no run cannot exist here.
+
+Two fields are firm-authored free text and reach the model delimited:
+line-item descriptions (merchant-written, the injection surface) and the
+agent's own attestation. The system prompt says they are data. This is
+deliberately independent of agents/mandate_checks.py's line-item injection
+heuristic — two mechanisms, so a manipulated semantic check does not leave
+injection detection with a single point of failure.
 """
 from __future__ import annotations
 
-import json
+import logging
 
-from langchain_core.messages import HumanMessage, SystemMessage
 
-from ingestion.normalize import IngestedCase
-from schemas import Finding, Rule
+from schemas import Assessment, Fact, Rule
+from schemas.dossier import LoadedDossier
 
-from .llm import THINKING_EFFORT, format_reviewer_addendum, get_model, get_tool_call
+from .llm import (
+    briefing_message, format_reviewer_addendum, get_model, get_tool_call, log_cache_usage,
+    system_message, THINKING_EFFORT, with_reasoning,
+)
 from .prompts import assemble
+
+logger = logging.getLogger(__name__)
 
 PROMPT_ID = "SPECIALIST-MANDATE"
 SYSTEM_PROMPT = assemble(PROMPT_ID).effective
 
-
-_SEMANTIC_CHECK_TOOL = {
-    "name": "record_semantic_check",
-    "description": "Record whether the cart is semantically consistent with the human's authorized intent.",
+_FIDELITY_TOOL = with_reasoning({
+    "name": "record_intent_fidelity",
+    "description": "Record, for every run shown, whether the cart answers what the shopper asked for.",
     "input_schema": {
         "type": "object",
         "properties": {
-            "consistent": {"type": "boolean"},
-            "quoted_evidence": {
-                "type": "string",
-                "description": "If not consistent: the exact text (from the cart or the agent's reasoning) that shows the mismatch. Empty string if consistent.",
+            "verdicts": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "run_id": {"type": "string", "description": "Exactly as shown; never invented."},
+                        "consistent": {"type": "boolean"},
+                        "quoted_evidence": {
+                            "type": "string",
+                            "description": "If not consistent: the exact text (from the cart or the agent's reasoning) that shows the mismatch. Empty string if consistent.",
+                        },
+                        "explanation": {"type": "string", "description": "One short sentence. Omit reasoning that repeats the quoted evidence."},
+                    },
+                    "required": ["run_id", "consistent", "quoted_evidence", "explanation"],
+                },
             },
-            "explanation": {"type": "string", "description": "One or two sentences explaining the judgment."},
         },
-        "required": ["consistent", "quoted_evidence", "explanation"],
+        "required": ["verdicts"],
     },
-}
+})
 
 
-def structured_view(case: IngestedCase) -> dict:
-    """Mandate's canonical evidence — see agents/kya_reasoning.structured_view."""
-    intent = case.case.mandate_chain.intent
-    cart = case.case.mandate_chain.cart
+def _delimit(kind: str, text: str) -> str:
+    return f"<<<UNTRUSTED_{kind}_TEXT>>>{text}<<<END_UNTRUSTED_{kind}_TEXT>>>"
+
+
+def structured_view(dossier: LoadedDossier, floor_facts: list[Fact]) -> dict:
+    """Mandate's canonical evidence: every run that reached a cart, as the
+    shopper's signed sentence against what was bought, plus what the floor
+    established by rule. Fifty runs' worth of pairs, not fifty JSON files."""
+    by_rule: dict[str, dict[str, int]] = {}
+    for f in floor_facts:
+        if f.rule_id and f.kind != "measurement":
+            by_rule.setdefault(f.rule_id, {})
+            by_rule[f.rule_id][f.kind] = by_rule[f.rule_id].get(f.kind, 0) + 1
+    runs = []
+    for r in dossier.runs:
+        if r.cart is None:
+            continue
+        runs.append({
+            "run_id": r.run_id,
+            "outcome": r.outcome,
+            "shopper_request": r.intent_mandate.natural_language_intent,
+            "purpose_category": r.intent_mandate.authorization_scope.purpose_category,
+            "max_transaction_amount": r.intent_mandate.authorization_scope.max_transaction_amount,
+            "merchant": r.cart.merchant.name,
+            "cart_total": r.cart.cart_total,
+            "currency": r.cart.currency,
+            "line_items": [
+                {"sku": li.sku, "qty": li.qty, "unit_price": li.unit_price,
+                 "description": _delimit("MERCHANT", li.description)}
+                for li in r.cart.line_items
+            ],
+            "agent_reasoning": _delimit("AGENT", r.cart.agent_attestation.reasoning),
+        })
     return {
-        "human_authorized_intent": intent.natural_language_intent,
-        "authorization_scope_purpose_category": intent.authorization_scope.purpose_category,
-        "cart_agent_reasoning": cart.agent_attestation.reasoning,
-        "cart_total": cart.cart_total,
-        "cart_line_items": [
-            {
-                "sku": item.sku,
-                "qty": item.qty,
-                "unit_price": item.unit_price,
-                "description": f"<<<UNTRUSTED_MERCHANT_TEXT>>>{item.description}<<<END_UNTRUSTED_MERCHANT_TEXT>>>",
-            }
-            for item in cart.line_items
-        ],
+        "dossier_id": dossier.dossier.dossier_id,
+        "runs_with_a_cart": len(runs),
+        "runs": runs,
+        "rule_outcomes": by_rule,
+        "floor_breaches": [{"rule_id": f.rule_id, "run_id": f.run_ref, "statement": f.statement}
+                           for f in floor_facts if f.kind == "breach"],
     }
 
 
-async def check_cart_reasoning_matches_intent(
-    case: IngestedCase,
+async def check_intent_fidelity(
+    dossier: LoadedDossier,
+    facts: list[Fact],
     rule: Rule,
     *,
     model=None,
@@ -90,39 +121,73 @@ async def check_cart_reasoning_matches_intent(
     reviewer_directive: str | None = None,
     system_prompt: str | None = None,
     context: dict | None = None,
-) -> Finding | None:
-    """The LLM semantic subcheck. Needs a live ANTHROPIC_API_KEY unless
-    `model` is supplied (tests inject a fake, same pattern as
-    agents/kya_reasoning.py)."""
+    round: int = 1,
+) -> list[Assessment]:
+    """The whole-dossier fidelity judgement. Needs a live ANTHROPIC_API_KEY
+    unless `model` is supplied. `facts` are the floor's; each verdict cites
+    the `MND-SEM-01` measurement the floor recorded for that run."""
+    case_id = dossier.dossier.dossier_id
+    shown = [r.run_id for r in dossier.runs if r.cart is not None]
+    if not shown:
+        return []
+    measurements = {f.run_ref: f for f in facts
+                    if f.kind == "measurement" and f.rule_id == rule.rule_id and f.run_ref}
+
     model = model or get_model()
     bound = model.bind(
         output_config={"effort": thinking_effort},
-        tools=[_SEMANTIC_CHECK_TOOL],
+        tools=[_FIDELITY_TOOL],
         tool_choice={"type": "auto"},
     )
-
     system = system_prompt or SYSTEM_PROMPT
     if reviewer_directive:
         system += format_reviewer_addendum(reviewer_directive)
-
     response = await bound.ainvoke([
-        SystemMessage(content=system),
-        HumanMessage(content=json.dumps(
-            context if context is not None else structured_view(case), indent=2
-        )),
+        system_message(system),
+        briefing_message(context if context is not None else structured_view(dossier, facts)),
     ])
+    log_cache_usage(response, "mandate")
+    result = get_tool_call(response, "record_intent_fidelity")
 
-    result = get_tool_call(response, "record_semantic_check")
-    if result["consistent"]:
-        return None
+    verdicts: dict[str, dict] = {}
+    for v in result.get("verdicts", []):
+        if not isinstance(v, dict) or "run_id" not in v or "consistent" not in v:
+            logger.warning("Mandate fidelity: skipping malformed verdict for %s: %r", case_id, v)
+            continue
+        if v["run_id"] not in shown:
+            # The mechanical "cannot invent" rule: a run the model was not
+            # shown does not exist for it.
+            logger.warning("Mandate fidelity: dropping verdict for unknown run %r on %s", v["run_id"], case_id)
+            continue
+        verdicts[v["run_id"]] = v
 
-    return Finding(
-        finding_id=f"{case.case.case_id}-SEM-001",
-        case_id=case.case.case_id,
-        agent="mandate",
-        type=rule.finding_type,
-        rule_id=rule.rule_id,
-        severity_weight=rule.severity_weight,
-        summary=result["explanation"],
-        details={"quoted_evidence": result["quoted_evidence"]},
-    )
+    def _fact_ids(run_ids: list[str]) -> list[str]:
+        return [measurements[r].fact_id for r in run_ids if r in measurements]
+
+    common = dict(case_id=case_id, round=round, scope="run", agent="mandate", rule_id=rule.rule_id,
+                  confidence="probable", severity_floor=rule.severity_weight,
+                  severity_assessed=rule.severity_weight)
+    out: list[Assessment] = []
+    for run_id in shown:
+        v = verdicts.get(run_id)
+        if v is not None and not v["consistent"]:
+            out.append(Assessment(
+                assessment_id=f"{case_id}:mandate:{rule.rule_id}:{run_id}:r{round}",
+                verdict="breach", fact_ids=_fact_ids([run_id]), run_refs=[run_id],
+                subject=(v.get("quoted_evidence") or None),
+                narrative=f"{run_id}: {v.get('explanation', '')}".strip(), **common))
+    consistent = [r for r in shown if r in verdicts and verdicts[r]["consistent"]]
+    if consistent:
+        out.append(Assessment(
+            assessment_id=f"{case_id}:mandate:{rule.rule_id}:r{round}",
+            verdict="clear", fact_ids=_fact_ids(consistent), run_refs=consistent,
+            narrative=(f"{len(consistent)} of {len(shown)} run(s) judged consistent with what the "
+                       f"shopper asked for."), **common))
+    unjudged = [r for r in shown if r not in verdicts]
+    if unjudged:
+        out.append(Assessment(
+            assessment_id=f"{case_id}:mandate:{rule.rule_id}:inconclusive:r{round}",
+            verdict="inconclusive", fact_ids=_fact_ids(unjudged), run_refs=unjudged,
+            narrative=(f"{len(unjudged)} run(s) shown to the model received no verdict: "
+                       f"{', '.join(unjudged[:5])}{' …' if len(unjudged) > 5 else ''}."), **common))
+    return out

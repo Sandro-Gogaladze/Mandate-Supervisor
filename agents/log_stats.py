@@ -90,3 +90,36 @@ def amount_stats(df: pd.DataFrame) -> dict:
 def hourly_distribution(df: pd.DataFrame) -> dict:
     hours = df["timestamp"].dt.hour
     return {str(h): int(c) for h, c in hours.value_counts().sort_index().items()}
+
+
+def new_payee_concentration(df: pd.DataFrame, *, merchants: dict[str, dict],
+                            window_start: str) -> dict:
+    """F55's signal: each counterparty's share of the LATEST month's
+    in-window spend, and whether the regulator's merchant register first saw
+    it inside the review window. A payee that did not exist a month ago
+    holding a share an established supplier took years to earn is the
+    supervisable shape; the verdict on it is Log's judgement (LOG-CON-01)."""
+    in_window = df[df["run_ref"].notna()] if "run_ref" in df else df.iloc[0:0]
+    if in_window.empty:
+        return {"latest_month": None, "total": 0.0, "counterparties": []}
+    months = in_window["timestamp"].apply(lambda ts: ts.strftime("%Y-%m"))
+    latest = months.max()
+    recent = in_window[months == latest]
+    total = float(recent["amount"].sum()) or 1.0
+    start = window_start[:10]
+    rows = []
+    for cp, group in recent.groupby("counterparty_id"):
+        record = merchants.get(cp, {})
+        first_seen = record.get("first_seen")
+        rows.append({
+            "counterparty_id": cp,
+            "counterparty_name": str(group["counterparty_name"].iloc[0]),
+            "share_pct": round(100.0 * float(group["amount"].sum()) / total, 1),
+            "total": round(float(group["amount"].sum()), 2),
+            "count": int(len(group)),
+            "registry_first_seen": first_seen,
+            "new_in_window": bool(first_seen and first_seen >= start),
+            "watchlist_flags": list(record.get("watchlist_flags", [])),
+        })
+    rows.sort(key=lambda r: -r["share_pct"])
+    return {"latest_month": latest, "total": round(total, 2), "counterparties": rows}

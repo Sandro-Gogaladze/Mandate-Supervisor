@@ -11,9 +11,10 @@
   the append-only record (`ledger/projection.py`), sorted by risk score —
   the concept note's "prioritised queue", literally. Run listings, run
   diffs, prompt defaults, chain verification, JSONL export.
-- **Intake**: uploads validate against the same schema ingestion enforces
-  and append `case_submitted`. Triage is supervisor-initiated — from the
-  case room or by asking the orchestrator — never automatic.
+- **Intake**: a dossier is uploaded as a zip of its directory and verified
+  at the door (data/uploads.py) before `case_submitted` is appended. Triage
+  is supervisor-initiated — from the case room or by asking the orchestrator
+  — never automatic.
 
 Checkpointers here are AG-UI thread plumbing: per-process, in-memory,
 disposable. The ledger is the record; deleting a checkpointer loses only an
@@ -21,28 +22,26 @@ in-flight run's resumability.
 """
 from __future__ import annotations
 
-import json
 import logging
 
-from ag_ui_langgraph import LangGraphAgent, add_langgraph_fastapi_endpoint
-from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
+from ag_ui_langgraph import LangGraphAgent as _LangGraphAgent, add_langgraph_fastapi_endpoint
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.checkpoint.memory import MemorySaver
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from agents.llm import LLMUnavailable
 from agents.prompts import PROMPTS_BY_RUN_KIND, load_prompt
-from data.loader import load_manifest, strip_qa_notes
 from ledger import get_default_store
-from ledger.projection import EmptyCaseError, diff_runs, project_case
-from ledger.seed import latest_submission, seed_corpus, submit_case
+from ledger.projection import diff_runs, project_case, visible_events
+from ledger.seed import latest_submission, seed_corpus
 from pipeline.graph import (
     build_drafting_graph,
     build_investigation_graph,
     build_triage_graph,
     run_triage,
 )
-from schemas import CaseBundle
+from registry.loader import load_all_rulesets, load_failure_catalogue
 
 logger = logging.getLogger(__name__)
 
@@ -56,12 +55,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# What the browser needs from a run is the decision, the findings and the
+# score — not the dossier, the evidence pack or every fact. Left in, the
+# adapter's node-exit snapshots and RAW event echoes sent 30 MB for one
+# six-second question (measured: 18 MB RAW, 12 MB in four snapshots) and
+# choked the page. RAW events are debugging echoes and are switched off;
+# snapshots drop the heavy keys the console never reads.
+_HEAVY_STATE_KEYS = frozenset({"dossier", "evidence", "facts", "assessments", "prompts", "dispatch_contexts"})
+
+
+class LangGraphAgent(_LangGraphAgent):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("emit_raw_events", False)
+        super().__init__(**kwargs)
+
+    def get_state_snapshot(self, state):
+        state = super().get_state_snapshot(state)
+        if isinstance(state, dict):
+            state = {k: v for k, v in state.items() if k not in _HEAVY_STATE_KEYS}
+        return state
+
+
 _store = get_default_store()
 seed_corpus(_store)
-
-# Eval-only ground truth for the corpus cases — shown ONLY in the case-file
-# tab as corpus metadata (a real submission never carries a label).
-_MANIFEST_BY_ID = {entry["case_id"]: entry for entry in load_manifest()}
+from api.dossiers import create_router
+app.include_router(create_router(_store))
 
 _triage_graph = build_triage_graph(store=_store, checkpointer=MemorySaver())
 _session_graph = build_investigation_graph(store=_store, checkpointer=MemorySaver())
@@ -71,7 +90,7 @@ add_langgraph_fastapi_endpoint(
     app=app,
     agent=LangGraphAgent(
         name="mandate_supervisor",
-        description="Runs a full triage pass over one case: dispatch, four specialists, escalation, critic, synthesizer, score.",
+        description="Runs a full triage pass over one case: eight domain peers, control assurance, critic, synthesizer, authorisation.",
         graph=_triage_graph,
     ),
     path="/agent/triage",
@@ -104,19 +123,67 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
-def _summary(record, case_id: str) -> dict:
-    manifest = _MANIFEST_BY_ID.get(case_id)
+@app.get("/failures")
+async def list_failure_catalogue() -> dict:
+    """The stable F1--F73 vocabulary plus its implemented rule coverage."""
+    catalogue = load_failure_catalogue()
+    mappings: dict[str, list[dict]] = {f.failure_id: [] for f in catalogue.failures}
+    for ruleset in load_all_rulesets().values():
+        for rule in ruleset.rules:
+            for failure_id in rule.failures:
+                if failure_id in mappings:
+                    mappings[failure_id].append({
+                        "rule_id": rule.rule_id,
+                        "ruleset_id": ruleset.ruleset_id,
+                        "ruleset_version": ruleset.version,
+                        "rule_status": rule.status,
+                        "evaluation": rule.evaluation,
+                    })
     return {
+        "catalogue_id": catalogue.catalogue_id,
+        "version": catalogue.version,
+        "as_of": catalogue.as_of,
+        "failures": [
+            {**failure.model_dump(), "mapped_rules": mappings[failure.failure_id],
+             "non_rule_detector": ("systemic" if failure.failure_id in {"F57", "F67", "F69"}
+                                   else None)}
+            for failure in catalogue.failures
+        ],
+    }
+
+
+def _submission_line(case_id: str) -> str | None:
+    try:
+        payload = latest_submission(_store, case_id)
+    except ValueError:
+        return None
+    dossier = payload.get("dossier") or {}
+    firm = payload.get("firm") or {}
+    runs = len(payload.get("runs", []))
+    return (f"{runs} run{'s' if runs != 1 else ''} · {dossier.get('agent_id', '?')} · "
+            f"{dossier.get('submission_purpose', 'submission')} via {firm.get('institution_name', '?')}")
+
+
+def _summary(record, case_id: str) -> dict:
+    # Through the same filter the projection uses: a cleared case must not
+    # keep advertising the disposition of the review that was cleared.
+    events = visible_events(_store.events_for(case_id))
+    recommendation = next((e.payload.get('disposition') for e in reversed(events) if e.event_type == 'authorisation_computed'), None)
+    decision = next((e.payload.get('disposition') for e in reversed(events) if e.event_type == 'authorisation_decided'), None)
+    return {
+        'recommendation': recommendation, 'authorisation_decision': decision,
         "case_id": case_id,
         "firm": record.firm,
         "status": record.status,
-        "label": manifest["label"] if manifest else None,
-        "summary": (manifest["summary"] if manifest else None)
-        or record.submitted_summary
+        # Ground truth never reaches the pipeline or the queue; a real
+        # submission carries no label.
+        "label": None,
+        "summary": record.submitted_summary or _submission_line(case_id)
         or f"{record.event_count} events on record",
         "risk_total": record.risk_score.total if record.risk_score else None,
         "risk_tier": record.risk_score.tier if record.risk_score else None,
         "findings_count": len(record.findings),
+        "failure_occurrences_count": len(record.failure_occurrences),
         "observations_count": len(record.observations),
         "opened_by": record.opened_by,
         "last_event_at": record.last_event_at,
@@ -175,34 +242,6 @@ async def _background_triage(case_id: str) -> None:
         logger.warning("No ANTHROPIC_API_KEY — case %s submitted without automatic triage", case_id)
     except Exception:
         logger.exception("Background triage failed for %s", case_id)
-
-
-@app.post("/cases/upload")
-async def upload_case(file: UploadFile) -> dict:
-    """Validate against the same schema ingestion enforces and append
-    case_submitted. Triage is NOT fired automatically — a supervisor starts
-    the first pass, from the case room or by asking the orchestrator
-    (revised on direction after live use; automatic-on-submission was built
-    and removed)."""
-    body = await file.read()
-    try:
-        raw = json.loads(body)
-    except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=400, detail=f"{file.filename} is not valid JSON: {exc}") from exc
-
-    try:
-        case = CaseBundle.model_validate(strip_qa_notes(raw))
-    except ValidationError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail=f"This file doesn't match the case bundle schema:\n{exc}",
-        ) from exc
-    if _store.has_case(case.case_id):
-        raise HTTPException(status_code=400, detail=f"A case with id {case.case_id!r} already exists.")
-
-    submit_case(_store, raw, actor="human:officer")
-    record = project_case(_store.events_for(case.case_id))
-    return _summary(record, case.case_id)
 
 
 class _ActorBody(BaseModel):
@@ -267,10 +306,16 @@ async def ledger_verify() -> dict:
 
 
 @app.get("/ledger/{case_id}")
-async def ledger_events(case_id: str) -> list[dict]:
+async def ledger_events(case_id: str, include_cleared: bool = False) -> list[dict]:
+    """The case's events. A reset hides the review that preceded it, so the
+    console shows a case with no review rather than a hidden one; the audit
+    trail is untouched and `include_cleared=true` returns all of it (the
+    timeline and the hash-chain verifier use that)."""
     events = _store.events_for(case_id)
     if not events:
         raise HTTPException(status_code=404, detail=f"No case with id {case_id!r}")
+    if not include_cleared:
+        events = visible_events(events)
     return [e.model_dump() for e in events]
 
 
@@ -309,78 +354,12 @@ async def graph_structure() -> dict:
     return _graph_structure(_triage_graph)
 
 
-# The full supervision map (revised on direction): ONE picture of the whole
-# iterative loop — supervisor ⇄ orchestrator, the three run lanes, and the
-# return edges that make it a loop, not a pipeline. Node ids are the REAL
-# LangGraph node names (validated below against the compiled graphs at
-# import time, so this map cannot silently drift from the code); the two
-# synthetic nodes (supervisor, orchestrator) and the connective edges
-# represent caller-level control flow no single graph can know about —
-# the human starting runs, results returning to the conversation.
-_FULL_MAP_NODES: list[dict] = [
-    {"id": "supervisor", "label": "Supervisor", "lane": "hub", "synthetic": True},
-    # Dispatch is not a separate box: proposing the plan and enforcing the
-    # floor IS the orchestrator's act — the graph's dispatch/ingest/
-    # bump_round steps light the hub. The orchestrator fans straight out.
-    {"id": "orchestrator", "label": "Orchestrator", "lane": "hub", "synthetic": True},
-    {"id": "mandate", "label": "Mandate", "lane": "triage", "synthetic": False},
-    {"id": "kya", "label": "KYA", "lane": "triage", "synthetic": False},
-    {"id": "log", "label": "Log", "lane": "triage", "synthetic": False},
-    {"id": "drift", "label": "Drift", "lane": "triage", "synthetic": False},
-    {"id": "investigator", "label": "Investigator", "lane": "investigation", "synthetic": False},
-    # The typed output pool every worker reports into — a display grouping,
-    # not a graph node (escalate_check/critic step events alias onto it).
-    {"id": "findings", "label": "Findings / Observations", "lane": "triage", "synthetic": True},
-    {"id": "synthesizer", "label": "Synthesizer", "lane": "triage", "synthetic": False},
-    {"id": "draft_report", "label": "Draft report", "lane": "drafting", "synthetic": False},
-    {"id": "grounding_check", "label": "Grounding check", "lane": "drafting", "synthetic": False},
-    {"id": "human_gate", "label": "Decision / Sign-off", "lane": "drafting", "synthetic": False},
-]
-
-# The supervisor's own mental model of the loop (drawn to direction):
-# dispatch fans to five peers, results pool, the synthesizer correlates,
-# everything returns through the orchestrator to the supervisor — who
-# loops with follow-ups, or calls the review complete and sends it to
-# draft -> grounding -> sign-off.
-_FULL_MAP_EDGES: list[dict] = [
-    {"source": "supervisor", "target": "orchestrator", "kind": "main"},
-    {"source": "orchestrator", "target": "supervisor", "kind": "return"},
-    {"source": "orchestrator", "target": "mandate", "kind": "main"},
-    {"source": "orchestrator", "target": "kya", "kind": "main"},
-    {"source": "orchestrator", "target": "log", "kind": "main"},
-    {"source": "orchestrator", "target": "drift", "kind": "main"},
-    {"source": "orchestrator", "target": "investigator", "kind": "route"},
-    {"source": "mandate", "target": "findings", "kind": "main"},
-    {"source": "kya", "target": "findings", "kind": "main"},
-    {"source": "log", "target": "findings", "kind": "main"},
-    {"source": "drift", "target": "findings", "kind": "main"},
-    {"source": "investigator", "target": "findings", "kind": "main"},
-    {"source": "findings", "target": "synthesizer", "kind": "main"},
-    {"source": "synthesizer", "target": "orchestrator", "kind": "return"},
-    # "draft the report" is routed by the orchestrator (intent
-    # draft_report) on the supervisor's say-so — the line runs from the hub.
-    {"source": "orchestrator", "target": "draft_report", "kind": "route"},
-    {"source": "draft_report", "target": "grounding_check", "kind": "main"},
-    {"source": "grounding_check", "target": "draft_report", "kind": "loop"},
-    {"source": "grounding_check", "target": "human_gate", "kind": "main"},
-]
-
-# Validation at import time: every non-synthetic node must exist in one of
-# the compiled graphs — the map lights up from live step events by node id,
-# so an id mismatch would silently break the display.
-_REAL_NODE_IDS = {
-    node_id
-    for graph in (_triage_graph, _session_graph, _drafting_graph)
-    for node_id in graph.get_graph().nodes
-}
-_missing = [n["id"] for n in _FULL_MAP_NODES if not n["synthetic"] and n["id"] not in _REAL_NODE_IDS]
-assert not _missing, f"/graph/full references nodes absent from the compiled graphs: {_missing}"
+from pipeline.map import supervision_map
 
 
 @app.get("/graph/full")
 async def graph_full() -> dict:
-    """The whole supervision loop in one structure — see _FULL_MAP_NODES."""
-    return {"nodes": _FULL_MAP_NODES, "edges": _FULL_MAP_EDGES}
+    return supervision_map(_GRAPHS_BY_KIND)
 
 
 @app.get("/graph/{kind}")

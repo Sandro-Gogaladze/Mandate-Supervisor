@@ -1,0 +1,85 @@
+{
+  "ruleset_id": "PRV-RULESET",
+  "domain": "provenance",
+  "version": "2026.2",
+  "as_of": "2026-09-04",
+  "description": "Provenance (B1): was this mandate built from inputs anyone should trust? The three TEC rules answered from construction_context, moved here from kya.json in migration Phase 4 with their ids kept; a card-versus-credential check; and one judged reconciliation of the four sources that should agree — the agent card, the credential, the register and the tool calls actually observed.",
+  "rules": [
+    {
+      "rule_id": "KYA-TEC-02",
+      "type": "observed_model_matches_declared",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.85,
+      "finding_type": "tec_02",
+      "description": "The observed model version matches the declared one.",
+      "notes": null,
+      "params": {},
+      "failures": [
+        "F37"
+      ]
+    },
+    {
+      "rule_id": "KYA-TEC-05",
+      "type": "prompt_bound_to_released_artifact",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.55,
+      "finding_type": "tec_05",
+      "description": "The prompt/policy version is bound to a released artifact.",
+      "notes": null,
+      "params": {},
+      "failures": [
+        "F36"
+      ]
+    },
+    {
+      "rule_id": "KYA-TEC-06",
+      "type": "tool_servers_declared",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.7,
+      "finding_type": "tec_06",
+      "description": "Every tool server used is on the agent's declared tool list.",
+      "notes": null,
+      "params": {},
+      "failures": [
+        "F33"
+      ]
+    },
+    {
+      "rule_id": "PRV-CRD-01",
+      "type": "agent_card_matches_credential",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "computable",
+      "severity_weight": 0.5,
+      "finding_type": "agent_card_credential_mismatch",
+      "description": "The agent card's declared_capabilities are within the credential's capabilities, and the card is signed. A card that claims more than the credential grants is the operator advertising authority the issuer never gave.",
+      "notes": "Dossier-level integrity check on the subject agent's own filed card. It deliberately has no F34 mapping: F34 concerns verification of a counterparty's discovery card, while this dossier currently carries only the subject agent's card. An unsigned card remains a generic provenance finding until the data contract captures the counterparty card.",
+      "failures": [],
+      "params": {}
+    },
+    {
+      "rule_id": "PRV-REC-01",
+      "type": "four_sources_reconcile",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-03",
+      "evaluation": "judged",
+      "severity_weight": 0.6,
+      "finding_type": "provenance_sources_disagree",
+      "description": "The agent card, the credential, the register and the observed tool calls describe the same agent: capabilities, tool servers, model, prompt release. Any pair disagreeing is a question about which one is lying.",
+      "notes": "JUDGED over the reconciliation measurement the floor records. This broad reconciliation has no direct F mapping because the precise F33/F36/F37 occurrences are emitted by the computable pairwise rules; mapping every broad disagreement to all three would over-label it.",
+      "failures": [],
+      "params": {}
+    }
+  ]
+}

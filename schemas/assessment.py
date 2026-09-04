@@ -15,6 +15,11 @@ Four verdicts, and two of them are new capabilities rather than renames:
                    decide. In v2 this had to lie in one direction. It scores
                    nothing, routes to a human, and replaces the
                    unresolved-Observation escalation trigger.
+- `clear`        — a JUDGED rule was evaluated and nothing is wrong. The
+                   assessment-level twin of a `satisfied` fact: Log's rules
+                   are decided by the model over measurements, and "we
+                   judged it and it is fine" has to be on the record as
+                   distinct from "we did not judge it".
 
 **Severity is propose-enforce, applied to weight.** The floor comes from the
 ruleset and is deterministic — same facts, same floor, always. An agent may
@@ -24,6 +29,13 @@ printable derivation from rules and weights) while an agent can still say
 "four detectors converged on one injected line item; as coordinated
 manipulation this is materially worse than the sum." The validator below is
 what makes "never lower" a guarantee rather than an instruction.
+
+**Scope.** `run` means the assessment is about run-level behaviour and
+`run_refs` must name the runs — an assessment about "some runs" that names
+none is rejected in the schema, because a whole-dossier LLM call is only
+viable if every claim it makes can be checked against a specific run
+(HANDOFF §5.1). `case` is the dossier as a whole (the credential, the
+submission, the controls repository); `portfolio` spans dossiers.
 
 `supersedes` is how an iterative review changes its mind. Round 1 finds an
 unapproved counterparty; round 3, given context, establishes it is the
@@ -39,8 +51,9 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .fact import EvidenceRef
+from .failure import FailureId
 
-Verdict = Literal["breach", "concern", "explained", "inconclusive"]
+Verdict = Literal["breach", "concern", "explained", "clear", "inconclusive"]
 Confidence = Literal["certain", "probable", "possible"]
 
 # Only a breach contributes to the risk score. Everything else is recorded,
@@ -60,12 +73,18 @@ class Assessment(BaseModel):
     assessment_id: str
     case_id: str
     round: int = 1
-    scope: Literal["case", "portfolio"] = "case"
+    scope: Literal["run", "case", "portfolio"] = "case"
 
     agent: str
     skill_id: str | None = None
     rule_id: str | None = None       # None for a judgment that isn't rule-backed
     ruleset_version: str | None = None
+    # Optional exact catalogue projection chosen by the evaluator.  This is
+    # needed when one broad judged rule discusses several distinct failures:
+    # the rule's coverage list is the allowed set, not evidence that every
+    # verdict instantiated every failure.  None means "use the rule mapping";
+    # [] explicitly means "record the assessment, but mint no F-occurrence".
+    failure_ids: list[FailureId] | None = None
 
     # What this rests on. agents/critic.py resolves every id against the
     # facts the agent was actually given — an assertion with no fact behind
@@ -81,10 +100,15 @@ class Assessment(BaseModel):
     severity_rationale: str | None = None
 
     subject: str | None = None            # the sku / transaction / counterparty it is about
+    run_refs: list[str] = Field(default_factory=list)      # the runs it concerns, for run scope
+    run_refs_by_case: dict[str, list[str]] = Field(default_factory=dict)  # portfolio provenance
     subject_refs: list[str] = Field(default_factory=list)  # case ids, for portfolio scope
     narrative: str
 
     supersedes: str | None = None
+    # None means the rule was reconsidered over the whole dossier. A focused
+    # round may only replace conclusions about these execution runs.
+    review_run_refs: list[str] | None = None
 
     @model_validator(mode="after")
     def _severity_never_below_floor(self) -> "Assessment":
@@ -112,6 +136,16 @@ class Assessment(BaseModel):
         if self.verdict in SCORING_VERDICTS and not self.fact_ids:
             raise ValueError(
                 f"{self.assessment_id}: verdict={self.verdict!r} must cite at least one fact_id"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _run_scope_names_its_runs(self) -> "Assessment":
+        """A claim about run-level behaviour that names no run cannot be
+        checked by anyone — not the critic, not the officer, not the firm."""
+        if self.scope == "run" and not self.run_refs:
+            raise ValueError(
+                f"{self.assessment_id}: scope='run' must name the runs it concerns in run_refs"
             )
         return self
 

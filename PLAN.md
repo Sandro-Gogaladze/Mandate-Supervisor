@@ -4,6 +4,124 @@ Durable, cross-session checklist — update this at the start/end of every chat,
 
 Mark items `[x]` as they're finished, and jot a one-line note (file paths, what's left, blockers) so the next chat — even a fresh one with no memory of this one — knows exactly where things stand.
 
+> **Where the build actually is (2026-09-03):** items 1–13 below describe the
+> v2 case-based pipeline, which the authorisation reframe superseded. The live
+> plan is `docs/migration-plan.md` (read `docs/HANDOFF.md` first). Phases 1–4
+> (Facts and Assessments; the dossier through the graph; the four specialists
+> migrated; the seven new specialists) are **done** — `docs/phases/14-*.md`
+> through `17-*.md`. No test module is parked. The eval (migration-plan
+> Phase 10) is skipped for now on explicit direction. **Next: Phase 5** —
+> skills registry, dispatcher floor and `Send()` fan-out for all eleven
+> agents; until then the triage graph runs the four migrated ones.
+>
+> **2026-09-03, later:** Phase 5 landed (eight peers, Control Assurance
+> sequenced after, all eleven dispatchable, authorisation policy, dossier API,
+> console additions). Then: the case room was rebuilt as a Claude-style
+> transcript (`dashboard/src/components/CaseChat.tsx`) — user requests on the
+> right, one assistant turn per run made of specialist steps, each with the
+> model's own working streamed as a collapsible "Thinking" block (the leading
+> `reasoning` field every recording tool now requires — this model returns no
+> thinking text), verdicts in plain language, briefing and rule results one
+> level down; "New chat" hides earlier activity behind a sequence number
+> without touching the ledger; the map moved to a collapsible right panel.
+> The specialist-progress stream no longer ships facts (8 MB per triage →
+> counts and a sequence range), the map keeps measured nodes so they no
+> longer vanish mid-run, the per-specialist model-call cap is 900 s (120 s
+> timed out Injection and Consent on a 50-run dossier), and Drift degrades a
+> malformed verdict to inconclusive instead of raising. 408 tests.
+>
+> **2026-09-04:** one orchestrator, skills-driven. The separate `dispatch`
+> node and the propose-enforce floor are gone (`pipeline/dispatch.py`
+> deleted): a first pass and a later question are the same run through one
+> review graph (`pipeline/graph.py::build_review_graph`; `run_triage` and
+> `run_investigation` remain as callers). The orchestrator (prompt
+> `ORCHESTRATOR`, `registry/prompts/orchestrator.json`) is given the request
+> — on a first pass a fixed sentence plus the intake statistics — and
+> answers by dispatching skills with a briefing each, replying from the
+> record, or asking for the report. Coverage on a first pass is asked for by
+> the prompt and RECORDED (`DispatchPlan.not_dispatched`), not enforced —
+> CLAUDE.md's propose-enforce row no longer describes the code. Control
+> Assurance runs after the peers by topology and cannot be dispatched. The
+> chat shows the orchestrator's working, the skills it used and its message;
+> a specialist's briefing sits in its own "What it was given" drawer; the
+> composer is locked until the orchestrator comes back. Every recording tool
+> requires a leading `reasoning` field; Log and Consent degrade a malformed
+> reply to inconclusive like Drift. 403 tests.
+> Later the same day: the orchestrator no longer receives intake statistics
+> (completeness is intake's job at submission); tool calls in the console are
+> attributed to agents by tool name, not by stream position, and a replayed
+> call start is not a new row; the composer greys out while the orchestrator
+> is away and carries no status sentences.
+> **2026-09-04, prompt caching:** every model call now sends its system
+> prompt and its briefing as cache-marked blocks (`agents/llm.py`:
+> `system_message()`, `briefing_message()`, `message_text()`,
+> `log_cache_usage()`) — one breakpoint after tools+system, one after the
+> composed context. A repeat call whose bytes match up to a breakpoint (the
+> same dossier reviewed again inside five minutes, a demo re-run, the
+> investigator's tool loop, a dev iteration) reads that prefix at ~10% of the
+> input price. Verified live: second identical KYA call read 2,902 cached
+> tokens, wrote 0. Deliberately unchanged: escalation and reviewer addenda
+> still append to the SYSTEM prompt (instructions reach an agent through the
+> system turn, evidence through the human turn — those rounds miss the cache
+> and that is the right trade), and the orchestrator's payload carries no
+> breakpoint (the request and the record change every turn). Caching is
+> input-side only and this pipeline's cost is dominated by thinking output;
+> see the note in `agents/llm.py`. 410 tests.
+> **2026-09-04, deterministic first pass:** the initial comprehensive
+> review no longer spends an orchestrator call rediscovering a fixed fan-out.
+> `agents/orchestrator.py::first_pass_decision()` selects all eight governed
+> review skills in registry order; Control Assurance still follows by graph
+> topology. The accepted plan remains ledger-recorded. Later officer requests
+> still use the model router. Specialist judgments remain model-backed and
+> retain the Anthropic prompt-cache breakpoints above.
+> **2026-09-04, failure instances + KYA evidence contract:** the stable
+> F1--F73 vocabulary now lives in `registry/failures.json` and every
+> implemented rule declares the catalogue failures it detects. A typed
+> `FailureOccurrence` is projected from each non-clear rule assessment and
+> ledger-recorded with the exact failure name/version, rule/version,
+> assessment, facts, evidence refs and affected execution runs; contained
+> attempts remain distinct from executed detections. Case/run projections,
+> the API and Results panel expose these instances. KYA's canonical context
+> is now a typed whole-dossier evidence bundle: full rule inventory, indexed
+> outcomes, full breach/gap/measurement facts, relevant regulator records,
+> credential series and per-run identity evidence. It deliberately excludes
+> ground truth and other specialists' raw domain data.
+> Follow-up: the same deterministic `evidence_contract` now wraps Mandate,
+> Consent, Provenance, Injection, Counterparty, Log and Drift while preserving
+> each prompt's established domain fields. Control Assurance records peer
+> breach facts plus declared/executed controls; Systemic records bounded
+> portfolio evidence; Red Team records probe results and rulebook versions.
+> Submitted text inside common facts is delimited before prompting, clean
+> results are compressed, and tests prohibit ground truth. Systemic's
+> F57/F67/F69 now project to typed portfolio occurrences without inventing a
+> per-firm rulebook.
+> Correctness audit follow-up: broad judged rules no longer over-project all
+> failures in their thematic area (`CPT-IDN-01`, `PRV-REC-01`), and the subject
+> agent's own card-integrity check no longer claims F34 (counterparty discovery
+> verification, for which the current schema has no evidence). Assessments can
+> explicitly narrow a multi-failure rule via `failure_ids`; Injection uses this
+> to separate per-run F32 from aggregate F35. Consent and Provenance now receive
+> complete per-run domain slices. Log and Drift receive a compact transaction
+> index and anomalous verdicts must return valid transaction ids, which are
+> projected to exact run refs; missing/invented ids become inconclusive. F65 is
+> only projected when a real change-log onset is named. Open Log hunts for
+> F62/F63/F64/F66 now produce typed, unscored candidate observations with exact
+> transaction/run refs. Systemic F57/F69 occurrences also carry the underlying
+> run refs, paired by dossier in `run_refs_by_case`. Injection triage rules no
+> longer claim F32 before the judged acted-on-injection result; Control
+> Assurance now consumes precise peer assessments as well as deterministic
+> peer facts. Tests lock these boundaries.
+>
+> No streaming, by decision: the orchestrator is one plain model call, the
+> console collects a tool call's argument JSON and shows its `reasoning`
+> (as "Thought for 12s"), the skills it named and its message once the call
+> has ended. The custom `orchestrator_tool_args` event, RAW-event parsing,
+> partial-JSON rendering and the per-tool-name dedupe workarounds are gone.
+> The API's AG-UI agents no longer echo RAW events and drop the dossier,
+> evidence pack, facts, prompts and dispatch contexts from state snapshots —
+> one question was sending 30 MB to the browser (18 MB RAW, 12 MB in four
+> snapshots) and choking the page.
+
 ## 1 · Synthetic data
 - [x] Schema spec written by hand — `docs/phases/01-synthetic-data.md`
 - [x] Corpus covering all seven scenario labels: compliant, mandate_breaching, broken_chain, synthetic_identity, structuring, drift, prompt_injection — hand-authored in `data/cases/*.json`, indexed in `data/corpus_manifest.json`, shared issuer trust list in `data/registry/issuers.json`

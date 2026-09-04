@@ -15,7 +15,7 @@ Each prompt is three parts, and only the middle is editable:
 The preamble and contract are not overridable — a hostile or careless edit
 must not be able to stop the model calling its tool, and must not be able to
 rewrite the agent's role. The floor itself is enforced in code either way
-(agents/skills.py::enforce_skill_floor), so even a prompt that says "skip
+(recorded on the plan as not_dispatched), so even a prompt that says "skip
 KYA" changes nothing about coverage.
 
 The *full effective text* of every prompt used by a run is recorded on that
@@ -34,26 +34,26 @@ PROMPTS_DIR = Path(__file__).resolve().parent.parent / "registry" / "prompts"
 
 # Which prompts each run kind uses — this is what gets assembled, recorded
 # on run_started, and made overridable per run.
+_REVIEW_PROMPTS: tuple[str, ...] = (
+    "ORCHESTRATOR",
+    "INVESTIGATOR",
+    "SYNTHESIZER",
+    "SPECIALIST-MANDATE",
+    "SPECIALIST-KYA",
+    "KYA-NARRATION",
+    "SPECIALIST-PROVENANCE",
+    "SPECIALIST-INJECTION",
+    "SPECIALIST-COUNTERPARTY",
+    "SPECIALIST-CONSENT",
+    "SPECIALIST-LOG",
+    "SPECIALIST-DRIFT",
+)
+
+# A first pass and a later question are the same run through the same
+# graph with the same orchestrator; the kind names the record, not the code.
 PROMPTS_BY_RUN_KIND: dict[str, tuple[str, ...]] = {
-    "triage": (
-        "ORCH-DISPATCH",
-        "SYNTHESIZER",
-        "SPECIALIST-MANDATE",
-        "SPECIALIST-KYA",
-        "KYA-NARRATION",
-        "SPECIALIST-LOG",
-        "SPECIALIST-DRIFT",
-    ),
-    "investigation": (
-        "ORCH-SESSION",
-        "INVESTIGATOR",
-        "SYNTHESIZER",
-        "SPECIALIST-MANDATE",
-        "SPECIALIST-KYA",
-        "KYA-NARRATION",
-        "SPECIALIST-LOG",
-        "SPECIALIST-DRIFT",
-    ),
+    "triage": _REVIEW_PROMPTS,
+    "investigation": _REVIEW_PROMPTS,
     "drafting": ("DRAFTING",),
 }
 

@@ -30,15 +30,18 @@ export interface CaseSummary {
   status: CaseStatus
   label: ScenarioLabel | null
   summary: string
+  recommendation?: import('./supervision-types').Disposition | null
+  authorisation_decision?: import('./supervision-types').Disposition | null
   risk_total: number | null
   risk_tier: DispositionTier | null
   findings_count: number
+  failure_occurrences_count: number
   observations_count: number
   opened_by: string | null
   last_event_at: string
 }
 
-export type FindingAgent = 'mandate' | 'kya' | 'log' | 'drift'
+export type FindingAgent = 'mandate' | 'kya' | 'log' | 'drift' | 'provenance' | 'injection' | 'counterparty' | 'consent' | 'control_assurance' | 'systemic' | 'red_team'
 export type ObservationAgent = FindingAgent | 'investigator'
 
 export interface Finding {
@@ -52,11 +55,36 @@ export interface Finding {
   details: Record<string, unknown>
 }
 
+export interface FailureOccurrence {
+  occurrence_id: string
+  case_id: string
+  failure_id: string
+  failure_name: string
+  catalogue_version: string
+  domain: FindingAgent
+  rule_id: string | null
+  ruleset_version: string | null
+  assessment_id: string
+  status: 'detected' | 'possible' | 'contained' | 'not_evaluable'
+  confidence: 'certain' | 'probable' | 'possible'
+  scope: 'run' | 'run_set' | 'case' | 'portfolio'
+  run_refs: string[]
+  run_refs_by_case: Record<string, string[]>
+  transaction_refs: string[]
+  case_refs: string[]
+  fact_ids: string[]
+  evidence_refs: { kind: string; ref: string; value: unknown }[]
+  summary: string
+}
+
 export interface Observation {
   case_id: string
   agent: ObservationAgent
   note: string
   cited_evidence: string
+  failure_id: string | null
+  run_refs: string[]
+  transaction_refs: string[]
 }
 
 export interface Correlation {
@@ -125,6 +153,7 @@ export type ReportStatus = 'draft' | 'issued' | 'rejected'
 export interface ReviewerDirective {
   instructions: string
   target_agents: FindingAgent[]
+  run_scope?: string[]
 }
 
 export interface ReviewerDecision {
@@ -136,14 +165,18 @@ export interface ReviewerDecision {
 }
 
 export interface DispatchPlan {
-  run_mandate: boolean
-  run_kya: boolean
-  run_log: boolean
-  run_drift: boolean
   reasoning: string
+  intent?: 'dispatch' | 'reply' | 'draft_report' | string
+  first_pass?: boolean
+  skills?: string[]
+  briefings?: Record<string, string>
+  run_scope?: Record<string, string[]>
+  context_blocks?: Record<string, string[]>
+  not_dispatched?: string[]
+  message_to_officer?: string
 }
 
-export type RunKind = 'triage' | 'investigation' | 'drafting'
+export type RunKind = 'triage' | 'investigation' | 'drafting' | 'portfolio'
 
 // prompt_id -> the assembled text recorded on run_started
 export interface RecordedPrompt {
@@ -159,6 +192,7 @@ export interface RunRecord {
   plan: DispatchPlan | null
   dispatches: DispatchRecord[]
   findings: Finding[]
+  failure_occurrences: FailureOccurrence[]
   observations: Observation[]
   correlations: Correlation[]
   risk_score: RiskScore | null
@@ -173,6 +207,7 @@ export interface CaseRecord {
   firm: string
   runs: RunRecord[]
   findings: Finding[]
+  failure_occurrences: FailureOccurrence[]
   observations: Observation[]
   correlations: Correlation[]
   answers: InvestigationAnswer[]
@@ -199,6 +234,7 @@ export interface LedgerEvent {
   seq: number
   case_id: string
   run_id: string | null
+  run_ref?: string | null
   event_type: string
   payload: Record<string, unknown>
   actor: string
@@ -321,6 +357,7 @@ export interface MapNode {
   label: string
   lane: MapLane
   synthetic: boolean
+  role?: 'hub' | 'peer' | 'control' | 'on_request' | 'support'
 }
 
 export interface MapEdge {
@@ -335,7 +372,7 @@ export interface FullMap {
   edges: MapEdge[]
 }
 
-export const SPECIALIST_NODES = ['mandate', 'kya', 'log', 'drift'] as const
+export const SPECIALIST_NODES = ['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'control_assurance', 'systemic', 'red_team'] as const
 
 export const AGENT_LABELS: Record<ObservationAgent, string> = {
   mandate: 'Mandate',
@@ -343,4 +380,6 @@ export const AGENT_LABELS: Record<ObservationAgent, string> = {
   log: 'Log',
   drift: 'Drift',
   investigator: 'Investigator',
+  provenance: 'Provenance', injection: 'Injection', counterparty: 'Counterparty', consent: 'Consent & Harm',
+  control_assurance: 'Control Assurance', systemic: 'Systemic', red_team: 'Red Team',
 }

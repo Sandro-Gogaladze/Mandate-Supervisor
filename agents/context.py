@@ -1,22 +1,20 @@
-"""Context composition (architecture-v2 §13.3) — how a subagent's evidence
-is assembled, and the code that makes three invariants mechanical:
+"""Context composition — how a specialist's evidence is assembled, and the
+code that makes three invariants mechanical:
 
-- §9.2 the evidence floor: the canonical base is always fully present —
+- the evidence floor: the canonical base is always fully present —
   compose_context() starts from it and can only add;
-- §9.3 no summarization: extra blocks are inserted whole, exactly as the
+- no summarization: extra blocks are inserted whole, exactly as the
   resolver fetched them — the orchestrator *names* blocks, it never authors
   their content;
-- §9.4 every dispatch records exactly what was sent: the composed dict is
-  what gets recorded (dispatch_recorded.context_blocks) AND what the
-  reasoning function serializes into its human message, byte for byte.
+- every dispatch records exactly what was sent: the composed dict is what
+  gets recorded (dispatch_recorded.context_blocks) AND what the reasoning
+  function serializes into its human message, byte for byte.
 
-Why the floor matters even though verdicts are already non-deterministic:
-case-005's structuring pattern is only visible across all 16 transactions
-relative to the account's own spread. A subagent handed three rows still
-answers — worse, with nothing downstream knowing why. Verdict variance is
-inherent; evidence integrity is a different thing, and it is also what makes
-run-vs-run comparison meaningful (same evidence, different judgment — not
-two different questions).
+The canonical base for each skill is the dossier-level view its reasoning
+module would build for itself: KYA's credential and what the floor found,
+Mandate's per-rule outcomes across the runs, Log's and Drift's statistics
+over the whole transaction history. Fifty runs' worth of facts, not fifty
+JSON files (HANDOFF §5.1).
 """
 from __future__ import annotations
 
@@ -25,10 +23,11 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 from data.canonical import payload_hash
-from ingestion.normalize import IngestedCase
-from schemas import Finding, Ruleset
+from schemas import EvidencePack, Fact, Ruleset
+from schemas.dossier import LoadedDossier
 
 from . import drift_reasoning, kya_reasoning, log_reasoning, mandate_reasoning
+from .evidence_bundle import with_evidence_contract
 
 
 class ContextBlock(BaseModel):
@@ -44,24 +43,108 @@ class ContextCompositionError(ValueError):
 
 def canonical_context(
     skill_id: str,
-    case: IngestedCase,
+    dossier: LoadedDossier,
     *,
+    evidence: EvidencePack | None = None,
     ruleset: Ruleset | None = None,
-    floor_findings: list[Finding] | None = None,
+    floor_facts: list[Fact] | None = None,
+    peer_facts: list[Fact] | None = None,
+    peer_assessments: list | None = None,
+    portfolio: list[LoadedDossier] | None = None,
+    rulebooks: dict[str, Ruleset] | None = None,
 ) -> dict:
     """The evidence floor for one skill — the same structured view the
     reasoning module would build for itself, produced here so the dispatcher
     can compose, record, and hand over one identical object."""
     if skill_id == "mandate.review":
-        return mandate_reasoning.structured_view(case)
+        return with_evidence_contract(
+            mandate_reasoning.structured_view(dossier, floor_facts or []),
+            specialist="mandate", skill_id=skill_id, dossier=dossier,
+            facts=floor_facts or [], ruleset=ruleset,
+        )
     if skill_id == "kya.review":
-        return kya_reasoning.structured_view(case, floor_findings or [])
+        return kya_reasoning.structured_view(dossier, floor_facts or [], ruleset)
+    from . import consent_reasoning, counterparty_reasoning, injection_reasoning, provenance_reasoning
+    builders = {"consent.review": consent_reasoning, "counterparty.review": counterparty_reasoning,
+                "injection.review": injection_reasoning, "provenance.review": provenance_reasoning}
+    if skill_id in builders:
+        specialist = skill_id.split(".", 1)[0]
+        return with_evidence_contract(
+            builders[skill_id].structured_view(dossier, floor_facts or []),
+            specialist=specialist, skill_id=skill_id, dossier=dossier,
+            facts=floor_facts or [], ruleset=ruleset,
+        )
+    if skill_id in ("control_assurance.review", "systemic.review", "red_team.review"):
+        # No model reads this briefing; it is recorded for the audit trail.
+        # A summary by rule and kind, plus the breaches in full, says what
+        # the pass established without copying hundreds of facts into the
+        # dispatch event (Control Assurance's was 200 kB per dispatch).
+        by_rule: dict[str, dict[str, int]] = {}
+        for f in floor_facts or []:
+            key = f.rule_id or f.fact_id.split("#")[-1].split("@")[0]
+            by_rule.setdefault(key, {})
+            by_rule[key][f.kind] = by_rule[key].get(f.kind, 0) + 1
+        domain_evidence: dict[str, Any] = {
+            "dossier_id": dossier.dossier.dossier_id,
+            "facts": len(floor_facts or []),
+            "rule_outcomes": by_rule,
+            "breaches": [{"fact_id": f.fact_id, "rule_id": f.rule_id, "run_ref": f.run_ref,
+                          "statement": f.statement} for f in floor_facts or [] if f.kind == "breach"],
+            "absent": [{"fact_id": f.fact_id, "rule_id": f.rule_id, "run_ref": f.run_ref,
+                        "reason": f.absent_reason, "missing": f.missing}
+                       for f in floor_facts or [] if f.kind == "absent"],
+        }
+        if skill_id == "control_assurance.review":
+            domain_evidence.update({
+                "declared_controls": dossier.dossier.controls.model_dump(mode="json"),
+                "control_executions": [{
+                    "run_ref": run.run_id,
+                    "outcome": run.outcome,
+                    "controls_evaluated": [c.model_dump(mode="json") for c in run.controls_evaluated],
+                } for run in dossier.runs],
+                "peer_breach_facts": [f.model_dump(mode="json") for f in (peer_facts or [])
+                                      if f.kind == "breach"],
+                "peer_breach_assessments": [a.model_dump(mode="json") for a in (peer_assessments or [])
+                                             if a.verdict == "breach"],
+            })
+        elif skill_id == "systemic.review":
+            domain_evidence["portfolio"] = [{
+                "case_id": item.dossier.dossier_id,
+                "agent_id": item.dossier.agent_id,
+                "operator_id": item.dossier.operator_id,
+                "declared_models": sorted({r.intent_mandate.agent.model_version for r in item.runs}),
+                "counterparties": sorted({t.counterparty_id for t in item.transaction_history}),
+                "transactions": len(item.transaction_history),
+            } for item in (portfolio or [dossier])]
+        else:
+            domain_evidence.update({
+                "declared_controls": dossier.dossier.controls.model_dump(mode="json"),
+                "probe_results": [f.model_dump(mode="json") for f in (floor_facts or [])
+                                  if f.kind == "measurement"],
+                "rulebooks": {name: {"ruleset_id": book.ruleset_id, "version": book.version}
+                              for name, book in (rulebooks or {}).items()},
+            })
+        specialist = skill_id.split(".", 1)[0]
+        return with_evidence_contract(
+            domain_evidence, specialist=specialist, skill_id=skill_id,
+            dossier=dossier, facts=floor_facts or [], ruleset=ruleset,
+        )
     if skill_id == "log.analyze":
         rule = _active_rule(ruleset, "transaction_structuring_detected", skill_id)
-        return log_reasoning.structured_view(case, rule)
+        concentration = next((r for r in ruleset.rules
+                              if r.type == "counterparty_concentration_anomaly" and r.status == "active"), None)
+        return with_evidence_contract(
+            log_reasoning.structured_view(dossier, rule, concentration),
+            specialist="log", skill_id=skill_id, dossier=dossier,
+            facts=floor_facts or [], ruleset=ruleset,
+        )
     if skill_id == "drift.analyze":
         rule = _active_rule(ruleset, "behavioral_drift_detected", skill_id)
-        return drift_reasoning.structured_view(case, rule)
+        return with_evidence_contract(
+            drift_reasoning.structured_view(dossier, rule),
+            specialist="drift", skill_id=skill_id, dossier=dossier,
+            facts=floor_facts or [], ruleset=ruleset,
+        )
     raise ContextCompositionError(f"no canonical context builder for skill {skill_id!r}")
 
 
@@ -89,10 +172,10 @@ def compose_context(base: dict, extra_blocks: list[ContextBlock] | None = None) 
 
 
 def resolve_blocks(record, block_ids: list[str]) -> list[ContextBlock]:
-    """Orchestrator-named record items → verbatim blocks (§13.3). The
-    orchestrator NAMES blocks; this resolver fetches their content untouched
-    — the model never authors or summarizes what goes into a briefing. An id
-    that doesn't resolve is logged and skipped, not improvised."""
+    """Orchestrator-named record items → verbatim blocks. The orchestrator
+    NAMES blocks; this resolver fetches their content untouched — the model
+    never authors or summarizes what goes into a briefing. An id that
+    doesn't resolve is logged and skipped, not improvised."""
     import logging
 
     logger = logging.getLogger(__name__)
@@ -106,6 +189,10 @@ def resolve_blocks(record, block_ids: list[str]) -> list[ContextBlock]:
         elif block_id.startswith("finding:"):
             fid = block_id.split(":", 1)[1]
             match = next((f for f in record.findings if f.finding_id == fid), None)
+            content = match.model_dump() if match else None
+        elif block_id.startswith("assessment:"):
+            aid = block_id.split(":", 1)[1]
+            match = next((a for a in record.assessments if a.assessment_id == aid), None)
             content = match.model_dump() if match else None
         elif block_id.startswith("answer:"):
             qid = block_id.split(":", 1)[1]
@@ -128,6 +215,6 @@ def resolve_blocks(record, block_ids: list[str]) -> list[ContextBlock]:
 
 def context_digest(context: dict) -> str:
     """sha256 over the canonical bytes — same serialization that signs the
-    mandate corpus and chains the ledger, so two runs' contexts compare as
-    equal exactly when their bytes are."""
+    corpus and chains the ledger, so two runs' contexts compare as equal
+    exactly when their bytes are."""
     return payload_hash(context, exclude_keys=())

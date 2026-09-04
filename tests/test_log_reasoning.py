@@ -1,187 +1,109 @@
+"""Log's judged verdicts become assessments citing the floor's measurements."""
+from __future__ import annotations
+
 import pytest
 
-# PARKED — migration-plan.md Phase 2/3.
-#
-# These cover Log's prompt, which is real and still wanted. They are parked because
-# their FIXTURE is gone: every one built its case from data/cases/*.json, and
-# the corpus is now two dossiers with a different shape.
-#
-# Parked rather than deleted, and loudly rather than quietly: the logic under
-# test did not stop mattering, and a silently shrinking suite is how a
-# migration loses coverage nobody notices. Each comes back when the pipeline
-# consumes a Dossier and a dossier fixture exists to replace the case one.
-pytestmark = pytest.mark.skip(reason="fixture removed with the case corpus — migration Phase 2/3")
-
-from agents.llm import THINKING_EFFORT
-from agents.log import LogAgent, LogReview
+from agents.llm import ModelDidNotCallTool, message_text
+from agents.log import LogAgent
 from agents.log_reasoning import analyze_log
-from data.loader import DATA_DIR
-from ingestion.normalize import normalize_case
 from registry.loader import load_log_ruleset
-from schemas import Finding, Observation
+from schemas import Observation
 from tests.fakes import FakeChatModel
 
 
 def _rules():
     ruleset = load_log_ruleset()
-    structuring = next(r for r in ruleset.rules if r.type == "transaction_structuring_detected")
-    concentration = next(r for r in ruleset.rules if r.type == "counterparty_concentration_anomaly")
-    velocity = next(r for r in ruleset.rules if r.type == "transaction_velocity_anomaly")
-    return structuring, concentration, velocity
+    by_type = {r.type: r for r in ruleset.rules}
+    return (by_type["transaction_structuring_detected"], by_type["counterparty_concentration_anomaly"],
+            by_type["transaction_velocity_anomaly"])
 
 
-_NOT_ANOMALOUS = {"anomalous": False, "explanation": "n/a", "cited_evidence": "n/a"}
-
-_CLEAN_RESULT = {
-    "structuring": _NOT_ANOMALOUS,
-    "concentration": _NOT_ANOMALOUS,
-    "velocity": _NOT_ANOMALOUS,
-    "other_observations": [],
-}
+_NOT = {"anomalous": False, "explanation": "n/a", "cited_evidence": "n/a", "transaction_ids": []}
+_CLEAN = {"structuring": _NOT, "concentration": _NOT, "velocity": _NOT, "other_observations": []}
 
 
-async def test_no_findings_when_nothing_anomalous() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-001-compliant.json")
-    fake = FakeChatModel({"record_log_analysis": _CLEAN_RESULT})
+def _facts(kst):
+    return LogAgent().run(kst, load_log_ruleset())
 
-    findings, observations = await analyze_log(case, *_rules(), model=fake)
 
-    assert findings == []
+async def test_clean_judgements_are_clear_assessments_citing_measurements(kst) -> None:
+    fake = FakeChatModel({"record_log_analysis": _CLEAN})
+    assessments, observations = await analyze_log(kst, _facts(kst), *_rules(), model=fake)
+    assert [(a.rule_id, a.verdict) for a in assessments] == [
+        ("LOG-STR-01", "clear"), ("LOG-CON-01", "clear"), ("LOG-VEL-01", "clear")]
+    assert all(not a.scores for a in assessments)
+    assert assessments[0].fact_ids == ["DOSSIER-KST-2026-001:LOG-STR-01#candidate_clusters"]
     assert observations == []
 
 
-async def test_structuring_finding_when_model_judges_the_cluster_deliberate() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-005-structuring.json")
-    result = {
-        **_CLEAN_RESULT,
-        "structuring": {
-            "anomalous": True,
-            "explanation": "3 payments to Guria Import-Export, 17-22 min apart, each under the ₾3,000 threshold, summing to ₾8,700.",
-            "cited_evidence": "amounts=[2900.0, 2850.0, 2950.0], sum=8700.0",
-        },
-    }
-    fake = FakeChatModel({"record_log_analysis": result})
-
-    findings, _ = await analyze_log(case, *_rules(), model=fake)
-
-    assert len(findings) == 1
-    assert isinstance(findings[0], Finding)
-    assert findings[0].rule_id == "LOG-STR-01"
-    assert findings[0].agent == "log"
+async def test_an_anomalous_judgement_is_a_breach_priced_at_the_floor(kst) -> None:
+    result = {**_CLEAN, "structuring": {"anomalous": True,
+                                        "explanation": "Two same-day payments to one merchant sum past the threshold.",
+                                        "cited_evidence": "sum 1240.0",
+                                        "transaction_ids": ["TXN-KST-0001"]}}
+    assessments, _ = await analyze_log(kst, _facts(kst), *_rules(), model=FakeChatModel({"record_log_analysis": result}))
+    a = next(a for a in assessments if a.rule_id == "LOG-STR-01")
+    assert a.verdict == "breach" and a.confidence == "probable"
+    assert a.severity_floor == a.severity_assessed == 0.85 and a.weighted() == pytest.approx(0.85 * 0.7)
+    assert a.subject == "sum 1240.0"
+    assert a.run_refs == ["RUN-2026-0616-0001"]
+    assert [r.ref for r in a.evidence_refs] == ["TXN-KST-0001"]
 
 
-async def test_concentration_finding_when_flagged() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-005-structuring.json")
-    result = {
-        **_CLEAN_RESULT,
-        "concentration": {
-            "anomalous": True,
-            "explanation": "48.8% of spend concentrated on Guria Import-Export.",
-            "cited_evidence": "share=0.488, count=7 of 16 transactions",
-        },
-    }
-    fake = FakeChatModel({"record_log_analysis": result})
-
-    findings, _ = await analyze_log(case, *_rules(), model=fake)
-
-    assert len(findings) == 1
-    assert findings[0].rule_id == "LOG-CON-01"
-    assert findings[0].severity_weight == _rules()[1].severity_weight
+async def test_other_observations_are_observations_never_assessments(kst) -> None:
+    result = {**_CLEAN, "other_observations": [{"note": "Weekend clustering.", "cited_evidence": "hourly"}]}
+    assessments, observations = await analyze_log(kst, _facts(kst), *_rules(), model=FakeChatModel({"record_log_analysis": result}))
+    (obs,) = observations
+    assert isinstance(obs, Observation) and obs.agent == "log"
+    assert len(assessments) == 3
 
 
-async def test_all_three_can_fire_together() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-005-structuring.json")
-    anomalous = {"anomalous": True, "explanation": "flagged", "cited_evidence": "x"}
-    result = {"structuring": anomalous, "concentration": anomalous, "velocity": anomalous, "other_observations": []}
-    fake = FakeChatModel({"record_log_analysis": result})
-
-    findings, _ = await analyze_log(case, *_rules(), model=fake)
-
-    assert {f.rule_id for f in findings} == {"LOG-STR-01", "LOG-CON-01", "LOG-VEL-01"}
-    assert len({f.finding_id for f in findings}) == 3  # distinct ids, no collision
-
-
-async def test_other_observations_become_unscored_observation_objects() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-006-drift.json")
-    result = {
-        **_CLEAN_RESULT,
-        "other_observations": [
-            {"note": "Amounts cluster suspiciously close to round numbers.", "cited_evidence": "round_number_count=9"},
-        ],
-    }
-    fake = FakeChatModel({"record_log_analysis": result})
-
-    findings, observations = await analyze_log(case, *_rules(), model=fake)
-
-    assert findings == []
-    assert len(observations) == 1
-    assert isinstance(observations[0], Observation)
-    assert observations[0].agent == "log"
-    assert not hasattr(observations[0], "rule_id")
-    assert not hasattr(observations[0], "severity_weight")
+async def test_open_log_pattern_names_candidate_failure_transactions_and_runs(kst) -> None:
+    result = {**_CLEAN, "other_observations": [{
+        "note": "Round amounts repeat.", "cited_evidence": "TXN-KST-0001",
+        "failure_id": "F62", "transaction_ids": ["TXN-KST-0001", "TXN-INVENTED"],
+    }]}
+    _, observations = await analyze_log(
+        kst, _facts(kst), *_rules(), model=FakeChatModel({"record_log_analysis": result})
+    )
+    (obs,) = observations
+    assert obs.failure_id == "F62"
+    assert obs.transaction_refs == ["TXN-KST-0001"]
+    assert obs.run_refs == ["RUN-2026-0616-0001"]
 
 
-async def test_uses_high_thinking_effort_and_auto_tool_choice() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-001-compliant.json")
-    fake = FakeChatModel({"record_log_analysis": _CLEAN_RESULT})
-
-    await analyze_log(case, *_rules(), model=fake)
-
-    assert fake.last_bind_kwargs["tool_choice"] == {"type": "auto"}
-    assert fake.last_bind_kwargs["output_config"] == {"effort": THINKING_EFFORT}
-
-
-async def test_prompt_includes_candidate_clusters_and_threshold() -> None:
-    """The model is hardcoded nothing about whether a cluster IS
-    structuring — but it must be given the real candidate clusters and the
-    real threshold to judge against, or it has nothing to reason from."""
-    case = normalize_case(DATA_DIR / "cases" / "case-005-structuring.json")
-    fake = FakeChatModel({"record_log_analysis": _CLEAN_RESULT})
-
-    await analyze_log(case, *_rules(), model=fake)
-
-    payload = fake.last_messages[1].content
-    assert "candidate_structuring_clusters" in payload
-    assert "MER-GIE-001" in payload
-    assert "reporting_flag_threshold" in payload
-    assert "3000" in payload
+async def test_anomaly_without_a_valid_transaction_is_not_projectable(kst) -> None:
+    result = {**_CLEAN, "velocity": {
+        "anomalous": True, "explanation": "fast", "cited_evidence": "invented",
+        "transaction_ids": ["TXN-INVENTED"],
+    }}
+    assessments, _ = await analyze_log(
+        kst, _facts(kst), *_rules(), model=FakeChatModel({"record_log_analysis": result})
+    )
+    a = next(a for a in assessments if a.rule_id == "LOG-VEL-01")
+    assert a.verdict == "inconclusive" and a.failure_ids == []
 
 
-async def test_review_returns_all_findings_and_observations_from_one_call() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-005-structuring.json")
-    ruleset = load_log_ruleset()
-    result = {
-        "structuring": {"anomalous": True, "explanation": "x", "cited_evidence": "x"},
-        "concentration": {"anomalous": True, "explanation": "x", "cited_evidence": "x"},
-        "velocity": _NOT_ANOMALOUS,
-        "other_observations": [{"note": "note", "cited_evidence": "x"}],
-    }
-    fake = FakeChatModel({"record_log_analysis": result})
-
-    review = await LogAgent().review(case, ruleset, model=fake)
-
-    assert isinstance(review, LogReview)
-    assert len(review.findings) == 2
-    assert len(review.observations) == 1
+async def test_escalation_and_reviewer_addenda_reach_the_prompt(kst) -> None:
+    fake = FakeChatModel({"record_log_analysis": _CLEAN})
+    prior = [Observation(case_id="DOSSIER-KST-2026-001", agent="log", note="Weekend clustering.", cited_evidence="h")]
+    await analyze_log(kst, _facts(kst), *_rules(), model=fake, prior_observations=prior,
+                      reviewer_directive="Look at Saturdays.")
+    system = message_text(fake.last_messages_for("record_log_analysis")[0])
+    assert "escalation round" in system and "Weekend clustering." in system
+    assert "<reviewer_instruction>" in system and "Look at Saturdays." in system
 
 
-async def test_review_without_ruleset_does_not_call_the_model() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-005-structuring.json")
-    fake = FakeChatModel({"record_log_analysis": _CLEAN_RESULT})
+async def test_review_with_no_history_never_calls_the_model(kst) -> None:
+    from tests.corpus import thin
 
-    review = await LogAgent().review(case, None, model=fake)
+    fake = FakeChatModel({"record_log_analysis": _CLEAN})
+    review = await LogAgent().review(thin(kst, 0), load_log_ruleset(), model=fake)
+    assert fake.call_log == [] and len(review.facts) == 3
+    gap, = review.assessments  # the missing history is a data-gap concern, not a verdict
+    assert gap.verdict == "concern" and "3 rules" in gap.narrative
 
-    assert review.findings == []
-    assert fake.last_bind_kwargs is None
 
-
-async def test_empty_transaction_history_short_circuits_without_calling_the_model() -> None:
-    case = normalize_case(DATA_DIR / "cases" / "case-001-compliant.json")
-    case.case.transaction_history.clear()
-    fake = FakeChatModel({"record_log_analysis": _CLEAN_RESULT})
-
-    findings, observations = await analyze_log(case, *_rules(), model=fake)
-
-    assert findings == []
-    assert observations == []
-    assert fake.last_bind_kwargs is None
+async def test_model_that_does_not_call_the_tool_is_a_clear_error(kst) -> None:
+    with pytest.raises(ModelDidNotCallTool):
+        await analyze_log(kst, _facts(kst), *_rules(), model=FakeChatModel({}))

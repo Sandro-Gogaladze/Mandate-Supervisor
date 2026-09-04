@@ -18,12 +18,19 @@ from pydantic import BaseModel, ConfigDict, field_validator
 # One finding per event, not a batch: "every finding citable" needs each
 # finding to have its own seq, timestamp, and producing actor.
 EVENT_TYPES = frozenset({
-    "case_submitted",          # full raw CaseBundle dict
+    "dossier_submitted",
+    "control_posture_recorded", "specialist_failed", "authorisation_computed",
+    "authorisation_decided", "run_evaluated", "case_watched",
+    "portfolio_sweep_started", "portfolio_sweep_completed", "portfolio_finding_recorded",
+    "case_submitted",          # the submission: dossier.json + runs + transaction_history + firm
+    "fact_recorded",           # Fact — one per fact, so each has its own seq and actor
+    "assessment_recorded",     # Assessment
     "case_opened",             # {}
     "run_started",             # {run_id, kind, prompts: {prompt_id: {effective, override, default_version}}}
     "dispatch_planned",        # {plan: DispatchPlan, selected_skills} — the orchestrator's own reasoning
     "dispatch_recorded",       # DispatchRecord — the exact context sent to one agent
     "finding_recorded",        # Finding
+    "failure_occurrence_recorded",  # FailureOccurrence: named F-id + exact affected runs
     "observation_recorded",    # Observation
     "critic_checked",          # {target, finding_id?, passed, unquoted_values}
     "correlation_recorded",    # Correlation
@@ -38,6 +45,14 @@ EVENT_TYPES = frozenset({
     "report_blocked",          # {problems}
     "decision_recorded",       # ReviewerDecision
     "case_closed",             # {reason}
+    # {reason, cleared_through_seq} — the review history is set aside so the
+    # next run starts from the submission alone. Nothing is deleted: the
+    # ledger stays append-only and every earlier event is still readable and
+    # still in the hash chain. The projection simply stops carrying work
+    # recorded before this marker, and WHO reset it and WHEN is itself on
+    # the record — which is the only version of "clear history" a hash-
+    # chained audit trail can honestly offer.
+    "review_history_cleared",
 })
 
 _ACTOR_PREFIXES = ("system:", "agent:", "human:")
@@ -49,6 +64,7 @@ class LedgerEvent(BaseModel):
     seq: int
     case_id: str
     run_id: str | None
+    run_ref: str | None = None
     event_type: str
     payload: dict
     actor: str

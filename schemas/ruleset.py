@@ -18,6 +18,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 RuleStatus = Literal["active", "draft", "retired"]
+FailureRef = Annotated[str, StringConstraints(pattern=r"^[FS]\d{1,2}$")]
 
 # Rule `type` is the key a checker function is registered under. It was a
 # closed Literal through v2026.1, which worked at 33 rules in two domains and
@@ -116,6 +117,22 @@ class StructuringDetectionParams(BaseModel):
         return self.threshold_by_classification.get(classification or "", self.threshold)
 
 
+class BarringFlagsParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # Which register flags are a hard prohibition rather than information.
+    # A dial only in the sense that the vocabulary is the regulator's.
+    barring_flags: list[str] = Field(default_factory=lambda: ["sanctioned", "prohibited", "frozen"])
+
+
+class ConcentrationParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # F55: a payee the register first saw INSIDE the review window that
+    # already holds this share of the latest month's spend. A dial, not a
+    # fact — where "a brand-new recipient getting most of the money" starts
+    # is a supervisory judgement.
+    new_payee_min_share_pct: float = 20.0
+
+
 class DriftBaselineParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     baseline_window_days: int = 30
@@ -184,6 +201,9 @@ _PARAM_MODEL_BY_TYPE: dict[str, type[BaseModel]] = {
     "capability_vocabulary_allowlist": CapabilityVocabularyAllowlistParams,
     "consent_method_allowlist": ConsentMethodAllowlistParams,
     "transaction_structuring_detected": StructuringDetectionParams,
+    "counterparty_concentration_anomaly": ConcentrationParams,
+    "new_payee_concentration": ConcentrationParams,
+    "payee_not_on_a_barring_list": BarringFlagsParams,
     "behavioral_drift_detected": DriftBaselineParams,
 }
 
@@ -226,6 +246,10 @@ class Rule(BaseModel):
     # Why a draft rule can't be promoted yet, or any other rationale worth
     # keeping next to the rule instead of in a commit message.
     notes: str | None = None
+    # The coverage-model failures this rule detects ("F42"). Declared on the
+    # rule so that Control Assurance can learn from its peers by rule rather
+    # than by a hand-kept map, and so an eval can read the mapping as data.
+    failures: list[FailureRef] = Field(default_factory=list)
     params: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")

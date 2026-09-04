@@ -22,12 +22,14 @@ or network access.
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from schemas import Observation, ObservationAgent
 
@@ -39,7 +41,15 @@ logger = logging.getLogger(__name__)
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 DEFAULT_MODEL = "claude-sonnet-5"
-THINKING_EFFORT = "high"
+# Thinking tokens are output tokens, and output is what sets a review's wall
+# clock: at "high" a single specialist's judgement ran 59-155 s and a whole
+# first pass took ten minutes. Every judgement here reasons over evidence a
+# deterministic floor has already computed and laid out — which cluster,
+# which measurement, which run — so the model is interpreting prepared
+# numbers rather than deriving them, and that is not work "high" was for.
+# Overridable per environment so a specialist that turns out to need more
+# can have it without editing code.
+THINKING_EFFORT = os.environ.get("MANDATE_THINKING_EFFORT", "low")
 
 
 class LLMUnavailable(RuntimeError):
@@ -52,7 +62,117 @@ def get_model(*, model: str = DEFAULT_MODEL) -> ChatAnthropic:
             "ANTHROPIC_API_KEY is not set. Every agent's deterministic floor "
             "(run()) works fine without one — this is only needed for review()'s LLM passes."
         )
-    return ChatAnthropic(model=model, thinking={"type": "adaptive"})
+    # max_tokens: the orchestrator writes its working and a briefing per skill,
+    # Injection judges every run — the library's default of 1024 would cut
+    # a tool call off mid-argument.
+    # AG-UI can only relay token/tool-argument deltas that LangChain emits.
+    # ChatAnthropic defaults to a buffered response, which made the console
+    # receive a complete tool call at the end even though every layer after
+    # this one supports streaming.
+    return ChatAnthropic(
+        model=model,
+        thinking={"type": "adaptive"},
+        max_tokens=16000,
+        streaming=True,
+    )
+
+
+# ---------------------------------------------------------------- caching
+#
+# Every call an agent makes has the same two parts: a frozen system prompt
+# (Anthropic renders the tool schema, then system, then the messages) and
+# one JSON briefing. Both are marked as cache breakpoints, so a later call
+# whose bytes up to that point are identical — the same dossier reviewed
+# again inside the window, a demo re-run, a second pass, a dev loop — reads
+# them at ~10% of the input price instead of paying to process them again.
+#
+# Two things this deliberately does NOT do:
+#
+# - It does not move the escalation or reviewer addendum out of the system
+#   prompt to keep that prefix stable. Instructions reach a specialist
+#   through the system turn and evidence reaches it through the human turn;
+#   that boundary is a guardrail, not a layout choice. Those rounds change
+#   the prefix and miss the cache, and that is the right trade.
+# - It does not mark the orchestrator's payload, which carries the officer's
+#   request and a record that grows every turn — a breakpoint after volatile
+#   bytes only ever pays the write premium and is never read back.
+#
+# Anthropic's minimum cacheable prefix on claude-sonnet-5 is 1024 tokens: a
+# shorter prefix silently does not cache (no error, nothing billed). Several
+# system prompts sit near that line, which is why the briefing carries its
+# own breakpoint rather than relying on the system one alone.
+CACHE_BREAKPOINT = {"type": "ephemeral"}  # 5-minute TTL; a read refreshes it
+
+
+def system_message(text: str) -> SystemMessage:
+    """The system prompt as one cache-marked block."""
+    return SystemMessage(content=[{"type": "text", "text": text, "cache_control": CACHE_BREAKPOINT}])
+
+
+def briefing_message(payload: dict, *, cache: bool = True) -> HumanMessage:
+    """The composed context, serialized exactly as it is recorded on the
+    dispatch event, as one (by default cache-marked) block."""
+    block = {"type": "text", "text": json.dumps(payload, indent=2)}
+    if cache:
+        block["cache_control"] = CACHE_BREAKPOINT
+    return HumanMessage(content=[block])
+
+
+def message_text(message: BaseMessage) -> str:
+    """The text of a message whose content is either a string or the block
+    list the helpers above build."""
+    if isinstance(message.content, str):
+        return message.content
+    return "".join(b["text"] for b in message.content
+                   if isinstance(b, dict) and b.get("type") == "text")
+
+
+def log_cache_usage(response, label: str) -> None:
+    """What the cache actually did on one call. This is the only ground
+    truth that caching still works after a change to prompt assembly — a
+    broken prefix costs money silently, it never raises."""
+    details = (getattr(response, "usage_metadata", None) or {}).get("input_token_details") or {}
+    if not details:
+        return
+    logger.info("%s: cache read %s, written %s, uncached %s", label,
+                details.get("cache_read", 0), details.get("cache_creation", 0),
+                (getattr(response, "usage_metadata", None) or {}).get("input_tokens", 0))
+
+
+# The console shows each specialist's working the way a Claude conversation
+# shows thinking. This model returns no thinking text (only a signature), so
+# the working is asked for explicitly: the FIRST field of every recording
+# tool, written before any verdict, streamed as it is typed. It is the
+# model's own reasoning in its own words — not a paraphrase of the output.
+# Deliberately short. This used to ask for the working "in full", which was
+# right when it was the only visible trace; with adaptive thinking on, that
+# working is produced twice — once as thinking, once again here — and both
+# halves are output tokens, which is what a review's wall clock is made of.
+# What a reviewer needs from this field is the decisive consideration, not a
+# transcript: the facts are cited, the runs are named, and the narrative
+# carries the claim.
+REASONING_HINT = (
+    "Your working, briefly: the evidence that decided it and what you weighed against it. "
+    "Two or three sentences. Do not restate the evidence you were given or the verdict you "
+    "are about to record."
+)
+
+
+def with_reasoning(tool: dict, hint: str = REASONING_HINT) -> dict:
+    """The same tool with a required `reasoning` string as its first property.
+    If the schema already has one it is moved to the front and re-described."""
+    schema = dict(tool["input_schema"])
+    props = dict(schema.get("properties", {}))
+    props.pop("reasoning", None)
+    schema["properties"] = {"reasoning": {"type": "string", "description": hint}, **props}
+    required = [r for r in schema.get("required", []) if r != "reasoning"]
+    schema["required"] = ["reasoning", *required]
+    return {**tool, "input_schema": schema}
+
+
+def without_reasoning(result: dict) -> dict:
+    """A tool result with the working removed — for validators that forbid extras."""
+    return {k: v for k, v in result.items() if k != "reasoning"}
 
 
 class ModelDidNotCallTool(RuntimeError):
@@ -140,7 +260,25 @@ def parse_observations(
     tool's array field is exactly where a model is most likely to drift
     from its schema, so this is the one shape parsed defensively across
     every reasoning module rather than validated once and trusted forever.
+
+    The field itself can also arrive as something other than a list. A
+    streamed tool call whose arguments are assembled from deltas can present
+    an array as the JSON text of one, and iterating that yields *characters*
+    — one "malformed observation" warning per character, and every real
+    observation lost. Recover the list where the text parses, and fail once
+    and quietly where it does not.
     """
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError:
+            logger.warning("Discarding %s's observations for case %s: the field arrived as text "
+                           "that is not JSON (%d chars)", agent, case_id, len(raw))
+            return []
+    if not isinstance(raw, list):
+        logger.warning("Discarding %s's observations for case %s: expected a list, got %s",
+                       agent, case_id, type(raw).__name__)
+        return []
     observations = []
     for entry in raw:
         if not isinstance(entry, dict) or note_key not in entry or cited_key not in entry:
@@ -150,5 +288,9 @@ def parse_observations(
                 agent, case_id, note_key, cited_key, entry,
             )
             continue
-        observations.append(Observation(case_id=case_id, agent=agent, note=entry[note_key], cited_evidence=entry[cited_key]))
+        observations.append(Observation(
+            case_id=case_id, agent=agent, note=entry[note_key], cited_evidence=entry[cited_key],
+            failure_id=entry.get("failure_id"), run_refs=entry.get("run_refs", []),
+            transaction_refs=entry.get("transaction_refs", []),
+        ))
     return observations

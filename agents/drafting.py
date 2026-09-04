@@ -18,13 +18,14 @@ model fixes the actual problems rather than re-rolling blind.
 """
 from __future__ import annotations
 
-import json
 
-from langchain_core.messages import HumanMessage, SystemMessage
 
 from schemas import DispatchPlan, DraftReport, Finding, Observation, RiskScore
 
-from .llm import THINKING_EFFORT, get_model, get_tool_call
+from .llm import (
+    briefing_message, get_model, get_tool_call, log_cache_usage, system_message,
+    THINKING_EFFORT, with_reasoning, without_reasoning,
+)
 from .prompts import assemble
 
 PROMPT_ID = "DRAFTING"
@@ -36,7 +37,7 @@ Your previous draft FAILED grounding validation with these exact problems — fi
 them; change nothing else about your approach:
 {problems}"""
 
-_REPORT_TOOL = {
+_REPORT_TOOL = with_reasoning({
     "name": "draft_case_report",
     "description": "Submit the drafted supervisory report for this case.",
     "input_schema": {
@@ -69,7 +70,7 @@ _REPORT_TOOL = {
         },
         "required": ["overall_assessment", "sections", "open_observations_note"],
     },
-}
+})
 
 
 def _structured_view(
@@ -114,16 +115,7 @@ def _structured_view(
         ],
         "dispatch": (
             {
-                "ran": [
-                    name
-                    for name, ran in [
-                        ("mandate", dispatch_plan.run_mandate),
-                        ("kya", dispatch_plan.run_kya),
-                        ("log", dispatch_plan.run_log),
-                        ("drift", dispatch_plan.run_drift),
-                    ]
-                    if ran
-                ],
+                "ran": [skill.split(".")[0] for skill in dispatch_plan.skills],
                 "reasoning": dispatch_plan.reasoning,
             }
             if dispatch_plan
@@ -162,9 +154,10 @@ async def draft_case_report(
 
     payload = _structured_view(firm_name, findings, observations, dispatch_plan, escalation_round, risk_score)
     response = await bound.ainvoke([
-        SystemMessage(content=system),
-        HumanMessage(content=json.dumps(payload, indent=2)),
+        system_message(system),
+        briefing_message(payload),
     ])
+    log_cache_usage(response, "drafting")
 
     tool_input = get_tool_call(response, "draft_case_report")
-    return DraftReport.model_validate({"case_id": case_id, **tool_input})
+    return DraftReport.model_validate({"case_id": case_id, **without_reasoning(tool_input)})

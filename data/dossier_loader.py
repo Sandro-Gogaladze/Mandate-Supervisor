@@ -32,9 +32,10 @@ def _read(path: Path) -> dict:
 
 def load(directory: Path | str, *, with_ground_truth: bool = True) -> LoadedDossier:
     d = Path(directory)
-    dossier = Dossier.model_validate(_read(d / "dossier.json"))
+    raw_dossier = _read(d / "dossier.json")
+    dossier = Dossier.model_validate(raw_dossier)
 
-    runs, bad = [], []
+    runs, raw_runs, bad = [], {}, []
 
     # Scan the directory as well as the index. Walking only the index means a
     # run file dropped in afterwards is silently ignored here while anything
@@ -55,7 +56,9 @@ def load(directory: Path | str, *, with_ground_truth: bool = True) -> LoadedDoss
             # what this is here to catch, so it is an error, not a warning.
             bad.append(f"{ref.run_id}: content digest {actual[:19]}… "
                        f"does not match the index")
-        runs.append(Run.model_validate(_read(path)))
+        raw_run = _read(path)
+        runs.append(Run.model_validate(raw_run))
+        raw_runs[ref.run_id] = raw_run
     if bad:
         raise ValueError("run index does not match the run files:\n  " + "\n  ".join(bad))
 
@@ -70,7 +73,11 @@ def load(directory: Path | str, *, with_ground_truth: bool = True) -> LoadedDoss
     if with_ground_truth and (d / "ground_truth.json").exists():
         gt = GroundTruth.model_validate(_read(d / "ground_truth.json"))
 
-    return LoadedDossier(dossier=dossier, runs=runs, transaction_history=txns, ground_truth=gt)
+    # The raw dicts ride along: signatures cover the canonical bytes of what
+    # was filed, and intake verifies against those, never a model dump.
+    return LoadedDossier(dossier=dossier, runs=runs, transaction_history=txns, ground_truth=gt,
+                         raw_dossier=raw_dossier, raw_runs=raw_runs,
+                         run_file_bytes={ref.run_id: (d / ref.file).read_bytes() for ref in dossier.run_index})
 
 
 def load_for_pipeline(directory: Path | str) -> LoadedDossier:

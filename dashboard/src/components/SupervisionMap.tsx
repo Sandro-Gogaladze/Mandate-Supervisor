@@ -4,7 +4,7 @@
 // return edges that make this a LOOP, not a pipeline: work fans out from
 // the orchestrator and results come back to the conversation). Live runs
 // light nodes from the same step events the chat's live block reads.
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   Background,
   BaseEdge,
@@ -13,6 +13,7 @@ import {
   Panel,
   Position,
   ReactFlow,
+  useNodesState,
   useReactFlow,
   type Edge,
   type EdgeProps,
@@ -24,38 +25,32 @@ import { nodeMeta, AGENT_ICON } from '@/lib/node-meta'
 import type { FullMap, MapEdgeKind } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
-export type NodeStatus = 'pending' | 'active' | 'done' | 'awaiting'
+// unresolved: the specialist returned, but its judged rules are still open
+// (a facts-only pass, a timed-out model call). Not a finding, not clean.
+export type NodeStatus = 'pending' | 'active' | 'done' | 'awaiting' | 'clean' | 'findings' | 'unresolved'
 
-// Vertical, two-column layout tuned for a persistent side panel: the hub on
-// top, the three lanes stacked beneath, loop edges bending back upward.
-// Canvas is ~594 virtual px wide: the five workers sit in ONE row of
-// compact chips (106px each), the 168px spine nodes center above and
-// below them. fitView scales the whole thing into the panel.
-const SPINE_X = 213  // centers a 168-wide node on the workers' row
-const POSITIONS: Record<string, { x: number; y: number }> = {
-  supervisor: { x: SPINE_X, y: 0 },
-  orchestrator: { x: SPINE_X, y: 104 },
-  mandate: { x: 0, y: 216 },
-  kya: { x: 122, y: 216 },
-  log: { x: 244, y: 216 },
-  drift: { x: 366, y: 216 },
-  investigator: { x: 488, y: 216 },
-  findings: { x: SPINE_X, y: 334 },
-  synthesizer: { x: SPINE_X, y: 430 },
-  draft_report: { x: SPINE_X, y: 586 },
-  grounding_check: { x: SPINE_X, y: 682 },
-  human_gate: { x: SPINE_X, y: 778 },
+type MapNodeData = { nodeId: string; label: string; status: NodeStatus; synthetic: boolean; worker?: boolean }
+type MapNode = Node<MapNodeData, 'mapNode'>
+
+// Keep the original chip/spine design. Membership comes from the backend's
+// compiled graphs; wrap peers so new specialists cannot overlap at (0, 0).
+const SPINE_X = 213
+const DIMMED_IDS = new Set(['investigator', 'systemic', 'red_team'])
+function layout(map: FullMap) {
+  const peers = map.nodes.filter(n => n.role === 'peer')
+  const requested = map.nodes.filter(n => n.role === 'on_request')
+  const positions: Record<string, { x: number; y: number }> = {
+    supervisor: { x: SPINE_X, y: 0 }, orchestrator: { x: SPINE_X, y: 100 },
+  }
+  peers.forEach((n, i) => { positions[n.id] = { x: 30 + (i % 4) * 140, y: 210 + Math.floor(i / 4) * 104 } })
+  const y = 210 + Math.ceil(peers.length / 4) * 104
+  requested.forEach((n, i) => { positions[n.id] = { x: 90 + i * 150, y } })
+  const spine = ['control_assurance', 'findings', 'synthesizer', 'draft_report', 'grounding_check', 'human_gate']
+  spine.forEach((id, i) => { positions[id] = { x: SPINE_X, y: y + 112 + i * 86 + (i >= 3 ? 40 : 0) } })
+  // New support nodes get a visible row rather than silently overlapping.
+  map.nodes.filter(n => !positions[n.id]).forEach((n, i) => { positions[n.id] = { x: SPINE_X, y: y + 680 + i * 86 } })
+  return positions
 }
-
-const LANE_LABELS: { id: string; label: string; y: number }[] = [
-  { id: 'lane-drafting', label: 'REVIEW COMPLETE → REPORT & SIGN-OFF', y: 550 },
-]
-
-// The five parallel workers render as compact peer chips.
-const WORKER_IDS = new Set(['mandate', 'kya', 'log', 'drift', 'investigator'])
-// The investigator only joins when the orchestrator routes a question to
-// it — dimmed until it actually lights.
-const DIMMED_IDS = new Set(['investigator'])
 
 // One-line captions under each node's name while idle.
 const CAPTIONS: Record<string, string> = {
@@ -66,23 +61,31 @@ const CAPTIONS: Record<string, string> = {
 }
 
 const STATUS_RING: Record<NodeStatus, string> = {
-  active: 'ring-2 ring-amber-500/60 shadow-[0_0_0_5px_rgba(245,158,11,0.14)] border-amber-500/70',
+  // Matches the chat's pills: blue is activity, red is findings.
+  active: 'ring-2 ring-blue-500/60 shadow-[0_0_0_5px_rgba(59,130,246,0.16)] border-blue-500/70',
+  clean: 'ring-1 ring-emerald-500/50 border-emerald-500/50',
+  findings: 'ring-1 ring-red-500/50 border-red-500/50',
+  unresolved: 'ring-1 ring-border border-dashed border-muted-foreground/50',
   done: 'ring-1 ring-emerald-500/50 border-emerald-500/50',
   pending: 'ring-1 ring-border border-border',
   awaiting: 'ring-2 ring-primary/50 shadow-[0_0_0_5px_oklch(0.55_0.21_262_/_0.12)] border-primary/60',
 }
 
-function MapNodeView({ data }: { data: { nodeId: string; label: string; status: NodeStatus; synthetic: boolean } }) {
+function MapNodeView({ data }: { data: MapNodeData }) {
   const meta = nodeMeta(data.nodeId)
   const Icon = data.nodeId === 'supervisor' ? UserRound : meta.icon
   const icon = AGENT_ICON[meta.color]
-  const worker = WORKER_IDS.has(data.nodeId)
+  const worker = data.worker
   const dimmed = DIMMED_IDS.has(data.nodeId) && data.status === 'pending'
 
   const iconWrap =
     data.status === 'active'
-      ? 'bg-amber-500 text-white'
-      : data.status === 'done'
+      ? 'bg-blue-500 text-white'
+      : data.status === 'findings'
+        ? 'bg-red-500/20 text-red-700 dark:text-red-400'
+        : data.status === 'unresolved'
+        ? 'bg-muted text-muted-foreground'
+        : ['done', 'clean'].includes(data.status)
         ? 'bg-emerald-500 text-white'
         : data.status === 'awaiting'
           ? 'bg-primary text-primary-foreground'
@@ -94,8 +97,8 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
     <>
       {data.status === 'active' && (
         <span className="absolute -right-1 -top-1 flex size-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-amber-500" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
+          <span className="relative inline-flex size-2.5 rounded-full bg-blue-500" />
         </span>
       )}
       {data.status === 'awaiting' && (
@@ -130,7 +133,7 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
           {data.label}
         </div>
         <div className="text-[8px] font-medium uppercase tracking-wide text-muted-foreground">
-          {data.status === 'active' ? 'working…' : data.status === 'done' ? 'complete' : dimmed ? 'on request' : 'ready'}
+          {data.status === 'active' ? 'working…' : data.status === 'findings' ? 'returned · findings' : data.status === 'unresolved' ? 'returned · unresolved' : data.status === 'clean' ? 'returned · clean' : data.status === 'done' ? 'complete' : dimmed ? 'on request' : 'ready'}
         </div>
         {statusDot}
         <Handle type="source" position={Position.Bottom} className="!h-2 !w-2 !border !border-card !bg-muted-foreground/50" />
@@ -162,7 +165,10 @@ function MapNodeView({ data }: { data: { nodeId: string; label: string; status: 
         <div className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
           {data.status === 'active'
             ? 'working…'
-            : data.status === 'done'
+            : data.status === 'findings' ? 'returned · findings'
+              : data.status === 'unresolved' ? 'returned · unresolved'
+              : data.status === 'clean' ? 'returned · clean'
+              : data.status === 'done'
               ? 'complete'
               : data.status === 'awaiting'
                 ? 'awaiting you'
@@ -251,32 +257,39 @@ export function SupervisionMap({
   map,
   nodeStatus,
   nodeStartSeq = {},
+  onNodeClick,
 }: {
   map: FullMap
   nodeStatus: Record<string, NodeStatus>
   nodeStartSeq?: Record<string, number>
+  onNodeClick?: (id: string) => void
 }) {
-  const nodes = useMemo<Node[]>(() => {
-    const flow: Node[] = map.nodes.map((n) => ({
+  // Node objects are created once per map and afterwards only their
+  // `data.status` changes. React Flow keeps a node's measured size on the
+  // object it was handed; rebuilding the objects on every status change made
+  // it re-measure every node, and while a run's stream kept the main thread
+  // busy the unmeasured nodes rendered invisible — the boxes vanished
+  // mid-run and came back one at a time. Controlled nodes keep their size.
+  const [nodes, setNodes, onNodesChange] = useNodesState<MapNode>([])
+  const latestStatus = useRef(nodeStatus)
+  latestStatus.current = nodeStatus
+  useEffect(() => {
+    const positions = layout(map)
+    setNodes(map.nodes.map((n) => ({
       id: n.id,
       type: 'mapNode',
-      position: POSITIONS[n.id] ?? { x: 0, y: 0 },
-      data: { nodeId: n.id, label: n.label, status: nodeStatus[n.id] ?? 'pending', synthetic: n.synthetic },
+      position: positions[n.id],
+      data: { nodeId: n.id, label: n.label, status: latestStatus.current[n.id] ?? 'pending', synthetic: n.synthetic, worker: n.role === 'peer' || n.role === 'on_request' },
       sourcePosition: Position.Bottom,
       targetPosition: Position.Top,
+    })))
+  }, [map, setNodes])
+  useEffect(() => {
+    setNodes((current) => current.map((n) => {
+      const status = nodeStatus[n.id] ?? 'pending'
+      return n.data.status === status ? n : { ...n, data: { ...n.data, status } }
     }))
-    for (const lane of LANE_LABELS) {
-      flow.push({
-        id: lane.id,
-        type: 'laneLabel',
-        position: { x: 0, y: lane.y },
-        data: { label: lane.label },
-        selectable: false,
-        draggable: false,
-      })
-    }
-    return flow
-  }, [map.nodes, nodeStatus])
+  }, [nodeStatus, setNodes])
 
   const edges = useMemo<Edge[]>(
     () =>
@@ -287,7 +300,7 @@ export function SupervisionMap({
         const traversed = sourceStart !== undefined && targetStart !== undefined && targetStart > sourceStart
         const live = traversed && nodeStatus[e.target] === 'active'
         const holding = traversed && nodeStatus[e.target] === 'awaiting'
-        const settled = traversed && nodeStatus[e.target] === 'done'
+        const settled = traversed && ['done', 'clean', 'findings', 'unresolved'].includes(nodeStatus[e.target])
         const routing = EDGE_ROUTING[`${e.source}-${e.target}`]
         return {
           id: `${e.source}-${e.target}-${e.kind}`,
@@ -319,6 +332,8 @@ export function SupervisionMap({
     <div className="h-full w-full">
       <ReactFlow
         nodes={nodes}
+        onNodesChange={onNodesChange}
+        onNodeClick={(_, node) => onNodeClick?.(node.id)}
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}

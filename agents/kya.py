@@ -1,55 +1,71 @@
-"""KYA agent (PLAN item 5).
+"""KYA agent (A2) — authority traceable to a human?
 
 Two layers, kept structurally separate on purpose:
 
-- `run()` — the deterministic floor. All 18 active KYA rules, unconditionally.
-  This is the Protocol-conformant method (agents/base.py) the orchestrator
-  (pipeline/graph.py) calls; no LLM involved, fully reproducible, testable
-  without any API key. 6 rule types via ingestion/verify.py (credential
-  signature/hash/alg, delegation-entry signatures, issuer trust/revocation
-  — Phase 3), 12 via agents/kya_checks.py (issuer trust-level/staleness,
-  credential lifecycle, delegation-chain shape, capabilities, consent).
+- `run()` — the deterministic floor: the six cryptographic rules
+  (ingestion/verify.py, against the raw submission) plus the rest of the
+  active KYA book (agents/kya_checks.py), as facts over the whole dossier.
+  No model, no key, reproducible.
 - `review()` — floor + the agentic ceiling (free-text reasoning over
-  anything the fixed rules can't catch) + grounded narration. Needs a live
-  ANTHROPIC_API_KEY unless reasoning/narration are disabled or a fake
-  client is injected. Returns a `KYAReview`, not a bare `list[Finding]` —
-  `findings` and `observations` are never merged, see agents/kya_reasoning.py.
+  anything the fixed rules can't catch — a near-name issuer, a structural
+  oddity) + grounded narration. Returns a `SpecialistReview`; observations
+  and assessments are never merged.
+
+Provenance owns three of the book's rules (TEC-02/05/06) and evaluates them
+from `construction_context`; this agent skips them deliberately.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from ingestion.verify import RawSubmissionMissing, credential_facts_with_ruleset
+from schemas import Assessment, EvidencePack, Fact, FactBuilder, Ruleset
+from schemas.dossier import LoadedDossier
 
-from ingestion.normalize import IngestedCase
-from ingestion.verify import verify_credential_with_ruleset
-from schemas import Finding, Ruleset
-
+from .base import SpecialistReview, floor
 from .kya_checks import run_policy_checks
+from .kya_reasoning import Observation, activity_summary, narrate_findings, reason_about_case
 from .prompts import effective_text
-from .kya_reasoning import Observation, narrate_findings, reason_about_case
 
-
-@dataclass
-class KYAReview:
-    findings: list[Finding]
-    observations: list[Observation] = field(default_factory=list)
-    narration: str | None = None
+KYAReview = SpecialistReview
 
 
 class KYAAgent:
     name = "kya"
 
-    def run(self, case: IngestedCase, ruleset: Ruleset | None) -> list[Finding]:
+    def run(self, dossier: LoadedDossier, ruleset: Ruleset | None, *,
+            evidence: EvidencePack | None = None) -> list[Fact]:
         if ruleset is None:
             return []
-        crypto_findings = verify_credential_with_ruleset(case.raw, ruleset)
-        policy_findings = run_policy_checks(case.case, ruleset)
-        return crypto_findings + policy_findings
+        try:
+            crypto = credential_facts_with_ruleset(dossier, ruleset)
+        except RawSubmissionMissing:
+            # A dossier constructed without its raw submission cannot be
+            # verified; intake's record is the next best thing.
+            crypto = [f for f in (evidence.ingestion_facts if evidence else []) if f.domain == "kya"]
+        facts = crypto + run_policy_checks(dossier, ruleset)
+        # REG-03 is judged: the floor records what the judgement rests on,
+        # active or draft, so the evidence is on the record either way.
+        reg_03 = next((r for r in ruleset.rules
+                       if r.type == "agent_activity_matches_classification"), None)
+        if reg_03 is not None:
+            summary = activity_summary(dossier)
+            facts.append(FactBuilder(dossier.dossier.dossier_id, self.name).measurement(
+                "activity_summary",
+                f"{summary['transactions']} transactions ({summary['in_window']} in window) "
+                f"totalling {summary['settled_total']}, largest {summary['largest_single']}, "
+                f"{summary['distinct_counterparties']} counterparties.",
+                rule=reg_03, values=summary))
+        return facts
+
+    def assess(self, facts: list[Fact], ruleset: Ruleset | None,
+               dossier: LoadedDossier, *, round: int = 1) -> list[Assessment]:
+        return floor(facts, ruleset, dossier, agent=self.name, round=round) if ruleset else []
 
     async def review(
         self,
-        case: IngestedCase,
+        dossier: LoadedDossier,
         ruleset: Ruleset | None,
         *,
+        evidence: EvidencePack | None = None,
         model=None,
         reason: bool = True,
         narrate: bool = True,
@@ -57,23 +73,27 @@ class KYAAgent:
         reviewer_directive: str | None = None,
         prompts: dict[str, dict] | None = None,
         context: dict | None = None,
-    ) -> KYAReview:
-        findings = self.run(case, ruleset)
+        round: int = 1,
+    ) -> SpecialistReview:
+        facts = self.run(dossier, ruleset, evidence=evidence)
+        assessments = self.assess(facts, ruleset, dossier, round=round)
         # `prompts` is the run's assembled prompt set (agents/prompts.py) —
         # the same text recorded on run_started; `context` is the composed
         # evidence recorded on dispatch_recorded (agents/context.py).
         reasoning_prompt = effective_text(prompts, "SPECIALIST-KYA") if prompts else None
         narration_prompt = effective_text(prompts, "KYA-NARRATION") if prompts else None
-        observations = (
-            await reason_about_case(
-                case, findings, model=model, prior_observations=prior_observations,
+        observations: list[Observation] = []
+        if reason:
+            observations, judged = await reason_about_case(
+                dossier, facts, model=model, prior_observations=prior_observations,
                 reviewer_directive=reviewer_directive, system_prompt=reasoning_prompt,
-                context=context,
+                context=context, ruleset=ruleset, round=round,
             )
-            if reason else []
-        )
+            assessments = assessments + judged
         narration = (
-            await narrate_findings(case.case.case_id, findings, model=model, system_prompt=narration_prompt)
+            await narrate_findings(dossier.dossier.dossier_id, assessments, model=model,
+                                   system_prompt=narration_prompt)
             if narrate else None
         )
-        return KYAReview(findings=findings, observations=observations, narration=narration)
+        return SpecialistReview(facts=facts, assessments=assessments,
+                                observations=observations, narration=narration)

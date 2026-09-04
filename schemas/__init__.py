@@ -1,4 +1,3 @@
-from .case import CaseBundle, Firm, ScenarioLabel
 from .common import ChainLink, SignatureEnvelope
 from .correlation import Correlation
 from .assessment import (
@@ -10,9 +9,22 @@ from .assessment import (
     Verdict,
 )
 from .dispatch import DispatchPlan, DispatchRecord
-from .fact import AbsentReason, EvidenceRef, Fact, FactKind
+from .evidence import (
+    AmountProfile,
+    ControlProfile,
+    CounterpartyProfile,
+    DriftBaseline,
+    EvidencePack,
+    Integrity,
+    RegistryResolution,
+    SubmissionProfile,
+    TimingProfile,
+)
+from .fact import DATA_GAP_REASONS, AbsentReason, EvidenceRef, Fact, FactBuilder, FactKind
 from .finding import Finding, FindingAgent
+from .failure import FailureCatalogue, FailureDefinition, FailureId, FailureOccurrence
 from .kya import DelegationEntry, IssuerRef, KYACredential
+from .kya_evidence import KYAEvidenceBundle, KYAResultSummary
 from .mandate import (
     AgentAttestation,
     AgentInfo,
@@ -50,10 +62,22 @@ from .submission import (
     SubMerchant,
     ToolCall,
 )
+from .specialist_evidence import RuleResultIndex, SpecialistEvidenceContract
 from .transaction import TransactionLogEntry
 
 __all__ = [
     "AbsentReason",
+    "DATA_GAP_REASONS",
+    "EvidencePack",
+    "FactBuilder",
+    "AmountProfile",
+    "ControlProfile",
+    "CounterpartyProfile",
+    "DriftBaseline",
+    "Integrity",
+    "RegistryResolution",
+    "SubmissionProfile",
+    "TimingProfile",
     "Assessment",
     "CONFIDENCE_FACTOR",
     "Confidence",
@@ -64,13 +88,10 @@ __all__ = [
     "FactKind",
     "SCORING_VERDICTS",
     "Verdict",
-    "CaseBundle",
     "ConsentCeremony",
     "ConstructionContext",
     "Controls",
     "SubMerchant",
-    "Firm",
-    "ScenarioLabel",
     "ChainLink",
     "SignatureEnvelope",
     "Correlation",
@@ -79,8 +100,14 @@ __all__ = [
     "DelegationEntry",
     "Finding",
     "FindingAgent",
+    "FailureCatalogue",
+    "FailureDefinition",
+    "FailureId",
+    "FailureOccurrence",
     "IssuerRef",
     "KYACredential",
+    "KYAEvidenceBundle",
+    "KYAResultSummary",
     "AgentAttestation",
     "AgentInfo",
     "AllowedCounterparty",
@@ -109,9 +136,11 @@ __all__ = [
     "ScoringConfig",
     "ScoringTier",
     "Rule",
+    "RuleResultIndex",
     "RuleStatus",
     "RuleType",
     "Ruleset",
+    "SpecialistEvidenceContract",
     "typed_params",
     "TransactionLogEntry",
 ]

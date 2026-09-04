@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ClipboardList, LayoutDashboard, UserRound } from 'lucide-react'
+import { ClipboardList, LayoutDashboard, UserRound, Network } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -16,8 +16,9 @@ import {
 } from '@/components/ui/sidebar'
 import { nodeMeta, SPECIALISTS, AGENT_ICON } from '@/lib/node-meta'
 import { cn } from '@/lib/utils'
+import { DEFAULT_OFFICER, useOfficer } from '@/lib/officer'
 
-export type SectionName = 'overview' | 'queue'
+export type SectionName = 'overview' | 'queue' | 'portfolio'
 
 export function AppSidebar({
   section,
@@ -28,6 +29,7 @@ export function AppSidebar({
   onNavigate: (section: SectionName) => void
   queueCount: number | null
 }) {
+  const [officer, setOfficer] = useOfficer()
   // A real, cheap health signal — pings the FastAPI backend once on mount
   // rather than showing a decorative always-green dot.
   const [healthy, setHealthy] = useState<boolean | null>(null)
@@ -74,6 +76,7 @@ export function AppSidebar({
                 </SidebarMenuButton>
                 {queueCount != null && queueCount > 0 && <SidebarMenuBadge>{queueCount}</SidebarMenuBadge>}
               </SidebarMenuItem>
+              <SidebarMenuItem><SidebarMenuButton isActive={section === 'portfolio'} onClick={() => onNavigate('portfolio')} tooltip="Portfolio"><Network /><span>Portfolio</span></SidebarMenuButton></SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -113,7 +116,14 @@ export function AppSidebar({
                 <UserRound className="size-3.5 text-sidebar-foreground/70" />
               </div>
               <div className="grid leading-tight group-data-[collapsible=icon]:hidden">
-                <span className="text-xs font-medium">Case officer</span>
+                <input
+                  value={officer}
+                  onChange={(e) => setOfficer(e.target.value)}
+                  onBlur={(e) => !e.target.value.trim() && setOfficer(DEFAULT_OFFICER)}
+                  placeholder={DEFAULT_OFFICER}
+                  aria-label="Acting as — recorded on everything you do"
+                  className="w-full bg-transparent text-xs font-medium outline-none placeholder:text-sidebar-foreground/50 focus:underline"
+                />
                 <span className="flex items-center gap-1.5 text-[10px] text-sidebar-foreground/60">
                   <span
                     className={cn(

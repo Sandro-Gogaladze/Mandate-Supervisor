@@ -17,13 +17,22 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from pipeline.state import _add_findings, _add_observations
+from pipeline.state import (
+    _add_assessments,
+    _add_facts,
+    _add_failure_occurrences,
+    _add_findings,
+    _add_observations,
+)
 from schemas import (
+    Assessment,
     Correlation,
+    Fact,
     DispatchPlan,
     DispatchRecord,
     DraftReport,
     Finding,
+    FailureOccurrence,
     InvestigationAnswer,
     Observation,
     ReviewerDecision,
@@ -43,7 +52,7 @@ CaseStatus = Literal[
     "closed_no_action",
 ]
 
-RunKind = Literal["triage", "investigation", "drafting"]
+RunKind = Literal["triage", "investigation", "drafting", "portfolio"]
 
 
 class RunRecord(BaseModel):
@@ -57,7 +66,10 @@ class RunRecord(BaseModel):
     prompts: dict[str, dict] = Field(default_factory=dict)
     plan: DispatchPlan | None = None      # the orchestrator's own reasoning (dispatch_planned)
     dispatches: list[DispatchRecord] = Field(default_factory=list)
+    facts: list[Fact] = Field(default_factory=list)
+    assessments: list[Assessment] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)
+    failure_occurrences: list[FailureOccurrence] = Field(default_factory=list)
     observations: list[Observation] = Field(default_factory=list)
     correlations: list[Correlation] = Field(default_factory=list)
     risk_score: RiskScore | None = None
@@ -85,7 +97,10 @@ class CaseRecord(BaseModel):
     status: CaseStatus
     firm: str
     runs: list[RunRecord] = Field(default_factory=list)
+    facts: list[Fact] = Field(default_factory=list)             # union across runs, deduped
+    assessments: list[Assessment] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)       # union across runs, deduped
+    failure_occurrences: list[FailureOccurrence] = Field(default_factory=list)
     observations: list[Observation] = Field(default_factory=list)
     correlations: list[Correlation] = Field(default_factory=list)
     answers: list[InvestigationAnswer] = Field(default_factory=list)
@@ -137,6 +152,28 @@ def _derive_status(
     return "submitted"
 
 
+# Events that survive a reset, in one place. The console, the queue summary
+# and the projection must agree on what a cleared case looks like; three
+# copies of this filter is how the queue kept showing a disposition for a
+# case whose review had been cleared.
+def visible_events(events: "list[LedgerEvent]") -> "list[LedgerEvent]":
+    """`events` minus everything a `review_history_cleared` marker set aside.
+
+    Nothing is deleted — the ledger is append-only and its hash chain is
+    global, so a row removed here would invalidate every event recorded after
+    it in every case. This decides only what is *carried forward*: the
+    submission always survives, because it is the evidence, not the review of
+    it.
+    """
+    cleared = max((e.seq for e in events
+                   if e.event_type == "review_history_cleared"), default=0)
+    if not cleared:
+        return list(events)
+    return [e for e in events
+            if e.seq > cleared
+            or e.event_type in ("case_submitted", "dossier_submitted", "case_opened")]
+
+
 def project_case(events: list[LedgerEvent]) -> CaseRecord:
     if not events:
         raise EmptyCaseError("cannot project a case from zero events")
@@ -146,7 +183,10 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
     submitted_summary: str | None = None
     runs: dict[str, RunRecord] = {}
     run_order: list[str] = []
+    facts: list[Fact] = []
+    assessments: list[Assessment] = []
     findings: list[Finding] = []
+    failure_occurrences: list[FailureOccurrence] = []
     observations: list[Observation] = []
     correlations: list[Correlation] = []
     answers: list[InvestigationAnswer] = []
@@ -164,11 +204,15 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
     # a draft only "awaits a decision" if no decision has landed after it
     draft_pending = False
 
+    events = visible_events(events)
+
     for event in events:
         payload = event.payload
         kind = event.event_type
 
-        if kind == "case_submitted":
+        if kind == "review_history_cleared":
+            continue
+        if kind in ("case_submitted", "dossier_submitted"):
             firm = (payload.get("firm") or {}).get("name", firm)
             submitted_summary = payload.get("narrative") or submitted_summary
         elif kind == "case_opened":
@@ -189,11 +233,29 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
             record = DispatchRecord.model_validate(payload)
             if record.run_id in runs:
                 runs[record.run_id].dispatches.append(record)
+        elif kind == "fact_recorded":
+            fact = Fact.model_validate(payload)
+            facts = _add_facts(facts, [fact])
+            if event.run_id in runs:
+                runs[event.run_id].facts = _add_facts(runs[event.run_id].facts, [fact])
+        elif kind == "assessment_recorded":
+            assessment = Assessment.model_validate(payload)
+            assessments = _add_assessments(assessments, [assessment])
+            if event.run_id in runs:
+                runs[event.run_id].assessments = _add_assessments(
+                    runs[event.run_id].assessments, [assessment])
         elif kind == "finding_recorded":
             finding = Finding.model_validate(payload)
             findings = _add_findings(findings, [finding])
             if event.run_id in runs:
                 runs[event.run_id].findings = _add_findings(runs[event.run_id].findings, [finding])
+        elif kind == "failure_occurrence_recorded":
+            occurrence = FailureOccurrence.model_validate(payload)
+            failure_occurrences = _add_failure_occurrences(failure_occurrences, [occurrence])
+            if event.run_id in runs:
+                runs[event.run_id].failure_occurrences = _add_failure_occurrences(
+                    runs[event.run_id].failure_occurrences, [occurrence]
+                )
         elif kind == "observation_recorded":
             observation = Observation.model_validate(payload)
             observations = _add_observations(observations, [observation])
@@ -243,6 +305,34 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
 
     open_questions = [q for qid, q in questions.items() if qid not in answered]
 
+    # A later round's assessment of a claim supersedes the earlier round's;
+    # both stay on the record, but the findings scoring and drafting read
+    # are the current ones only (agents/assess.py::superseded_ids).
+    from agents.assess import current, current_findings
+
+    findings = current_findings(findings, assessments)
+    current_assessments = {a.assessment_id: a for a in current(assessments)}
+    current_occurrences: list[FailureOccurrence] = []
+    for occurrence in failure_occurrences:
+        assessment = current_assessments.get(occurrence.assessment_id)
+        if assessment is None:
+            continue
+        # A focused later review can replace only some runs from an earlier
+        # assessment. ``current()`` returns the surviving slice; mirror that
+        # slice here so the case-level occurrence never names a run whose
+        # assessment was superseded. The producing RunRecord still retains
+        # the original occurrence unchanged as audit history.
+        scope = assessment.scope
+        if scope == "run" and len(assessment.run_refs) > 1:
+            scope = "run_set"
+        current_occurrences.append(occurrence.model_copy(update={
+            "scope": scope,
+            "run_refs": list(assessment.run_refs),
+            "fact_ids": list(assessment.fact_ids),
+            "summary": assessment.narrative,
+        }))
+    failure_occurrences = current_occurrences
+
     status = _derive_status(
         closed=closed,
         decisions=decisions,
@@ -260,7 +350,10 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
         status=status,
         firm=firm,
         runs=[runs[rid] for rid in run_order],
+        facts=facts,
+        assessments=assessments,
         findings=findings,
+        failure_occurrences=failure_occurrences,
         observations=observations,
         correlations=correlations,
         answers=answers,

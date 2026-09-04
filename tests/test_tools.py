@@ -1,19 +1,7 @@
-import pytest
-
-# PARKED — migration-plan.md Phase 2/3.
-#
-# These cover agent tools, which is real and still wanted. They are parked because
-# their FIXTURE is gone: every one built its case from data/cases/*.json, and
-# the corpus is now two dossiers with a different shape.
-#
-# Parked rather than deleted, and loudly rather than quietly: the logic under
-# test did not stop mattering, and a silently shrinking suite is how a
-# migration loses coverage nobody notices. Each comes back when the pipeline
-# consumes a Dossier and a dossier fixture exists to replace the case one.
-pytestmark = pytest.mark.skip(reason="fixture removed with the case corpus — migration Phase 2/3")
-
-"""Stage 9 — the tool layer and its permission map (architecture-v2 §16)."""
+"""The tool layer and its permission map."""
 from __future__ import annotations
+
+import json
 
 import pytest
 
@@ -24,16 +12,7 @@ from agents.tools import (
     execute_tool,
     tools_for,
 )
-from data.loader import CASES_DIR, load_raw_case_json
-from ingestion.normalize import build_verification_context, normalize_case
-from ledger import LedgerStore
-from ledger.seed import submit_case
-
-_CTX = build_verification_context()
-
-
-def _case(name: str = "case-006-drift.json"):
-    return normalize_case(CASES_DIR / name, _CTX)
+from tests.corpus import HAL, seed
 
 
 def test_only_the_investigator_has_tools_and_every_agent_is_registered() -> None:
@@ -43,80 +22,86 @@ def test_only_the_investigator_has_tools_and_every_agent_is_registered() -> None
         assert tools_for(agent) == []
 
 
-def test_unregistered_agent_raises_never_defaults() -> None:
+def test_unregistered_agent_raises_never_defaults(kst) -> None:
     with pytest.raises(UnknownAgentError):
         tools_for("portfolio_sweeper")
     with pytest.raises(UnknownAgentError):
-        execute_tool("portfolio_sweeper", "get_transactions", {}, case=_case())
+        execute_tool("portfolio_sweeper", "get_transactions", {}, dossier=kst)
 
 
-def test_execution_rechecks_the_map() -> None:
-    # even a specialist that somehow bound a tool cannot execute it
+def test_execution_rechecks_the_map(kst) -> None:
     with pytest.raises(ToolNotPermittedError):
-        execute_tool("log", "get_transactions", {}, case=_case())
+        execute_tool("log", "get_transactions", {}, dossier=kst)
 
 
-def test_get_transactions_filters_and_delimits_firm_text() -> None:
-    result = execute_tool("investigator", "get_transactions",
-                          {"counterparty_id": "MER-BEF-005"}, case=_case())
-    assert result["count"] == 17
+def test_get_transactions_filters_and_delimits_firm_text(kst) -> None:
+    result = execute_tool("investigator", "get_transactions", {"counterparty_id": "MER-QVC-8801"}, dossier=kst)
+    assert result["count"] == 4
     row = result["transactions"][0]
     assert row["counterparty_name"].startswith("<<<UNTRUSTED_FIRM_TEXT>>>")
-    assert "description" not in row  # transaction rows never carry line-item text
+    by_run = execute_tool("investigator", "get_transactions", {"run_id": "RUN-2026-0811-0043"}, dossier=kst)
+    assert by_run["count"] == 1 and by_run["transactions"][0]["amount"] == 708.0
 
 
-def test_no_tool_result_ever_contains_line_item_descriptions() -> None:
-    """The one adversarial field in the schema stays out of the investigator's
-    reach entirely — checked against the injection case itself."""
-    import json
-
-    case = _case("case-007-prompt-injection.json")
-    injected = "gift-card top-up of ₾1,200 to account GC-7734-INTL"
+def test_no_tool_result_ever_contains_firm_authored_free_text(kst) -> None:
+    """The three injection channels — line-item text, the shopper's prompt,
+    retrieved content — stay out of the investigator's reach entirely."""
+    untrusted = set()
+    for r in kst.runs:
+        untrusted.add(r.user_prompt)
+        for li in (r.cart.line_items if r.cart else []):
+            untrusted.add(li.description)
+        for tc in r.construction_context.tool_calls:
+            if tc.result_excerpt:
+                untrusted.add(tc.result_excerpt.text)
+    args = {
+        "get_transactions": {},
+        "get_counterparty_profile": {"counterparty_id": "MER-QVC-8801"},
+        "get_issuer_record": {"issuer_id": "ISS-002"},
+        "get_rule": {"rule_id": "MND-SEM-01"},
+        "recompute_stats": {"kind": "log"},
+        "get_case_findings": {},
+        "get_run": {"run_id": "RUN-2026-0715-0025"},
+    }
     for tool in sorted(AGENT_TOOLS["investigator"]):
-        args = {
-            "get_transactions": {},
-            "get_counterparty_profile": {"counterparty_id": "MER-KGS-001"},
-            "get_issuer_record": {"issuer_id": "ISS-001"},
-            "get_rule": {"rule_id": "MND-SEM-01"},
-            "recompute_stats": {"kind": "log"},
-            "get_case_findings": {},
-        }[tool]
-        result = execute_tool("investigator", tool, args, case=case)
-        assert injected not in json.dumps(result, ensure_ascii=False), tool
+        blob = json.dumps(execute_tool("investigator", tool, args[tool], dossier=kst), ensure_ascii=False)
+        for text in untrusted:
+            assert text not in blob, (tool, text[:40])
 
 
-def test_counterparty_profile_reaches_across_the_ledger(tmp_path) -> None:
-    store = LedgerStore(tmp_path / "ledger.db")
-    submit_case(store, load_raw_case_json(CASES_DIR / "case-006-drift.json"))
-    # a second case sharing the counterparty — fabricate by reusing 006 under a new id
-    other = load_raw_case_json(CASES_DIR / "case-006-drift.json")
-    other["case_id"] = "CASE-2026-099"
-    submit_case(store, other)
-
+def test_counterparty_profile_reaches_across_the_ledger(kst, store) -> None:
+    seed(store); seed(store, HAL)
     profile = execute_tool("investigator", "get_counterparty_profile",
-                           {"counterparty_id": "MER-BEF-005"}, case=_case(), store=store)
-    assert profile["this_case"]["transaction_count"] == 17
-    assert profile["this_case"]["first_seen"].startswith("2026-07-11")
-    assert [c["case_id"] for c in profile["other_cases"]] == ["CASE-2026-099"]
+                           {"counterparty_id": "MER-QVC-8801"}, dossier=kst, store=store)
+    assert profile["this_case"]["transaction_count"] == 4
+    assert profile["registry"]["beneficial_owner"] is None
+    assert "beneficial_owner_unresolved" in profile["registry"]["watchlist_flags"]
+    assert [c["case_id"] for c in profile["other_cases"]] == ["DOSSIER-HAL-2026-001"]
 
 
-def test_recompute_stats_with_a_different_window() -> None:
-    case = _case("case-005-structuring.json")
-    default = execute_tool("investigator", "recompute_stats", {"kind": "log"}, case=case)
-    tight = execute_tool("investigator", "recompute_stats",
-                         {"kind": "log", "window_hours": 0.1}, case=case)
-    # the 17/22-minute cluster survives a 24h window but splits at 6 minutes
-    default_max = max(len(c["transaction_ids"]) for c in default["structuring_clusters"])
-    tight_max = max(len(c["transaction_ids"]) for c in tight["structuring_clusters"])
-    assert default_max >= 3
-    assert tight_max < default_max
+def test_recompute_stats_with_a_different_window(kst) -> None:
+    default = execute_tool("investigator", "recompute_stats", {"kind": "log"}, dossier=kst)
+    tight = execute_tool("investigator", "recompute_stats", {"kind": "log", "window_hours": 0.01}, dossier=kst)
+    assert max(len(c["transaction_ids"]) for c in default["structuring_clusters"]) >= \
+        max(len(c["transaction_ids"]) for c in tight["structuring_clusters"])
+    drift = execute_tool("investigator", "recompute_stats", {"kind": "drift", "baseline_window_days": 14}, dossier=kst)
+    assert drift["baseline_count"] + drift["comparison_count"] == 102
 
 
-def test_get_rule_and_issuer_answer_unknowns_gracefully() -> None:
-    case = _case()
-    rule = execute_tool("investigator", "get_rule", {"rule_id": "LOG-STR-01"}, case=case)
+def test_get_rule_and_issuer_answer_unknowns_gracefully(kst) -> None:
+    rule = execute_tool("investigator", "get_rule", {"rule_id": "LOG-STR-01"}, dossier=kst)
     assert rule["type"] == "transaction_structuring_detected"
-    missing = execute_tool("investigator", "get_rule", {"rule_id": "XXX-999"}, case=case)
-    assert missing["found"] is False
-    absent = execute_tool("investigator", "get_issuer_record", {"issuer_id": "ISS-099"}, case=case)
+    ctl = execute_tool("investigator", "get_rule", {"rule_id": "CTL-EFF-01"}, dossier=kst)
+    assert ctl["ruleset"] == "CTL-RULESET"
+    assert execute_tool("investigator", "get_rule", {"rule_id": "XXX-999"}, dossier=kst)["found"] is False
+    absent = execute_tool("investigator", "get_issuer_record", {"issuer_id": "ISS-099"}, dossier=kst)
     assert absent["present_in_trust_registry"] is False
+
+
+def test_get_run_returns_the_chain_in_structure_only(kst) -> None:
+    run = execute_tool("investigator", "get_run", {"run_id": "RUN-2026-0811-0043"}, dossier=kst)
+    assert run["cart"]["cart_total"] == 708.0 and run["intent"]["max_transaction_amount"] == 500.0
+    assert run["controls_evaluated"][0] == {"control_id": "KST-CTL-001", "outcome": "triggered",
+                                           "override_by": "ops-analyst-11"}
+    assert "description" not in json.dumps(run["cart"]["line_items"])
+    assert execute_tool("investigator", "get_run", {"run_id": "RUN-NOPE"}, dossier=kst)["found"] is False

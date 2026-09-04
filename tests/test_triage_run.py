@@ -1,23 +1,7 @@
-import pytest
-
-# PARKED — migration-plan.md Phase 2/3.
-#
-# These cover the triage graph, which is real and still wanted. They are parked because
-# their FIXTURE is gone: every one built its case from data/cases/*.json, and
-# the corpus is now two dossiers with a different shape.
-#
-# Parked rather than deleted, and loudly rather than quietly: the logic under
-# test did not stop mattering, and a silently shrinking suite is how a
-# migration loses coverage nobody notices. Each comes back when the pipeline
-# consumes a Dossier and a dossier fixture exists to replace the case one.
-pytestmark = pytest.mark.skip(reason="fixture removed with the case corpus — migration Phase 2/3")
-
-"""Stage 5–6 — the triage run, wired to the ledger (architecture-v2 §14.1).
+"""The triage run, wired to the ledger, on the dossier.
 
 Everything here runs against a tmp-path ledger and the comprehensive fake
-model — zero live calls. The old test_pipeline.py graph-shape and
-escalation tests continue here in their new home; the gate tests moved to
-tests/test_drafting_run.py.
+model — zero live calls.
 """
 from __future__ import annotations
 
@@ -26,266 +10,252 @@ import json
 import pytest
 
 from agents.context import canonical_context, compose_context, context_digest
-from data.loader import CASES_DIR, load_raw_case_json
+from ingestion.normalize import normalize_dossier
 from ledger import LedgerStore
-from ledger.seed import submit_case
 from pipeline.graph import build_triage_graph, run_triage
 from registry.loader import load_log_ruleset
 from schemas import ReviewerDirective
+from tests.corpus import HAL, hal as load_hal, seed, thin
 from tests.fakes import CLEAN_VERDICT, make_graph_fake
-
-
-@pytest.fixture
-def store(tmp_path) -> LedgerStore:
-    return LedgerStore(tmp_path / "ledger.db")
-
-
-def _seed(store: LedgerStore, name: str) -> str:
-    return submit_case(store, load_raw_case_json(CASES_DIR / name))
+from agents.llm import message_text
 
 
 def test_triage_graph_nodes() -> None:
     graph = build_triage_graph(model=make_graph_fake(), store=LedgerStore.__new__(LedgerStore))
     node_names = set(graph.get_graph().nodes) - {"__start__", "__end__"}
     assert node_names == {
-        "ingest", "dispatch", "mandate", "kya", "log", "drift",
-        "escalate_check", "bump_round", "critic", "synthesizer", "risk_score",
+        "ingest", "orchestrate", "mandate", "kya", "log", "drift",
+        "specialists_done", "critic", "synthesizer", "record", "investigator",
+        "provenance", "injection", "consent", "counterparty", "control_assurance", "systemic", "red_team",
     }
 
 
-async def test_clean_case_triage_ends_at_the_score_with_the_expected_ledger_trail(store) -> None:
-    case_id = _seed(store, "case-001-compliant.json")
+async def test_kestrel_triage_produces_the_floor_the_scripts_do(store) -> None:
+    case_id = seed(store)
     fake = make_graph_fake()
     record = await run_triage(case_id, model=fake, store=store)
 
     assert record.status == "triaged"
-    assert record.findings == []
-    assert record.observations == []
-    assert record.risk_score is not None and record.risk_score.total == 0.0
+    assert len(record.facts) == 2603
+    verdicts = sorted((a.agent, a.rule_id, a.verdict) for a in record.assessments if a.agent in ("mandate", "kya", "log", "drift"))
+    assert verdicts == sorted([
+        ("kya", "KYA-LIF-04", "breach"),
+        ("mandate", "MND-CAP-01", "breach"), ("mandate", "MND-CAP-01", "explained"),
+        ("mandate", "MND-CAP-02", "breach"), ("mandate", "MND-CAP-05", "breach"),
+        ("mandate", "MND-USE-01", "breach"),
+        ("mandate", "MND-SEM-01", "clear"),   # the whole-dossier fidelity call, fake-consistent
+        ("log", "LOG-STR-01", "clear"), ("log", "LOG-CON-01", "clear"), ("log", "LOG-VEL-01", "clear"),
+        ("drift", "DRIFT-BHV-01", "clear"),
+    ])
+    fidelity = next(a for a in record.assessments if a.rule_id == "MND-SEM-01")
+    assert len(fidelity.run_refs) == 49 and len(fidelity.fact_ids) == 49
+    # findings are the projection, under the same ids
+    assert {f.finding_id for f in record.findings} == {a.assessment_id for a in record.assessments}
+    assert record.risk_score.total == 13.1
     assert record.draft_report is None  # triage NEVER drafts — report is on demand
 
     events = [e.event_type for e in store.events_for(case_id)]
-    # The fake orchestrator proposes all four and the floor is ADD-only, so
-    # drift is dispatched too — and declines on insufficient baseline (24 tx
-    # < 30), recorded as such. Specialist dispatch order is fan-out order,
-    # not asserted.
-    assert events[:3] == ["case_submitted", "run_started", "dispatch_planned"]
-    assert events[-2:] == ["score_computed", "run_completed"]
-    assert events[3:-2].count("dispatch_recorded") == 4
-    drift_dispatch = next(e.payload for e in store.events_for(case_id)
-                          if e.event_type == "dispatch_recorded" and e.payload["target"] == "drift")
-    assert drift_dispatch["context_blocks"] == {"insufficient_baseline_gate": True, "transaction_count": 24}
-    # clean case: <2 findings, synthesizer never called
-    assert fake.call_log.count("record_correlations") == 0
+    assert events[:3] == ["dossier_submitted", "run_started", "dispatch_planned"]
+    assert "authorisation_computed" in events and events[-2:] == ["run_evaluated", "run_completed"]
+    assert events.count("dispatch_recorded") == 9
+    assert events.count("fact_recorded") == 2603
+    assert events.count("assessment_recorded") == events.count("finding_recorded") == 82
+    assert fake.call_log.count("record_intent_fidelity") == 1
+    assert fake.call_log.count("record_correlations") == 1  # ≥2 findings → synthesizer ran
     assert store.verify() == []
 
 
-async def test_findings_are_recorded_one_event_each_with_agent_actor(store) -> None:
-    case_id = _seed(store, "case-002-mandate-breaching.json")
+async def test_every_assessment_cites_facts_on_the_record(store) -> None:
+    case_id = seed(store)
     record = await run_triage(case_id, model=make_graph_fake(), store=store)
+    fact_ids = {f.fact_id for f in record.facts}
+    for a in record.assessments:
+        assert a.fact_ids and set(a.fact_ids) <= fact_ids, a.assessment_id
+        if a.scope == "run":
+            assert a.run_refs
 
-    finding_events = [e for e in store.events_for(case_id) if e.event_type == "finding_recorded"]
-    assert len(finding_events) == 3
-    assert {e.actor for e in finding_events} == {"agent:mandate"}
-    assert {e.payload["type"] for e in finding_events} == {
-        "category_out_of_scope", "counterparty_not_approved", "per_transaction_cap_exceeded",
-    }
-    # the projected record carries them, deduped, scored
-    assert len(record.findings) == 3
-    assert record.risk_score.total == round(sum(f.severity_weight for f in record.findings), 4)
+
+async def test_halcyon_triage_is_nearly_clean(store) -> None:
+    case_id = seed(store, HAL)
+    record = await run_triage(case_id, model=make_graph_fake(), store=store)
+    assert [(a.rule_id, a.run_refs) for a in record.assessments if a.verdict == "breach" and a.agent == "mandate"] == [
+        ("MND-CAP-02", ["RUN-2026-0813-0015"])]
+    assert record.risk_score.total == 3.2
+    assert {e.actor for e in store.events_for(case_id) if e.event_type == "finding_recorded"} <= {
+        "agent:mandate", "agent:kya", "agent:log", "agent:drift", "agent:consent", "agent:injection", "agent:provenance", "agent:counterparty", "agent:control_assurance"}
 
 
 async def test_dispatch_recorded_context_is_the_exact_canonical_composition(store) -> None:
-    """§9.4 — what the ledger says the agent saw IS what compose_context
-    builds, digest and all."""
-    case_id = _seed(store, "case-005-structuring.json")
+    case_id = seed(store)
     await run_triage(case_id, model=make_graph_fake(), store=store)
-
     dispatches = {e.payload["target"]: e.payload for e in store.events_for(case_id)
                   if e.event_type == "dispatch_recorded"}
-    # drift was proposed by the fake orchestrator (add-only floor keeps it)
-    # but declined on data availability — 16 tx < 30
-    assert set(dispatches) == {"mandate", "kya", "log", "drift"}
-    assert dispatches["drift"]["context_blocks"]["insufficient_baseline_gate"] is True
+    assert set(dispatches) == {"mandate", "kya", "log", "drift", "provenance", "injection", "consent", "counterparty", "control_assurance"}
 
-    from ingestion.normalize import normalize_case_payload
-    case = normalize_case_payload(load_raw_case_json(CASES_DIR / "case-005-structuring.json"))
-    expected = compose_context(canonical_context("log.analyze", case, ruleset=load_log_ruleset()))
+    from ingestion.normalize import dossier_from_submission
+    from ledger.seed import latest_submission
+    dossier = dossier_from_submission(latest_submission(store, case_id))
+    from ledger.projection import project_case
+    record = project_case(store.events_for(case_id))
+    expected = compose_context(canonical_context(
+        "log.analyze", dossier, ruleset=load_log_ruleset(),
+        floor_facts=[f for f in record.facts if f.domain == "log"],
+    ))
     assert dispatches["log"]["context_blocks"] == json.loads(json.dumps(expected))
     assert dispatches["log"]["context_digest"] == context_digest(expected)
-    assert dispatches["log"]["skill"] == "log.analyze"
-    assert dispatches["log"]["instruction"] == ""
+    assert dispatches["log"]["skill"] == "log.analyze" and dispatches["log"]["instruction"] == ""
 
 
-async def test_floor_gates_specialists_despite_the_llm_proposal(store) -> None:
-    case_id = _seed(store, "case-007-prompt-injection.json")
-    fake = make_graph_fake(overrides={
-        "record_dispatch_plan": {
-            "run_mandate": False, "run_kya": False, "run_log": False, "run_drift": False,
-            "reasoning": "skip everything",  # hostile/lazy proposal
-        },
-    })
-    await run_triage(case_id, model=fake, store=store)
-
-    # floor forced mandate+kya+log (7 tx), not drift
-    assert fake.call_log.count("record_semantic_check") == 1
-    assert fake.call_log.count("record_observations") == 1
-    assert fake.call_log.count("record_log_analysis") == 1
-    assert fake.call_log.count("record_drift_analysis") == 0
-
-
-async def test_escalation_re_dispatches_only_the_targeted_agent_and_is_capped(store) -> None:
-    case_id = _seed(store, "case-006-drift.json")
-    fake = make_graph_fake(overrides={
-        "record_observations": {
-            "observations": [{"note": "Issuer name looks slightly unusual.", "cited_field": "issuer_name"}],
-        },
-    })
-    record = await run_triage(case_id, model=fake, store=store)
-
-    # kya reasons twice (round 0 + the one escalation round), others once
-    assert fake.call_log.count("record_observations") == 2
-    assert fake.call_log.count("record_semantic_check") == 1
-    assert fake.call_log.count("record_log_analysis") == 1
-    assert fake.call_log.count("record_drift_analysis") == 1
-    assert record.escalation_rounds == 1
-    escalations = [e for e in store.events_for(case_id) if e.event_type == "escalation_round_started"]
-    assert len(escalations) == 1
-    assert escalations[0].payload == {"round": 1, "targets": ["kya"]}
-
-
-async def test_cross_agent_observation_escalates_to_the_named_agent(store) -> None:
-    case_id = _seed(store, "case-006-drift.json")
-    fake = make_graph_fake(overrides={
-        "record_drift_analysis": {
-            "drift": CLEAN_VERDICT,
-            "other_observations": [
-                {"note": "This new counterparty warrants a specific KYA verification check.", "cited_evidence": "x"},
-            ],
-        },
-    })
-    await run_triage(case_id, model=fake, store=store)
-    assert fake.call_log.count("record_drift_analysis") == 1
-    assert fake.call_log.count("record_observations") == 2  # kya: round 0 + escalation
-
-
-async def test_directed_pass_runs_exactly_the_named_agents_with_no_floor(store) -> None:
-    case_id = _seed(store, "case-001-compliant.json")
+async def test_drift_declines_on_a_thin_history_and_says_so(store) -> None:
+    case_id = seed(store, dossier=thin(load_hal(), 12))
     fake = make_graph_fake()
-    await run_triage(case_id, model=fake, store=store)  # pass 1, full floor
-    calls_after_first = list(fake.call_log)
+    record = await run_triage(case_id, model=fake, store=store)
+    assert fake.call_log.count("record_drift_analysis") == 0
+    assert fake.call_log.count("record_log_analysis") == 1
+    drift_dispatch = next(e.payload for e in store.events_for(case_id)
+                          if e.event_type == "dispatch_recorded" and e.payload["target"] == "drift")
+    assert drift_dispatch["context_blocks"] == {"insufficient_baseline_gate": True, "transaction_count": 12}
+    f, = [f for f in record.facts if f.domain == "drift"]
+    assert (f.kind, f.absent_reason) == ("absent", "insufficient_history")
 
-    directive = ReviewerDirective(
-        instructions="Re-check the same-day payments for a shared beneficiary.",
-        target_agents=["log"],
-    )
+
+async def test_the_first_pass_dispatches_every_review_skill_without_routing_call(store) -> None:
+    """The fixed first-pass policy fans out; Control Assurance follows by topology."""
+    case_id = seed(store, dossier=thin(load_hal(), 12))
+    fake = make_graph_fake()
+    record = await run_triage(case_id, model=fake, store=store)
+    assert fake.call_log.count("route_supervisor_request") == 0
+    dispatched = [e.payload["target"] for e in store.events_for(case_id) if e.event_type == "dispatch_recorded"]
+    assert set(dispatched) == {"mandate", "kya", "provenance", "injection", "counterparty", "consent", "log", "drift", "control_assurance"}
+    plan = record.runs[-1].plan
+    assert plan.first_pass and plan.not_dispatched == [] and len(plan.skills) == 8
+    assert plan.message_to_officer
+
+
+
+
+async def test_directed_pass_runs_exactly_the_named_agents_as_a_new_round(store) -> None:
+    case_id = seed(store)
+    fake = make_graph_fake()
+    first = await run_triage(case_id, model=fake, store=store)
+    calls_after_first = list(fake.call_log)
+    fact_events_after_first = sum(1 for e in store.events_for(case_id) if e.event_type == "fact_recorded")
+
+    directive = ReviewerDirective(instructions="Re-check the override on 11 August for a shared beneficiary.",
+                                  target_agents=["log"])
     record = await run_triage(case_id, model=fake, store=store, directive=directive)
 
     new_calls = fake.call_log[len(calls_after_first):]
     assert new_calls.count("record_log_analysis") == 1
     assert new_calls.count("record_observations") == 0  # kya NOT re-run — no floor on pass 2
-    assert new_calls.count("record_semantic_check") == 0
-    assert new_calls.count("record_dispatch_plan") == 0  # no LLM proposal on a directed pass
-    # the officer's instruction reached the specialist's prompt
-    assert "shared beneficiary" in fake.last_messages_for("record_log_analysis")[0].content
-    # and the dispatch record carries it
+    assert new_calls.count("route_supervisor_request") == 0  # a directive needs no model routing
+    assert "shared beneficiary" in message_text(fake.last_messages_for("record_log_analysis")[0])
     directed_run = record.runs[-1]
-    assert [d.target for d in directed_run.dispatches] == ["log"]
+    assert [d.target for d in directed_run.dispatches] == ["log", "control_assurance"]
     assert directed_run.dispatches[0].instruction == directive.instructions
     assert directed_run.plan.reasoning.startswith("Directed re-analysis")
+    # round 2 supersedes round 1's Log verdicts; nothing else changed; the
+    # floor's facts were not re-recorded
+    r2 = [a for a in record.assessments if a.round == 2 and a.agent == "log"]
+    assert {a.rule_id for a in r2} == {"LOG-STR-01", "LOG-CON-01", "LOG-VEL-01"}
+    assert all(a.supersedes and a.supersedes.endswith(":r1") for a in r2)
+    assert len(record.findings) == len(first.findings)
+    assert sum(1 for e in store.events_for(case_id) if e.event_type == "fact_recorded") == fact_events_after_first
+    assert record.risk_score.total == first.risk_score.total
+
+
+async def test_a_changed_judgement_in_a_later_round_moves_the_score(store) -> None:
+    case_id = seed(store)
+    await run_triage(case_id, model=make_graph_fake(), store=store)
+    anomalous = {"anomalous": True, "explanation": "The largest counterparty holds 2735.0 of 20113.5.",
+                 "cited_evidence": "total 2735.0", "transaction_ids": ["TXN-KST-0001"]}
+    fake = make_graph_fake({"record_log_analysis": {
+        "structuring": CLEAN_VERDICT, "concentration": anomalous, "velocity": CLEAN_VERDICT,
+        "other_observations": []}})
+    record = await run_triage(case_id, model=fake, store=store,
+                              directive=ReviewerDirective(instructions="Judge concentration.", target_agents=["log"]))
+    current = [f for f in record.findings if f.rule_id == "LOG-CON-01"]
+    assert len(current) == 1 and current[0].severity_weight == pytest.approx(0.35)  # 0.5 × probable
+    assert record.risk_score.total == pytest.approx(13.45)
 
 
 async def test_prompt_override_reaches_the_specialist_and_the_record(store) -> None:
-    case_id = _seed(store, "case-001-compliant.json")
+    case_id = seed(store)
     fake = make_graph_fake()
     override = "This run: weight threshold-proximity heavily; treat repeat purchases as benign."
-    record = await run_triage(
-        case_id, model=fake, store=store,
-        prompt_overrides={"SPECIALIST-LOG": override},
-    )
-
-    sent = fake.last_messages_for("record_log_analysis")[0].content
+    record = await run_triage(case_id, model=fake, store=store, prompt_overrides={"SPECIALIST-LOG": override})
+    sent = message_text(fake.last_messages_for("record_log_analysis")[0])
     assert override in sent
     recorded = record.runs[-1].prompts["SPECIALIST-LOG"]
-    assert recorded["override"] == override
-    assert recorded["effective"] == sent  # ledger text == wire text
-    # the other prompts stayed default
+    assert recorded["override"] == override and recorded["effective"] == sent
     assert record.runs[-1].prompts["SPECIALIST-KYA"]["override"] is None
 
 
 async def test_synthesizer_correlations_validated_and_recorded(store) -> None:
-    case_id = _seed(store, "case-002-mandate-breaching.json")
+    case_id = seed(store)
 
     def correlate(messages):
-        payload = json.loads(messages[-1].content)
+        payload = json.loads(message_text(messages[-1]))
         ids = [f["finding_id"] for f in payload["findings"]]
         return {"correlations": [
-            {"finding_ids": ids[:2], "relationship": "same_event",
-             "explanation": "One out-of-scope purchase seen by two rules."},
-            # invented id — must be dropped by the resolver, not recorded
+            {"finding_ids": ids[:2], "relationship": "same_event", "explanation": "One over-cap cart seen by two rules."},
             {"finding_ids": ["F-INVENTED", ids[0]], "relationship": "causal", "explanation": "x"},
         ]}
 
-    record = await run_triage(
-        case_id, model=make_graph_fake({"record_correlations": correlate}), store=store,
-    )
-    assert len(record.correlations) == 1
-    assert record.correlations[0].relationship == "same_event"
-    events = [e for e in store.events_for(case_id) if e.event_type == "correlation_recorded"]
-    assert len(events) == 1
+    record = await run_triage(case_id, model=make_graph_fake({"record_correlations": correlate}), store=store)
+    assert len(record.correlations) == 1 and record.correlations[0].relationship == "same_event"
+
+
+async def test_synthesizer_accepts_a_json_encoded_correlations_array(store) -> None:
+    """Some live model replies encode the array one level too deep as text;
+    normalize that boundary instead of iterating thousands of characters."""
+    case_id = seed(store)
+
+    def correlate(messages):
+        payload = json.loads(message_text(messages[-1]))
+        ids = [f["finding_id"] for f in payload["findings"]]
+        return {"correlations": json.dumps([
+            {"finding_ids": ids[:2], "relationship": "corroborating", "explanation": "Two checks agree."}
+        ])}
+
+    record = await run_triage(case_id, model=make_graph_fake({"record_correlations": correlate}), store=store)
+    assert len(record.correlations) == 1 and record.correlations[0].relationship == "corroborating"
 
 
 async def test_critic_flags_a_number_absent_from_the_dispatched_evidence(store) -> None:
-    case_id = _seed(store, "case-005-structuring.json")
-    fake = make_graph_fake(overrides={
-        "record_log_analysis": {
-            "structuring": {
-                "anomalous": True,
-                "explanation": "Three payments of 9999999.99 each split a settlement.",
-                "cited_evidence": "cluster sums to 9999999.99",
-            },
-            "concentration": CLEAN_VERDICT, "velocity": CLEAN_VERDICT, "other_observations": [],
-        },
-    })
+    case_id = seed(store)
+    fake = make_graph_fake(overrides={"record_log_analysis": {
+        "structuring": {"anomalous": True, "explanation": "Three payments of 9999999.99 each split a settlement.",
+                        "cited_evidence": "cluster sums to 9999999.99", "transaction_ids": ["TXN-KST-0001"]},
+        "concentration": CLEAN_VERDICT, "velocity": CLEAN_VERDICT, "other_observations": []}})
     await run_triage(case_id, model=fake, store=store)
-
-    critic_events = [e for e in store.events_for(case_id) if e.event_type == "critic_checked"]
-    log_check = next(e.payload for e in critic_events if e.payload["target"] == "log")
-    assert log_check["passed"] is False
-    assert "9999999.99" in log_check["unquoted_values"]
+    log_check = next(e.payload for e in store.events_for(case_id)
+                     if e.event_type == "critic_checked" and e.payload["target"] == "log")
+    assert log_check["passed"] is False and "9999999.99" in log_check["unquoted_values"]
 
 
 async def test_critic_passes_when_the_model_quotes_real_numbers(store) -> None:
-    case_id = _seed(store, "case-005-structuring.json")
-    fake = make_graph_fake(overrides={
-        "record_log_analysis": {
-            "structuring": {
-                "anomalous": True,
-                # 2900/2850/2950 are case-005's real cluster amounts — present
-                # in the dispatched evidence
-                "explanation": "Payments of 2900.0, 2850.0 and 2950.0 sit just under the threshold.",
-                "cited_evidence": "cluster sum 8700.0 vs threshold 3000.0",
-            },
-            "concentration": CLEAN_VERDICT, "velocity": CLEAN_VERDICT, "other_observations": [],
-        },
-    })
+    case_id = seed(store)
+    fake = make_graph_fake(overrides={"record_log_analysis": {
+        "structuring": {"anomalous": True,
+                        "explanation": "Spend totals 20113.5 across 102 transactions against a 1000.0 threshold.",
+                        "cited_evidence": "total 20113.5, threshold 1000.0", "transaction_ids": ["TXN-KST-0001"]},
+        "concentration": CLEAN_VERDICT, "velocity": CLEAN_VERDICT, "other_observations": []}})
     await run_triage(case_id, model=fake, store=store)
-    critic_events = [e for e in store.events_for(case_id) if e.event_type == "critic_checked"]
-    log_check = next(e.payload for e in critic_events if e.payload["target"] == "log")
+    log_check = next(e.payload for e in store.events_for(case_id)
+                     if e.event_type == "critic_checked" and e.payload["target"] == "log")
     assert log_check["passed"] is True, log_check
 
 
-async def test_ingestion_findings_are_a_subset_of_agent_findings(store) -> None:
-    for name in ["case-003-broken-chain.json", "case-004-synthetic-identity.json"]:
-        case_id = _seed(store, name)
-        record = await run_triage(case_id, model=make_graph_fake(), store=store)
-        finding_types = {f.type for f in record.findings}
-        raw = load_raw_case_json(CASES_DIR / name)
-        from ingestion.normalize import normalize_case_payload
-        ingestion_types = {f.type for f in normalize_case_payload(raw).findings}
-        assert ingestion_types <= finding_types, name
+async def test_intake_facts_are_a_subset_of_the_agents_facts(store) -> None:
+    case_id = seed(store)
+    record = await run_triage(case_id, model=make_graph_fake(), store=store)
+    from ingestion.normalize import dossier_from_submission
+    from ledger.seed import latest_submission
+    pack = normalize_dossier(dossier_from_submission(latest_submission(store, case_id)))
+    assert {(f.fact_id, f.kind) for f in pack.ingestion_facts} <= {(f.fact_id, f.kind) for f in record.facts}
 
 
 async def test_unknown_case_id_raises_clearly(store) -> None:
     with pytest.raises(ValueError, match="no case_submitted event"):
-        await run_triage("CASE-DOES-NOT-EXIST", model=make_graph_fake(), store=store)
+        await run_triage("DOSSIER-DOES-NOT-EXIST", model=make_graph_fake(), store=store)

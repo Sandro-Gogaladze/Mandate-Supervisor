@@ -1,8 +1,8 @@
 {
   "ruleset_id": "LOG-RULESET",
   "domain": "log",
-  "version": "2026.2",
-  "as_of": "2026-09-03",
+  "version": "2026.5",
+  "as_of": "2026-09-04",
   "description": "Log ruleset. All three rules are LLM-evaluated (agents/log_reasoning.py) against real pre-computed statistics/candidate clusters (agents/log_stats.py) — no deterministic verdict layer at all, revised from the original build which hardcoded structuring as a Python threshold check. See docs/phases/07-log-agent.md for why a dispatch-floor tension (CLAUDE.md's stated 'Log+Drift run when history >= 30 tx') doesn't fit this domain's structuring check and needed its own resolution.",
   "rules": [
     {
@@ -11,10 +11,12 @@
       "version": 1,
       "status": "active",
       "effective_from": "2026-08-01",
+      "evaluation": "judged",
       "severity_weight": 0.85,
       "finding_type": "transaction_structuring_detected",
       "description": "A cluster of same-counterparty transactions, each individually under the threshold, occurring within a short window and summing to more than the threshold — deliberate splitting to stay under a reporting/scrutiny threshold. This is case-005's defect: three payments to the same counterparty 17-22 minutes apart, each just under ₾3,000, summing to ₾8,700. Threshold is a policy dial, and it must sit inside the agent's operating range to mean anything: at 3000 against a consumer shopping agent whose largest transaction is $867, the rule is switched off rather than lenient.",
       "notes": "threshold=3000 (SR-STRUCT-01) is a synthetic reporting-flag figure invented for this demo, not a real AML threshold (docs/phases/01-synthetic-data.md §3). Candidate clusters (same-counterparty transactions within window_hours of each other) are computed deterministically by agents/log_stats.py::structuring_clusters — but whether a candidate cluster actually constitutes structuring is the model's judgment against threshold/min_cluster_size, not a Python comparison.",
+      "failures": ["F59"],
       "params": {
         "threshold": 3000.0,
         "min_cluster_size": 2,
@@ -30,11 +32,15 @@
       "version": 1,
       "status": "active",
       "effective_from": "2026-08-01",
+      "evaluation": "judged",
       "severity_weight": 0.5,
       "finding_type": "counterparty_concentration_anomaly",
       "description": "One counterparty receiving an unusual share of total spend/count relative to how many counterparties the mandate actually approves and what's typical for this agent — not an absolute percentage cutoff, since a mandate with few approved vendors naturally concentrates spend without that being anomalous (case-007: 100% to a single approved counterparty is correct, not a red flag).",
-      "notes": "No case in the current corpus is purpose-built to test this — evaluated by agents/log_reasoning.py against real pre-computed per-counterparty statistics (agents/log_stats.py::counterparty_breakdown), not vibes. Real check, no bite yet, same situation as several KYA/Mandate rules.",
-      "params": {}
+      "notes": "Evaluated by agents/log_reasoning.py against real pre-computed per-counterparty statistics (agents/log_stats.py). Migration Phase 3 added the new-payee measurement behind it: each counterparty's share of the latest month and whether the register first saw it inside the review window — F55, a brand-new recipient suddenly getting most of the money. new_payee_min_share_pct is the dial that separates a payee that arrived last month and took a fifth of the spend from ordinary churn; it was 20 in scripts/verify_dossier.py and belongs here. Both dossiers plant F55 (Quickvale Direct).",
+      "failures": ["F61"],
+      "params": {
+        "new_payee_min_share_pct": 20.0
+      }
     },
     {
       "rule_id": "LOG-VEL-01",
@@ -42,10 +48,12 @@
       "version": 1,
       "status": "active",
       "effective_from": "2026-08-01",
+      "evaluation": "judged",
       "severity_weight": 0.45,
       "finding_type": "transaction_velocity_anomaly",
       "description": "A burst of transactions in a short window that isn't explained by structuring (LOG-STR-01 already covers same-counterparty threshold-evasion specifically) — e.g. rapid-fire transactions across different counterparties, faster than any human-reviewed process would plausibly produce.",
       "notes": "No case in the current corpus is purpose-built to test this — evaluated by agents/log_reasoning.py against real pre-computed inter-transaction gap statistics (agents/log_stats.py::velocity_stats). Real check, no bite yet.",
+      "failures": ["F60"],
       "params": {}
     }
   ]

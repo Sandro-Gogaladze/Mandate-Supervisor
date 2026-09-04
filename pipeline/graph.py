@@ -1,4 +1,4 @@
-"""The bounded runs (architecture-v2 §14): triage and drafting.
+"""The bounded runs: review and drafting.
 
 Each graph starts, does one job, appends what it produced to the ledger, and
 exits. None is held open — the case lives in the ledger, not in a paused
@@ -7,42 +7,46 @@ DRAFTING run: it guards the artifact (a report cannot issue without a named
 decision — minutes, which is what a checkpointer is for), never the case
 (open for a week — a ledger state).
 
-TRIAGE — build_triage_graph():
+REVIEW — build_review_graph(): one officer request, answered.
 
-    ingest → dispatch → {mandate, kya, log, drift} → escalate_check
-           ⇄ bump_round → critic → synthesizer → risk_score → END
+    ingest → orchestrate → {the skills it dispatched…} → specialists_done
+           → control_assurance → critic → synthesizer → record → END
 
-  The existing detection pipeline, minus the drafting tail, plus: every
-  node appends its output to the ledger as it is produced; every specialist
-  dispatch records the exact composed context it received
-  (dispatch_recorded — the event this architecture exists to make
-  possible); the deterministic critic and the additive synthesizer run
-  before scoring. A directed re-analysis is a triage run with a
-  reviewer_directive in its initial state — it enters at exactly the named
-  specialists (the floor applies to pass 1 only; coverage was guaranteed
-  when the case first arrived).
+  A first pass ("run the review") and a later question use the same graph.
+  The first pass deterministically dispatches every governed review skill;
+  later questions ask the orchestrator to dispatch skills with a briefing,
+  reply from the record, or ask for the report. `ingest` reads the submission
+  from the ledger by case id, rebuilds
+  the dossier and runs intake (ingestion/normalize.py). Every specialist runs
+  its deterministic floor over the dossier in scope (facts), assesses it
+  (assessments), and makes its one contained model call; every fact,
+  assessment and projected finding is appended to the ledger as it is
+  produced, and every dispatch records the exact composed context the agent
+  received. Control Assurance runs after whichever peers ran, then the
+  deterministic critic, the additive synthesizer, the score and the
+  authorisation recommendation. The run kind on the record is "triage" for
+  a first pass or a directed re-analysis and "investigation" for a question.
 
 DRAFTING — build_drafting_graph():
 
     load_record → draft_report ⇄ grounding_check → human_gate (interrupt) → END
 
-  Only reachable by explicit request — a clean case never drafts, it gets
-  "close, no action" (a named decision, not a document). The score is
-  recomputed from the ledger's current findings first, so the report states
-  the tier as of when it was written. Grounding retry cap, report_blocked
-  path, and the gate's self-defending loop are unchanged from the old
-  single graph. A `rerun` decision records the directive and ENDS the run;
-  the caller then starts a directed triage — the fan-back no longer lives
-  inside one long-running graph.
+  Only reachable by explicit request. The score is recomputed from the
+  ledger's current findings first. A `rerun` decision records the directive
+  and ENDS the run; the caller then starts a directed review.
 
-Every guarantee here is code, not prompt: the skill floor
-(agents/skills.py), the evidence floor (agents/context.py), observations
-never scoring (pipeline/scoring.py's signature), grounding
-(agents/grounding.py), the critic (agents/critic.py), correlation id
-resolution (agents/synthesizer.py), and the gate (graph topology).
+Every guarantee here is code, not prompt: the evidence floor
+(agents/context.py), observations never scoring (pipeline/scoring.py's
+signature), grounding (agents/grounding.py), the critic (agents/critic.py),
+correlation id resolution (agents/synthesizer.py), and the gate (graph
+topology). First-pass coverage is a deterministic policy and its complete
+dispatch plan is recorded.
 """
 from __future__ import annotations
 
+import asyncio
+import logging
+import os
 import uuid
 from datetime import datetime, timezone
 
@@ -52,6 +56,13 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command, interrupt
 from pydantic import ValidationError
 
+from agents.assess import (
+    current_findings,
+    link_supersessions,
+    project_failure_occurrences,
+    project_findings,
+)
+from agents.base import SpecialistReview, scoped
 from agents.context import (
     ContextCompositionError,
     canonical_context,
@@ -61,36 +72,58 @@ from agents.context import (
 )
 from agents.critic import check_evidence_grounding
 from agents.drafting import draft_case_report
-from agents.drift import DriftAgent
 from agents.grounding import check_grounding
-from agents.kya import KYAAgent
-from agents.llm import format_escalation_addendum
-from agents.log import LogAgent
-from agents.mandate import MandateAgent
 from agents.investigator import investigate
-from agents.orchestrator import OrchestratorDecision, route
+from agents.orchestrator import FIRST_PASS_REQUEST, Dispatch, OrchestratorDecision, first_pass_decision, route
 from agents.prompts import assemble_run_prompts, effective_text
-from agents.skills import SPECIALIST_SKILLS_BY_AGENT, enforce_skill_floor
+from agents.skills import REVIEW_SKILLS, SKILLS, SPECIALIST_SKILLS_BY_AGENT
 from agents.synthesizer import synthesize
-from ingestion.normalize import normalize_case_payload
+from ingestion.normalize import dossier_from_submission, normalize_dossier
 from ledger import LedgerStore, get_default_store
 from ledger.projection import project_case
 from ledger.seed import latest_submission
-from pipeline.dispatch import enforce_floor, propose_dispatch_plan
-from pipeline.escalation import escalation_targets, observations_for
 from pipeline.scoring import score_findings
 from pipeline.state import SupervisionState
-from registry.loader import (
-    load_drift_ruleset,
-    load_kya_ruleset,
-    load_log_ruleset,
-    load_mandate_ruleset,
-    load_scoring_config,
+from registry.loader import load_failure_catalogue, load_scoring_config
+from schemas import (
+    Assessment,
+    DispatchPlan,
+    DispatchRecord,
+    Observation,
+    ReviewerDecision,
+    ReviewerDirective,
 )
-from schemas import DispatchPlan, DispatchRecord, Finding, Observation, ReviewerDecision, ReviewerDirective
 
-_SPECIALIST_NODES = ("mandate", "kya", "log", "drift")
-_MAX_ESCALATION_ROUNDS = 1
+from agents.catalog import AGENTS, PEERS, RULESET_LOADERS
+from registry.loader import load_all_rulesets
+_SPECIALIST_NODES = (*PEERS, "systemic", "red_team")
+_RULESET_LOADERS = RULESET_LOADERS
+# One specialist's model call. Injection now judges every run and Consent
+# every selection; on a fifty-run dossier that is minutes, not seconds, and
+# a cap that fires turns the whole judgement into "unavailable". Generous on
+# purpose — the fallback exists for a hung call, not a long one.
+_SPECIALIST_TIMEOUT_S = 900
+# How many specialists may hold a model call open at once — one per peer, so
+# the fan-out the graph describes is the fan-out that actually happens.
+#
+# This was 3, on the theory that concurrent generations exhausted the
+# account's output-tokens-per-minute allowance. That diagnosis was wrong:
+# the account's live headers report 2,000,000 output and 10,000,000 input
+# tokens per minute, and eight calls capped at max_tokens=16000 cannot
+# exceed 128,000 output tokens even if every one of them ran to its limit in
+# the same minute — under 7% of the budget. The stalls were real but came
+# from elsewhere (see _dispatch_specialist: the deterministic floor and the
+# per-fact ledger writes are synchronous, and while they hold the event loop
+# no concurrent response is being read).
+_MODEL_CONCURRENCY = int(os.environ.get("MANDATE_MODEL_CONCURRENCY", "8"))
+_model_slots: asyncio.Semaphore | None = None
+
+
+def _model_slot() -> asyncio.Semaphore:
+    global _model_slots
+    if _model_slots is None:
+        _model_slots = asyncio.Semaphore(_MODEL_CONCURRENCY)
+    return _model_slots
 # 1 initial draft + at most 2 regenerations, then blocked (CLAUDE.md).
 _MAX_GROUNDING_RETRIES = 2
 # The human-directed loop is bounded by the human — every iteration costs an
@@ -98,332 +131,556 @@ _MAX_GROUNDING_RETRIES = 2
 _MAX_REVIEWER_ROUNDS = 3
 
 
+from pipeline.review_basis import snapshot_basis
+
+
 def _new_run_id(kind: str) -> str:
     return f"{kind[:3]}-{uuid.uuid4().hex[:12]}"
 
 
+def _agents() -> dict:
+    return {name: cls() for name, cls in AGENTS.items()}
+
+
+def _next_round(record) -> int:
+    """The first triage is round 1; every later triage or investigation pass
+    is a new round of the same review."""
+    return 1 + sum(1 for r in record.runs if r.kind in ("triage", "investigation"))
+
+
+def _seed_from_record(record) -> dict:
+    """A later round starts from what earlier rounds established, so its
+    assessments can supersede theirs and the score is over the whole record."""
+    return {"facts": record.facts, "assessments": record.assessments,
+            "findings": record.findings, "failure_occurrences": record.failure_occurrences,
+            "observations": record.observations}
+
+
 # ---------------------------------------------------------------------------
-# Triage
+# What every specialist pass shares: floor → context → record → review → record
 # ---------------------------------------------------------------------------
 
 
-def build_triage_graph(*, model=None, store: LedgerStore | None = None, checkpointer=None) -> CompiledStateGraph:
+def _record_dispatch(store: LedgerStore, state: SupervisionState, agent_name: str,
+                     skill: str, composed: dict, instruction: str) -> None:
+    record = DispatchRecord(
+        case_id=state["case_id"], run_id=state["run_id"], target=agent_name, skill=skill,
+        instruction=instruction, context_blocks=composed, context_digest=context_digest(composed),
+    )
+    # Recorded BEFORE the model call — the audit trail shows the briefing
+    # even if the specialist then dies mid-flight.
+    store.append(case_id=record.case_id, event_type="dispatch_recorded", run_id=state["run_id"],
+                 payload=record.model_dump(), actor="agent:orchestrator")
+
+
+async def _stream_specialist(store, state, name, status, facts=()):
+    """Use the existing LangGraph → AG-UI → CopilotKit event stream.
+
+    STEP_FINISHED is a stream transition, not a concurrent worker finishing.
+    This explicit completion event lets the existing map show the truth.
+
+    The payload is deliberately small: this agent's dispatch, assessments,
+    postures and failures for this run, plus fact COUNTS and the ledger
+    sequence range the facts occupy. The facts themselves stay on the
+    ledger — pushing them through the stream twice per agent was 8 MB per
+    triage, and the console's main thread stalled on it until the map's
+    nodes went unmeasured and vanished mid-run. The console reads facts
+    from the ledger when the run finishes or a turn is opened.
+    """
+    from collections import Counter
+
+    from langchain_core.callbacks.manager import adispatch_custom_event
+    own = [e for e in store.events_for_run(state['run_id'])
+           if e.actor == f'agent:{name}' or (e.event_type == 'dispatch_recorded' and e.payload.get('target') == name)]
+    fact_seqs = [e.seq for e in own if e.event_type == 'fact_recorded']
+    kinds = Counter(f.kind for f in facts)
+    await adispatch_custom_event('specialist_progress', {
+        'agent': name, 'status': status, 'run_id': state['run_id'],
+        'events': [e.model_dump() for e in own if e.event_type != 'fact_recorded'],
+        'fact_counts': {'total': len(facts),
+                        **{k: kinds.get(k, 0) for k in ('satisfied', 'breach', 'absent', 'measurement')}},
+        'fact_seq_range': [min(fact_seqs), max(fact_seqs)] if fact_seqs else None,
+    })
+
+
+def _record_review(store: LedgerStore, state: SupervisionState, agent_name: str,
+                   review: SpecialistReview, ruleset, *, observations_only: bool = False,
+                   scope: list[str] | None = None) -> dict:
+    """Append what one specialist pass produced — one event per fact,
+    assessment, projected finding and observation — and return the state
+    update. On an escalation round only the observations are new: the
+    rule-backed verdicts were decided in round 0. A fact already on the
+    record (a later round re-running a deterministic floor over an unchanged
+    dossier) is not appended twice; an assessment always is, superseding
+    the earlier round's."""
+    run_id = state["run_id"]
+    actor = f"agent:{agent_name}"
+    for o in review.observations:
+        store.append(case_id=o.case_id, event_type="observation_recorded", run_id=run_id,
+                     payload=o.model_dump(), actor=actor)
+    if observations_only:
+        return {"observations": review.observations}
+    from pipeline.review_support import version_review_facts, clear_reconsidered_rules
+    review = version_review_facts(review, state)
+    clear_reconsidered_rules(review, state, agent_name, ruleset)
+    known = {f.fact_id for f in state.get("facts", [])}
+    # Model-judged specialists historically emitted the rule id but not the
+    # book version. The dispatcher knows the exact immutable book used, so it
+    # closes that provenance field before anything reaches the ledger or the
+    # failure-occurrence projection.
+    if ruleset is not None:
+        review.assessments = [
+            a.model_copy(update={"ruleset_version": ruleset.version})
+            if a.rule_id and not a.ruleset_version else a
+            for a in review.assessments
+        ]
+    review.assessments = link_supersessions(review.assessments, state.get("assessments", []))
+    scope = scope or state.get("run_scope") or None
+    for a in review.assessments:
+        a.review_run_refs = scope
+    findings = project_findings(review.assessments, [ruleset] if ruleset else [])
+    occurrences = project_failure_occurrences(
+        review.assessments,
+        [ruleset] if ruleset else [],
+        load_failure_catalogue(),
+    )
+    for posture in review.postures:
+        store.append(case_id=state["case_id"], event_type="control_posture_recorded", run_id=run_id,
+                     payload=posture.model_dump(), actor=actor)
+    for f in review.facts:
+        if f.fact_id in known:
+            continue
+        store.append(case_id=f.case_id, event_type="fact_recorded", run_id=run_id,
+                     payload=f.model_dump(), actor=actor, run_ref=f.run_ref)
+    for a in review.assessments:
+        store.append(case_id=a.case_id, event_type="assessment_recorded", run_id=run_id,
+                     payload=a.model_dump(), actor=actor)
+    for f in findings:
+        store.append(case_id=f.case_id, event_type="finding_recorded", run_id=run_id,
+                     payload=f.model_dump(), actor=actor)
+    for occurrence in occurrences:
+        store.append(
+            case_id=occurrence.case_id,
+            event_type="failure_occurrence_recorded",
+            run_id=run_id,
+            payload=occurrence.model_dump(),
+            actor=actor,
+        )
+    return {"facts": review.facts, "assessments": review.assessments,
+            "findings": findings, "failure_occurrences": occurrences,
+            "observations": review.observations}
+
+
+async def _dispatch_specialist(
+    store: LedgerStore, model, state: SupervisionState, agent, *, ruleset,
+    instruction: str = "", directive: str | None = None,
+    prior: list[Observation] | None = None, extras: list | None = None,
+    observations_only: bool = False, run_scope: list[str] | None = None,
+) -> dict:
+    """One specialist pass over the dossier in scope, recorded end to end."""
+    run_scope = run_scope or state.get("run_scope") or None
+    dossier = scoped(state["dossier"], run_scope)
+    evidence = normalize_dossier(dossier) if run_scope else state.get("evidence")
+    skill = SPECIALIST_SKILLS_BY_AGENT[agent.name]
+
+    if agent.name in ("control_assurance", "systemic", "red_team"):
+        kwargs = {"rulebooks": load_all_rulesets()}
+        if agent.name == "control_assurance":
+            kwargs["peer_facts"] = [f for f in state.get("facts", []) if f.domain in PEERS]
+            kwargs["peer_assessments"] = [a for a in state.get("assessments", []) if a.agent in PEERS]
+        if agent.name == "systemic":
+            kwargs["portfolio"] = [dossier_from_submission(latest_submission(store, cid))
+                                   for cid in store.all_case_ids()]
+        review = await agent.review(dossier, ruleset, evidence=evidence,
+                                    round=state.get("review_round", 1), **kwargs)
+        context = canonical_context(
+            skill, dossier, evidence=evidence, ruleset=ruleset, floor_facts=review.facts,
+            peer_facts=kwargs.get("peer_facts"), portfolio=kwargs.get("portfolio"),
+            peer_assessments=kwargs.get("peer_assessments"),
+            rulebooks=kwargs.get("rulebooks"),
+        )
+        _record_dispatch(store, state, agent.name, skill, context, instruction)
+        update = await asyncio.to_thread(_record_review, store, state, agent.name, review,
+                                         ruleset, scope=run_scope)
+        await _stream_specialist(store, state, agent.name, 'complete', review.facts)
+        return update
+    # Off the event loop, both of them. `run()` is the deterministic floor —
+    # 650 rule evaluations and real Ed25519 verification for a fifty-run
+    # dossier — and each `append` opens a connection, takes the writer lock,
+    # hashes and commits (an fsync per fact). Run on the loop thread, either
+    # one stops every *other* specialist's response from being read while it
+    # works, which is what turned eight concurrent calls into eight calls
+    # that all hit the 900 s timeout. The lock inside `append` still
+    # serializes writers, so the hash chain is unaffected.
+    floor_facts = await asyncio.to_thread(agent.run, dossier, ruleset, evidence=evidence)
+    from pipeline.review_support import version_review_facts
+    floor_facts = version_review_facts(SpecialistReview(facts=floor_facts, assessments=[]), state).facts
+    # Facts land before the model starts; a timeout cannot erase the floor.
+    known = {f.fact_id for f in state.get("facts", [])}
+    if not observations_only:
+        def _append_floor() -> None:
+            for f in floor_facts:
+                if f.fact_id not in known:
+                    store.append(case_id=f.case_id, event_type="fact_recorded", run_id=state["run_id"],
+                                 payload=f.model_dump(), actor=f"agent:{agent.name}", run_ref=f.run_ref)
+        await asyncio.to_thread(_append_floor)
+    composed: dict | None
+    llm_context: dict | None = None
+    if agent.name == "drift" and evidence is not None and not evidence.drift.sufficient:
+        # Dispatched but declined on data availability — auditable as such,
+        # without computing statistics over too little history.
+        composed = {"insufficient_baseline_gate": True,
+                    "transaction_count": len(dossier.transaction_history)}
+    else:
+        try:
+            base = canonical_context(skill, dossier, evidence=evidence, ruleset=ruleset,
+                                     floor_facts=floor_facts)
+            composed = llm_context = compose_context(base, extras)
+        except ContextCompositionError:
+            composed = None  # no active rule for this skill — nothing to brief
+    if composed is not None:
+        _record_dispatch(store, state, agent.name, skill, composed, instruction)
+    await _stream_specialist(store, state, agent.name, 'reasoning', floor_facts)
+
+    kwargs = dict(evidence=evidence, model=model, reviewer_directive=directive,
+                  prompts=state.get("prompts"), context=llm_context,
+                  round=state.get("review_round", 1))
+    if agent.name != "mandate":
+        kwargs["prior_observations"] = prior
+    if state.get("deterministic_only"):
+        from pipeline.review_support import unjudged_review
+        review = unjudged_review(agent, dossier, ruleset, floor_facts, state.get("review_round", 1))
+    else:
+        try:
+            async with _model_slot():
+                review = await asyncio.wait_for(agent.review(dossier, ruleset, **kwargs), timeout=_SPECIALIST_TIMEOUT_S)
+        except Exception as exc:
+            logging.getLogger(__name__).exception("%s review failed", agent.name)
+            from pipeline.review_support import unjudged_review
+            review = unjudged_review(agent, dossier, ruleset, floor_facts, state.get("review_round", 1))
+            store.append(case_id=state["case_id"], event_type="specialist_failed", run_id=state["run_id"],
+                         payload={"agent": agent.name, "error": type(exc).__name__,
+                                  "message": "Judgment unavailable; deterministic evidence retained."},
+                         actor=f"agent:{agent.name}")
+    from pipeline.review_support import validate_review
+    review = version_review_facts(review, {**state, "facts": [*state.get("facts", []), *floor_facts]})
+    review = validate_review(review, dossier, ruleset)
+    recording_state = {**state, "facts": [*state.get("facts", []), *floor_facts]}
+    # Same reason as the floor above: this writes one event per assessment,
+    # finding and occurrence, and it runs while its peers are still streaming.
+    update = await asyncio.to_thread(_record_review, store, recording_state, agent.name, review,
+                                     ruleset, observations_only=observations_only, scope=run_scope)
+    if composed is not None:
+        update["dispatch_contexts"] = {agent.name: composed}
+    await _stream_specialist(store, state, agent.name, 'complete', review.facts)
+    return update
+
+
+# ---------------------------------------------------------------------------
+# Review — one request through the orchestrator
+# ---------------------------------------------------------------------------
+
+
+def _unique(xs):
+    return list(dict.fromkeys(xs))
+
+
+def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpointer=None) -> CompiledStateGraph:
     store = store or get_default_store()
-    mandate_agent = MandateAgent()
-    kya_agent = KYAAgent()
-    log_agent = LogAgent()
-    drift_agent = DriftAgent()
+    agents = _agents()
 
     async def _ingest_node(state: SupervisionState) -> dict:
         case_id = state["case_id"]
-        raw = latest_submission(store, case_id)
-        ingested = normalize_case_payload(raw)
+        payload = latest_submission(store, case_id)
+        dossier = dossier_from_submission(payload)
+        evidence = normalize_dossier(dossier)
+        record = project_case(store.events_for(case_id))
+        review_round = _next_round(record)
 
         directive = state.get("reviewer_directive")
-        run_id = _new_run_id("triage")
-        prompts = assemble_run_prompts("triage", state.get("prompt_overrides"))
+        first_pass = bool(state.get("first_pass")) and directive is None
+        kind = "triage" if first_pass or directive is not None else "investigation"
+        request = state.get("officer_message") or (directive.instructions if directive else FIRST_PASS_REQUEST)
+        run_id = _new_run_id(kind)
+        prompts = assemble_run_prompts(kind, state.get("prompt_overrides"))
+        officer = state.get("officer") or "officer"
+        question_id = state.get("question_id") or f"Q-{uuid.uuid4().hex[:8]}"
         store.append(
             case_id=case_id, event_type="run_started", run_id=run_id,
             payload={
-                "run_id": run_id, "kind": "triage", "prompts": prompts,
+                "run_id": run_id, "kind": kind, "prompts": prompts,
+                "review_basis": snapshot_basis(store),
+                "deterministic_only": state.get("deterministic_only", False),
+                "first_pass": first_pass, "request": request,
+                "runs_in_scope": len(dossier.runs), "review_round": review_round,
                 **({"directive": directive.model_dump()} if directive else {}),
             },
-            actor="system:triage",
+            actor="system:review",
         )
+        if kind == "investigation":
+            store.append(case_id=case_id, event_type="question_asked", run_id=run_id,
+                         payload={"question_id": question_id, "question": request}, actor=f"human:{officer}")
         return {
-            "case": ingested,
-            "ingestion_findings": ingested.findings,
+            "dossier": dossier,
+            "evidence": evidence,
+            "run_scope": [],
             "run_id": run_id,
             "prompts": prompts,
-            "pass_number": 2 if directive else 1,
+            "question_id": question_id,
+            "officer_message": request,
+            "first_pass": first_pass,
+            "pass_number": 1 if first_pass else 2,
+            "review_round": review_round,
+            "firm_name": (payload.get("firm") or {}).get("name", dossier.dossier.operator_id),
+            **(_seed_from_record(record) if review_round > 1 else {}),
         }
 
-    async def _dispatch_node(state: SupervisionState) -> dict:
-        case = state["case"]
+    async def _orchestrate_node(state: SupervisionState) -> dict:
+        case_id = state["case_id"]
+        dossier = state["dossier"]
         directive = state.get("reviewer_directive")
-
+        first_pass = bool(state.get("first_pass"))
         if directive is not None:
-            # A directed pass: the human named the specialists; no LLM
-            # proposal, and the floor does not re-apply (pass 2).
-            selected = [SPECIALIST_SKILLS_BY_AGENT[a] for a in directive.target_agents]
-            selected = enforce_skill_floor(selected, case, pass_number=2)
-            plan = DispatchPlan(
-                run_mandate="mandate" in directive.target_agents,
-                run_kya="kya" in directive.target_agents,
-                run_log="log" in directive.target_agents,
-                run_drift="drift" in directive.target_agents,
+            # A named reviewer said exactly what to re-examine: no model call.
+            decision = OrchestratorDecision(
                 reasoning=f"Directed re-analysis by a named reviewer: {directive.instructions}",
+                intent="dispatch", message_to_officer="Re-examining as directed.",
+                dispatches=[Dispatch(skill=SPECIALIST_SKILLS_BY_AGENT[a], instruction=directive.instructions,
+                                     run_scope=list(directive.run_scope)) for a in directive.target_agents
+                            if a in SPECIALIST_SKILLS_BY_AGENT],
             )
+        elif state.get("deterministic_only"):
+            decision = OrchestratorDecision(
+                reasoning="Comprehensive deterministic review; model judgments remain unresolved.",
+                intent="dispatch", message_to_officer="Running every rule; no model judgement in this pass.",
+                dispatches=[Dispatch(skill=s) for s in REVIEW_SKILLS],
+            )
+        elif first_pass:
+            # Coverage is fixed policy on the initial review. Paying a model
+            # to rediscover the same fan-out was slower, stochastic, and
+            # capable of accidentally omitting a skill.
+            decision = first_pass_decision()
         else:
-            plan = await propose_dispatch_plan(
-                case, model=model,
-                system_prompt=effective_text(state["prompts"], "ORCH-DISPATCH"),
-            )
-            proposed = [
-                skill for flag, skill in [
-                    (plan.run_mandate, "mandate.review"), (plan.run_kya, "kya.review"),
-                    (plan.run_log, "log.analyze"), (plan.run_drift, "drift.analyze"),
-                ] if flag
-            ]
-            selected = enforce_skill_floor(proposed, case, pass_number=1)
-            plan = enforce_floor(plan, case)  # the mirrored view the UI shows
-
+            record = project_case(store.events_for(case_id))
+            try:
+                decision = await route(
+                    state.get("officer_message") or FIRST_PASS_REQUEST, record,
+                    first_pass=first_pass, known_runs={r.run_id for r in dossier.runs}, model=model,
+                    system_prompt=effective_text(state["prompts"], "ORCHESTRATOR"),
+                )
+            except Exception as exc:  # noqa: BLE001 — the model, the network, the account
+                # The turn still completes and says what happened, on the
+                # record; a run that dies here would otherwise sit half-written
+                # on the ledger with nothing said to the officer.
+                logging.getLogger(__name__).exception("orchestrator call failed on %s", case_id)
+                detail = str(exc).split("\n")[0][:300]
+                store.append(case_id=case_id, event_type="specialist_failed", run_id=state["run_id"],
+                             payload={"agent": "orchestrator", "error": type(exc).__name__,
+                                      "message": f"The orchestrator could not reach the model: {detail}"},
+                             actor="agent:orchestrator")
+                decision = OrchestratorDecision(
+                    reasoning="", intent="reply", dispatches=[],
+                    message_to_officer=f"I could not reach the model to decide what to run ({type(exc).__name__}). "
+                                       f"Nothing was dispatched. {detail}",
+                )
+        skills = decision.targets
+        plan = DispatchPlan(
+            reasoning=decision.reasoning, intent=decision.intent, first_pass=first_pass, skills=skills,
+            briefings={d.skill: d.instruction for d in decision.dispatches if d.instruction},
+            run_scope={d.skill: d.run_scope for d in decision.dispatches if d.run_scope},
+            context_blocks={d.skill: d.context_blocks for d in decision.dispatches if d.context_blocks},
+            not_dispatched=[s for s in REVIEW_SKILLS if s not in skills] if first_pass and decision.intent == "dispatch" else [],
+            message_to_officer=decision.message_to_officer,
+        )
         store.append(
-            case_id=case.case.case_id, event_type="dispatch_planned", run_id=state["run_id"],
-            payload={"plan": plan.model_dump(), "selected_skills": selected},
+            case_id=case_id, event_type="dispatch_planned", run_id=state["run_id"],
+            payload={"plan": plan.model_dump(), "selected_skills": skills, "decision": decision.model_dump()},
             actor="agent:orchestrator",
         )
-        return {"dispatch_plan": plan, "selected_skills": selected, "escalation_round": 0}
-
-    def _route_from_dispatch(state: SupervisionState) -> list[str]:
-        agents = [
-            agent for agent, skill in SPECIALIST_SKILLS_BY_AGENT.items()
-            if skill in state.get("selected_skills", [])
-        ]
-        ordered = [a for a in _SPECIALIST_NODES if a in agents]
-        return ordered or ["escalate_check"]  # floor guarantees non-empty on pass 1
-
-    def _directive_for(state: SupervisionState, agent_name: str) -> str | None:
-        directive = state.get("reviewer_directive")
-        if directive is not None and agent_name in directive.target_agents:
-            return directive.instructions
-        return None
-
-    def _record_dispatch(state: SupervisionState, agent_name: str, composed: dict, instruction: str) -> None:
-        record = DispatchRecord(
-            case_id=state["case"].case.case_id,
-            run_id=state["run_id"],
-            target=agent_name,
-            skill=SPECIALIST_SKILLS_BY_AGENT[agent_name],
-            instruction=instruction,
-            context_blocks=composed,
-            context_digest=context_digest(composed),
-        )
-        # Recorded BEFORE the model call (§9.4) — the audit trail shows the
-        # briefing even if the subagent then dies mid-flight.
-        store.append(
-            case_id=record.case_id, event_type="dispatch_recorded", run_id=state["run_id"],
-            payload=record.model_dump(), actor="agent:orchestrator",
-        )
-
-    def _record_outputs(state: SupervisionState, agent_name: str, findings, observations) -> None:
-        for finding in findings:
-            store.append(
-                case_id=finding.case_id, event_type="finding_recorded", run_id=state["run_id"],
-                payload=finding.model_dump(), actor=f"agent:{agent_name}",
-            )
-        for observation in observations:
-            store.append(
-                case_id=observation.case_id, event_type="observation_recorded", run_id=state["run_id"],
-                payload=observation.model_dump(), actor=f"agent:{agent_name}",
-            )
-
-    async def _mandate_node(state: SupervisionState) -> dict:
-        case = state["case"]
-        directive = _directive_for(state, "mandate")
-        ruleset = load_mandate_ruleset()
-        composed = compose_context(canonical_context("mandate.review", case))
-        _record_dispatch(state, "mandate", composed, directive or "")
-        findings = await mandate_agent.review(
-            case, ruleset, model=model, reviewer_directive=directive,
-            prompts=state.get("prompts"), context=composed,
-        )
-        _record_outputs(state, "mandate", findings, [])
-        return {"findings": findings, "dispatch_contexts": {"mandate": composed}}
-
-    async def _kya_node(state: SupervisionState) -> dict:
-        case = state["case"]
-        directive = _directive_for(state, "kya")
-        escalating = state.get("escalation_round", 0) > 0 and directive is None
-        prior = observations_for("kya", state.get("observations", [])) if escalating else None
-        ruleset = load_kya_ruleset()
-
-        floor = kya_agent.run(case, ruleset)  # deterministic, cheap; review() recomputes identically
-        composed = compose_context(canonical_context("kya.review", case, floor_findings=floor))
-        instruction = directive or (format_escalation_addendum(prior) if prior else "")
-        _record_dispatch(state, "kya", composed, instruction)
-
-        review = await kya_agent.review(
-            case, ruleset, model=model, prior_observations=prior,
-            reviewer_directive=directive, prompts=state.get("prompts"), context=composed,
-        )
-        if escalating:
-            # Rule-backed verdicts were decided in round 0 — an escalation
-            # round only narrows/resolves the observation list.
-            _record_outputs(state, "kya", [], review.observations)
-            return {"observations": review.observations, "dispatch_contexts": {"kya": composed}}
-        _record_outputs(state, "kya", review.findings, review.observations)
         return {
-            "findings": review.findings, "observations": review.observations,
-            "dispatch_contexts": {"kya": composed},
+            "dispatch_plan": plan, "selected_skills": skills, "escalation_round": 0,
+            "dispatch_briefings": {SKILLS[d.skill].agent: d.model_dump() for d in decision.dispatches},
+            "orchestrator_decision": decision.model_dump(),
+            "orchestrator_reply": decision.message_to_officer,
         }
 
-    async def _log_node(state: SupervisionState) -> dict:
-        case = state["case"]
-        directive = _directive_for(state, "log")
-        escalating = state.get("escalation_round", 0) > 0 and directive is None
-        prior = observations_for("log", state.get("observations", [])) if escalating else None
-        ruleset = load_log_ruleset()
+    def _route_from_orchestrator(state: SupervisionState) -> list[str] | str:
+        decision = OrchestratorDecision.model_validate(state["orchestrator_decision"])
+        if decision.intent != "dispatch" or not decision.dispatches:
+            return "record"
+        names = _unique(SKILLS[d.skill].agent for d in decision.dispatches)
+        peers = [n for n in names if n != "control_assurance"]
+        return peers or ["control_assurance"]
 
-        try:
-            composed = compose_context(canonical_context("log.analyze", case, ruleset=ruleset))
-        except ContextCompositionError:
-            # No active Log rules — review() returns empty; nothing dispatched.
-            review = await log_agent.review(case, ruleset, model=model)
-            return {"findings": review.findings, "observations": review.observations}
+    def _run_observations(state: SupervisionState) -> list[Observation]:
+        """Only what THIS run's specialists left open. The state is seeded with
+        every observation ever recorded on the case; a second look that
+        re-opened them all on every question would never end."""
+        return [Observation.model_validate(e.payload) for e in store.events_for_run(state["run_id"])
+                if e.event_type == "observation_recorded"]
 
-        instruction = directive or (format_escalation_addendum(prior) if prior else "")
-        _record_dispatch(state, "log", composed, instruction)
-        review = await log_agent.review(
-            case, ruleset, model=model, prior_observations=prior,
-            reviewer_directive=directive, prompts=state.get("prompts"), context=composed,
-        )
-        if escalating:
-            _record_outputs(state, "log", [], review.observations)
-            return {"observations": review.observations, "dispatch_contexts": {"log": composed}}
-        _record_outputs(state, "log", review.findings, review.observations)
-        return {
-            "findings": review.findings, "observations": review.observations,
-            "dispatch_contexts": {"log": composed},
-        }
+    def _briefing(state: SupervisionState, agent_name: str) -> dict:
+        return (state.get("dispatch_briefings") or {}).get(agent_name) or {}
 
-    async def _drift_node(state: SupervisionState) -> dict:
-        case = state["case"]
-        directive = _directive_for(state, "drift")
-        escalating = state.get("escalation_round", 0) > 0 and directive is None
-        prior = observations_for("drift", state.get("observations", [])) if escalating else None
-        ruleset = load_drift_ruleset()
+    def _extras(state: SupervisionState, agent_name: str) -> list | None:
+        blocks = _briefing(state, agent_name).get("context_blocks") or []
+        if not blocks:
+            return None
+        return resolve_blocks(project_case(store.events_for(state["case_id"])), blocks)
 
-        tx_count = len(case.case.transaction_history)
-        try:
-            rule = next(
-                r for r in ruleset.rules
-                if r.type == "behavioral_drift_detected" and r.status == "active"
+    def _specialist_node(agent_name: str):
+        agent = agents[agent_name]
+        load_ruleset = _RULESET_LOADERS[agent_name]
+
+        async def node(state: SupervisionState) -> dict:
+            brief = _briefing(state, agent_name)
+            instruction = brief.get("instruction") or ""
+            # One call per specialist per review. A specialist that cannot
+            # decide records `inconclusive` and the officer's own follow-up
+            # question is the second look.
+            return await _dispatch_specialist(
+                store, model, state, agent, ruleset=load_ruleset(), instruction=instruction,
+                directive=brief.get("instruction") or None, extras=_extras(state, agent_name),
+                run_scope=brief.get("run_scope") or None,
             )
-            from schemas import typed_params
 
-            insufficient = tx_count < typed_params(rule).min_total_transactions
-        except StopIteration:
-            insufficient = True
+        node.__name__ = f"_{agent_name}_node"
+        return node
 
-        if insufficient:
-            # Dispatched but declined on data availability — auditable as
-            # such, without computing statistics over too little history.
-            composed = {"insufficient_baseline_gate": True, "transaction_count": tx_count}
-            _record_dispatch(state, "drift", composed, directive or "")
-            review = await drift_agent.review(case, ruleset, model=model)
-            return {"findings": review.findings, "observations": review.observations,
-                    "dispatch_contexts": {"drift": composed}}
-
-        composed = compose_context(canonical_context("drift.analyze", case, ruleset=ruleset))
-        instruction = directive or (format_escalation_addendum(prior) if prior else "")
-        _record_dispatch(state, "drift", composed, instruction)
-        review = await drift_agent.review(
-            case, ruleset, model=model, prior_observations=prior,
-            reviewer_directive=directive, prompts=state.get("prompts"), context=composed,
+    async def _investigator_node(state: SupervisionState) -> dict:
+        brief = _briefing(state, "investigator")
+        question = brief.get("instruction") or state.get("officer_message", "")
+        extras = _extras(state, "investigator") or []
+        composed = {"question": question, "context_blocks": [b.model_dump() for b in extras]}
+        _record_dispatch(store, state, "investigator", "investigator.lookup", composed, brief.get("instruction") or "")
+        answer, observations = await investigate(
+            scoped(state["dossier"], brief.get("run_scope") or state.get("run_scope")), question,
+            question_id=state["question_id"], store=store, model=model,
+            system_prompt=effective_text(state["prompts"], "INVESTIGATOR"),
         )
-        if escalating:
-            _record_outputs(state, "drift", [], review.observations)
-            return {"observations": review.observations, "dispatch_contexts": {"drift": composed}}
-        _record_outputs(state, "drift", review.findings, review.observations)
-        return {
-            "findings": review.findings, "observations": review.observations,
-            "dispatch_contexts": {"drift": composed},
-        }
+        store.append(case_id=answer.case_id, event_type="investigation_completed",
+                     run_id=state["run_id"], payload=answer.model_dump(), actor="agent:investigator")
+        for o in observations:
+            store.append(case_id=o.case_id, event_type="observation_recorded",
+                         run_id=state["run_id"], payload=o.model_dump(), actor="agent:investigator")
+        return {"observations": observations}
 
-    async def _escalate_check_node(state: SupervisionState) -> dict:
-        return {}  # pure join point
+    async def _specialists_done_node(state: SupervisionState) -> dict:
+        return {}  # pure join point for the peer fan-out
+
+    def _peers_ran(state: SupervisionState) -> bool:
+        return any(SKILLS[s].agent in PEERS for s in state.get("selected_skills", []) if s in SKILLS)
 
     def _route_after_specialists(state: SupervisionState) -> str:
-        if state.get("escalation_round", 0) >= _MAX_ESCALATION_ROUNDS:
-            return "critic"
-        return "bump_round" if escalation_targets(state.get("observations", [])) else "critic"
+        return "control_assurance" if _peers_ran(state) else "record"
 
-    async def _bump_round_node(state: SupervisionState) -> dict:
-        next_round = state.get("escalation_round", 0) + 1
-        store.append(
-            case_id=state["case"].case.case_id, event_type="escalation_round_started",
-            run_id=state["run_id"],
-            payload={"round": next_round, "targets": escalation_targets(state.get("observations", []))},
-            actor="system:triage",
-        )
-        return {"escalation_round": next_round}
-
-    def _route_escalation_targets(state: SupervisionState) -> list[str] | str:
-        targets = escalation_targets(state.get("observations", []))
-        return targets if targets else "critic"
+    async def _control_node(state: SupervisionState) -> dict:
+        return await _dispatch_specialist(store, model, state, agents["control_assurance"],
+                                          ruleset=_RULESET_LOADERS["control_assurance"]())
 
     async def _critic_node(state: SupervisionState) -> dict:
         results = check_evidence_grounding(
-            state.get("findings", []), state.get("observations", []),
-            state.get("dispatch_contexts", {}),
+            [a for a in state.get("assessments", []) if a.round == state.get("review_round")],
+            state.get("observations", []), state.get("dispatch_contexts", {}),
         )
         for result in results:
-            store.append(
-                case_id=state["case"].case.case_id, event_type="critic_checked",
-                run_id=state["run_id"], payload=result.model_dump(), actor="system:critic",
-            )
+            store.append(case_id=state["case_id"], event_type="critic_checked",
+                         run_id=state["run_id"], payload=result.model_dump(), actor="system:critic")
         return {"critic_results": [r.model_dump() for r in results]}
 
     async def _synthesizer_node(state: SupervisionState) -> dict:
-        findings = state.get("findings", [])
+        run_events = store.events_for_run(state["run_id"])
+        findings = current_findings(state.get("findings", []), state.get("assessments", []))
+        changed = any(e.event_type == "finding_recorded" for e in run_events)
         correlations = await synthesize(
-            state["case"].case.case_id, findings, model=model,
+            state["case_id"], findings, model=model,
             system_prompt=effective_text(state["prompts"], "SYNTHESIZER") if state.get("prompts") else None,
-        ) if len(findings) >= 2 else []
+        ) if changed and len(findings) >= 2 and not state.get("deterministic_only") else []
         for correlation in correlations:
-            store.append(
-                case_id=correlation.case_id, event_type="correlation_recorded",
-                run_id=state["run_id"], payload=correlation.model_dump(), actor="agent:synthesizer",
-            )
+            store.append(case_id=correlation.case_id, event_type="correlation_recorded",
+                         run_id=state["run_id"], payload=correlation.model_dump(), actor="agent:synthesizer")
         return {"correlations": correlations}
 
-    async def _risk_score_node(state: SupervisionState) -> dict:
-        case_id = state["case"].case.case_id
-        score = score_findings(case_id, state.get("findings", []), load_scoring_config())
+    async def _record_node(state: SupervisionState) -> dict:
+        case_id = state["case_id"]
+        decision = state.get("orchestrator_decision") or {}
+        plan = state.get("dispatch_plan")
+        run_events = store.events_for_run(state["run_id"])
+        kind = next((e.payload.get("kind") for e in run_events if e.event_type == "run_started"), "investigation")
+        # The orchestrator's own turn goes on the record — what it routed,
+        # with what briefing, and what it told the officer.
         store.append(
-            case_id=case_id, event_type="score_computed", run_id=state["run_id"],
-            payload=score.model_dump(), actor="system:scoring",
+            case_id=case_id, event_type="orchestrator_replied", run_id=state["run_id"],
+            payload={
+                "intent": decision.get("intent"),
+                "targets": [d.get("skill") for d in decision.get("dispatches", [])],
+                "instruction": next((d.get("instruction") for d in decision.get("dispatches", []) if d.get("instruction")), ""),
+                "briefings": plan.briefings if plan else {},
+                "run_scope": sorted({r for d in decision.get("dispatches", []) for r in d.get("run_scope", [])}),
+                "not_dispatched": plan.not_dispatched if plan else [],
+                "message": decision.get("message_to_officer", ""),
+            },
+            actor="agent:orchestrator",
         )
+        updates: dict = {"reviewer_directive": None}
+        if any(e.event_type == "assessment_recorded" for e in run_events):
+            findings = current_findings(state.get("findings", []), state.get("assessments", []))
+            score = score_findings(case_id, findings, load_scoring_config())
+            store.append(case_id=case_id, event_type="score_computed", run_id=state["run_id"],
+                         payload=score.model_dump(), actor="system:scoring")
+            from pipeline.authorisation import record_recommendation
+            record_recommendation(store, state)
+            updates["risk_score"] = score
         store.append(
             case_id=case_id, event_type="run_completed", run_id=state["run_id"],
             payload={
-                "run_id": state["run_id"], "kind": "triage",
-                "finding_count": len(state.get("findings", [])),
-                "observation_count": len(state.get("observations", [])),
+                "run_id": state["run_id"], "kind": kind,
+                "fact_count": len(state.get("facts", [])),
+                "assessment_count": len(state.get("assessments", [])),
+                "finding_count": sum(1 for e in run_events if e.event_type == "finding_recorded"),
+                "observation_count": sum(1 for e in run_events if e.event_type == "observation_recorded"),
             },
-            actor="system:triage",
+            actor="system:review",
         )
-        # The directive steered exactly one pass; consumed here.
-        return {"risk_score": score, "reviewer_directive": None}
+        return updates
 
     graph = StateGraph(SupervisionState)
     graph.add_node("ingest", _ingest_node)
-    graph.add_node("dispatch", _dispatch_node)
-    graph.add_node("mandate", _mandate_node)
-    graph.add_node("kya", _kya_node)
-    graph.add_node("log", _log_node)
-    graph.add_node("drift", _drift_node)
-    graph.add_node("escalate_check", _escalate_check_node)
-    graph.add_node("bump_round", _bump_round_node)
+    graph.add_node("orchestrate", _orchestrate_node)
+    for name in _SPECIALIST_NODES:
+        graph.add_node(name, _specialist_node(name))
+    graph.add_node("investigator", _investigator_node)
+    graph.add_node("specialists_done", _specialists_done_node)
+    graph.add_node("control_assurance", _control_node)
     graph.add_node("critic", _critic_node)
     graph.add_node("synthesizer", _synthesizer_node)
-    graph.add_node("risk_score", _risk_score_node)
+    graph.add_node("record", _record_node)
 
     graph.add_edge(START, "ingest")
-    graph.add_edge("ingest", "dispatch")
-    graph.add_conditional_edges("dispatch", _route_from_dispatch, [*_SPECIALIST_NODES, "escalate_check"])
-    for node in _SPECIALIST_NODES:
-        graph.add_edge(node, "escalate_check")
-    graph.add_conditional_edges("escalate_check", _route_after_specialists, ["bump_round", "critic"])
-    graph.add_conditional_edges("bump_round", _route_escalation_targets, [*_SPECIALIST_NODES, "critic"])
+    graph.add_edge("ingest", "orchestrate")
+    graph.add_conditional_edges("orchestrate", _route_from_orchestrator,
+                                [*_SPECIALIST_NODES, "investigator", "control_assurance", "record"])
+    for node in (*_SPECIALIST_NODES, "investigator"):
+        graph.add_edge(node, "specialists_done")
+    graph.add_conditional_edges("specialists_done", _route_after_specialists, ["control_assurance", "record"])
+    graph.add_edge("control_assurance", "critic")
     graph.add_edge("critic", "synthesizer")
-    graph.add_edge("synthesizer", "risk_score")
-    graph.add_edge("risk_score", END)
+    graph.add_edge("synthesizer", "record")
+    graph.add_edge("record", END)
 
     # checkpointer is AG-UI thread plumbing only (api/main.py) — disposable,
     # never the record. run_triage() compiles without one: nothing interrupts.
     return graph.compile(checkpointer=checkpointer)
+
+
+# The two run kinds are one graph; these names stay for the callers.
+build_triage_graph = build_review_graph
+build_investigation_graph = build_review_graph
+
+
+def _initial_state(case_id: str, **extra) -> dict:
+    return {"case_id": case_id, "facts": [], "assessments": [], "findings": [],
+            "observations": [], "messages": [], **extra}
 
 
 async def run_triage(
@@ -433,17 +690,18 @@ async def run_triage(
     store: LedgerStore | None = None,
     prompt_overrides: dict[str, str] | None = None,
     directive: ReviewerDirective | None = None,
+    deterministic_only: bool = False,
 ):
-    """One bounded triage pass. Starts, appends everything it produces to
-    the ledger, exits. Returns the projected CaseRecord — the durable truth,
-    not the transient graph state."""
+    """A first pass (or a directed re-analysis). Starts, appends everything
+    it produces to the ledger, exits. Returns the projected CaseRecord — the
+    durable truth, not the transient graph state."""
     store = store or get_default_store()
-    graph = build_triage_graph(model=model, store=store)
-    initial: dict = {
-        "case_id": case_id, "findings": [], "observations": [], "messages": [],
+    graph = build_review_graph(model=model, store=store)
+    initial = _initial_state(
+        case_id, first_pass=directive is None, deterministic_only=deterministic_only,
         **({"prompt_overrides": prompt_overrides} if prompt_overrides else {}),
         **({"reviewer_directive": directive} if directive else {}),
-    }
+    )
     await graph.ainvoke(initial)
     return project_case(store.events_for(case_id))
 
@@ -655,303 +913,8 @@ async def resolve_gate(graph: CompiledStateGraph, config: dict, decision: dict):
 
 
 # ---------------------------------------------------------------------------
-# Investigation
+# A question
 # ---------------------------------------------------------------------------
-
-
-def build_investigation_graph(*, model=None, store: LedgerStore | None = None, checkpointer=None) -> CompiledStateGraph:
-    """One officer message, routed (architecture-v2 §14.2):
-
-        load_context → orchestrate → {specialist(s) | investigator | record} → record → END
-
-    The orchestrator picks skills and composes briefings; it cannot answer
-    substantive questions itself (its output schema is a routing decision).
-    A specialist dispatched here may produce new Findings — it judges
-    against its rules, with the officer's concern as its instruction and any
-    orchestrator-named record items attached verbatim on top of its
-    canonical evidence. The investigator may not — Observations and an
-    InvestigationAnswer only.
-    """
-    store = store or get_default_store()
-    mandate_agent = MandateAgent()
-    kya_agent = KYAAgent()
-    log_agent = LogAgent()
-    drift_agent = DriftAgent()
-
-    async def _load_context_node(state: SupervisionState) -> dict:
-        case_id = state["case_id"]
-        raw = latest_submission(store, case_id)
-        ingested = normalize_case_payload(raw)
-        record = project_case(store.events_for(case_id))
-
-        run_id = _new_run_id("investigation")
-        prompts = assemble_run_prompts("investigation", state.get("prompt_overrides"))
-        officer = state.get("officer") or "officer"
-        question_id = state.get("question_id") or f"Q-{uuid.uuid4().hex[:8]}"
-
-        store.append(
-            case_id=case_id, event_type="run_started", run_id=run_id,
-            payload={"run_id": run_id, "kind": "investigation", "prompts": prompts},
-            actor="system:investigation",
-        )
-        store.append(
-            case_id=case_id, event_type="question_asked", run_id=run_id,
-            payload={"question_id": question_id, "question": state.get("officer_message", "")},
-            actor=f"human:{officer}",
-        )
-        return {
-            "case": ingested,
-            "run_id": run_id,
-            "prompts": prompts,
-            "question_id": question_id,
-            "firm_name": record.firm,
-            "findings": record.findings,       # the record so far seeds the dedup base
-            "observations": record.observations,
-            "pass_number": 2,
-        }
-
-    async def _orchestrate_node(state: SupervisionState) -> dict:
-        record = project_case(store.events_for(state["case_id"]))
-        decision = await route(
-            state.get("officer_message", ""), record, model=model,
-            system_prompt=effective_text(state["prompts"], "ORCH-SESSION"),
-        )
-        return {
-            "orchestrator_decision": decision.model_dump(),
-            "orchestrator_reply": decision.message_to_officer,
-        }
-
-    def _route_from_orchestrator(state: SupervisionState) -> list[str] | str:
-        decision = OrchestratorDecision.model_validate(state["orchestrator_decision"])
-        # run_triage / draft_report are executed by the CALLER (the UI starts
-        # that run); inside this graph they resolve like a reply.
-        if decision.intent != "dispatch" or not decision.targets:
-            return "record"
-        from agents.skills import SKILLS
-
-        return [SKILLS[t].agent for t in decision.targets]
-
-    def _decision(state: SupervisionState) -> OrchestratorDecision:
-        return OrchestratorDecision.model_validate(state["orchestrator_decision"])
-
-    def _extras(state: SupervisionState) -> list:
-        record = project_case(store.events_for(state["case_id"]))
-        return resolve_blocks(record, _decision(state).context_blocks)
-
-    def _record_dispatch(state: SupervisionState, agent_name: str, skill: str, composed: dict, instruction: str) -> None:
-        record = DispatchRecord(
-            case_id=state["case_id"], run_id=state["run_id"], target=agent_name,
-            skill=skill, instruction=instruction, context_blocks=composed,
-            context_digest=context_digest(composed),
-        )
-        store.append(
-            case_id=record.case_id, event_type="dispatch_recorded", run_id=state["run_id"],
-            payload=record.model_dump(), actor="agent:orchestrator",
-        )
-
-    def _record_outputs(state: SupervisionState, agent_name: str, findings, observations) -> None:
-        for finding in findings:
-            store.append(case_id=finding.case_id, event_type="finding_recorded",
-                         run_id=state["run_id"], payload=finding.model_dump(),
-                         actor=f"agent:{agent_name}")
-        for observation in observations:
-            store.append(case_id=observation.case_id, event_type="observation_recorded",
-                         run_id=state["run_id"], payload=observation.model_dump(),
-                         actor=f"agent:{agent_name}")
-
-    async def _inv_mandate_node(state: SupervisionState) -> dict:
-        decision = _decision(state)
-        composed = compose_context(canonical_context("mandate.review", state["case"]), _extras(state))
-        _record_dispatch(state, "mandate", "mandate.review", composed, decision.instruction)
-        findings = await mandate_agent.review(
-            state["case"], load_mandate_ruleset(), model=model,
-            reviewer_directive=decision.instruction or None,
-            prompts=state.get("prompts"), context=composed,
-        )
-        _record_outputs(state, "mandate", findings, [])
-        return {"findings": findings, "dispatch_contexts": {"mandate": composed}}
-
-    async def _inv_kya_node(state: SupervisionState) -> dict:
-        decision = _decision(state)
-        ruleset = load_kya_ruleset()
-        floor = kya_agent.run(state["case"], ruleset)
-        composed = compose_context(
-            canonical_context("kya.review", state["case"], floor_findings=floor), _extras(state)
-        )
-        _record_dispatch(state, "kya", "kya.review", composed, decision.instruction)
-        review = await kya_agent.review(
-            state["case"], ruleset, model=model,
-            reviewer_directive=decision.instruction or None,
-            prompts=state.get("prompts"), context=composed,
-        )
-        _record_outputs(state, "kya", review.findings, review.observations)
-        return {"findings": review.findings, "observations": review.observations,
-                "dispatch_contexts": {"kya": composed}}
-
-    async def _inv_log_node(state: SupervisionState) -> dict:
-        decision = _decision(state)
-        ruleset = load_log_ruleset()
-        try:
-            composed = compose_context(
-                canonical_context("log.analyze", state["case"], ruleset=ruleset), _extras(state)
-            )
-        except ContextCompositionError:
-            review = await log_agent.review(state["case"], ruleset, model=model)
-            return {"findings": review.findings, "observations": review.observations}
-        _record_dispatch(state, "log", "log.analyze", composed, decision.instruction)
-        review = await log_agent.review(
-            state["case"], ruleset, model=model,
-            reviewer_directive=decision.instruction or None,
-            prompts=state.get("prompts"), context=composed,
-        )
-        _record_outputs(state, "log", review.findings, review.observations)
-        return {"findings": review.findings, "observations": review.observations,
-                "dispatch_contexts": {"log": composed}}
-
-    async def _inv_drift_node(state: SupervisionState) -> dict:
-        decision = _decision(state)
-        ruleset = load_drift_ruleset()
-        try:
-            composed = compose_context(
-                canonical_context("drift.analyze", state["case"], ruleset=ruleset), _extras(state)
-            )
-        except ContextCompositionError:
-            review = await drift_agent.review(state["case"], ruleset, model=model)
-            return {"findings": review.findings, "observations": review.observations}
-        _record_dispatch(state, "drift", "drift.analyze", composed, decision.instruction)
-        review = await drift_agent.review(
-            state["case"], ruleset, model=model,
-            reviewer_directive=decision.instruction or None,
-            prompts=state.get("prompts"), context=composed,
-        )
-        _record_outputs(state, "drift", review.findings, review.observations)
-        return {"findings": review.findings, "observations": review.observations,
-                "dispatch_contexts": {"drift": composed}}
-
-    async def _investigator_node(state: SupervisionState) -> dict:
-        decision = _decision(state)
-        question = decision.instruction or state.get("officer_message", "")
-        composed = {"question": question, "context_blocks": [b.model_dump() for b in _extras(state)]}
-        _record_dispatch(state, "investigator", "investigator.lookup", composed, decision.instruction)
-
-        answer, observations = await investigate(
-            state["case"], question, question_id=state["question_id"],
-            store=store, model=model,
-            system_prompt=effective_text(state["prompts"], "INVESTIGATOR"),
-        )
-        store.append(
-            case_id=answer.case_id, event_type="investigation_completed",
-            run_id=state["run_id"], payload=answer.model_dump(), actor="agent:investigator",
-        )
-        _record_outputs(state, "investigator", [], observations)
-        return {"observations": observations}
-
-    async def _inv_critic_node(state: SupervisionState) -> dict:
-        """Same deterministic check as triage's critic, scoped to what THIS
-        run produced — a re-briefed specialist's new findings must quote
-        numbers that exist in the context it was just given. Old findings on
-        the record were checked by their own run's critic."""
-        run_events = store.events_for_run(state["run_id"])
-        new_findings = [
-            Finding.model_validate(e.payload) for e in run_events
-            if e.event_type == "finding_recorded"
-        ]
-        new_observations = [
-            Observation.model_validate(e.payload) for e in run_events
-            if e.event_type == "observation_recorded"
-        ]
-        results = check_evidence_grounding(
-            new_findings, new_observations, state.get("dispatch_contexts", {})
-        )
-        for result in results:
-            store.append(
-                case_id=state["case_id"], event_type="critic_checked",
-                run_id=state["run_id"], payload=result.model_dump(), actor="system:critic",
-            )
-        return {"critic_results": [r.model_dump() for r in results]}
-
-    async def _inv_synthesizer_node(state: SupervisionState) -> dict:
-        """Re-correlate only when this run actually changed the findings —
-        a lookup or a clean re-check leaves the correlations as they were."""
-        run_events = store.events_for_run(state["run_id"])
-        if not any(e.event_type == "finding_recorded" for e in run_events):
-            return {}
-        record = project_case(store.events_for(state["case_id"]))
-        correlations = await synthesize(
-            state["case_id"], record.findings, model=model,
-            system_prompt=effective_text(state["prompts"], "SYNTHESIZER") if state.get("prompts") else None,
-        )
-        for correlation in correlations:
-            store.append(
-                case_id=correlation.case_id, event_type="correlation_recorded",
-                run_id=state["run_id"], payload=correlation.model_dump(), actor="agent:synthesizer",
-            )
-        return {"correlations": correlations}
-
-    async def _record_node(state: SupervisionState) -> dict:
-        case_id = state["case_id"]
-        decision = state.get("orchestrator_decision")
-        if decision:
-            # The routing decision itself goes on the record — "what it
-            # routed, with what instruction" is answerable from the ledger,
-            # not just from a transient chat surface.
-            store.append(
-                case_id=case_id, event_type="orchestrator_replied", run_id=state["run_id"],
-                payload={
-                    "intent": decision.get("intent"),
-                    "targets": decision.get("targets", []),
-                    "instruction": decision.get("instruction", ""),
-                    "message": decision.get("message_to_officer", ""),
-                },
-                actor="agent:orchestrator",
-            )
-        run_events = store.events_for_run(state["run_id"])
-        # A specialist pass may have changed the findings — keep the score
-        # current; a pure lookup or reply leaves it untouched.
-        if any(e.event_type == "finding_recorded" for e in run_events):
-            record = project_case(store.events_for(case_id))
-            score = score_findings(case_id, record.findings, load_scoring_config())
-            store.append(case_id=case_id, event_type="score_computed", run_id=state["run_id"],
-                         payload=score.model_dump(), actor="system:scoring")
-        store.append(
-            case_id=case_id, event_type="run_completed", run_id=state["run_id"],
-            payload={"run_id": state["run_id"], "kind": "investigation",
-                     "finding_count": sum(1 for e in run_events if e.event_type == "finding_recorded"),
-                     "observation_count": sum(1 for e in run_events if e.event_type == "observation_recorded")},
-            actor="system:investigation",
-        )
-        return {}
-
-    graph = StateGraph(SupervisionState)
-    graph.add_node("load_context", _load_context_node)
-    graph.add_node("orchestrate", _orchestrate_node)
-    graph.add_node("mandate", _inv_mandate_node)
-    graph.add_node("kya", _inv_kya_node)
-    graph.add_node("log", _inv_log_node)
-    graph.add_node("drift", _inv_drift_node)
-    graph.add_node("investigator", _investigator_node)
-    graph.add_node("critic", _inv_critic_node)
-    graph.add_node("synthesizer", _inv_synthesizer_node)
-    graph.add_node("record", _record_node)
-
-    graph.add_edge(START, "load_context")
-    graph.add_edge("load_context", "orchestrate")
-    graph.add_conditional_edges(
-        "orchestrate", _route_from_orchestrator,
-        [*_SPECIALIST_NODES, "investigator", "record"],
-    )
-    # A re-briefed specialist's output goes through the same critic +
-    # synthesizer tail as a triage pass (architecture-v2 §14.2). The
-    # investigator produces observations only — nothing rule-backed to
-    # check or correlate — so it records directly.
-    for node in _SPECIALIST_NODES:
-        graph.add_edge(node, "critic")
-    graph.add_edge("critic", "synthesizer")
-    graph.add_edge("synthesizer", "record")
-    graph.add_edge("investigator", "record")
-    graph.add_edge("record", END)
-
-    return graph.compile(checkpointer=checkpointer)
 
 
 async def run_investigation(
@@ -967,12 +930,9 @@ async def run_investigation(
     the orchestrator's reply) — the record is the durable truth; the reply
     is conversational surface."""
     store = store or get_default_store()
-    graph = build_investigation_graph(model=model, store=store)
-    state = await graph.ainvoke({
-        "case_id": case_id,
-        "officer_message": officer_message,
-        "officer": officer,
-        "findings": [], "observations": [], "messages": [],
+    graph = build_review_graph(model=model, store=store)
+    state = await graph.ainvoke(_initial_state(
+        case_id, officer_message=officer_message, officer=officer, first_pass=False,
         **({"prompt_overrides": prompt_overrides} if prompt_overrides else {}),
-    })
+    ))
     return project_case(store.events_for(case_id)), state.get("orchestrator_reply", "")
