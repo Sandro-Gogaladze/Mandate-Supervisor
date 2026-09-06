@@ -1,0 +1,39 @@
+# Build-context hygiene. Without this, `docker build` ships ~1.35 GB to
+# package a 1.9 MB corpus: 936 MB of node_modules, a 244 MB host .venv built
+# for macOS, and a 96 MB local ledger. Everything excluded here is either
+# rebuilt inside the image, machine-local, or a secret.
+
+# Version control and tooling
+.git
+.github
+.gitignore
+.claude
+.agents
+.impeccable
+.pytest_cache
+**/__pycache__
+**/*.py[co]
+
+# Host-built dependency trees — wrong platform for the image, and huge
+.venv
+**/node_modules
+dashboard/dist
+
+# Secrets. .env.example is the template that ships; .env never does.
+.env
+.env.*
+!.env.example
+
+# Runtime state. The ledger is rebuilt from the corpus on first boot (0.3s),
+# uploads and drafts belong to whoever runs the container, and the reseed
+# backup is a local artifact that isn't even tracked by git.
+data/ledger.db
+data/sandbox.db
+data/*.jsonl
+data/uploads
+registry/drafts
+
+# Docs and tests aren't needed to run the service
+docs
+eval
+tests

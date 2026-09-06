@@ -9,6 +9,7 @@ else does.
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import threading
 import uuid
@@ -23,7 +24,15 @@ from schemas import (
     SweepResult,
 )
 
-DEFAULT_PATH = Path(__file__).resolve().parent.parent / "data" / "sandbox.db"
+# Overridable exactly as the ledger's path is (ledger/store.py), so a
+# container can put both SQLite files on one writable volume instead of
+# inside the image, where they would not survive the container.
+DEFAULT_PATH = Path(
+    os.environ.get(
+        "MANDATE_SANDBOX_PATH",
+        Path(__file__).resolve().parent.parent / "data" / "sandbox.db",
+    )
+)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS sweeps (

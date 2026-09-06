@@ -233,7 +233,10 @@ Sixth pass: full impeccable `critique` run by its book (two isolated sub-agents 
 - Notes:
 
 ## 17 · Deployment & demo rehearsal
-- [ ] docker-compose local profile + `make demo`
+- [x] Packaged for download — three images (api / copilot-runtime / dashboard), Compose, Makefile, root README
+- [x] Verified on real containers: all three images build, cold start from empty volumes to a usable console in 3 s, 4 cases seeded, hash chain intact inside the container, console renders with zero errors and the proxy is transparent (identical status codes direct vs proxied)
+- [ ] Untested in the container: a live review's minutes-long SSE stream through nginx (routing is proven, sustained streaming is not — this is what `proxy_buffering off` + 1 h timeouts are for), dossier upload through the proxy, the human-gate resume, and the amd64 build (only arm64 was built locally; CI covers amd64)
+- [ ] Publish: tag `v*` -> GitHub Actions -> GHCR, then flip the three packages public
 - [ ] Fly.io mirror, reseeded on boot
 - [ ] Five-beat demo script rehearsed from cold start
-- Notes:
+- Notes: Distribution is **pull, not build** — CI builds once for amd64+arm64, downloaders only pull, so no toolchain on their side and no chance of a different dependency resolution. One published port: nginx serves the built console and proxies `/api` and `/copilotkit`, making the app same-origin (no CORS) and free of baked-in host names, so one image runs locally or hosted. Users bring their own key; with none, the deterministic floors still run and only the judgement layer is skipped. Two supporting changes: `MANDATE_SANDBOX_PATH` (mirrors the ledger override, so both SQLite files sit on one volume) and `@ag-ui/client` declared in dashboard/package.json — it was imported but resolving only by npm hoisting, which a production install would not have guaranteed. `.dockerignore` takes the build context from 1.35 GB to 4.9 MB. Build-time ledger seeding was considered and dropped: seeding measures 0.27 s, so first boot is already instant. Found and fixed while verifying: the runtime image was installing the dashboard's whole production tree (mermaid, streamdown, lucide-react) to run a 60-line translator — 1.32 GB against 749 MB once it got its own four-package manifest; and CopilotKit telemetry, which is on by default, is now disabled in the image. Also re-locked: the venv had drifted 14 packages ahead of uv.lock, so the image would have shipped a set nothing was tested on; `uv lock --upgrade` + `uv sync` aligned them and the 490 tests pass on the result.

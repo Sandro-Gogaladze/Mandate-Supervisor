@@ -1,0 +1,80 @@
+# Builds the three images and runs the whole stack, on every push. This is
+# the packaging test: it is the only place the images are proven to build and
+# the nginx proxy is proven to route, so a broken Dockerfile surfaces here
+# rather than on a downloader's machine.
+#
+# amd64 only and no push — releases are built for both architectures and
+# published by release.yml.
+
+name: build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docker/**'
+      - 'compose*.yml'
+      - '.dockerignore'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'dashboard/package*.json'
+      - 'api/**'
+      - 'dashboard/src/**'
+      - 'dashboard/server/**'
+      - '.github/workflows/build.yml'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  stack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and start the stack
+        env:
+          TAG: ci
+        run: docker compose -f compose.yml -f compose.build.yml up --build -d
+
+      # The API seeds the ledger from the corpus on boot; give it room.
+      - name: Wait for health
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:5173/api/health > /dev/null; then
+              echo "healthy after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "never became healthy"; exit 1
+
+      # Every path a browser uses, through nginx: the console, the REST
+      # projection of the ledger, and the agent runtime.
+      - name: Smoke the proxy
+        run: |
+          set -e
+          curl -fsS http://localhost:5173/ | grep -q '<div id="root"' \
+            && echo "console   ok"
+          test "$(curl -fsS http://localhost:5173/api/cases | \
+            python3 -c 'import json,sys; print(len(json.load(sys.stdin)))')" -gt 0 \
+            && echo "queue     ok (seeded)"
+          # /copilotkit itself has no route (404 by design, verified against
+          # the container directly); /copilotkit/info is the runtime's own
+          # handshake and must be a clean 200 through the proxy.
+          curl -fsS http://localhost:5173/copilotkit/info > /dev/null \
+            && echo "runtime   ok"
+
+      # The audit trail the whole product rests on, checked inside the
+      # container: proves the ledger seeded onto the volume and its hash
+      # chain verifies. Runs with no API key configured — the exact state a
+      # downloader is in before they add one.
+      - name: Verify the ledger chain
+        run: docker compose exec -T api python -m ledger.verify
+
+      - name: Service logs
+        if: always()
+        run: docker compose logs --tail=50
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

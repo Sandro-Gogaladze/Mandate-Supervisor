@@ -1,0 +1,24 @@
+# Overlay that builds the three images from this checkout instead of pulling
+# them. Used by `make up-build`, and by CI only as a smoke test — releases
+# are built by .github/workflows/release.yml.
+#
+#   docker compose -f compose.yml -f compose.build.yml up --build
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    image: ghcr.io/sandro-gogaladze/mandate-supervisor-api:${TAG:-dev}
+
+  copilot-runtime:
+    build:
+      context: .
+      dockerfile: docker/runtime.Dockerfile
+    image: ghcr.io/sandro-gogaladze/mandate-supervisor-runtime:${TAG:-dev}
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/dashboard.Dockerfile
+    image: ghcr.io/sandro-gogaladze/mandate-supervisor-dashboard:${TAG:-dev}

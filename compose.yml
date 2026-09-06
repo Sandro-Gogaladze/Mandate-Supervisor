@@ -1,0 +1,60 @@
+# What a downloader runs. Images are prebuilt and published to GHCR by
+# .github/workflows/release.yml, so nothing is compiled on this machine:
+# no Python, no Node, no npm, no toolchain to go wrong.
+#
+#   curl -O https://raw.githubusercontent.com/Sandro-Gogaladze/Mandate-Supervisor/main/compose.yml
+#   echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
+#   docker compose up -d
+#
+# To build from source instead, see compose.build.yml (or `make up-build`).
+
+name: mandate-supervisor
+
+services:
+  # FastAPI, the LangGraph pipeline, the specialists, the ledger.
+  api:
+    image: ghcr.io/sandro-gogaladze/mandate-supervisor-api:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      # Empty is legal and useful: every specialist's deterministic floor
+      # runs without a key, and only the LLM judgement passes are skipped.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MANDATE_THINKING_EFFORT: ${MANDATE_THINKING_EFFORT:-low}
+      MANDATE_MODEL_CONCURRENCY: ${MANDATE_MODEL_CONCURRENCY:-8}
+      # Unset means open intake, which is the right default for a local
+      # checkout. Set it to lock submissions to known institutions.
+      MANDATE_INSTITUTION_TOKENS: ${MANDATE_INSTITUTION_TOKENS:-}
+    volumes:
+      - state:/state                        # ledger.db + sandbox.db
+      - uploads:/app/data/uploads           # ad hoc submissions
+      - drafts:/app/registry/drafts         # policy-sandbox drafts
+    expose:
+      - "8123"
+
+  # CopilotKit protocol <-> AG-UI translator. No LLM, no business logic.
+  copilot-runtime:
+    image: ghcr.io/sandro-gogaladze/mandate-supervisor-runtime:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      SUPERVISOR_API_URL: http://api:8123
+    depends_on:
+      - api
+    expose:
+      - "4000"
+
+  # The console, and the only published port: nginx serves the built React
+  # app and proxies /api and /copilotkit to the two services above, so the
+  # whole application is same-origin.
+  dashboard:
+    image: ghcr.io/sandro-gogaladze/mandate-supervisor-dashboard:${TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5173}:80"
+    depends_on:
+      - api
+      - copilot-runtime
+
+volumes:
+  state:
+  uploads:
+  drafts:

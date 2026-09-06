@@ -27,3 +27,6 @@ data/sandbox.db
 
 # One-off ledger backup taken before a reseed. Large, local, and not the record.
 data/ledger-backup-*.jsonl
+
+# Offline image bundles produced by `make save`
+mandate-supervisor-*.tar.gz

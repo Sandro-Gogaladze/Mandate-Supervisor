@@ -1,0 +1,74 @@
+# Builds the three images once, here, so nobody has to build them anywhere
+# else. Triggered by a version tag; the resulting images are what compose.yml
+# pulls.
+#
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# One manual step, once, after the first successful run: GHCR packages are
+# private by default, and a private package means every downloader needs a
+# docker login. Profile -> Packages -> each package -> change visibility.
+
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  # A button in the Actions tab, for rebuilding without inventing a version.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            dockerfile: docker/api.Dockerfile
+          - name: runtime
+            dockerfile: docker/runtime.Dockerfile
+          - name: dashboard
+            dockerfile: docker/dashboard.Dockerfile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # arm64 under emulation. Judges may be on Apple Silicon, and an
+      # amd64-only image either refuses to run or crawls there.
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # Automatic — there is no secret to create.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Lowercased literal: GHCR rejects capitals, and the owner has them.
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/sandro-gogaladze/mandate-supervisor-${{ matrix.name }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Per-image cache scope: three images sharing one scope evict
+          # each other's layers on every run.
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}

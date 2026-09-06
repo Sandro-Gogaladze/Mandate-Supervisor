@@ -1,0 +1,16 @@
+{
+  "name": "mandate-supervisor-copilot-runtime",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Dependency manifest for the CopilotKit runtime container. Deliberately separate from dashboard/package.json: the runtime imports four packages, while the dashboard's production tree also carries every frontend library @copilotkit/react-core pulls in (mermaid, streamdown, lucide-react, date-fns), which the server never loads. Installing the dashboard tree here cost 811 MB of node_modules for a translator that needs none of it. Versions are pinned to exactly what dashboard/package.json resolves, so dev (npm --prefix dashboard run copilot-runtime) and the container run identical code.",
+  "scripts": {
+    "start": "node copilot-runtime.js"
+  },
+  "dependencies": {
+    "@ag-ui/client": "0.0.57",
+    "@copilotkit/runtime": "1.69.2",
+    "cors": "2.8.6",
+    "express": "5.2.1"
+  }
+}
