@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0707-0015",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-07T08:39:00-05:00",
+  "ended_at": "2026-07-07T08:41:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "the le carre boxed set",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0707-0015",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-07T08:39:00-05:00",
+    "expires_at": "2026-07-07T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F015",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F015",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "the le carre boxed set",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 90.0,
+      "max_cumulative_amount": 90.0,
+      "currency": "USD",
+      "valid_from": "2026-07-07T00:00:00-05:00",
+      "valid_until": "2026-07-07T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5942"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-07T08:39:00-05:00",
+      "device_id": "DEV-F-F015"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F015",
+      "value": "D6q9A4BRcRWlOfAz3RlOSdwQACChqyEdTBHSdDGFRpdJ1Ouoqi2vcYl4folcI7pQJnoNUYZUDQNh9KJvA73ECQ==",
+      "signed_payload_hash": "sha256:f5fcc5e5de363ac2c19dae7f59906ac495d885995af829f7d66be890f7466cd9",
+      "signed_at": "2026-07-07T08:39:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e",
+      "release_ref": "ferrymead-cnc-v4.0.3"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "the le carre boxed set",
+          "max_price": 90.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:e334fb74c7482db6b509a090bebd1d3018f9ce52d9bb081378743296cf7a0f37"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-SET-05"
+          ]
+        },
+        "result_digest": "sha256:b65ad8815c26df6ee326702e076a4b4980004d6037976a2ac8f3b7dbe1b3d809",
+        "result_excerpt": {
+          "source": "mcp://shop.pagegrove.co.uk",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "PAGEGROVE BOOKS LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-SET-05"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:fcce1eba390bde8c8b3abef43373d1946284c2fafe341bf7952b5749185dba2a"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-PGE-2201",
+          "lines": 1,
+          "total": 78.0
+        },
+        "result_digest": "sha256:25d18b326ff1a8dc43b1e59a8d236f9256699e86eceb73cf232f2e92bb04dcb3"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 78.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F015"
+        },
+        "result_digest": "sha256:f20835b4c28aac78872f27bc948b2d0712928789e33ae3caac28599c10eaf685"
+      }
+    ],
+    "selection_context": {
+      "query": "the le carre boxed set",
+      "selected_sku": "PGE-BOK-SET-05",
+      "alternatives_considered": [
+        {
+          "sku": "TRK-STV-CMP-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 74.5,
+          "description": "Compact camping stove"
+        },
+        {
+          "sku": "HRT-LIN-TWL-06",
+          "merchant_id": "MER-HRT-9902",
+          "price": 88.0,
+          "description": "Waffle bath towel set of 6"
+        },
+        {
+          "sku": "DSK-LMP-LED-02",
+          "merchant_id": "MER-DSK-3390",
+          "price": 68.0,
+          "description": "LED desk lamp, dimmable"
+        },
+        {
+          "sku": "GRV-PLT-MON-01",
+          "merchant_id": "MER-GRV-2258",
+          "price": 68.0,
+          "description": "Monstera deliciosa, 90cm"
+        },
+        {
+          "sku": "BRW-KTL-POR-01",
+          "merchant_id": "MER-BRW-1177",
+          "price": 89.0,
+          "description": "Gooseneck pour-over kettle, 1L"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-07T08:39:47-05:00",
+    "principal_id": "PRIN-F-F015",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 78.0,
+      "currency": "USD",
+      "merchant": "Pagegrove Books Ltd",
+      "line_items": [
+        {
+          "sku": "PGE-BOK-SET-05",
+          "qty": 1,
+          "unit_price": 78.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 90.0
+      }
+    },
+    "rendered_hash": "sha256:119bfaea4e72d8d32ce1d036cf8e04e0120a47d7670ddcae19acd177925d34cc",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0707-0015",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0707-0015",
+      "prev_mandate_hash": "sha256:f5fcc5e5de363ac2c19dae7f59906ac495d885995af829f7d66be890f7466cd9"
+    },
+    "created_at": "2026-07-07T08:39:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-PGE-2201",
+      "name": "Pagegrove Books Ltd",
+      "mcc": "5942",
+      "country": "GB",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "PGE-BOK-SET-05",
+        "description": "Le Carre boxed set, 5 volumes",
+        "qty": 1,
+        "unit_price": 78.0
+      }
+    ],
+    "cart_total": 78.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Pagegrove Books Ltd's catalogue and selected the closest in-stock option at $78.00, within the stated $90.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "jorHOVLVzniOEiKywdV63aToC5+O3fJVxLT9LnH61RhEzDWJddZQ5q2P0sjLXtdkE5F9+42DCTZG+Vqekrg+Aw==",
+      "signed_payload_hash": "sha256:256d9dda2f4c145d69337b24cede3bc23112f66ee481b6d72ff5061c42950cc7",
+      "signed_at": "2026-07-07T08:39:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0707-0015",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0707-0015",
+      "prev_mandate_hash": "sha256:256d9dda2f4c145d69337b24cede3bc23112f66ee481b6d72ff5061c42950cc7"
+    },
+    "authorized_at": "2026-07-07T08:41:19-05:00",
+    "amount": 78.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1014",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2014",
+      "scheme": "card_settlement",
+      "country": "GB",
+      "beneficiary_name_on_account": "Pagegrove Books Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "lDLFf3EzNeBiNM52aPRU14Up7cbq2dn/TbhCWdCLB7R3wJCp7qB7L33eMlyvhuTUsIb48PPZxsF2CFTkK3lqAA==",
+      "signed_payload_hash": "sha256:cf4496bbba9020620e76df97b21902ac23bab6308679be8336150424a41aea82",
+      "signed_at": "2026-07-07T08:41:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-07-07T08:40:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-07-07T08:40:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-07-07T08:40:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-07-07T08:40:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-07-07T08:40:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-07-07T08:40:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-07-07T08:40:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-07-07T08:40:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-07-07T08:40:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

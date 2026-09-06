@@ -103,7 +103,6 @@ for name, question in {
     "consent": "Did the shopper see and authorise this exact purchase; was value distorted?",
     "control_assurance": "After the peer review, did the institution's and operator's controls work?",
     "systemic": "Sweep accepted dossiers for shared dependencies, exposures and attack payloads.",
-    "red_team": "Probe declared control coverage with synthetic mutations; does not execute the operator runtime.",
 }.items():
     sid = f"{name}.review"
     SKILLS[sid] = Skill(skill_id=sid, agent=name, description=question, produces="finding",
@@ -111,7 +110,7 @@ for name, question in {
 
 _SKILL_ORDER = ["mandate.review", "kya.review", "provenance.review", "injection.review",
                 "counterparty.review", "consent.review", "log.analyze", "drift.analyze",
-                "control_assurance.review", "systemic.review", "red_team.review", "investigator.lookup"]
+                "control_assurance.review", "systemic.review", "investigator.lookup"]
 
 SPECIALIST_SKILLS_BY_AGENT = {
     "mandate": "mandate.review",
@@ -127,10 +126,23 @@ def skill_catalog() -> list[Skill]:
 
 
 
-# The skills a first pass covers: every reviewing specialist. Control
-# Assurance is not dispatched — the graph runs it after the peers, because
-# CTL-EFF-01 needs their findings. Systemic and the Red Team are on request.
+# The skills a first pass covers: every reviewing specialist, plus Systemic.
+#
+# Control Assurance is not dispatched here — the graph runs it after the
+# peers, because CTL-EFF-01 needs their findings.
+#
+# Systemic IS dispatched. Its question ("is this agent part of something
+# larger?") is one an officer needs answered while reviewing the case, not
+# only when somebody remembers to press a button on another page; a shared
+# payee or a correlated rhythm is context for the verdict, not an afterthought
+# to it. It is cheap enough to belong here — loading four submissions and
+# sweeping them measured 35 ms — and it cannot distort the decision, because
+# every portfolio finding is a `concern` and only breaches score.
+#
+# The cost is O(portfolio) per review: every case re-loads every other case's
+# submission. At four dossiers that is nothing; at four hundred it is the
+# first thing to make incremental.
 REVIEW_SKILLS: tuple[str, ...] = tuple(
     sid for sid in _SKILL_ORDER
-    if SKILLS[sid].produces == "finding" and SKILLS[sid].agent not in ("control_assurance", "systemic", "red_team")
+    if SKILLS[sid].produces == "finding" and SKILLS[sid].agent != "control_assurance"
 )

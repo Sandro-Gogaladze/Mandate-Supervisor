@@ -158,6 +158,7 @@ async def analyze_log(
     reviewer_directive: str | None = None,
     system_prompt: str | None = None,
     context: dict | None = None,
+    extra_rules: list[Rule] | None = None,
     round: int = 1,
 ) -> tuple[list[Assessment], list[Observation]]:
     """The judged half of the Log agent. Needs a live ANTHROPIC_API_KEY
@@ -166,10 +167,26 @@ async def analyze_log(
     if not dossier.transaction_history:
         return [], []
 
+    # One slot per judged rule that is actually in force. The original three
+    # are the book's floor; anything added since appears only while active, so
+    # promoting or retiring one in the sandbox changes the call with no code
+    # change — and a rule nobody wired cannot be silently skipped.
+    slots = {"round_number_pattern": "roundness",
+             "probing_the_authorisation_ceiling": "ceiling_probing"}
+    extra = [(slots[r.type], r) for r in (extra_rules or []) if r.type in slots]
+    tool = _LOG_ANALYSIS_TOOL
+    if extra:
+        schema = _LOG_ANALYSIS_TOOL["input_schema"]
+        tool = {**_LOG_ANALYSIS_TOOL, "input_schema": {
+            **schema,
+            "properties": {**schema["properties"], **{key: _VERDICT_SCHEMA for key, _ in extra}},
+            "required": [*schema["required"], *[key for key, _ in extra]],
+        }}
+
     model = model or get_model()
     bound = model.bind(
         output_config={"effort": thinking_effort},
-        tools=[_LOG_ANALYSIS_TOOL],
+        tools=[tool],
         tool_choice={"type": "auto"},
     )
 
@@ -235,6 +252,11 @@ async def analyze_log(
         _verdict("concentration", concentration_rule),
         _verdict("velocity", velocity_rule),
     ]
+    # Slots added after the original three. Each is read only when its rule is
+    # active in the book handed in, so promoting or retiring one is a data
+    # change — the tool asked for it above on exactly the same condition.
+    for key, rule in extra:
+        assessments.append(_verdict(key, rule))
     known = {t.transaction_id: t for t in dossier.transaction_history}
     raw_observations = []
     for item in result.get("other_observations", []):

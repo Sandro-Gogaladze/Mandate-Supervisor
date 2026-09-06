@@ -463,20 +463,6 @@ One bank may see one unusual transaction. The regulator may see the same pattern
 
 This is a capability that belongs naturally to a central regulator because no individual institution sees the complete supervised market.
 
-## 11. Red Team — Does the agent remain safe when deliberately challenged?
-
-The Red Team specialist creates synthetic tests from the agent's own mandate.
-
-Examples include:
-
-- an amount just above the cap;
-- a merchant name resembling an approved merchant;
-- a product description containing hidden instructions;
-- reuse of a one-time mandate;
-- or consent-screen values that differ from the signed values.
-
-These tests do not touch live payment systems. They reveal which risks the firm's declared controls can handle and which remain unprotected.
-
 ---
 
 # How the system uses AI safely

@@ -1,7 +1,7 @@
 """The conversational orchestrator + investigation graph on the dossier."""
 from __future__ import annotations
 
-from agents.orchestrator import first_pass_decision, route
+from agents.orchestrator import close_out, first_pass_decision, route
 from ledger import LedgerStore
 from ledger.projection import project_case
 from pipeline.graph import run_investigation, run_triage
@@ -25,9 +25,15 @@ def test_first_pass_routing_is_deterministic_and_complete() -> None:
     decision = first_pass_decision()
 
     assert decision.intent == "dispatch"
+    # Systemic is in the first-pass set: "is this agent part of something
+    # larger?" is context for the verdict, not an afterthought to it. Control
+    # Assurance is absent because the graph runs it after the fan-out (its
+    # rules need the peers' facts), and the Red Team because it generates
+    # probes rather than reading the submission.
     assert decision.targets == [
         "mandate.review", "kya.review", "provenance.review", "injection.review",
         "counterparty.review", "consent.review", "log.analyze", "drift.analyze",
+        "systemic.review",
     ]
 
 
@@ -133,7 +139,7 @@ async def test_asking_for_the_review_again_is_a_dispatch_of_every_review_skill(s
     record, reply = await run_investigation(case_id, "run the full review again", officer="Ana", model=fake, store=store)
     assert reply == "Starting a full pass now."
     replied = [e for e in store.events_for(case_id) if e.event_type == "orchestrator_replied"][-1]
-    assert replied.payload["intent"] == "dispatch" and len(replied.payload["targets"]) == 8
+    assert replied.payload["intent"] == "dispatch" and len(replied.payload["targets"]) == 9
     assert record.runs[-1].kind == "investigation" and record.runs[-1].completed_at
 
 
@@ -200,3 +206,71 @@ async def test_an_orchestrator_call_that_fails_completes_the_turn_and_says_so(st
     replied = next(e for e in events if e.event_type == "orchestrator_replied")
     assert "could not reach the model" in replied.payload["message"] and replied.payload["targets"] == []
     assert not any(e.event_type == "dispatch_recorded" for e in events)
+
+
+# ---------------------------------------------------------------------------
+# The closing brief
+# ---------------------------------------------------------------------------
+
+
+async def test_the_orchestrator_closes_the_turn_over_the_finished_record(store) -> None:
+    """After the specialists, the critic and the synthesizer, the orchestrator
+    speaks once — over a recommendation that is already on the record, with
+    counts it was handed rather than counts it worked out."""
+    case_id = await _triaged(store)
+    events = store.events_for(case_id)
+    order = [e.event_type for e in events]
+    brief = next(e for e in events if e.event_type == "orchestrator_summarised")
+    rec = next(e for e in events if e.event_type == "authorisation_computed")
+
+    assert brief.actor == "agent:orchestrator"
+    # It cannot describe a recommendation that does not exist yet.
+    assert order.index("authorisation_computed") < order.index("orchestrator_summarised")
+    assert brief.payload["breach_count"] == len(rec.payload["factors"])
+    assert brief.payload["disposition"] == rec.payload["disposition"]
+    real = {f.rule_id for f in _record(store, case_id).findings}
+    assert set(brief.payload["main_risks"]) <= real
+
+
+async def test_a_closing_brief_cannot_name_a_rule_no_finding_supports(store) -> None:
+    case_id = await _triaged(store)
+    record = _record(store, case_id)
+    rec = next(e for e in store.events_for(case_id) if e.event_type == "authorisation_computed").payload
+    fake = FakeChatModel({"record_closing_brief": {
+        "reasoning": "…", "message_to_officer": "Two breaches; open the findings list.",
+        "main_risks": ["MND-CAP-01", "NOT-A-RULE"]}})
+
+    brief = await close_out(rec, record.findings, score=record.risk_score, model=fake)
+
+    assert "NOT-A-RULE" not in brief.main_risks
+    assert set(brief.main_risks) <= {f.rule_id for f in record.findings}
+    # The counts stay code's either way — the model never supplied them.
+    assert brief.breach_count == len(rec["factors"])
+
+
+async def test_a_closing_brief_that_fails_costs_a_sentence_not_the_run(store) -> None:
+    """It reads a record that is already final, so its failure must not take
+    the recommendation, the score or the run down with it."""
+    class BrokenAtTheEnd:
+        """Every call the graph makes works, except the closing brief."""
+
+        def __init__(self, inner, broken: bool = False) -> None:
+            self.inner, self.broken = inner, broken
+
+        def bind(self, **kwargs):
+            tools = kwargs.get("tools") or []
+            return BrokenAtTheEnd(self.inner.bind(**kwargs),
+                                  bool(tools) and tools[0]["name"] == "record_closing_brief")
+
+        async def ainvoke(self, messages):
+            if self.broken:
+                raise RuntimeError("overloaded_error")
+            return await self.inner.ainvoke(messages)
+
+    case_id = seed(store, KST)
+    await run_triage(case_id, model=BrokenAtTheEnd(make_graph_fake()), store=store)
+
+    events = [e.event_type for e in store.events_for(case_id)]
+    assert "orchestrator_summarised" not in events
+    assert "authorisation_computed" in events and events[-1] == "run_completed"
+    assert _record(store, case_id).risk_score is not None

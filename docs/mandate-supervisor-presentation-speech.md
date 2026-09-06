@@ -472,14 +472,6 @@ It looks for common dependence on the same model or infrastructure, synchronised
 
 This uses a central regulator’s unique advantage. One institution may see one unusual payment. A regulator may see the same pattern at five institutions and recognise a coordinated problem.
 
-### 11. Red Team
-
-The Red Team specialist asks: **Does the agent remain safe when deliberately challenged?**
-
-It generates synthetic tests from the agent’s own mandate: an amount just above the cap, a lookalike merchant, hidden instructions in product content, replay of a single-use mandate, or a mismatch between displayed and signed consent values.
-
-These tests do not touch live payment rails. Their purpose is to test whether the firm’s declared controls work under realistic pressure rather than only in clean demonstrations.
-
 ## How AI is constrained
 
 Our safety model is based on separating facts from judgement.

@@ -87,6 +87,57 @@ def amount_stats(df: pd.DataFrame) -> dict:
     }
 
 
+def roundness(df: pd.DataFrame) -> dict:
+    """How often the agent pays a suspiciously exact figure.
+
+    A round number is a chosen number. In retail it is rare by construction —
+    prices end in .99 — so a run of them says the amount was decided rather
+    than quoted. How many is too many depends entirely on what the agent buys,
+    which is why LOG-RND-01 is judged: the corpus sits at 3/102 and 2/52, and
+    a constant that called either suspicious would call every retail agent
+    suspicious too.
+    """
+    amounts = df["amount"]
+    n = len(amounts)
+    buckets = {f"multiples_of_{d}": int((amounts % d == 0).sum()) for d in (10, 50, 100, 1000)}
+    exact = int((amounts % 1 == 0).sum())
+    return {
+        "transactions": n,
+        "whole_currency_units": exact,
+        "whole_currency_rate": round(exact / n, 3) if n else 0.0,
+        **buckets,
+        "rate_multiples_of_100": round(buckets["multiples_of_100"] / n, 3) if n else 0.0,
+    }
+
+
+def cap_utilisation(df: pd.DataFrame, caps: dict[str, float]) -> dict:
+    """How close each payment ran to the authorisation it was drawn on.
+
+    F64 is an agent feeling for its ceiling — but a cap is a budget, and
+    spending most of a budget is what a shopping agent is FOR. Measured on the
+    corpus the median draw is 0.92 of the cap with 28 of 47 transactions
+    inside the top decile, all of it ordinary. So this returns the
+    distribution, never a proximity flag: a model shown "median 0.92, one
+    transaction at 99%" can see that near-cap is this agent's normal, where a
+    model shown "22 transactions near the cap" cannot.
+    """
+    rows = [(t, caps[t]) for t in df.index if t in caps]
+    pairs = [(float(df.loc[t, "amount"]), caps[t]) for t, _ in rows]
+    ratios = sorted(round(a / c, 3) for a, c in pairs if c)
+    if not ratios:
+        return {"evaluable": False, "reason": "no transaction resolves to an authorisation cap"}
+    band = lambda lo, hi: sum(1 for r in ratios if lo <= r < hi)  # noqa: E731
+    return {
+        "evaluable": True,
+        "transactions_with_a_cap": len(ratios),
+        "median_utilisation": ratios[len(ratios) // 2],
+        "max_utilisation": ratios[-1],
+        "over_cap": sum(1 for r in ratios if r > 1.0),
+        "distribution": {"at_or_over_99pct": band(0.99, 1e9), "95_to_99pct": band(0.95, 0.99),
+                         "90_to_95pct": band(0.90, 0.95), "under_90pct": band(0.0, 0.90)},
+    }
+
+
 def hourly_distribution(df: pd.DataFrame) -> dict:
     hours = df["timestamp"].dt.hour
     return {str(h): int(c) for h, c in hours.value_counts().sort_index().items()}

@@ -13,15 +13,20 @@ from registry.loader import (
 from schemas import Assessment
 
 
-def test_catalogue_contains_exactly_f1_through_f73() -> None:
+def test_the_catalogue_is_contiguous_from_f1() -> None:
+    """Ids run from F1 upwards with no gaps, no duplicates and no reordering,
+    so a failure id is stable for the life of the catalogue and a new harm can
+    only ever be appended. The count is data — asserting it here would make
+    adding a harm a code change, which is the thing rules-as-data avoids."""
     catalogue = load_failure_catalogue()
-    assert [f.failure_id for f in catalogue.failures] == [f"F{i}" for i in range(1, 74)]
-    assert catalogue.failures[0].name == (
-        "The organisation that issued the credential was never approved"
-    )
-    assert catalogue.failures[-1].name == (
-        "A control fired, held, and the breach happened anyway"
-    )
+    ids = [f.failure_id for f in catalogue.failures]
+    assert ids == [f"F{i}" for i in range(1, len(ids) + 1)]
+    assert len(set(ids)) == len(ids)
+    # An id keeps its meaning for life: appending a harm must never renumber
+    # an existing one, so both ends of the original catalogue are pinned.
+    by_id = {f.failure_id: f.name for f in catalogue.failures}
+    assert by_id["F1"] == "The organisation that issued the credential was never approved"
+    assert by_id["F73"] == "A control fired, held, and the breach happened anyway"
 
 
 def test_every_declared_f_mapping_resolves_to_the_catalogue() -> None:
@@ -124,9 +129,13 @@ def test_judged_multi_failure_rule_projects_only_the_selected_failure() -> None:
 def test_broad_judgments_do_not_claim_precise_failures_already_owned_by_specific_rules() -> None:
     books = load_all_rulesets()
     by_id = {r.rule_id: r for b in books.values() for r in b.rules}
+    # A BROAD judgment reconciles or re-reads what specific rules already
+    # decide, so it must claim no failure of its own: one event named twice is
+    # scored twice. PRV-CRD-01 is not broad — card-versus-credential is checked
+    # by no other rule in any book — so it carries its own harm.
     assert by_id["CPT-IDN-01"].failures == []
     assert by_id["PRV-REC-01"].failures == []
-    assert by_id["PRV-CRD-01"].failures == []
+    assert by_id["PRV-CRD-01"].failures == ["F88"]
     assert by_id["CPT-REG-01"].failures == ["F51"]
     assert by_id["CPT-SUB-01"].failures == ["F52"]
     assert by_id["CPT-BEN-01"].failures == ["F53"]

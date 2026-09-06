@@ -14,7 +14,18 @@ labeled slot, `open_observations_note`.
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
+
+# What a section asserts about the findings it rests on. Prose cannot be
+# checked against data, but this can: a section that calls something a breach
+# must cite a finding carrying severity, and a section that says an area was
+# clear must not cite one. Without it, grounding verified that citations were
+# real and complete while saying nothing about whether the section described
+# them correctly — forty satisfied checks could be written up as failures and
+# every rule would still pass.
+SectionCharacter = Literal["adverse", "clear", "mixed"]
 
 
 class ReportSection(BaseModel):
@@ -23,6 +34,11 @@ class ReportSection(BaseModel):
     title: str
     body: str
     cited_finding_ids: list[str] = Field(default_factory=list)
+    # Optional in the schema, required by the drafting tool: reports already on
+    # the ledger predate the field, and a required one would fail to project.
+    # check_grounding() only ever runs on a freshly drafted report, where the
+    # tool schema guarantees it is set.
+    character: SectionCharacter | None = None
 
 
 class DraftReport(BaseModel):

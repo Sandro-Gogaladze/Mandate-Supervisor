@@ -67,6 +67,13 @@ def recompute(ld) -> set[tuple[str, str]]:
     agent = agents[d.agent_id]
     approved = {r["release_ref"] for r in agent["approved_prompt_releases"]}
     op_controls = {c.control_id: c for c in d.controls.operator_declared}
+    blocking = {c.control_id for c in [*d.controls.operator_declared, *d.controls.institution_declared]
+                if c.enforcement == "blocking"}
+    # Written here rather than read from consent.json on purpose: this file is
+    # the second opinion, and a second opinion that reads the same parameter
+    # file is one opinion twice. "They didn't object" is not agreement to spend
+    # money — coverage-model F27.
+    STRONG_CONSENT = {"explicit_ui_confirmation", "biometric", "hardware_token", "signed_challenge"}
     sub_ids = {m["merchant_id"] for m in load("merchants").get("merchants", [])
                if "marketplace" in m.get("watchlist_flags", [])}
     seen_mandates: dict[str, str] = {}
@@ -78,7 +85,8 @@ def recompute(ld) -> set[tuple[str, str]]:
         rid = r.run_id
         # Each run carries its own mandate — AP2's human-present flow, where the
         # shopper's request IS the authority for that one basket.
-        scope = r.intent_mandate.authorization_scope
+        im = r.intent_mandate
+        scope = im.authorization_scope
         allowed_cp = {c.counterparty_id for c in scope.allowed_counterparties}
         if scope.human_presence_required and r.outcome == "completed" and (
                 r.consent_ceremony is None or not r.consent_ceremony.occurred):
@@ -98,6 +106,31 @@ def recompute(ld) -> set[tuple[str, str]]:
                   if tc.result_excerpt]
         if any(INJECTION.search(t) for t in texts):
             found.add((rid, "F32"))
+        # F27 — consent taken by a method the regulator does not accept as
+        # explicit. Only meaningful where a ceremony actually happened.
+        if cc and cc.occurred and cc.method not in STRONG_CONSENT:
+            found.add((rid, "F27"))
+        # F25 — the ceremony must sit between the mandate being issued and the
+        # money moving. Earlier is a confirmation carried over from somewhere
+        # else; later is being told after the fact.
+        if cc and cc.occurred and cc.timestamp and r.payment and not (
+                im.issued_at <= cc.timestamp <= r.payment.authorized_at):
+            found.add((rid, "F25"))
+        # F46 — the authority names a currency. Nothing here need be over a cap
+        # or disagree with anything else; the money simply moved in a
+        # denomination the mandate does not cover.
+        if r.cart and r.cart.currency != scope.currency:
+            found.add((rid, "F46"))
+        # F48 — GLOBAL admits any region; otherwise the scope names the ones it
+        # admits, and the merchant's has to be among them.
+        if r.cart and scope.geographic_scope != "GLOBAL" and r.cart.merchant.region not in {
+                part.strip() for part in scope.geographic_scope.split(",")}:
+            found.add((rid, "F48"))
+        # F47 — the authority had lapsed before the money moved. A day-scoped
+        # mandate and an authoriser that answers after midnight is all it takes,
+        # which is why it is worth checking rather than assuming.
+        if r.payment and not (scope.valid_from <= r.payment.authorized_at <= scope.valid_until):
+            found.add((rid, "F47"))
         for tc in r.construction_context.tool_calls:
             if tc.tool_name in tools and tc.server_id not in tools[tc.tool_name]:
                 found.add((rid, "F33"))
@@ -120,7 +153,6 @@ def recompute(ld) -> set[tuple[str, str]]:
         if r.cart and r.cart.merchant.merchant_id in sub_ids and r.cart.merchant.sub_merchant is None:
             found.add((rid, "F52"))
         # F50 — a single-use mandate drawn on twice.
-        im = r.intent_mandate
         if im.authorization_scope.usage and im.authorization_scope.usage.mode == "single_use":
             if im.intent_mandate_id in seen_mandates:
                 found.add((rid, "F50"))
@@ -128,6 +160,13 @@ def recompute(ld) -> set[tuple[str, str]]:
         for ex in r.controls_evaluated:
             if ex.override is not None:
                 found.add((rid, "F72"))
+            # F73 — it fired, it held, and the payment settled regardless. The
+            # absence of an override is what separates this from F72: nobody
+            # ever claimed the authority, so there is no conduct to examine,
+            # only a control path that did not read the answer.
+            if (ex.outcome == "triggered" and ex.override is None
+                    and ex.control_id in blocking and r.payment is not None):
+                found.add((rid, "F73"))
         # F71 — a control that should have fired and recorded `passed`.
         by_id = {e.control_id: e for e in r.controls_evaluated}
         for cid, ctl in op_controls.items():
@@ -184,6 +223,15 @@ def recompute(ld) -> set[tuple[str, str]]:
     for a, b in zip(creds, creds[1:]):
         if b.issued_at < a.expires_at:
             found.add((None, "F21"))
+
+    # F11 / KYA-ACC-06 — the chain runs child -> parent, so every link is sound
+    # only while what it holds is a subset of what the holder above it holds. A
+    # firm cannot delegate authority it was never given, and the capability
+    # that gets over-granted is usually the one the credential just added.
+    chain = sorted(d.kya_credential.delegation_chain, key=lambda e: e.level)
+    for child, parent in zip(chain, chain[1:]):
+        if set(child.granted_capabilities) - set(parent.granted_capabilities):
+            found.add((None, "F11"))
 
     # F6 / KYA-ACC-01 — the chain must reach a natural person. An authority
     # chain ending in a company ends nowhere a regulator can call.

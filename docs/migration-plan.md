@@ -4,7 +4,7 @@ The corpus, the rulesets and three specialists now describe a product the
 pipeline does not yet run. This is the plan to close that gap.
 
 Reads with `data-and-agents.md` (what each agent needs), `architecture-v3.md`
-(the target pipeline), `coverage-model.md` (the 73 failures) and
+(the target pipeline), `coverage-model.md` (the failure catalogue) and
 `kya-ruleset.md` (the 57 rules).
 
 ---
@@ -195,11 +195,15 @@ found by agents on the graph, not by `verify_dossier.py`.
 ## Phase 4 — The seven new specialists
 
 > **Status (2026-09-03): done.** `docs/phases/17-the-seven-new-specialists.md`.
-> The gate, honestly: all eleven agents review a dossier and return
-> assessments citing facts, with ids that never collide — as agents, called
-> directly. Dispatching them from the graph is Phase 5. Posture and the
-> Red Team's verdicts turned out computable, so neither makes a model call.
-> The eval is deliberately skipped for now.
+> The gate, honestly: all agents review a dossier and return assessments
+> citing facts, with ids that never collide — as agents, called directly.
+> Dispatching them from the graph is Phase 5. Posture turned out computable,
+> so it makes no model call. The eval is deliberately skipped for now.
+>
+> **E3 Red Team was removed on 2026-09-05.** Its "probes" mutated a run's JSON
+> and were scored by our own checkers, so the only thing it reported was
+> whether the firm had declared a matching control label. That is declaration
+> completeness, not adversarial testing. The roster is ten specialists.
 
 Each is a deterministic floor plus at most one contained LLM call, per the house
 pattern. Checkers for three already exist.
@@ -212,7 +216,6 @@ pattern. Checkers for three already exist.
 | C2 | **Consent & Harm** | ✅ `consent_checks.py` | ✅ value-for-money against `selection_context` (CNS-VFM-01) |
 | E1 | **Control Assurance** | ✅ `control_checks.py` | none — posture is computed from the CTL facts |
 | E2 | **Systemic** | ✅ `systemic.py` | none — the sweep's three conditions are the judgement |
-| E3 | **Red Team** | ✅ `red_team.py` | none — probes run through the deterministic floors |
 
 11. `agents/injection.py`, `counterparty.py`, `consent.py` + their check modules.
 12. Wrap the three existing check modules in agents.
@@ -275,7 +278,8 @@ replays the case.
 ## Phase 8 — API
 
 23. New routes: `/dossiers`, `/dossiers/{id}/runs`, `/dossiers/{id}/runs/{run_id}`,
-    `/portfolio/sweep`, `/dossiers/{id}/decision`. Keep `/cases/*` as aliases
+    `/dossiers/{id}/decision`. (`/portfolio/sweep` was built here and removed on
+    2026-09-05 — see below.) Keep `/cases/*` as aliases
     through Phase 9, then remove.
 24. **Submission becomes multi-file.** `POST /cases/upload` takes one JSON file
     and validates a `CaseBundle`. A dossier is a directory: `dossier.json`, 20–50

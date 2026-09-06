@@ -48,13 +48,13 @@
     "consent": {
       "method": "explicit_ui_confirmation",
       "timestamp": "2026-07-13T15:19:00-05:00",
-      "device_id": "DEV-K-H008"
+      "device_id": "DEV-H-H008"
     },
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "KEY-SHOPPER-H008",
-      "value": "3Dsly9aUrJdDlUb4nrPt+G8xC8ppvb05n2DU2PLm04c86O6FNEF8JlMW8klh6LBPP/MYX8m8WjGPuxSmctNICw==",
-      "signed_payload_hash": "sha256:09700129aecf4599c3b89ba57e171a13eb6ed3556cabc3030e65efab31553837",
+      "value": "bqQUGFXf3siZDxi3M/zObc682iJDxghaWnov9wNPxQiu/RX8/n3+tzWPIYrD0G7SuVDW0RCVlKmDhgzijAHPCg==",
+      "signed_payload_hash": "sha256:a347109453d728ed0d5395b0363e0dd207c494ffea40951d20120759f224e8a7",
       "signed_at": "2026-07-13T15:19:00-05:00"
     }
   },
@@ -209,7 +209,7 @@
     "cart_mandate_id": "CM-HAL-0713-0008",
     "chain_link": {
       "prev_mandate_id": "IM-HAL-0713-0008",
-      "prev_mandate_hash": "sha256:09700129aecf4599c3b89ba57e171a13eb6ed3556cabc3030e65efab31553837"
+      "prev_mandate_hash": "sha256:a347109453d728ed0d5395b0363e0dd207c494ffea40951d20120759f224e8a7"
     },
     "created_at": "2026-07-13T15:19:00-05:00",
     "merchant": {
@@ -236,8 +236,8 @@
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "KEY-HAL-AGT-01",
-      "value": "471IQ2rUPlGQX/SZyRnv2WIukEdpU/YyIPMIx1mCuwpEgvOCOzMmsLaD01OZa0W400pwRHhw7V95qIBc+yJ5CA==",
-      "signed_payload_hash": "sha256:0c6118326bf2a31dd6283a00501449514f5c441e6e01c129b2413c13d016e7b9",
+      "value": "4bK7itGuEx0TxzD5IjBANsK69RyuyV/+PTonpkFbrhMIE2k0c3eu9mTbg4gxGyHNwl0DdhEtq2t+NIi9/sAABA==",
+      "signed_payload_hash": "sha256:7ee5fd17ccb506eb3f77d6dd9c46e3d6449f4458ca5c5a6b08e90809e8c84b4f",
       "signed_at": "2026-07-13T15:19:00-05:00"
     }
   },
@@ -245,7 +245,7 @@
     "payment_mandate_id": "PM-HAL-0713-0008",
     "chain_link": {
       "prev_mandate_id": "CM-HAL-0713-0008",
-      "prev_mandate_hash": "sha256:0c6118326bf2a31dd6283a00501449514f5c441e6e01c129b2413c13d016e7b9"
+      "prev_mandate_hash": "sha256:7ee5fd17ccb506eb3f77d6dd9c46e3d6449f4458ca5c5a6b08e90809e8c84b4f"
     },
     "authorized_at": "2026-07-13T15:21:19-05:00",
     "amount": 279.0,
@@ -265,8 +265,8 @@
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "KEY-HAL-AGT-01",
-      "value": "dp7JM4f6eNP5ANqsdrYPyJKogrBKh8ZxyGoA846JD37Cs9T8EwaD0/ZkYjoMWof5X4WDEhg0+/0BtIvyPvKuAQ==",
-      "signed_payload_hash": "sha256:44302bd2d6894d362c8ecf77dc42d5a7c45b90fbb1b98d9644d55b8a85c1ef1e",
+      "value": "ROh0Wif3z6bUn4mgFVf0MnI2+yXyzKNU5BmUHwFvCYXAbU4AZefuBg+MqT7+mN72ILsqsE1BNKcwuiDrHkxpDQ==",
+      "signed_payload_hash": "sha256:fa30ddf1f6c230c3a60f2b56b20105961087823788eb9003e3978028b724c1b8",
       "signed_at": "2026-07-13T15:21:19-05:00"
     }
   },

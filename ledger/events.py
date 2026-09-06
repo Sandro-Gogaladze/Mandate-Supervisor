@@ -21,7 +21,6 @@ EVENT_TYPES = frozenset({
     "dossier_submitted",
     "control_posture_recorded", "specialist_failed", "authorisation_computed",
     "authorisation_decided", "run_evaluated", "case_watched",
-    "portfolio_sweep_started", "portfolio_sweep_completed", "portfolio_finding_recorded",
     "case_submitted",          # the submission: dossier.json + runs + transaction_history + firm
     "fact_recorded",           # Fact — one per fact, so each has its own seq and actor
     "assessment_recorded",     # Assessment
@@ -32,6 +31,11 @@ EVENT_TYPES = frozenset({
     "finding_recorded",        # Finding
     "failure_occurrence_recorded",  # FailureOccurrence: named F-id + exact affected runs
     "observation_recorded",    # Observation
+    # {agent, narration} — the specialist's briefing line for the officer,
+    # written over its own assessments only. Model-written prose, so it is
+    # recorded like any other model output and is never citable evidence:
+    # the report cites assessments, not a paraphrase of them.
+    "specialist_narrated",
     "critic_checked",          # {target, finding_id?, passed, unquoted_values}
     "correlation_recorded",    # Correlation
     "escalation_round_started",  # {round, targets}
@@ -39,6 +43,10 @@ EVENT_TYPES = frozenset({
     "run_completed",           # {run_id, kind, finding_count, observation_count}
     "question_asked",          # {question_id, question}
     "orchestrator_replied",    # {intent, targets, instruction, message} — the routing decision, on the record
+    # {message, main_risks, breach_count, disposition} — the orchestrator's
+    # closing brief once the specialists have reported. Presentational: the
+    # counts in it are the authorisation policy's, and nothing reads it back.
+    "orchestrator_summarised",
     "investigation_completed",  # InvestigationAnswer
     "report_drafted",          # DraftReport
     "grounding_checked",       # {passed, problems, attempt}
@@ -53,6 +61,11 @@ EVENT_TYPES = frozenset({
     # the record — which is the only version of "clear history" a hash-
     # chained audit trail can honestly offer.
     "review_history_cleared",
+    # {domain, from_version, to_version, draft_id, sweep_id, rationale, edits,
+    #  evidence} — a rulebook becomes policy. The sweep id is the point: the
+    # evidence a promotion rested on is part of the promotion record, so
+    # "what did you know when you tightened this?" has an answer.
+    "ruleset_promoted",
 })
 
 _ACTOR_PREFIXES = ("system:", "agent:", "human:")

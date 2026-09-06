@@ -39,7 +39,15 @@ def test_map_is_the_real_graph_with_the_control_join(store):
     assert set(AGENTS) <= {n['id'] for n in surface['nodes']}
     assert {n['id'] for n in surface['nodes'] if n['role'] == 'peer'} == set(PEERS)
     edges = {(e['source'], e['target']) for e in surface['edges']}
-    assert all((p, 'control_assurance') in edges for p in PEERS)
+    # Every peer lands on the shared join, and the join — not each specialist —
+    # is what carries on to control assurance or short-circuits to the record.
+    # Drawing it the other way claimed the specialists report to the
+    # orchestrator directly, which the graph never does.
+    assert all((p, 'specialists_done') in edges for p in PEERS)
+    assert not any((p, 'control_assurance') in edges for p in PEERS)
+    assert not any((p, 'orchestrator') in edges for p in PEERS)
+    assert ('specialists_done', 'control_assurance') in edges
+    assert ('specialists_done', 'orchestrator') in edges
     assert ('control_assurance', 'findings') in edges
     assert ('synthesizer', 'orchestrator') in edges
     assert ('grounding_check', 'draft_report') in edges
@@ -113,8 +121,6 @@ def test_missing_evidence_cannot_turn_into_a_clean_run_and_digest_pins_content()
     assert changed.clean_runs == first.clean_runs - 1
     assert changed.disposition == 'incomplete-submission'
     assert changed.recommendation_digest != first.recommendation_digest
-    portfolio = recommend(dossier, facts, [], policy=policy, portfolio_findings=[{'finding_id': 'portfolio-new'}])
-    assert portfolio.recommendation_digest != changed.recommendation_digest
 
 
 def test_same_event_groups_are_order_independent_and_keep_strongest_weight():
@@ -157,6 +163,26 @@ async def test_upload_alias_has_same_institution_authentication(store, tmp_path,
         assert len((await client.get(f"/dossiers/{accepted.json()['dossier_id']}/runs")).json()) == 20
 
 
+async def test_upload_is_open_when_no_submission_tokens_are_configured(store, tmp_path, monkeypatch):
+    """Whether intake is authenticated is a deployment decision, not a caller's.
+
+    Unset, the token map leaves intake open and the dossier's own
+    institution_id is taken at face value — the local default, so a console
+    with no token issued can still accept a submission. The enforcement above
+    is what happens the moment one is configured; nothing a request sends can
+    move between the two.
+    """
+    from data import uploads
+    monkeypatch.setattr(uploads, 'UPLOADS_DIR', tmp_path / 'uploads')
+    monkeypatch.delenv('MANDATE_INSTITUTION_TOKENS', raising=False)
+    async with api_client(store) as client:
+        accepted = await client.post('/dossiers', files={'file': ('dossier.zip', _zip_of(HAL))})
+        assert accepted.status_code == 200
+        cid = accepted.json()['dossier_id']
+    submitted = [e for e in store.events_for(cid) if e.event_type == 'dossier_submitted']
+    assert submitted and submitted[0].actor == 'human:institution:INST-001'
+
+
 async def test_zip_export_replays_the_signed_submission_and_decision_requires_current_basis(store, tmp_path):
     cid = seed(store, HAL)
     await run_triage(cid, store=store, deterministic_only=True)
@@ -181,14 +207,3 @@ async def test_zip_export_replays_the_signed_submission_and_decision_requires_cu
         assert len(project_case([LedgerEvent.model_validate(row) for row in rows]).assessments) == len(project_case(store.events_for(cid)).assessments)
 
 
-async def test_portfolio_is_a_persisted_run_kind(store):
-    seed_corpus(store)
-    async with api_client(store) as client:
-        result = await client.post('/portfolio/sweep')
-        assert result.status_code == 200
-        assert {f['failure'] for f in result.json()['findings']} == {'F57', 'F67', 'F69'}
-        assert (await client.get('/portfolio')).json()['sweep_id'] == result.json()['sweep_id']
-    for cid in store.all_case_ids():
-        run = project_case(store.events_for(cid)).runs[-1]
-        assert run.kind == 'portfolio' and run.completed_at
-    assert not store.verify()

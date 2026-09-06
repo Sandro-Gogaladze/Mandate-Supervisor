@@ -3,7 +3,7 @@
 // can't drift into three different sets of labels for the same node.
 import {
   Inbox,
-  ScanEye, ShieldAlert, Store, HeartHandshake, ShieldEllipsis, Network, FlaskConical,
+  ScanEye, ShieldAlert, Store, HeartHandshake, ShieldEllipsis, Network,
   ListChecks,
   SearchCheck,
   Waypoints,
@@ -63,8 +63,10 @@ export const NODE_META: Record<string, NodeMeta> = {
   consent: { label: 'Consent & Harm', icon: HeartHandshake, color: 'blue', blurb: 'Was the shopper present, did they see what they signed, and were they harmed?' },
   control_assurance: { label: 'Controls', icon: ShieldEllipsis, color: 'indigo', blurb: 'Did declared controls hold when peer checks establish that a risk materialised?' },
   systemic: { label: 'Systemic', icon: Network, color: 'teal', blurb: 'Which shared exposures or payloads connect multiple dossiers?' },
-  red_team: { label: 'Red Team', icon: FlaskConical, color: 'orange', blurb: 'Which probe scenarios lack declared control coverage? These are not executed agent tests.' },
-  specialists_done: { label: 'Specialists done', icon: GitMerge, color: 'slate' },
+  // A pure join in the graph — the barrier the peer fan-out lands on. It does
+  // no work, which is exactly why it has to be drawn: hide it and the map
+  // claims each specialist reports onward by itself.
+  specialists_done: { label: 'All specialists in', icon: GitMerge, color: 'slate' },
   critic: {
     label: 'Critic',
     icon: FileCheck2,
@@ -102,7 +104,7 @@ export const NODE_META: Record<string, NodeMeta> = {
 }
 
 /** The four review agents, in display order. */
-export const SPECIALISTS = ['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'control_assurance', 'systemic', 'red_team'] as const
+export const SPECIALISTS = ['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'control_assurance', 'systemic'] as const
 
 export function nodeMeta(id: string): NodeMeta {
   return NODE_META[id] ?? { label: id, icon: Waypoints, color: 'slate' }

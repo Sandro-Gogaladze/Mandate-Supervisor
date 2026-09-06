@@ -2,7 +2,7 @@
 
 ## The three layers
 
-1. `registry/failures.json` is the stable supervisory vocabulary: F1--F73
+1. `registry/failures.json` is the stable supervisory vocabulary: F1--F87
    and their exact names. It says **what kind of failure exists**.
 2. Each versioned rule's `failures` field says which catalogue failure(s)
    that rule detects. A rule and its facts say **what was tested and what the
@@ -75,7 +75,6 @@ The domain projection supplies the material that differs by specialist:
 - Control Assurance: peer breach facts, declared controls and every control
   execution.
 - Systemic: bounded portfolio identities, models, counterparties and counts.
-- Red Team: declared controls, generated probe results and rulebook versions.
 
 Potentially submitted free text inside common facts is delimited as untrusted
 evidence before entering a model prompt. The canonical domain projections keep

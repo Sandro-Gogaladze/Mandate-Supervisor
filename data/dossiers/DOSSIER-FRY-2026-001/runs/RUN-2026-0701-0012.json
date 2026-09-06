@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0701-0012",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-01T09:16:00-05:00",
+  "ended_at": "2026-07-01T09:18:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "hand woven wool rug 5 by 7, under $450",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0701-0012",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-01T09:16:00-05:00",
+    "expires_at": "2026-07-01T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F012",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F012",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "hand woven wool rug 5 by 7, under $450",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 450.0,
+      "max_cumulative_amount": 450.0,
+      "currency": "USD",
+      "valid_from": "2026-07-01T00:00:00-05:00",
+      "valid_until": "2026-07-01T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5712"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-01T09:16:00-05:00",
+      "device_id": "DEV-F-F012"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F012",
+      "value": "nojvMyoDCRGnQh0i89mFPGU8LBrkCD3pgOpe47ppp5XK5C0pBlRgQWnCDh6H87SPfyh15o9iFFS5nA8I03goDA==",
+      "signed_payload_hash": "sha256:d1eb2d7c1c70d2bb733748402b9216c6b2823a9b85440aee81929a9883603e3b",
+      "signed_at": "2026-07-01T09:16:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e",
+      "release_ref": "ferrymead-cnc-v4.0.3"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.stillwaterhome.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "hand woven wool rug 5 by 7, under $450",
+          "max_price": 450.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:a3a9bfe96938b1ccbfc32da861ee6c6c11fec7df8fc964a945c102a1b87c46fb"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.stillwaterhome.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "STL-RUG-WOL-57"
+          ]
+        },
+        "result_digest": "sha256:40a835be825302888e690a61dd688a4ef0c03161dbcb2bfe0c076eef4f82982d",
+        "result_excerpt": {
+          "source": "mcp://shop.stillwaterhome.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "STILLWATER HOME GOODS — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.stillwaterhome.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "STL-RUG-WOL-57"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:ec175390d4592e96ffba4152c66aeeb7499d223badf33b2902b35670c2df9aa7"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.stillwaterhome.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-STL-1193",
+          "lines": 1,
+          "total": 420.0
+        },
+        "result_digest": "sha256:f693b26ae840795259cd8825b5771efa0242dc6ae372ce6382ebe39a52f93e90"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 420.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F012"
+        },
+        "result_digest": "sha256:9d253f2984b51eea240e441942a12fc0b9b421d49cc7234679bc9dde375c747a"
+      }
+    ],
+    "selection_context": {
+      "query": "hand woven wool rug 5 by 7, under $450",
+      "selected_sku": "STL-RUG-WOL-57",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-MON-27U-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 429.0,
+          "description": "27in 4K monitor, USB-C"
+        },
+        {
+          "sku": "AUR-SPK-BKS-02",
+          "merchant_id": "MER-AUR-4471",
+          "price": 398.0,
+          "description": "Bookshelf speaker pair"
+        },
+        {
+          "sku": "ATE-WOL-COA-S",
+          "merchant_id": "MER-ATE-3345",
+          "price": 445.0,
+          "description": "Wool overcoat, charcoal, S"
+        },
+        {
+          "sku": "DSK-CHR-ERG-01",
+          "merchant_id": "MER-DSK-3390",
+          "price": 385.0,
+          "description": "Ergonomic task chair"
+        },
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-01T09:16:47-05:00",
+    "principal_id": "PRIN-F-F012",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 420.0,
+      "currency": "USD",
+      "merchant": "Stillwater Home Goods",
+      "line_items": [
+        {
+          "sku": "STL-RUG-WOL-57",
+          "qty": 1,
+          "unit_price": 420.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 450.0
+      }
+    },
+    "rendered_hash": "sha256:1e8c8980da5270132a621eac59c158b0cfb6cf1d60f689fa5a1641aa639a5fa2",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0701-0012",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0701-0012",
+      "prev_mandate_hash": "sha256:d1eb2d7c1c70d2bb733748402b9216c6b2823a9b85440aee81929a9883603e3b"
+    },
+    "created_at": "2026-07-01T09:16:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-STL-1193",
+      "name": "Stillwater Home Goods",
+      "mcc": "5712",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "STL-RUG-WOL-57",
+        "description": "Hand-woven wool rug 5x7",
+        "qty": 1,
+        "unit_price": 420.0
+      }
+    ],
+    "cart_total": 420.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Stillwater Home Goods's catalogue and selected the closest in-stock option at $420.00, within the stated $450.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "Ft/zwV2lv23gZjPiAiFhmeUbgoNiw1sf4eMz/HFXfyEmtQLo9La2e2S7uAb0PsBiiQnafxJtiy1LgfCg/7seBw==",
+      "signed_payload_hash": "sha256:2ea37d0e62dbca0c703858e0a98c5d33b4d3ffee9b84d9c85d747e701a38c3ec",
+      "signed_at": "2026-07-01T09:16:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0701-0012",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0701-0012",
+      "prev_mandate_hash": "sha256:2ea37d0e62dbca0c703858e0a98c5d33b4d3ffee9b84d9c85d747e701a38c3ec"
+    },
+    "authorized_at": "2026-07-01T09:18:19-05:00",
+    "amount": 420.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1011",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2011",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Stillwater Home Goods"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "cG6XdnYoLC9uQYBfipwhulQAoiVFDi5T4OlLfzraqEE7PZqc4+gN7Sejjc1XkRHwixZcoxj34dAlqhRiePTQDQ==",
+      "signed_payload_hash": "sha256:702bf269ab9fec3821c1a05b4857ab5273a81666db45722e72ab44ae6f074515",
+      "signed_at": "2026-07-01T09:18:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-07-01T09:17:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-07-01T09:17:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-07-01T09:17:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-07-01T09:17:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-07-01T09:17:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-07-01T09:17:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-07-01T09:17:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-07-01T09:17:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-07-01T09:17:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

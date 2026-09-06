@@ -44,16 +44,19 @@ def test_mandate_floor_is_chain_plus_policy_and_explains_the_contained_breach(ks
 
 def test_log_floor_is_measurements_and_absents_without_history(kst) -> None:
     facts = LogAgent().run(kst, load_log_ruleset())
-    assert {f.kind for f in facts} == {"measurement"}
-    assert {f.rule_id for f in facts if f.rule_id} == {"LOG-STR-01", "LOG-CON-01", "LOG-VEL-01"}
+    # Measurements for the judged rules, plus one absence for the drafted one.
+    assert {f.kind for f in facts} == {"measurement", "absent"}
+    assert {f.rule_id for f in facts if f.rule_id} == {
+        "LOG-STR-01", "LOG-CON-01", "LOG-VEL-01", "LOG-RND-01", "LOG-LIM-01", "LOG-HRS-01"}
     assert LogAgent().assess(facts, load_log_ruleset(), kst) == []  # judged: no floor verdicts
     empty = LogAgent().run(thin(kst, 0), load_log_ruleset())
-    assert {(f.kind, f.absent_reason, f.missing) for f in empty} == {("absent", "insufficient_history", "transaction_history")}
+    assert {(f.kind, f.absent_reason) for f in empty} == {
+        ("absent", "insufficient_history"), ("absent", "rule_draft")}
 
 
 def test_drift_floor_is_a_measurement_or_an_honest_absence(kst) -> None:
-    f, = DriftAgent().run(kst, load_drift_ruleset())
-    assert f.kind == "measurement" and f.rule_id == "DRIFT-BHV-01"
+    facts = {f.rule_id: f for f in DriftAgent().run(kst, load_drift_ruleset())}
+    assert facts["DRIFT-BHV-01"].kind == "measurement"
     f, = DriftAgent().run(thin(kst, 10), load_drift_ruleset())
     assert (f.kind, f.absent_reason) == ("absent", "insufficient_history") and f.values["transactions"] == 10
 

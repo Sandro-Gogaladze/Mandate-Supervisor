@@ -147,7 +147,7 @@ that went wrong, which is the actual job.
 
 ## 1.2 · The failures that are only detectable across runs
 
-Not an argument by assertion — this is countable. Of the 73 failures in `coverage-model.md`, these
+Not an argument by assertion — this is countable. Of the failures in `coverage-model.md`, these
 **cannot occur inside a single run at all**, and were therefore untestable under the old shape:
 
 | Needs | Failures |
@@ -159,7 +159,7 @@ Not an argument by assertion — this is countable. Of the 73 failures in `cover
 | Aggregation over transactions | F43 collectively over limit · F50 authorisation reused · F55 new dominant payee · F56 one payee as several · F58 decline clustering · F59 splitting · F60 velocity · F61 concentration · F62 roundness · F63 off-hours · F66 review-fatigue noise |
 | A control *rate* | F71 should have fired · F72 fired and overridden · F73 fired and breached anyway |
 
-**24 of 73.** A third of the coverage model was structurally undetectable in the corpus that existed.
+**24 of them.** A third of the coverage model was structurally undetectable in the corpus that existed.
 
 ---
 

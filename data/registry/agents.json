@@ -112,6 +112,226 @@
         "mcp://shop.trekline.nl",
         "mcp://shop.voltic.de"
       ]
+    },
+    {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_id": "OPR-004",
+      "registered_at": "2026-04-14",
+      "classification": "consumer_shopping",
+      "risk_class": "medium",
+      "declared_purpose": "Acts as a personal shopper for a retail consumer: searches the merchant catalogue federation against the shopper's stated request and budget, assembles a single cart, and presents it for the shopper to approve before any payment is authorised.",
+      "authorisation_status": "provisional",
+      "authorisation_expires": "2027-04-14",
+      "pinned_model_versions": [
+        "claude-sonnet-5"
+      ],
+      "approved_prompt_releases": [
+        {
+          "release_ref": "larkspur-shop-v3.1.4",
+          "approved_at": "2026-04-14",
+          "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca"
+        },
+        {
+          "release_ref": "larkspur-shop-v3.2.0",
+          "approved_at": "2026-07-14",
+          "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41"
+        }
+      ],
+      "validation_evidence": [
+        {
+          "model_version": "claude-sonnet-5",
+          "validated_at": "2026-04-07",
+          "method": "operator_self_assessment"
+        }
+      ],
+      "declared_tool_servers": [
+        "mcp://core.larkspurshopping.com",
+        "mcp://shop.ateliernord.se",
+        "mcp://shop.auroraaudio.kr",
+        "mcp://shop.brewhouse.com",
+        "mcp://shop.cyclora.fr",
+        "mcp://shop.deskwell.com",
+        "mcp://shop.groveline.com",
+        "mcp://shop.hearthandgrain.com",
+        "mcp://shop.kudotoys.jp",
+        "mcp://shop.lumenbeauty.com",
+        "mcp://shop.meridianmkt.sg",
+        "mcp://shop.northsole.com",
+        "mcp://shop.pagegrove.co.uk",
+        "mcp://shop.petcove.ca",
+        "mcp://shop.quickvale.cy",
+        "mcp://shop.silvara.it",
+        "mcp://shop.stillwaterhome.com",
+        "mcp://shop.trekline.nl",
+        "mcp://shop.voltic.de"
+      ],
+      "registered_purpose_category": "consumer_retail_purchase"
+    },
+    {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_id": "OPR-005",
+      "registered_at": "2025-12-04",
+      "classification": "consumer_shopping",
+      "risk_class": "medium",
+      "declared_purpose": "Acts as a shopping concierge for a retail consumer: interprets the shopper's stated request and budget, searches the merchant catalogue federation, assembles one cart and presents it for the shopper to approve before any payment is authorised.",
+      "authorisation_status": "provisional",
+      "authorisation_expires": "2027-05-20",
+      "pinned_model_versions": [
+        "claude-sonnet-5"
+      ],
+      "approved_prompt_releases": [
+        {
+          "release_ref": "ferrymead-cnc-v4.0.3",
+          "approved_at": "2025-12-04",
+          "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e"
+        },
+        {
+          "release_ref": "ferrymead-cnc-v4.1.0",
+          "approved_at": "2026-07-13",
+          "prompt_hash": "sha256:a4090be262c74821602ac852a77de5cc9979a9c48a7e120a26d478aea9c37060"
+        }
+      ],
+      "validation_evidence": [
+        {
+          "model_version": "claude-sonnet-5",
+          "validated_at": "2025-11-26",
+          "method": "operator_self_assessment"
+        }
+      ],
+      "declared_tool_servers": [
+        "mcp://core.ferrymead.com",
+        "mcp://shop.ateliernord.se",
+        "mcp://shop.auroraaudio.kr",
+        "mcp://shop.brewhouse.com",
+        "mcp://shop.cyclora.fr",
+        "mcp://shop.deskwell.com",
+        "mcp://shop.groveline.com",
+        "mcp://shop.hearthandgrain.com",
+        "mcp://shop.kudotoys.jp",
+        "mcp://shop.lumenbeauty.com",
+        "mcp://shop.meridianmkt.sg",
+        "mcp://shop.northsole.com",
+        "mcp://shop.pagegrove.co.uk",
+        "mcp://shop.petcove.ca",
+        "mcp://shop.quickvale.cy",
+        "mcp://shop.silvara.it",
+        "mcp://shop.stillwaterhome.com",
+        "mcp://shop.trekline.nl",
+        "mcp://shop.voltic.de"
+      ],
+      "registered_purpose_category": "consumer_retail_purchase"
+    },
+    {
+      "agent_id": "AGT-MRC-SHOP-01",
+      "agent_name": "Marchmont Assisted Checkout",
+      "operator_id": "OPR-006",
+      "registered_at": "2025-09-15",
+      "classification": "consumer_shopping",
+      "risk_class": "medium",
+      "declared_purpose": "Assists a bank's cardholder through checkout: takes their stated request and budget, searches the merchant catalogue federation within the constraints the bank has set on that customer, assembles one cart and presents it for the cardholder to approve before any payment is authorised.",
+      "authorisation_status": "provisional",
+      "authorisation_expires": "2027-03-15",
+      "pinned_model_versions": [
+        "claude-sonnet-5"
+      ],
+      "approved_prompt_releases": [
+        {
+          "release_ref": "marchmont-chk-v1.2.7",
+          "approved_at": "2025-09-15",
+          "prompt_hash": "sha256:78abd7ef1b43210a096615f4bbd04ac038a8d6e8f47fce70340c7fb2c1526f48"
+        },
+        {
+          "release_ref": "marchmont-chk-v1.3.0",
+          "approved_at": "2026-07-13",
+          "prompt_hash": "sha256:286c0538e3d73c46ae4d73e59ec7fbfb0dbdb19ee678bb736bb7b20f23e701a2"
+        }
+      ],
+      "validation_evidence": [
+        {
+          "model_version": "claude-sonnet-5",
+          "validated_at": "2025-09-08",
+          "method": "operator_self_assessment"
+        }
+      ],
+      "declared_tool_servers": [
+        "mcp://core.marchmont-digital.com",
+        "mcp://shop.ateliernord.se",
+        "mcp://shop.auroraaudio.kr",
+        "mcp://shop.brewhouse.com",
+        "mcp://shop.cyclora.fr",
+        "mcp://shop.deskwell.com",
+        "mcp://shop.groveline.com",
+        "mcp://shop.hearthandgrain.com",
+        "mcp://shop.kudotoys.jp",
+        "mcp://shop.lumenbeauty.com",
+        "mcp://shop.meridianmkt.sg",
+        "mcp://shop.northsole.com",
+        "mcp://shop.pagegrove.co.uk",
+        "mcp://shop.petcove.ca",
+        "mcp://shop.quickvale.cy",
+        "mcp://shop.silvara.it",
+        "mcp://shop.stillwaterhome.com",
+        "mcp://shop.trekline.nl",
+        "mcp://shop.voltic.de"
+      ],
+      "registered_purpose_category": "consumer_retail_purchase"
+    },
+    {
+      "agent_id": "AGT-ASH-BSK-01",
+      "agent_name": "Ashgrove Basket Builder",
+      "operator_id": "OPR-007",
+      "registered_at": "2025-07-22",
+      "classification": "consumer_shopping",
+      "risk_class": "medium",
+      "declared_purpose": "Builds a single basket for a bank cardholder from their stated request and budget, inside whatever constraints the sponsoring institution has set for that customer, and presents it for the cardholder to approve before any payment is authorised.",
+      "authorisation_status": "provisional",
+      "authorisation_expires": "2027-02-27",
+      "pinned_model_versions": [
+        "claude-sonnet-5"
+      ],
+      "approved_prompt_releases": [
+        {
+          "release_ref": "ashgrove-basket-v2.0.6",
+          "approved_at": "2025-07-22",
+          "prompt_hash": "sha256:0d7247c8a7d43be20cf75e9cf280b59dbc0a48bbbae03c4b2b2a0ba611638aad"
+        },
+        {
+          "release_ref": "ashgrove-basket-v2.1.0",
+          "approved_at": "2026-07-13",
+          "prompt_hash": "sha256:c63af3683618706921a51e2b8044631543aabd75320bb5b619ab0c8b90d23852"
+        }
+      ],
+      "validation_evidence": [
+        {
+          "model_version": "claude-sonnet-5",
+          "validated_at": "2025-07-15",
+          "method": "operator_self_assessment"
+        }
+      ],
+      "declared_tool_servers": [
+        "mcp://core.ashgrovecommerce.com",
+        "mcp://shop.ateliernord.se",
+        "mcp://shop.auroraaudio.kr",
+        "mcp://shop.brewhouse.com",
+        "mcp://shop.cyclora.fr",
+        "mcp://shop.deskwell.com",
+        "mcp://shop.groveline.com",
+        "mcp://shop.hearthandgrain.com",
+        "mcp://shop.kudotoys.jp",
+        "mcp://shop.lumenbeauty.com",
+        "mcp://shop.meridianmkt.sg",
+        "mcp://shop.northsole.com",
+        "mcp://shop.pagegrove.co.uk",
+        "mcp://shop.petcove.ca",
+        "mcp://shop.quickvale.cy",
+        "mcp://shop.silvara.it",
+        "mcp://shop.stillwaterhome.com",
+        "mcp://shop.trekline.nl",
+        "mcp://shop.voltic.de"
+      ],
+      "registered_purpose_category": "consumer_retail_purchase"
     }
   ]
 }

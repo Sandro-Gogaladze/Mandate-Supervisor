@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0810-0031",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-10T14:37:00-05:00",
+  "ended_at": "2026-08-10T14:39:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "merino crew knit, oatmeal, medium, under $160",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0810-0031",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-10T14:37:00-05:00",
+    "expires_at": "2026-08-10T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F031",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F031",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "merino crew knit, oatmeal, medium, under $160",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 160.0,
+      "max_cumulative_amount": 160.0,
+      "currency": "USD",
+      "valid_from": "2026-08-10T00:00:00-05:00",
+      "valid_until": "2026-08-10T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5651"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-10T14:37:00-05:00",
+      "device_id": "DEV-F-F031"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F031",
+      "value": "essmqhRdxiG8ZbRD63fUb0tO3LlTCbgTxoMCvdU8CfWNhyRQuPMh+KLt+L7TVPIIcm6plCqKmdz+zhRr1uHcDA==",
+      "signed_payload_hash": "sha256:5f9a1b5fe37db5dd2d7baf90238f62a201609beed61a81df8dc8a66bedea2215",
+      "signed_at": "2026-08-10T14:37:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:a4090be262c74821602ac852a77de5cc9979a9c48a7e120a26d478aea9c37060",
+      "release_ref": "ferrymead-cnc-v4.1.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "merino crew knit, oatmeal, medium, under $160",
+          "max_price": 160.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:ea6f52fa645406ef463fdfba98c35deec2003ba5ab8cd6e10da972d2012f46a5"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "ATE-KNT-MER-M"
+          ]
+        },
+        "result_digest": "sha256:653346c8fd909cab3b16803d98ebfe41ab4b0971c0d3d6dbc3ae55df14d0b9ba",
+        "result_excerpt": {
+          "source": "mcp://shop.ateliernord.se",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "ATELIER NORD AB — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "ATE-KNT-MER-M"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:78f3a54cbb7ced024206c50e84e4a0b440df15427ed734818abbc899e56e3076"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-ATE-3345",
+          "lines": 1,
+          "total": 148.0
+        },
+        "result_digest": "sha256:63bdb8ccc55eec8223f412f500332aacaf8a0f5b6cf8e48c77cffdf9225ef037"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 148.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F031"
+        },
+        "result_digest": "sha256:27f53d6a6abfe20af6750011f7f2b797557e0138e269d71a5f2fd787b8c857c8"
+      }
+    ],
+    "selection_context": {
+      "query": "merino crew knit, oatmeal, medium, under $160",
+      "selected_sku": "ATE-KNT-MER-M",
+      "alternatives_considered": [
+        {
+          "sku": "PTC-CAT-TRE-01",
+          "merchant_id": "MER-PTC-7712",
+          "price": 148.0,
+          "description": "Sisal cat tree, 1.4m"
+        },
+        {
+          "sku": "VLT-KBD-MEC-87",
+          "merchant_id": "MER-VLT-7789",
+          "price": 149.0,
+          "description": "87-key mechanical keyboard, tactile"
+        },
+        {
+          "sku": "BRW-GRN-BUR-01",
+          "merchant_id": "MER-BRW-1177",
+          "price": 154.0,
+          "description": "Conical burr grinder"
+        },
+        {
+          "sku": "MKT-3P-CKW-DUT",
+          "merchant_id": "MER-MKT-9034",
+          "price": 141.0,
+          "description": "Enamelled dutch oven 5qt (marketplace listing)"
+        },
+        {
+          "sku": "MKT-3P-BAG-45L",
+          "merchant_id": "MER-MKT-9034",
+          "price": 158.0,
+          "description": "Alpine 45L trekking pack (marketplace listing)"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-10T14:37:47-05:00",
+    "principal_id": "PRIN-F-F031",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 148.0,
+      "currency": "USD",
+      "merchant": "Atelier Nord AB",
+      "line_items": [
+        {
+          "sku": "ATE-KNT-MER-M",
+          "qty": 1,
+          "unit_price": 148.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 160.0
+      }
+    },
+    "rendered_hash": "sha256:c600969fc68cf2a25e1c187f65c3496db4e3753e40c684d523adf1f3cf43f1d6",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0810-0031",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0810-0031",
+      "prev_mandate_hash": "sha256:5f9a1b5fe37db5dd2d7baf90238f62a201609beed61a81df8dc8a66bedea2215"
+    },
+    "created_at": "2026-08-10T14:37:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-ATE-3345",
+      "name": "Atelier Nord AB",
+      "mcc": "5651",
+      "country": "SE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "ATE-KNT-MER-M",
+        "description": "Merino crew knit, oatmeal, M",
+        "qty": 1,
+        "unit_price": 148.0
+      }
+    ],
+    "cart_total": 148.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Atelier Nord AB's catalogue and selected the closest in-stock option at $148.00, within the stated $160.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "luEsBWO0rPo53WCfW+EsCZE4/FKJZBaEvtTfrkz0b3UZ4WhdgPNmZZZy4hXzA0XlhkQFwpTZK4zIYbH5E7OcBg==",
+      "signed_payload_hash": "sha256:7bbdda249f28d2d2200d63533e896fa5fb16ea377e5c88ddb9867121a1fb7c00",
+      "signed_at": "2026-08-10T14:37:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0810-0031",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0810-0031",
+      "prev_mandate_hash": "sha256:7bbdda249f28d2d2200d63533e896fa5fb16ea377e5c88ddb9867121a1fb7c00"
+    },
+    "authorized_at": "2026-08-10T14:39:19-05:00",
+    "amount": 148.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1030",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2030",
+      "scheme": "card_settlement",
+      "country": "SE",
+      "beneficiary_name_on_account": "Atelier Nord AB"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "K6moL3JhEvNIp3NUbMxfZ1prOEiqGoFlLmGVzjfrRzGFN5JsrIR+2Gs6QaFemSdUwNQ2Trrzl7hStnOk/gDFAw==",
+      "signed_payload_hash": "sha256:3254963facb4a36b3733bfe1bc0cfa53d16d44aab3667d9da84e804714222410",
+      "signed_at": "2026-08-10T14:39:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-08-10T14:38:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-08-10T14:38:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-08-10T14:38:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-08-10T14:38:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-08-10T14:38:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-08-10T14:38:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-08-10T14:38:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-08-10T14:38:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-08-10T14:38:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { SubmissionGuideDialog } from '@/components/SubmissionGuide'
 import { CaseUploadError, uploadCase } from '@/lib/api'
 import type { CaseSummary } from '@/lib/types'
 
@@ -39,7 +40,7 @@ export function UploadCaseDialog({ onUploaded }: { onUploaded: (c: CaseSummary) 
     setError(null)
     try {
       const summary = await uploadCase(file, token)
-      toast.success('Case submitted', { description: `${summary.firm} — ${summary.case_id}` })
+      toast.success('Submission accepted — case opened', { description: `${summary.firm} — ${summary.case_id}` })
       setOpen(false)
       reset()
       onUploaded(summary)
@@ -61,21 +62,32 @@ export function UploadCaseDialog({ onUploaded }: { onUploaded: (c: CaseSummary) 
       <DialogTrigger asChild>
         <Button variant="outline">
           <Upload data-icon="inline-start" />
-          Submit a dossier
+          New submission
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Submit a dossier for review</DialogTitle>
+          <DialogTitle>Submit an agent for review</DialogTitle>
           <DialogDescription>
-            Submit a ZIP containing dossier.json, runs/*.json and transactions.json. The institution token must match the dossier. Every indexed run, signature and chain is verified before acceptance.
+            A submission is one agent’s evidence, filed as a ZIP. Every run, signature and hash chain is verified
+            before a case opens.
           </DialogDescription>
         </DialogHeader>
 
+        {/* The instructions open in their own window, so the form below
+            stays visible and whole. */}
+        <div>
+          <SubmissionGuideDialog />
+        </div>
+
         <FieldGroup>
-          <Field><FieldLabel htmlFor="institution-token">Institution submission token</FieldLabel><Input id="institution-token" type="password" autoComplete="off" value={token} onChange={e => setToken(e.target.value)} /><FieldDescription>Issued to the submitting institution. Kept only for this upload.</FieldDescription></Field>
+          {/* Optional, because whether intake is authenticated is a
+              deployment decision: with MANDATE_INSTITUTION_TOKENS configured the
+              API rejects an upload without a matching token and says so here;
+              unset, intake is open and the field is left empty. */}
+          <Field><FieldLabel htmlFor="institution-token">Institution submission token <span className="font-normal text-muted-foreground">(optional)</span></FieldLabel><Input id="institution-token" type="password" autoComplete="off" value={token} onChange={e => setToken(e.target.value)} /><FieldDescription>Issued to the submitting institution. Required only where this deployment configures submission tokens. Kept only for this upload.</FieldDescription></Field>
           <Field>
-            <FieldLabel htmlFor="case-file">Dossier archive (.zip)</FieldLabel>
+            <FieldLabel htmlFor="case-file">Submission archive (.zip)</FieldLabel>
             <input
               ref={inputRef}
               id="case-file"
@@ -87,7 +99,7 @@ export function UploadCaseDialog({ onUploaded }: { onUploaded: (c: CaseSummary) 
               }}
               className="flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1.5 text-sm shadow-xs outline-none file:mr-3 file:h-full file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground selection:bg-primary selection:text-primary-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
-            <FieldDescription>Open a dossier’s Runs tab to export its evidence structure. Ground truth is never used in a review.</FieldDescription>
+            <FieldDescription>Open any case’s Runs tab to export its evidence structure as a template. Ground truth is never used in a review.</FieldDescription>
           </Field>
 
           {file && !error && (
@@ -109,7 +121,7 @@ export function UploadCaseDialog({ onUploaded }: { onUploaded: (c: CaseSummary) 
         </FieldGroup>
 
         <DialogFooter>
-          <Button onClick={handleSubmit} disabled={!file || !token.trim() || submitting}>
+          <Button onClick={handleSubmit} disabled={!file || submitting}>
             {submitting ? <Loader2 data-icon="inline-start" className="animate-spin" /> : <Upload data-icon="inline-start" />}
             {submitting ? 'Submitting…' : 'Submit for review'}
           </Button>

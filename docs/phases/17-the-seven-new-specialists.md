@@ -59,12 +59,14 @@ set in `AGENT_TOOLS` — schema-constrained output only.
   graph will hand it every submission on the ledger. Fewer than two is an
   honest absence, not an empty sweep. Its findings are portfolio-scoped
   `concern`s with `subject_refs` — none of F57, F67, F69 is a refusal.
-- **Red Team**: on demand, no model. Generates probe runs from the mandate's
-  own parameters — a cart one unit over the cap, a merchant outside the
-  category, a second draw on a single-use mandate, an injected line item, a
-  merchant outside a named region — runs the deterministic floors over them,
-  and reports which probes the operator's *declared controls* would have
-  addressed and which would have passed unopposed.
+- **Red Team**: built in this phase and **removed on 2026-09-05**. It mutated
+  a run's JSON one parameter at a time, scored the mutations with our own
+  `MND-*`/`INJ-*` checkers — which by construction always tripped — and
+  reported whether the operator had declared a matching `risk_addressed`
+  label. That is a completeness check on a declaration form, not adversarial
+  testing: it never reached the operator's runtime, so it could not say
+  whether any control works. Everything below about E3 describes the phase as
+  it was, not the system as it is.
 
 ## 4. Not in this phase
 
@@ -109,6 +111,9 @@ nothing from `agents/` and passes on both dossiers.
   context builders now copy the registry; the bug was the test's, not the
   data's — the register carries no barring flag anywhere.
 - Neither operator declares a control against listing injection or against
-  geography. The Red Team finds it in seconds; nothing else in the pipeline
-  would have said so, because both are things that did not happen.
+  geography. The probe generator found it in seconds; nothing else in the
+  pipeline would have said so, because both are things that did not happen.
+  The observation survives the agent's removal — the gap is real, and a
+  declaration-completeness check over `controls` would state it directly
+  without pretending to be a red team.
 

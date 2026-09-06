@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0701-0009",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-01T16:12:00-05:00",
+  "ended_at": "2026-07-01T16:14:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "brushed oxford shirt, large, under $100",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0701-0009",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-01T16:12:00-05:00",
+    "expires_at": "2026-07-01T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L009",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L009",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "brushed oxford shirt, large, under $100",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 100.0,
+      "max_cumulative_amount": 100.0,
+      "currency": "USD",
+      "valid_from": "2026-07-01T00:00:00-05:00",
+      "valid_until": "2026-07-01T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5651"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-01T16:12:00-05:00",
+      "device_id": "DEV-L-L009"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L009",
+      "value": "cY37zPsK4gn5EiJqF++8X/mIXn4qomf60YOQiB4FyZmMAQ5W8f9kQ0r8cT+xrTQ7tFVvFXHOelKQ/8C19dXACw==",
+      "signed_payload_hash": "sha256:b3b0129d94af6dcd258adfbd10c30ff1eb479b54629ce1eeed5a63c9b81d98a8",
+      "signed_at": "2026-07-01T16:12:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca",
+      "release_ref": "larkspur-shop-v3.1.4"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "brushed oxford shirt, large, under $100",
+          "max_price": 100.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:8946776bb6c8c5d361ae231e4838cc57f82bca5471b9f09aef6564e373e8bdef"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "ATE-COT-OXF-L"
+          ]
+        },
+        "result_digest": "sha256:653346c8fd909cab3b16803d98ebfe41ab4b0971c0d3d6dbc3ae55df14d0b9ba",
+        "result_excerpt": {
+          "source": "mcp://shop.ateliernord.se",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "ATELIER NORD AB — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "ATE-COT-OXF-L"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:418d7638f360a38be3efd64c8d00576b02f3b8b26e93a97354a0937023c62c12"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-ATE-3345",
+          "lines": 1,
+          "total": 92.0
+        },
+        "result_digest": "sha256:c55c98b46a520f2ac8f5e1f670fe480a0097ca7c55eba6322c4eb1d207d1fa12"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 92.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L009"
+        },
+        "result_digest": "sha256:5433ec11bb8d0fd92566634fd55dbcd0cfc274d978a7fb1a4840cde709fe81de"
+      }
+    ],
+    "selection_context": {
+      "query": "brushed oxford shirt, large, under $100",
+      "selected_sku": "ATE-COT-OXF-L",
+      "alternatives_considered": [
+        {
+          "sku": "HRT-LIN-TWL-06",
+          "merchant_id": "MER-HRT-9902",
+          "price": 88.0,
+          "description": "Waffle bath towel set of 6"
+        },
+        {
+          "sku": "KDO-BLD-CTY-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 96.0,
+          "description": "Modular city building set, 1200pc"
+        },
+        {
+          "sku": "CYC-TYR-GRV-02",
+          "merchant_id": "MER-CYC-6650",
+          "price": 96.0,
+          "description": "Gravel tyre 700x40, pair"
+        },
+        {
+          "sku": "PGE-BOK-SET-05",
+          "merchant_id": "MER-PGE-2201",
+          "price": 78.0,
+          "description": "Le Carre boxed set, 5 volumes"
+        },
+        {
+          "sku": "TRK-STV-CMP-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 74.5,
+          "description": "Compact camping stove"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-01T16:12:47-05:00",
+    "principal_id": "PRIN-L-L009",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 92.0,
+      "currency": "USD",
+      "merchant": "Atelier Nord AB",
+      "line_items": [
+        {
+          "sku": "ATE-COT-OXF-L",
+          "qty": 1,
+          "unit_price": 92.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 100.0
+      }
+    },
+    "rendered_hash": "sha256:ed9690669053c5957e95e0ab8e4be0787ad46971b65c86ba779bffa0d03fa652",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0701-0009",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0701-0009",
+      "prev_mandate_hash": "sha256:b3b0129d94af6dcd258adfbd10c30ff1eb479b54629ce1eeed5a63c9b81d98a8"
+    },
+    "created_at": "2026-07-01T16:12:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-ATE-3345",
+      "name": "Atelier Nord AB",
+      "mcc": "5651",
+      "country": "SE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "ATE-COT-OXF-L",
+        "description": "Brushed oxford shirt, L",
+        "qty": 1,
+        "unit_price": 92.0
+      }
+    ],
+    "cart_total": 92.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Atelier Nord AB's catalogue and selected the closest in-stock option at $92.00, within the stated $100.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "0WxWrV2dzhi1jX7J84GaKD5nb3h0MudTUn8mq4FGtBe3GbIk4T5rqSJx80HbZarnapyee72gWzUwmZaaw54hBw==",
+      "signed_payload_hash": "sha256:d039a4e7046d2ffeb3883bcc9e2880fb3db60c2077867a7722c7e24051fc3909",
+      "signed_at": "2026-07-01T16:12:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0701-0009",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0701-0009",
+      "prev_mandate_hash": "sha256:d039a4e7046d2ffeb3883bcc9e2880fb3db60c2077867a7722c7e24051fc3909"
+    },
+    "authorized_at": "2026-07-01T16:14:19-05:00",
+    "amount": 92.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1008",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2008",
+      "scheme": "card_settlement",
+      "country": "SE",
+      "beneficiary_name_on_account": "Atelier Nord AB"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "SihDq/QTO3Dbm1AXHRMgsBj7hDD8rHAgUU6r67zdq6vTIubfvVRw4AuI7Njnsul+IT6FqDgijpCnLYYYr7J5CQ==",
+      "signed_payload_hash": "sha256:e56faa7a9a0c9eca33687c4fb5fc9e4b13b6319233208112632aeceef66a5dbe",
+      "signed_at": "2026-07-01T16:14:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-07-01T16:13:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-07-01T16:13:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-07-01T16:13:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-07-01T16:13:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-07-01T16:13:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-01T16:13:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-01T16:13:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-01T16:13:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-01T16:13:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

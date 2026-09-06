@@ -187,7 +187,7 @@ export function PipelineGraph({
           type: 'smoothstep',
           animated: live || holding,
           style: {
-            stroke: live ? '#f59e0b' : holding ? 'oklch(0.55 0.21 262)' : settled ? '#10b981' : 'var(--border)',
+            stroke: live ? '#f59e0b' : holding ? 'var(--primary)' : settled ? 'var(--brand-teal)' : 'var(--border)',
             strokeWidth: live || holding ? 3 : settled ? 2.5 : 2,
             strokeDasharray: e.conditional ? '6 4' : undefined,
             opacity: settled && !live ? 0.6 : 1,
@@ -196,7 +196,7 @@ export function PipelineGraph({
             type: MarkerType.ArrowClosed,
             width: 20,
             height: 20,
-            color: live ? '#f59e0b' : holding ? 'oklch(0.55 0.21 262)' : settled ? '#10b981' : '#9ca3af',
+            color: live ? '#f59e0b' : holding ? 'var(--primary)' : settled ? 'var(--brand-teal)' : 'var(--muted-foreground)',
           },
         }
       }),

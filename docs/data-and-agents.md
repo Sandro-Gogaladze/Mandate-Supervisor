@@ -3,7 +3,7 @@
 What every agent needs, what the submission contains, where a bank actually gets each field, and
 what is wrong with the corpus today.
 
-Reads with `coverage-model.md` (failures F1–F73 and the data contract), `kya-ruleset.md` (the 57
+Reads with `coverage-model.md` (failures F1–F87 and the data contract), `kya-ruleset.md` (the 57
 rules), `architecture-v3.md` (the pipeline), and `synthetic-data-spec.md` (corpus design).
 
 **Written against the corpus as it actually is, not as intended.** Part 5 lists nine defects found by
@@ -193,7 +193,6 @@ and keeps the floor honest: an agent is never asked a question its brief cannot 
 | D2 | **Drift** | What changed, **and when did it start**? | F65 · 1 `DRIFT-*` | 55-row baseline + `change_log` | ✅ |
 | E1 | **Control Assurance** | Did the firm's own controls work? | F70–F73 · 15 `CTL-*` | `controls` (both owners) + `controls_evaluated` + peer findings | ⚠️ **no ruleset exists** |
 | E2 | **Systemic** | What's true across the portfolio? | F67–F69, F57 at scale | many dossiers | ❌ one dossier |
-| E3 | **Red Team** | Does it hold up when pushed? | on demand | the mandate's own parameters | ✅ |
 
 ---
 
@@ -308,7 +307,7 @@ The five rules still draft are the genuinely blocked ones: `IDN-04`/`IDN-05`
 need cross-case ledger history, and `REG-03`/`CAP-03`/`CAP-04` are judgements the
 sandbox has to tune rather than computations anyone can write.
 
-## 7.2 · What the portfolio sweep found
+## 7.2 · What Systemic's sweep found
 
 Three things, none of which any single submission can see:
 

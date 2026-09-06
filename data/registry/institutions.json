@@ -9,9 +9,44 @@
       "licence_type": "payment_service_provider",
       "licence_status": "active",
       "supervised_since": "2021-04-19",
-      "reporting_contact": { "name": "Adaeze Nwachukwu", "role": "Head of Regulatory Reporting" },
-      "agentic_products": ["Northgate Agentic Checkout API v2"],
+      "reporting_contact": {
+        "name": "Adaeze Nwachukwu",
+        "role": "Head of Regulatory Reporting"
+      },
+      "agentic_products": [
+        "Northgate Agentic Checkout API v2"
+      ],
       "notes": "Processes card-not-present and agent-initiated commerce for mid-market merchants. Its Agentic Checkout API requires the mandate chain and run record as a condition of processing, which is why it can produce construction context it does not itself generate."
+    },
+    {
+      "institution_id": "INST-002",
+      "legal_name": "Rivermont Bank, N.A.",
+      "licence_type": "credit_institution",
+      "licence_status": "active",
+      "supervised_since": "2019-06-11",
+      "reporting_contact": {
+        "name": "Dermot Ashworth",
+        "role": "Head of Agentic Risk"
+      },
+      "agentic_products": [
+        "Rivermont Delegated Checkout"
+      ],
+      "notes": "Issues the consumer cards behind its own delegated-checkout product and sponsors the retail platforms that build on it. Unlike a pure acquirer it holds the cardholder relationship, so the consent record it can produce is its own SCA log rather than a merchant's attestation."
+    },
+    {
+      "institution_id": "INST-003",
+      "legal_name": "Caledon Union Bank plc",
+      "licence_type": "credit_institution",
+      "licence_status": "active",
+      "supervised_since": "2016-02-24",
+      "reporting_contact": {
+        "name": "Rhona Callaghan",
+        "role": "Director of Payments Compliance"
+      },
+      "agentic_products": [
+        "Caledon Assisted Checkout"
+      ],
+      "notes": "A retail bank offering assisted checkout to its own cardholders rather than acquiring for merchants. It sets the constraints its customers shop under — approved-seller lists above a value threshold, mandate lifetimes tied to the calendar day — so the failures it files are failures of its own controls, not a client's."
     }
   ]
 }

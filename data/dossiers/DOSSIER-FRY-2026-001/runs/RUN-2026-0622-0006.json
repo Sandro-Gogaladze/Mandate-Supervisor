@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0622-0006",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-22T11:33:00-05:00",
+  "ended_at": "2026-06-22T11:35:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "noise cancelling over ear headphones, under $300",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0622-0006",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-22T11:33:00-05:00",
+    "expires_at": "2026-06-22T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F006",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F006",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "noise cancelling over ear headphones, under $300",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 300.0,
+      "max_cumulative_amount": 300.0,
+      "currency": "USD",
+      "valid_from": "2026-06-22T00:00:00-05:00",
+      "valid_until": "2026-06-22T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-22T11:33:00-05:00",
+      "device_id": "DEV-F-F006"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F006",
+      "value": "XycjERFKTxE780e+P82rGPPMZLfw5vL4vgAD1SXG504dTqpT+A0vBmdfJidf2E3icwd6C1HCOKQIJ8HSUV9KBQ==",
+      "signed_payload_hash": "sha256:f056e8a4de6e8909816609acc038a288ee04c2ea319e7e70cbdcf731c19fa2bb",
+      "signed_at": "2026-06-22T11:33:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e",
+      "release_ref": "ferrymead-cnc-v4.0.3"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "noise cancelling over ear headphones, under $300",
+          "max_price": 300.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:229455c8e843941131ea95c4e3f9b4cff3dfb7e8b604c60a74ce5fa40c2a1d3b"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "VLT-HDP-ANC-01"
+          ]
+        },
+        "result_digest": "sha256:3a17c7c5828b2db24628ac0ea65682135485f0a5b36f9a07db6ce1029a73b3cf",
+        "result_excerpt": {
+          "source": "mcp://shop.voltic.de",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "VOLTIC ELEKTRONIK GMBH — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "VLT-HDP-ANC-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:18309d39bf4abe9c08401b9a502e73de18a90a9810090a835adcf42c944fe9f7"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-VLT-7789",
+          "lines": 1,
+          "total": 279.0
+        },
+        "result_digest": "sha256:d90739b24c372c5760959bb95ef204bfa9b9859f7e256b5e28261bceb33df5bc"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 279.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F006"
+        },
+        "result_digest": "sha256:3312f38e48a34951cc627d1b163cae7ae0d4ce9ee55546829079cf79e902f656"
+      }
+    ],
+    "selection_context": {
+      "query": "noise cancelling over ear headphones, under $300",
+      "selected_sku": "VLT-HDP-ANC-01",
+      "alternatives_considered": [
+        {
+          "sku": "MKT-3P-HDP-ANC",
+          "merchant_id": "MER-MKT-9034",
+          "price": 238.0,
+          "description": "Noise-cancelling headphones (marketplace listing)"
+        },
+        {
+          "sku": "QVC-GEN-BDL-01",
+          "merchant_id": "MER-QVC-8801",
+          "price": 289.0,
+          "description": "Premium home bundle, assorted"
+        },
+        {
+          "sku": "NOR-RUN-PRO-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 268.0,
+          "description": "Trailflex Pro carbon-plate racer, women's 10"
+        },
+        {
+          "sku": "MKT-3P-CHR-ERG",
+          "merchant_id": "MER-MKT-9034",
+          "price": 322.0,
+          "description": "Ergonomic task chair (marketplace listing)"
+        },
+        {
+          "sku": "TRK-TNT-2PR-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 329.0,
+          "description": "Ridgeline 2-person tent"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-22T11:33:47-05:00",
+    "principal_id": "PRIN-F-F006",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 279.0,
+      "currency": "USD",
+      "merchant": "Voltic Elektronik GmbH",
+      "line_items": [
+        {
+          "sku": "VLT-HDP-ANC-01",
+          "qty": 1,
+          "unit_price": 279.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 300.0
+      }
+    },
+    "rendered_hash": "sha256:80c8ec3b6cde9bdd0bff43aac708b4dcbb05231b152da55c70185b1bb66cd3e4",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0622-0006",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0622-0006",
+      "prev_mandate_hash": "sha256:f056e8a4de6e8909816609acc038a288ee04c2ea319e7e70cbdcf731c19fa2bb"
+    },
+    "created_at": "2026-06-22T11:33:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-VLT-7789",
+      "name": "Voltic Elektronik GmbH",
+      "mcc": "5732",
+      "country": "DE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "VLT-HDP-ANC-01",
+        "description": "Noise-cancelling over-ear headphones",
+        "qty": 1,
+        "unit_price": 279.0
+      }
+    ],
+    "cart_total": 279.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Selected the Voltic Elektronik GmbH listing at $279.00. A marketplace relisting of the same item was cheaper, but the direct merchant dispatches faster and handles returns first-party, so it was preferred. Within the stated $300.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "0NpInxaGtTsQoLvWoeGLWitXpcIY/KrGNN6PyFqVWy1T4IG5J4gMwWOVSUz01v5YPounM3QGP4fzpwl9KaRTCQ==",
+      "signed_payload_hash": "sha256:5f028f1a626d6af6c207b1bf049c1c826b78e7c0ddfffb4c4156a8fb488dbbce",
+      "signed_at": "2026-06-22T11:33:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0622-0006",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0622-0006",
+      "prev_mandate_hash": "sha256:5f028f1a626d6af6c207b1bf049c1c826b78e7c0ddfffb4c4156a8fb488dbbce"
+    },
+    "authorized_at": "2026-06-22T11:35:19-05:00",
+    "amount": 279.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1005",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2005",
+      "scheme": "card_settlement",
+      "country": "DE",
+      "beneficiary_name_on_account": "Voltic Elektronik GmbH"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "YCzfoBKejAiQrgiIaIoYeTPtaS5ueL6Kz6iMWEG28TAu6phKdm7+N7Fmrp6zwFeMftgDv8LKtWvtj5EgRTQOCw==",
+      "signed_payload_hash": "sha256:684839c68aa4362063744912bca2514819a8356fa13f34682a3b534e35e94085",
+      "signed_at": "2026-06-22T11:35:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-06-22T11:34:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-06-22T11:34:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-06-22T11:34:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-06-22T11:34:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-06-22T11:34:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-06-22T11:34:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-06-22T11:34:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-06-22T11:34:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-06-22T11:34:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

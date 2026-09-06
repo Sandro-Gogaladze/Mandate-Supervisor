@@ -1,7 +1,7 @@
 {
   "ruleset_id": "KYA-RULESET",
   "domain": "kya",
-  "version": "2026.9",
+  "version": "2026.11",
   "as_of": "2026-09-04",
   "description": "Agent identity and accountability requirements (industry term: KYA). Designed in docs/kya-ruleset.md; eight families, ids readable by subject. Every rule declares its own evaluation mode. v2026.8 (migration Phase 4): TEC-02/05/06 moved to provenance.json — the TEC family is answered from two evidence blocks, and those three read construction_context, which is Provenance's; they keep their ids. 39 rules, 34 active.",
   "rules": [
@@ -15,7 +15,10 @@
       "severity_weight": 1.0,
       "finding_type": "signature_invalid",
       "description": "Credential signature verifies against the issuer's public key.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F74"
+      ]
     },
     {
       "rule_id": "KYA-IDN-02",
@@ -31,7 +34,10 @@
         "allowed_algs": [
           "Ed25519"
         ]
-      }
+      },
+      "failures": [
+        "F75"
+      ]
     },
     {
       "rule_id": "KYA-IDN-03",
@@ -43,7 +49,10 @@
       "severity_weight": 0.8,
       "finding_type": "credential_payload_hash_mismatch",
       "description": "Signed payload hash recomputes over the canonical content.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F76"
+      ]
     },
     {
       "rule_id": "KYA-IDN-04",
@@ -56,7 +65,9 @@
       "finding_type": "idn_04",
       "description": "The signer key backs no other agent identity.",
       "notes": "Needs credential history across cases — derivable from the ledger's case_submitted events (architecture-v3 Stage 2).",
-      "failures": ["F22"],
+      "failures": [
+        "F22"
+      ],
       "params": {}
     },
     {
@@ -70,7 +81,9 @@
       "finding_type": "idn_05",
       "description": "The credential id is unique across the register.",
       "notes": "Needs credential history across cases.",
-      "failures": ["F23"],
+      "failures": [
+        "F23"
+      ],
       "params": {}
     },
     {
@@ -83,7 +96,9 @@
       "severity_weight": 1.0,
       "finding_type": "issuer_not_in_trust_registry",
       "description": "Issuer is present in the trust registry.",
-      "failures": ["F1"],
+      "failures": [
+        "F1"
+      ],
       "params": {}
     },
     {
@@ -96,7 +111,9 @@
       "severity_weight": 1.0,
       "finding_type": "issuer_revoked_as_of_issuance",
       "description": "Issuer was not revoked as at the credential's issue date.",
-      "failures": ["F2"],
+      "failures": [
+        "F2"
+      ],
       "params": {}
     },
     {
@@ -109,7 +126,9 @@
       "severity_weight": 0.3,
       "finding_type": "issuer_below_minimum_trust_level",
       "description": "Issuer trust tier meets the minimum for this mandate.",
-      "failures": ["F3"],
+      "failures": [
+        "F3"
+      ],
       "params": {
         "min_trust_level": "recognized"
       }
@@ -124,7 +143,9 @@
       "severity_weight": 0.2,
       "finding_type": "issuer_reaccreditation_stale",
       "description": "Issuer accreditation reviewed within the maximum age.",
-      "failures": ["F4"],
+      "failures": [
+        "F4"
+      ],
       "params": {
         "max_reaccreditation_age_days": 730
       }
@@ -140,7 +161,10 @@
       "finding_type": "iss_05",
       "description": "Issuer is accredited to issue for this agent classification.",
       "notes": "Blocked on data/registry/agents.json — no agent classification exists to check against.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F3"
+      ]
     },
     {
       "rule_id": "KYA-ACC-01",
@@ -167,7 +191,9 @@
       "severity_weight": 0.6,
       "finding_type": "delegation_terminus_principal_mismatch",
       "description": "Chain terminus is the principal that signed the Intent.",
-      "failures": ["F7"],
+      "failures": [
+        "F7"
+      ],
       "params": {}
     },
     {
@@ -180,7 +206,9 @@
       "severity_weight": 0.85,
       "finding_type": "delegation_entry_signature_invalid",
       "description": "Every delegation entry signature verifies.",
-      "failures": ["F8"],
+      "failures": [
+        "F8"
+      ],
       "params": {}
     },
     {
@@ -193,7 +221,9 @@
       "severity_weight": 0.5,
       "finding_type": "delegation_chain_duplicate_holder",
       "description": "No holder appears twice in the chain.",
-      "failures": ["F9"],
+      "failures": [
+        "F9"
+      ],
       "params": {}
     },
     {
@@ -206,7 +236,9 @@
       "severity_weight": 0.35,
       "finding_type": "delegation_chain_too_deep",
       "description": "Chain depth is within the maximum.",
-      "failures": ["F10"],
+      "failures": [
+        "F10"
+      ],
       "params": {
         "max_depth": 4
       }
@@ -238,7 +270,10 @@
       "finding_type": "acc_07",
       "description": "The terminus is on the operator firm's authorised-signatory list.",
       "notes": null,
-      "params": {}
+      "params": {},
+      "failures": [
+        "F77"
+      ]
     },
     {
       "rule_id": "KYA-OPF-01",
@@ -251,7 +286,9 @@
       "finding_type": "opf_01",
       "description": "The operator firm holds a current licence or registration.",
       "notes": "Blocked on data/registry/firms.json.",
-      "failures": ["F12"],
+      "failures": [
+        "F12"
+      ],
       "params": {}
     },
     {
@@ -265,7 +302,9 @@
       "finding_type": "opf_02",
       "description": "The firm's standing is not in a barring state.",
       "notes": null,
-      "failures": ["F13"],
+      "failures": [
+        "F13"
+      ],
       "params": {}
     },
     {
@@ -295,7 +334,9 @@
       "finding_type": "opf_04",
       "description": "A named compliance contact is on record and current.",
       "notes": null,
-      "failures": ["F15"],
+      "failures": [
+        "F15"
+      ],
       "params": {}
     },
     {
@@ -325,21 +366,26 @@
       "finding_type": "reg_02",
       "description": "A risk classification is declared for this agent.",
       "notes": null,
-      "failures": ["F17"],
+      "failures": [
+        "F17"
+      ],
       "params": {}
     },
     {
       "rule_id": "KYA-REG-03",
       "type": "agent_activity_matches_classification",
       "version": 1,
-      "status": "draft",
+      "status": "active",
       "effective_from": "2026-09-02",
       "evaluation": "judged",
       "severity_weight": 0.7,
       "finding_type": "reg_03",
       "description": "Observed activity is consistent with the declared classification.",
-      "notes": "JUDGED. Needs agents.json plus a transaction summary in KYA's evidence — the one rule requiring an evidence-floor widening (kya-ruleset.md Part 3.5).",
-      "params": {}
+      "notes": "JUDGED. Compares the register's classification and declared purpose against an activity summary computed from the dossier's own transaction history (kya-ruleset.md Part 3.5). The floor records the measurement; the verdict is the specialist's.",
+      "params": {},
+      "failures": [
+        "F78"
+      ]
     },
     {
       "rule_id": "KYA-REG-04",
@@ -352,7 +398,10 @@
       "finding_type": "reg_04",
       "description": "The registration is current.",
       "notes": "Blocked on agents.json.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F79"
+      ]
     },
     {
       "rule_id": "KYA-REG-05",
@@ -365,7 +414,10 @@
       "finding_type": "reg_05",
       "description": "The registered purpose matches the mandate's purpose_category.",
       "notes": "Blocked on agents.json.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F80"
+      ]
     },
     {
       "rule_id": "KYA-TEC-01",
@@ -409,7 +461,10 @@
       "finding_type": "tec_04",
       "description": "Validation evidence is on file for this model version where the risk class requires it.",
       "notes": null,
-      "params": {}
+      "params": {},
+      "failures": [
+        "F81"
+      ]
     },
     {
       "rule_id": "KYA-CAP-01",
@@ -421,7 +476,10 @@
       "severity_weight": 0.5,
       "finding_type": "credential_capabilities_empty",
       "description": "Capabilities are non-empty.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F82"
+      ]
     },
     {
       "rule_id": "KYA-CAP-02",
@@ -444,7 +502,10 @@
           "product_search",
           "settlement"
         ]
-      }
+      },
+      "failures": [
+        "F83"
+      ]
     },
     {
       "rule_id": "KYA-CAP-03",
@@ -457,7 +518,10 @@
       "finding_type": "cap_03",
       "description": "Capabilities are sufficient for the declared purpose.",
       "notes": "Needs a purpose-to-capability mapping in the registry.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F84"
+      ]
     },
     {
       "rule_id": "KYA-CAP-04",
@@ -469,8 +533,11 @@
       "severity_weight": 0.4,
       "finding_type": "cap_04",
       "description": "Capabilities are not materially broader than the purpose requires.",
-      "notes": "JUDGED. Least privilege — dial 6, the clearest false-positive/coverage trade in the book.",
-      "params": {}
+      "notes": "JUDGED, and wired: the floor records a capability_profile measurement whether this rule is active or draft, and agents/kya_reasoning.py adds its verdict slot when it is active. Still draft because least privilege is the clearest false-positive/coverage trade in the book — sweep it before promoting.",
+      "params": {},
+      "failures": [
+        "F85"
+      ]
     },
     {
       "rule_id": "KYA-CAP-05",
@@ -502,7 +569,10 @@
       "description": "The credential was not expired at time of use.",
       "params": {
         "grace_period_days": 3
-      }
+      },
+      "failures": [
+        "F86"
+      ]
     },
     {
       "rule_id": "KYA-LIF-02",
@@ -514,7 +584,9 @@
       "severity_weight": 0.6,
       "finding_type": "credential_dates_malformed",
       "description": "issued_at precedes expires_at.",
-      "failures": ["F5"],
+      "failures": [
+        "F5"
+      ],
       "params": {}
     },
     {
@@ -527,7 +599,9 @@
       "severity_weight": 0.25,
       "finding_type": "credential_validity_window_too_short",
       "description": "The validity window meets the minimum.",
-      "failures": ["F5"],
+      "failures": [
+        "F5"
+      ],
       "params": {
         "min_validity_days": 30
       }
@@ -561,7 +635,10 @@
       "notes": "Needs revocation-feed metadata in the issuer registry.",
       "params": {
         "max_age_days": 30
-      }
+      },
+      "failures": [
+        "F87"
+      ]
     }
   ]
 }

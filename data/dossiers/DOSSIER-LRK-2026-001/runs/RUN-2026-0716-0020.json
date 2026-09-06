@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0716-0020",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-16T10:53:00-05:00",
+  "ended_at": "2026-07-16T10:55:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "bookshelf speaker pair, under $400",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0716-0020",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-16T10:53:00-05:00",
+    "expires_at": "2026-07-16T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L019",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L019",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "bookshelf speaker pair, under $400",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 400.0,
+      "max_cumulative_amount": 400.0,
+      "currency": "USD",
+      "valid_from": "2026-07-16T00:00:00-05:00",
+      "valid_until": "2026-07-16T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-16T10:53:00-05:00",
+      "device_id": "DEV-L-L019"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L019",
+      "value": "kuJC07K7oeg7TOuGg+b8mXGUnUOFGegnpnPXlN4x+pYvkc7fpZjinPdgebdtjglr4uJ9CknW6pPu3iDJcktGCQ==",
+      "signed_payload_hash": "sha256:64ac8d9ca90201f1f1954542cc96589e4d04ae20376f25519fa5b3b6436485f4",
+      "signed_at": "2026-07-16T10:53:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41",
+      "release_ref": "larkspur-shop-v3.2.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.auroraaudio.kr",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "bookshelf speaker pair, under $400",
+          "max_price": 400.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:01ebdd40a63bce1803fe53532935a77cbae1de9db0e689c8a96a1c8115b93118"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.auroraaudio.kr",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "AUR-SPK-BKS-02"
+          ]
+        },
+        "result_digest": "sha256:111c77914c9b1fdf2607ebed656f1cd5838e75b52f43d176efb68b1daa21e908",
+        "result_excerpt": {
+          "source": "mcp://shop.auroraaudio.kr",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "AURORA AUDIO CO LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.auroraaudio.kr",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "AUR-SPK-BKS-02"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:e59a43d0b8d26add190d6fdca3b8bbed774edc969c21e7666e52bf054d6953c8"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.auroraaudio.kr",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-AUR-4471",
+          "lines": 1,
+          "total": 398.0
+        },
+        "result_digest": "sha256:a0347a3460c285629d2d6df850ce3bb65ee6c71f12b3a1af45d27fa95a240cdd"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 398.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L019"
+        },
+        "result_digest": "sha256:b1c8c0ada4689ac0ff345c3e651e401b9d38479e682f14d9148a6db2b4711f19"
+      }
+    ],
+    "selection_context": {
+      "query": "bookshelf speaker pair, under $400",
+      "selected_sku": "AUR-SPK-BKS-02",
+      "alternatives_considered": [
+        {
+          "sku": "DSK-CHR-ERG-01",
+          "merchant_id": "MER-DSK-3390",
+          "price": 385.0,
+          "description": "Ergonomic task chair"
+        },
+        {
+          "sku": "STL-RUG-WOL-57",
+          "merchant_id": "MER-STL-1193",
+          "price": 420.0,
+          "description": "Hand-woven wool rug 5x7"
+        },
+        {
+          "sku": "VLT-MON-27U-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 429.0,
+          "description": "27in 4K monitor, USB-C"
+        },
+        {
+          "sku": "ATE-WOL-COA-S",
+          "merchant_id": "MER-ATE-3345",
+          "price": 445.0,
+          "description": "Wool overcoat, charcoal, S"
+        },
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-16T10:53:47-05:00",
+    "principal_id": "PRIN-L-L019",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 398.0,
+      "currency": "USD",
+      "merchant": "Aurora Audio Co Ltd",
+      "line_items": [
+        {
+          "sku": "AUR-SPK-BKS-02",
+          "qty": 1,
+          "unit_price": 398.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 400.0
+      }
+    },
+    "rendered_hash": "sha256:d7d85bb409174e6e8c6283246d93feb3c18ba98adff145002d1f60f465add594",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0716-0020",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0716-0020",
+      "prev_mandate_hash": "sha256:64ac8d9ca90201f1f1954542cc96589e4d04ae20376f25519fa5b3b6436485f4"
+    },
+    "created_at": "2026-07-16T10:53:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-AUR-4471",
+      "name": "Aurora Audio Co Ltd",
+      "mcc": "5732",
+      "country": "KR",
+      "region": "APAC",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "AUR-SPK-BKS-02",
+        "description": "Bookshelf speaker pair",
+        "qty": 1,
+        "unit_price": 398.0
+      }
+    ],
+    "cart_total": 398.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Aurora Audio Co Ltd's catalogue and selected the closest in-stock option at $398.00, within the stated $400.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "nJfUSBvJxwbDbr7cX0HT1p0Cb47WWM8/G2YnaRQxAopBkr7FPTC8+oY6gzWzJfV9p2s9KRiSRQd+PQTbJNwKDA==",
+      "signed_payload_hash": "sha256:8f089b0a403f94c1c44a2a584cde3b3e68cc48cdcc8c6482aea4348d8d52eeda",
+      "signed_at": "2026-07-16T10:53:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0716-0020",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0716-0020",
+      "prev_mandate_hash": "sha256:8f089b0a403f94c1c44a2a584cde3b3e68cc48cdcc8c6482aea4348d8d52eeda"
+    },
+    "authorized_at": "2026-07-16T10:55:19-05:00",
+    "amount": 398.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1019",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2019",
+      "scheme": "card_settlement",
+      "country": "KR",
+      "beneficiary_name_on_account": "Aurora Audio Co Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "wAjbFfgALPWicfxwN/PmtRdiWnX+UtwvxNIQ8UP8DdkdMuOE9rjY84l4hJTI0OrMCt0a8p6stV7H13RpW+YlAA==",
+      "signed_payload_hash": "sha256:9d96d2f90411b2c442c227fca0a1d5cca70b02baa304f2c5ac90d2186ff7e0ae",
+      "signed_at": "2026-07-16T10:55:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-07-16T10:54:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-07-16T10:54:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-07-16T10:54:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-07-16T10:54:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-07-16T10:54:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-16T10:54:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-16T10:54:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-16T10:54:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-16T10:54:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

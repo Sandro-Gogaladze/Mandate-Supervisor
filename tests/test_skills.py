@@ -7,15 +7,15 @@ from agents.skills import REVIEW_SKILLS, SKILLS, SPECIALIST_SKILLS_BY_AGENT, ski
 
 def test_catalog_is_every_agent_plus_the_investigator_in_stable_order() -> None:
     ids = [s.skill_id for s in skill_catalog()]
-    assert len(ids) == 12 and {s.agent for s in skill_catalog()} == {*AGENTS, "investigator"}
+    assert len(ids) == 11 and {s.agent for s in skill_catalog()} == {*AGENTS, "investigator"}
     assert SKILLS["investigator.lookup"].produces == "observation"
     assert ids[-1] == "investigator.lookup"
 
 
-def test_a_first_pass_covers_the_eight_peers_and_nothing_that_runs_after_or_on_request() -> None:
-    assert {SKILLS[s].agent for s in REVIEW_SKILLS} == set(PEERS)
+def test_a_first_pass_covers_the_peers_and_systemic_and_nothing_that_runs_after() -> None:
+    assert {SKILLS[s].agent for s in REVIEW_SKILLS} == {*PEERS, "systemic"}
     assert "control_assurance.review" not in REVIEW_SKILLS  # runs after the peers by topology
-    assert "systemic.review" not in REVIEW_SKILLS and "red_team.review" not in REVIEW_SKILLS  # on request
+    assert "red_team.review" not in SKILLS  # removed: probe generation was not red teaming
     assert "investigator.lookup" not in REVIEW_SKILLS
 
 

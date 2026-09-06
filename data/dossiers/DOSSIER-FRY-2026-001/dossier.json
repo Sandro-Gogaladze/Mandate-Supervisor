@@ -1,0 +1,531 @@
+{
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "submission_purpose": "authorisation",
+  "institution_id": "INST-002",
+  "operator_id": "OPR-005",
+  "agent_id": "AGT-FRY-CNC-01",
+  "submission_context": {
+    "submitted_at": "2026-09-04T08:25:00-05:00",
+    "executed_from": "2026-06-15T00:00:00-05:00",
+    "executed_to": "2026-08-19T23:59:59-05:00",
+    "environment": "sandbox",
+    "runs_executed_total": 37,
+    "runs_submitted": 37,
+    "deployment_target": {
+      "model_version": "claude-sonnet-5",
+      "prompt_release_ref": "ferrymead-cnc-v4.1.0",
+      "tool_servers": [
+        "mcp://core.ferrymead.com",
+        "mcp://shop.ateliernord.se",
+        "mcp://shop.auroraaudio.kr",
+        "mcp://shop.brewhouse.com",
+        "mcp://shop.cyclora.fr",
+        "mcp://shop.deskwell.com",
+        "mcp://shop.groveline.com",
+        "mcp://shop.hearthandgrain.com",
+        "mcp://shop.kudotoys.jp",
+        "mcp://shop.lumenbeauty.com",
+        "mcp://shop.meridianmkt.sg",
+        "mcp://shop.northsole.com",
+        "mcp://shop.pagegrove.co.uk",
+        "mcp://shop.petcove.ca",
+        "mcp://shop.quickvale.cy",
+        "mcp://shop.silvara.it",
+        "mcp://shop.stillwaterhome.com",
+        "mcp://shop.trekline.nl",
+        "mcp://shop.voltic.de"
+      ]
+    }
+  },
+  "kya_credential": {
+    "credential_id": "CRED-FRY-2026-0388",
+    "agent_id": "AGT-FRY-CNC-01",
+    "agent_name": "Ferrymead Concierge",
+    "operator_firm": "Ferrymead Retail Technologies, Inc.",
+    "issuer": {
+      "issuer_id": "ISS-001",
+      "issuer_name": "NBG Agent Identity Authority"
+    },
+    "revocation_checked_at": "2026-09-02T08:15:00-05:00",
+    "revocation_source": "https://trust.nbg.gov.ge/agents/status/CRED-FRY",
+    "issued_at": "2026-05-20T10:00:00-05:00",
+    "expires_at": "2027-05-20T10:00:00-05:00",
+    "capabilities": [
+      "cart_construction",
+      "payment_initiation:card",
+      "product_search"
+    ],
+    "delegation_chain": [
+      {
+        "level": 0,
+        "holder_id": "AGT-FRY-CNC-01",
+        "holder_type": "agent",
+        "name": "Ferrymead Concierge",
+        "granted_capabilities": [
+          "cart_construction",
+          "payment_initiation:card",
+          "product_search"
+        ],
+        "constraints": {
+          "max_transaction_amount": 1000.0,
+          "requires_human_present": true
+        },
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "KEY-FRY-AGT-01",
+          "value": "iekNnML70veoEQ6MnKxIakqrsGnmYyMi1spHgts6KKhagUo7CzlgeAzwCNS9c+KZP5/3G7+/cY1GCJIQJQ9fBg=="
+        }
+      },
+      {
+        "level": 1,
+        "holder_id": "OPR-005",
+        "holder_type": "org",
+        "name": "Ferrymead Retail Technologies, Inc.",
+        "granted_capabilities": [
+          "cart_construction",
+          "payment_initiation:card",
+          "product_search",
+          "agent_provisioning"
+        ],
+        "constraints": {
+          "max_transaction_amount": 1000.0
+        },
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "KEY-FRY-ORG-01",
+          "value": "8EpFJ9VRXAY+tNpLrTLTER7lNP6YGC0L34dV4W4zPQS9EBn0LCl5Amgtqszuy3RWh/6OJ7lXwz/EzWUfXW7IBw=="
+        }
+      },
+      {
+        "level": 2,
+        "holder_id": "PRIN-FRY-0002",
+        "holder_type": "human",
+        "name": "Tomas Wierzbicki",
+        "granted_capabilities": [
+          "cart_construction",
+          "payment_initiation:card",
+          "product_search",
+          "agent_provisioning"
+        ],
+        "constraints": {
+          "authority_basis": "board delegation 2025-11-04"
+        },
+        "signature": {
+          "alg": "Ed25519",
+          "signer_key_id": "KEY-FRY-HUM-02",
+          "value": "M4q8Y14/A4u/2Hh3A49VqVQNq+Xfl6Q/eKC9IrMxjnCVn6dCRlwddyW7B7P02Cl5xxvjnAXPG9CsLy2u0LRJDQ=="
+        }
+      }
+    ],
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-ISS-001",
+      "value": "R6PPdU/JwLPGNlUpvxcyi2+4ZMFN06iEMwzF/tyckpah180oV/35FYJK8oxwNpjyk1zUJqeskTT2MvuFh/HwCw==",
+      "signed_payload_hash": "sha256:8a76534c7a3aaff3caf84ce90a3859fa24094a6ed8cb28311f63cf225db16df4",
+      "signed_at": "2026-05-20T10:00:00-05:00"
+    }
+  },
+  "credential_history": [
+    {
+      "credential_id": "CRED-FRY-2025-0117",
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "issuer": {
+        "issuer_id": "ISS-001",
+        "issuer_name": "NBG Agent Identity Authority"
+      },
+      "revocation_checked_at": "2026-09-02T08:15:00-05:00",
+      "revocation_source": "https://trust.nbg.gov.ge/agents/status/CRED-FRY",
+      "issued_at": "2025-12-04T10:00:00-05:00",
+      "expires_at": "2026-05-19T10:00:00-05:00",
+      "capabilities": [
+        "cart_construction",
+        "product_search"
+      ],
+      "delegation_chain": [
+        {
+          "level": 0,
+          "holder_id": "AGT-FRY-CNC-01",
+          "holder_type": "agent",
+          "name": "Ferrymead Concierge",
+          "granted_capabilities": [
+            "cart_construction",
+            "product_search"
+          ],
+          "constraints": {
+            "max_transaction_amount": 1000.0,
+            "requires_human_present": true
+          },
+          "signature": {
+            "alg": "Ed25519",
+            "signer_key_id": "KEY-FRY-AGT-01",
+            "value": "tzK3JAqDvTg1mkNzOl+jU0WGHLQKtch4qMEWEvBsOYhC2OHp0y22nU0Ete5pIpPOl1X6FzMLXvdKW7x9+eK1DQ=="
+          }
+        },
+        {
+          "level": 1,
+          "holder_id": "OPR-005",
+          "holder_type": "org",
+          "name": "Ferrymead Retail Technologies, Inc.",
+          "granted_capabilities": [
+            "cart_construction",
+            "product_search",
+            "agent_provisioning"
+          ],
+          "constraints": {
+            "max_transaction_amount": 1000.0
+          },
+          "signature": {
+            "alg": "Ed25519",
+            "signer_key_id": "KEY-FRY-ORG-01",
+            "value": "SHTbGAf4pxH4yvneG/Vlxod6WuR0Cj7wySdmuS5aG/95voF+6QWkhyWYSnSepI7Xa2YCFOKg6JGpIMlsu8EQDg=="
+          }
+        },
+        {
+          "level": 2,
+          "holder_id": "PRIN-FRY-0002",
+          "holder_type": "human",
+          "name": "Tomas Wierzbicki",
+          "granted_capabilities": [
+            "cart_construction",
+            "product_search",
+            "agent_provisioning"
+          ],
+          "constraints": {
+            "authority_basis": "board delegation 2025-11-04"
+          },
+          "signature": {
+            "alg": "Ed25519",
+            "signer_key_id": "KEY-FRY-HUM-02",
+            "value": "j8z7P9R2C5lsFRUWDQ7hKmyb42LF1DnMEKeH/BTdMbllphqVrOIsLc8tzdLIP/W5+8mos6r2e0+Zlnnqs3vsDQ=="
+          }
+        }
+      ],
+      "signature": {
+        "alg": "Ed25519",
+        "signer_key_id": "KEY-ISS-001",
+        "value": "GSaf7lUsuStELlLKcxKNpLre3WOmLsNuUDzm/6+i1EGtNKuK2a7FlsUWLFYHXOAS3OCC5VBxNpPtwPveZT6qCQ==",
+        "signed_payload_hash": "sha256:26878951ffcaea64bf4adbf2c4a4719f8c047d951d30fcf84eda0fa054a5c94e",
+        "signed_at": "2025-12-04T10:00:00-05:00"
+      }
+    }
+  ],
+  "agent_card": {
+    "url": "https://agents.ferrymead.com/concierge/.well-known/agent-card.json",
+    "card_hash": "sha256:2f37f4201418619256925391209ab2d64aeaf541ecb1ad64102d6281fd0c70bf",
+    "declared_capabilities": [
+      "cart_construction",
+      "payment_initiation:card",
+      "product_search"
+    ],
+    "declared_tool_servers": [
+      "mcp://core.ferrymead.com",
+      "mcp://shop.ateliernord.se",
+      "mcp://shop.auroraaudio.kr",
+      "mcp://shop.brewhouse.com",
+      "mcp://shop.cyclora.fr",
+      "mcp://shop.deskwell.com",
+      "mcp://shop.groveline.com",
+      "mcp://shop.hearthandgrain.com",
+      "mcp://shop.kudotoys.jp",
+      "mcp://shop.lumenbeauty.com",
+      "mcp://shop.meridianmkt.sg",
+      "mcp://shop.northsole.com",
+      "mcp://shop.pagegrove.co.uk",
+      "mcp://shop.petcove.ca",
+      "mcp://shop.quickvale.cy",
+      "mcp://shop.silvara.it",
+      "mcp://shop.stillwaterhome.com",
+      "mcp://shop.trekline.nl",
+      "mcp://shop.voltic.de"
+    ],
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-ORG-01",
+      "value": "ed25519-sig-placeholder:agentcard"
+    }
+  },
+  "controls": {
+    "operator_declared": [
+      {
+        "control_id": "FRY-CTL-001",
+        "risk_addressed": "stated_budget_cap",
+        "rule": "reject if cart_total > the shopper's stated maximum",
+        "enforcement": "blocking",
+        "version": "2026.3"
+      },
+      {
+        "control_id": "FRY-CTL-002",
+        "risk_addressed": "category_match",
+        "rule": "reject if merchant.mcc is outside the category the shopper asked for",
+        "enforcement": "blocking",
+        "version": "2026.1"
+      },
+      {
+        "control_id": "FRY-CTL-003",
+        "risk_addressed": "shopper_confirmation",
+        "rule": "reject if the cart is signed without a recorded shopper confirmation",
+        "enforcement": "blocking",
+        "version": "2026.2"
+      },
+      {
+        "control_id": "FRY-CTL-004",
+        "risk_addressed": "mandate_single_use",
+        "rule": "reject if the intent mandate has already been consumed",
+        "enforcement": "blocking",
+        "version": "2026.1"
+      },
+      {
+        "control_id": "FRY-CTL-005",
+        "risk_addressed": "merchant_reputation",
+        "rule": "warn if the merchant is newly onboarded or carries a watchlist flag",
+        "enforcement": "advisory",
+        "version": "2026.1"
+      }
+    ],
+    "institution_declared": [
+      {
+        "control_id": "RVM-CTL-001",
+        "risk_addressed": "velocity",
+        "rule": "hold if more than 4 agent-initiated authorisations for one shopper in a rolling hour",
+        "enforcement": "blocking",
+        "version": "2026.2"
+      },
+      {
+        "control_id": "RVM-CTL-002",
+        "risk_addressed": "sanctions_screening",
+        "rule": "reject if the counterparty or its beneficial owner matches a sanctions list",
+        "enforcement": "blocking",
+        "version": "2026.3"
+      },
+      {
+        "control_id": "RVM-CTL-003",
+        "risk_addressed": "mandate_signature_verification",
+        "rule": "reject if any mandate signature fails verification",
+        "enforcement": "blocking",
+        "version": "2026.1"
+      },
+      {
+        "control_id": "RVM-CTL-004",
+        "risk_addressed": "merchant_risk_score",
+        "rule": "warn if the counterparty risk score exceeds 70",
+        "enforcement": "advisory",
+        "version": "2026.2"
+      }
+    ]
+  },
+  "change_log": [
+    {
+      "at": "2026-03-02T00:00:00-05:00",
+      "kind": "model_version",
+      "ref": "claude-sonnet-4-5-20250929 blocklisted",
+      "detail": "regulator blocklist entry; agents pinned to it must be repinned"
+    },
+    {
+      "at": "2026-06-01T00:00:00-05:00",
+      "kind": "control_version",
+      "ref": "FRY-CTL-001 2026.2 -> 2026.3",
+      "detail": "budget cap moved from advisory to blocking"
+    },
+    {
+      "at": "2026-07-13T00:00:00-05:00",
+      "kind": "prompt_release",
+      "ref": "ferrymead-cnc-v4.0.3 -> ferrymead-cnc-v4.1.0",
+      "detail": "selection prompt now weights review volume above price rank"
+    },
+    {
+      "at": "2026-08-05T00:00:00-05:00",
+      "kind": "merchant_onboarded",
+      "ref": "MER-QVC-8801",
+      "detail": "Quickvale Direct added to the catalogue federation"
+    }
+  ],
+  "run_index": [
+    {
+      "run_id": "RUN-2026-0615-0001",
+      "file": "runs/RUN-2026-0615-0001.json",
+      "sha256": "sha256:09f9cc83d42210fe2ce255b5c651ca90cfd6fef08b63ce446764d8729b963cfa"
+    },
+    {
+      "run_id": "RUN-2026-0616-0002",
+      "file": "runs/RUN-2026-0616-0002.json",
+      "sha256": "sha256:9d6d1fd53f665c8f2aca8f63dd1116f34c103add762d032a87da805c6e3e2bfd"
+    },
+    {
+      "run_id": "RUN-2026-0617-0003",
+      "file": "runs/RUN-2026-0617-0003.json",
+      "sha256": "sha256:4637f655aa1adaf692204452fe467743e3d57efe794f15f44346ecc3062451b3"
+    },
+    {
+      "run_id": "RUN-2026-0618-0004",
+      "file": "runs/RUN-2026-0618-0004.json",
+      "sha256": "sha256:771e967cba4a5b8d151e8f4d8eb390cba1084d8a950f350bea34a7a46894b64a"
+    },
+    {
+      "run_id": "RUN-2026-0619-0005",
+      "file": "runs/RUN-2026-0619-0005.json",
+      "sha256": "sha256:7844c1a6778437e3a0aefdb0e8cabfcc61b5ed67d46e399958e0847edcb4b828"
+    },
+    {
+      "run_id": "RUN-2026-0622-0006",
+      "file": "runs/RUN-2026-0622-0006.json",
+      "sha256": "sha256:667f643ea0756a4f9d85ac495c4486ec802155651038bc6c35a978c3435d7d1d"
+    },
+    {
+      "run_id": "RUN-2026-0623-0007",
+      "file": "runs/RUN-2026-0623-0007.json",
+      "sha256": "sha256:abd2f21633850ee98bf14ed81c54452ab59b32f89668091eb69418ade6f7f5bc"
+    },
+    {
+      "run_id": "RUN-2026-0624-0008",
+      "file": "runs/RUN-2026-0624-0008.json",
+      "sha256": "sha256:eb25d0e86d38979e037a60f0d9910e4734154cf33accb89587c198ad02cf6982"
+    },
+    {
+      "run_id": "RUN-2026-0625-0009",
+      "file": "runs/RUN-2026-0625-0009.json",
+      "sha256": "sha256:26c3d6875ca97aec19c4d0f949cf83b1b7de8e1f8a074a3ca469bbc13afbcfbe"
+    },
+    {
+      "run_id": "RUN-2026-0629-0010",
+      "file": "runs/RUN-2026-0629-0010.json",
+      "sha256": "sha256:9e57b9ceb1e78dcff91592557623e1de5ebac04ffb84658e74656027cb7b5712"
+    },
+    {
+      "run_id": "RUN-2026-0630-0011",
+      "file": "runs/RUN-2026-0630-0011.json",
+      "sha256": "sha256:5174fa1c5732ac30f5adc18666d82b1b4370f991317436241286aad498bcb416"
+    },
+    {
+      "run_id": "RUN-2026-0701-0012",
+      "file": "runs/RUN-2026-0701-0012.json",
+      "sha256": "sha256:8b0b3c9777955c8ff4e9976f5633218f31131603e0f1eeae638ab88e9bb3bcb9"
+    },
+    {
+      "run_id": "RUN-2026-0702-0013",
+      "file": "runs/RUN-2026-0702-0013.json",
+      "sha256": "sha256:8af958ab8d467954d668890d1bad263f0b0746c9dc16579d99956cba44b764e7"
+    },
+    {
+      "run_id": "RUN-2026-0706-0014",
+      "file": "runs/RUN-2026-0706-0014.json",
+      "sha256": "sha256:414338d0e34e9ae518bfe02e104b87980475a345c8e204e391eff4f4addd6a14"
+    },
+    {
+      "run_id": "RUN-2026-0707-0015",
+      "file": "runs/RUN-2026-0707-0015.json",
+      "sha256": "sha256:3db5d97ff5732d94d00027c274d9182fe47ef78fec2b0bb0ca408f2edfcf76f3"
+    },
+    {
+      "run_id": "RUN-2026-0708-0016",
+      "file": "runs/RUN-2026-0708-0016.json",
+      "sha256": "sha256:f213670999467db4d1cf74d3e3a3b99844978df3018685515362d9721a4c948a"
+    },
+    {
+      "run_id": "RUN-2026-0709-0017",
+      "file": "runs/RUN-2026-0709-0017.json",
+      "sha256": "sha256:e4bf7cc6ec0e280d553fc58a8e95731b3230d4973f9f7874c8f5dc6a49bf4085"
+    },
+    {
+      "run_id": "RUN-2026-0713-0018",
+      "file": "runs/RUN-2026-0713-0018.json",
+      "sha256": "sha256:9cb52265c08d071645cb9c9548ea911b4179f99ca4844be5880cc44e809621ab"
+    },
+    {
+      "run_id": "RUN-2026-0714-0019",
+      "file": "runs/RUN-2026-0714-0019.json",
+      "sha256": "sha256:5acc0ac197ed1135d0856e53203f3fc196a9c897887f0129839d5d0e2a20389b"
+    },
+    {
+      "run_id": "RUN-2026-0715-0020",
+      "file": "runs/RUN-2026-0715-0020.json",
+      "sha256": "sha256:6aa74f8114887e3e59a88045d211f83f7496c7f5d21951950225f949f695010c"
+    },
+    {
+      "run_id": "RUN-2026-0716-0021",
+      "file": "runs/RUN-2026-0716-0021.json",
+      "sha256": "sha256:73ad250c42c50b389110e3ea97a8a9bbab7f36b0b4195926c042aea44add6443"
+    },
+    {
+      "run_id": "RUN-2026-0720-0022",
+      "file": "runs/RUN-2026-0720-0022.json",
+      "sha256": "sha256:c099cef5dd42af5e9e883ded6dedebeecf0057484bc38d2009d020f85cf26e65"
+    },
+    {
+      "run_id": "RUN-2026-0721-0023",
+      "file": "runs/RUN-2026-0721-0023.json",
+      "sha256": "sha256:89db1e3111f5f7b813779522b1735494e462c6db702eb7b20beb6bca46be0b9a"
+    },
+    {
+      "run_id": "RUN-2026-0724-0024",
+      "file": "runs/RUN-2026-0724-0024.json",
+      "sha256": "sha256:a00171d5269469d4787e149ec1e3d0c72d0c27ae8d3e3f950323956abadda463"
+    },
+    {
+      "run_id": "RUN-2026-0727-0025",
+      "file": "runs/RUN-2026-0727-0025.json",
+      "sha256": "sha256:cf4b3c04fb2339f3b64fd369b965c36a7478c88074c48278b9b8f7205ac6bd5b"
+    },
+    {
+      "run_id": "RUN-2026-0730-0026",
+      "file": "runs/RUN-2026-0730-0026.json",
+      "sha256": "sha256:b68200d2892b8c2ccf56e09a546a4a327a41b264fbbaf62457a5cd0323d632ed"
+    },
+    {
+      "run_id": "RUN-2026-0803-0027",
+      "file": "runs/RUN-2026-0803-0027.json",
+      "sha256": "sha256:a0d0244d53fcdbedfb89296dcc426a945569dc93b6b5eb40d50c55398dfc0e13"
+    },
+    {
+      "run_id": "RUN-2026-0804-0028",
+      "file": "runs/RUN-2026-0804-0028.json",
+      "sha256": "sha256:8c5de390687c6d7b34741e1f9aaa5630df665b5520e31fc9d66780ba0b80b5fc"
+    },
+    {
+      "run_id": "RUN-2026-0805-0029",
+      "file": "runs/RUN-2026-0805-0029.json",
+      "sha256": "sha256:706bc894093e506f4cfe938a62f11c435f9253e06a727ffe698d38394865624d"
+    },
+    {
+      "run_id": "RUN-2026-0806-0030",
+      "file": "runs/RUN-2026-0806-0030.json",
+      "sha256": "sha256:44ffad2e97a53853ecefe8823960c5ae2f6203db9648133277f69ea58c777749"
+    },
+    {
+      "run_id": "RUN-2026-0810-0031",
+      "file": "runs/RUN-2026-0810-0031.json",
+      "sha256": "sha256:08f0b6e0c33670ad83b8521f28eaf1dd32c4c72d6b70a386cf6129e7f14211b3"
+    },
+    {
+      "run_id": "RUN-2026-0811-0032",
+      "file": "runs/RUN-2026-0811-0032.json",
+      "sha256": "sha256:f3a779bc3ee494f19d95051e2007ad104709d799bc85207f85b8dfa5c2aeabcd"
+    },
+    {
+      "run_id": "RUN-2026-0812-0033",
+      "file": "runs/RUN-2026-0812-0033.json",
+      "sha256": "sha256:862372c4d2135a0aa2cb42ed645ada9afee2cedf5c1abee2cc38289c508e26f7"
+    },
+    {
+      "run_id": "RUN-2026-0813-0034",
+      "file": "runs/RUN-2026-0813-0034.json",
+      "sha256": "sha256:45ba0fdcaa4063897ee4a3a3c70071151c842d81469751dddcc0f7b4a691ef41"
+    },
+    {
+      "run_id": "RUN-2026-0817-0035",
+      "file": "runs/RUN-2026-0817-0035.json",
+      "sha256": "sha256:d9c6edb434d36589f87685c039766b5cb94c631469827e2e22346b3acf2c0665"
+    },
+    {
+      "run_id": "RUN-2026-0818-0036",
+      "file": "runs/RUN-2026-0818-0036.json",
+      "sha256": "sha256:e2072ae09a27b72dde3e791cf2f2614185b77fd862a54863b6837b02cdbc631f"
+    },
+    {
+      "run_id": "RUN-2026-0819-0037",
+      "file": "runs/RUN-2026-0819-0037.json",
+      "sha256": "sha256:fdf4b23c7a9af3a08dada57ed386f37c542b0db1e4f58b93ea97f106c4e9d816"
+    }
+  ]
+}

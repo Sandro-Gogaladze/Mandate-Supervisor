@@ -60,14 +60,19 @@ function ScoreCard({ score }: { score: RiskScore }) {
           const meta = nodeMeta(f.agent)
           return (
             <div key={f.agent} className="flex items-center gap-2 text-xs">
-              <span className="w-16 shrink-0 font-medium text-muted-foreground">{meta.label}</span>
+              {/* Specialist names run to "Consent & Harm"; a narrower column
+                  wrapped them onto a second line and knocked the bars out of
+                  their grid. */}
+              <span className="w-28 shrink-0 truncate font-medium text-muted-foreground" title={meta.label}>
+                {meta.label}
+              </span>
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border/60">
                 <div
                   className={cn('h-full rounded-full transition-all', f.score > 0 ? 'bg-primary' : 'bg-transparent')}
                   style={{ width: `${(f.score / maxFactor) * 100}%` }}
                 />
               </div>
-              <span className="w-14 shrink-0 text-right font-mono">
+              <span className="w-16 shrink-0 whitespace-nowrap text-right font-mono">
                 {f.score.toFixed(2)}
                 <span className="text-muted-foreground"> ·{f.finding_count}</span>
               </span>

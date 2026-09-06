@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ClipboardList, LayoutDashboard, UserRound, Network } from 'lucide-react'
+import { BookOpen, ClipboardList, FlaskConical, LayoutDashboard, ShieldAlert, UserRound } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -14,11 +14,15 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
-import { nodeMeta, SPECIALISTS, AGENT_ICON } from '@/lib/node-meta'
+import { nodeMeta, SPECIALISTS } from '@/lib/node-meta'
 import { cn } from '@/lib/utils'
 import { DEFAULT_OFFICER, useOfficer } from '@/lib/officer'
+import { BrandMark } from '@/components/BrandMark'
 
-export type SectionName = 'overview' | 'queue' | 'portfolio'
+/** Working surfaces, plus one reference page per specialist. `agent:<id>`
+ * keeps documentation in the same routing vocabulary without pretending an
+ * agent is a feature you can operate. */
+export type SectionName = 'overview' | 'queue' | 'sandbox' | 'catalogue' | 'rulebook' | `agent:${string}`
 
 export function AppSidebar({
   section,
@@ -45,10 +49,12 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" onClick={() => onNavigate('overview')} className="group-data-[collapsible=icon]:justify-center">
-              {/* logo-dark-bg.png is the light-on-dark variant of the mark
-                  (navy figure → paper white, robot blue kept) so it sits
-                  directly on the ink rail, no plate needed. */}
-              <img src="/logo-dark-bg.png" alt="Mandate Supervisor logo" className="size-8 shrink-0 object-contain" />
+              {/* Wrapped, not bare: SidebarMenuButton clamps any direct
+                  <svg> child to size-4, which would shrink the mark to an
+                  illegible 16px. The span takes that rule instead. */}
+              <span className="flex size-9 shrink-0 items-center justify-center">
+                <BrandMark className="size-9" />
+              </span>
               <div className="grid leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="font-heading text-sm font-semibold tracking-tight">Mandate Supervisor</span>
                 <span className="text-[11px] text-sidebar-foreground/60">Agentic payment oversight</span>
@@ -70,42 +76,67 @@ export function AppSidebar({
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={section === 'queue'} onClick={() => onNavigate('queue')} tooltip="Case queue">
+                <SidebarMenuButton isActive={section === 'queue'} onClick={() => onNavigate('queue')} tooltip="Cases">
                   <ClipboardList />
-                  <span>Case queue</span>
+                  <span>Cases</span>
                 </SidebarMenuButton>
                 {queueCount != null && queueCount > 0 && <SidebarMenuBadge>{queueCount}</SidebarMenuBadge>}
               </SidebarMenuItem>
-              <SidebarMenuItem><SidebarMenuButton isActive={section === 'portfolio'} onClick={() => onNavigate('portfolio')} tooltip="Portfolio"><Network /><span>Portfolio</span></SidebarMenuButton></SidebarMenuItem>
+              <SidebarMenuItem><SidebarMenuButton isActive={section === 'sandbox'} onClick={() => onNavigate('sandbox')} tooltip="Policy sandbox"><FlaskConical /><span>Policy sandbox</span></SidebarMenuButton></SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <SidebarGroupLabel>Review specialists</SidebarGroupLabel>
+          {/* Documentation, not console. The group label is doing real work:
+              these open reference pages explaining a specialist, they are not
+              ten features you can run. */}
+          <SidebarGroupLabel>Documentation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {/* The two system-wide references first: the vocabulary of harm
+                  and the rulebook. Every specialist page below is a slice of
+                  these two, so they read better before the ten than after. */}
+              <SidebarMenuItem>
+                <SidebarMenuButton className="h-6.5 pl-5 text-[12.5px] font-normal text-sidebar-foreground/70 [&>svg]:size-3 [&>svg]:opacity-70" isActive={section === 'catalogue'} onClick={() => onNavigate('catalogue')} tooltip="Failure catalogue">
+                  <ShieldAlert />
+                  <span>Failure catalogue</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="h-6.5 pl-5 text-[12.5px] font-normal text-sidebar-foreground/70 [&>svg]:size-3 [&>svg]:opacity-70" isActive={section === 'rulebook'} onClick={() => onNavigate('rulebook')} tooltip="Rulebook">
+                  <BookOpen />
+                  <span>Rulebook</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {/* Bare icons, no coloured tiles. Ten tinted swatches in a
+                  narrow rail read as ten competing statuses, and they made
+                  this group look unlike the Console group directly above it,
+                  whose items are plain icons. The per-agent colour still does
+                  its job where agents appear side by side — the pipeline
+                  graph, the Overview fan — but in a nav list the selected row
+                  is the only thing that should be carrying colour. */}
               {SPECIALISTS.map((id) => {
                 const meta = nodeMeta(id)
                 const Icon = meta.icon
-                const tone = AGENT_ICON[meta.color]
                 return (
                   <SidebarMenuItem key={id}>
-                    {/* Informational roster, not navigation — the agents are
-                        not pages, they're the workforce. */}
-                    <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/80">
-                      <span className={cn('flex size-5 items-center justify-center rounded', tone.bg)}>
-                        <Icon className={cn('size-3.5', tone.text)} />
-                      </span>
+                    <SidebarMenuButton
+                      className="h-6.5 pl-5 text-[12.5px] font-normal text-sidebar-foreground/70 [&>svg]:size-3 [&>svg]:opacity-70"
+                      isActive={section === `agent:${id}`}
+                      onClick={() => onNavigate(`agent:${id}`)}
+                      tooltip={meta.label}
+                    >
+                      <Icon />
                       <span>{meta.label}</span>
-                      <span className="ml-auto size-1.5 rounded-full bg-emerald-400/80" title="ready" />
-                    </div>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
               })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
       </SidebarContent>
 
       <SidebarFooter>

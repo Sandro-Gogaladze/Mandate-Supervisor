@@ -31,7 +31,23 @@ export function ReportCard({ report, firm, blocked, groundingProblems, signed, o
       <div className="flex flex-col gap-6 px-6 py-5">
         {report.sections.map((section, i) => (
           <section key={i}>
-            <h3 className="font-heading text-[15px] font-semibold">{section.title}</h3>
+            <h3 className="flex flex-wrap items-center gap-2 font-heading text-[15px] font-semibold">
+              {section.title}
+              {/* Not decoration: the drafter declares this and the grounding
+                  validator checks it against the cited findings' severities,
+                  so the badge is a verified claim, not a restatement of the
+                  heading. Absent on reports drafted before the field. */}
+              {section.character && (
+                <span className={cn(
+                  'rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+                  section.character === 'adverse' ? 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400'
+                    : section.character === 'clear' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                      : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+                )}>
+                  {section.character}
+                </span>
+              )}
+            </h3>
             <p className="mt-1.5 text-[14px] leading-7 text-foreground">{section.body}</p>
             {section.cited_finding_ids?.length > 0 && (
               <p className="mt-2 flex flex-wrap gap-1">

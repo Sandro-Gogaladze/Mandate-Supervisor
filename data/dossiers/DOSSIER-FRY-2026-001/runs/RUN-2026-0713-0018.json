@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0713-0018",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-13T16:33:00-05:00",
+  "ended_at": "2026-07-13T16:35:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "bookshelf speaker pair, under $400",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0713-0018",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-13T16:33:00-05:00",
+    "expires_at": "2026-07-13T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F018",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F018",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "bookshelf speaker pair, under $400",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 400.0,
+      "max_cumulative_amount": 400.0,
+      "currency": "USD",
+      "valid_from": "2026-07-13T00:00:00-05:00",
+      "valid_until": "2026-07-13T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-13T16:33:00-05:00",
+      "device_id": "DEV-F-F018"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F018",
+      "value": "Kk0hUrzZ1iYl/ApYuwSsvxC7s7gx0wgsJq2F246bj5ChZx5xpq3EEkExgC6ybWBJ9dZ96Sgc0FQFtf7P4lapCg==",
+      "signed_payload_hash": "sha256:8fbecc40b72c85f49dbc984c1c15d15ce08f09d8ef0462b601869142dbaba199",
+      "signed_at": "2026-07-13T16:33:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:a4090be262c74821602ac852a77de5cc9979a9c48a7e120a26d478aea9c37060",
+      "release_ref": "ferrymead-cnc-v4.1.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.auroraaudio.kr",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "bookshelf speaker pair, under $400",
+          "max_price": 400.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:f4828d561eac27374a26071b38628b21f7381f311c633c3841a4a5953545b2c1"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.auroraaudio.kr",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "AUR-SPK-BKS-02"
+          ]
+        },
+        "result_digest": "sha256:111c77914c9b1fdf2607ebed656f1cd5838e75b52f43d176efb68b1daa21e908",
+        "result_excerpt": {
+          "source": "mcp://shop.auroraaudio.kr",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "AURORA AUDIO CO LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.auroraaudio.kr",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "AUR-SPK-BKS-02"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:45fea2d0f6ef680bb498cee1aef41b49b07568b777f3cdff762bfe68d91a49d4"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.auroraaudio.kr",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-AUR-4471",
+          "lines": 1,
+          "total": 398.0
+        },
+        "result_digest": "sha256:8662f6d6ea7216167a1b6083cb62fb43c78ec140e4bd4759d080ef1e7c58f016"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 398.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F018"
+        },
+        "result_digest": "sha256:621d23b93b170e43b195eaed42e03913d9c3461cef127ecf29f7ee8f3f403c5d"
+      }
+    ],
+    "selection_context": {
+      "query": "bookshelf speaker pair, under $400",
+      "selected_sku": "AUR-SPK-BKS-02",
+      "alternatives_considered": [
+        {
+          "sku": "DSK-CHR-ERG-01",
+          "merchant_id": "MER-DSK-3390",
+          "price": 385.0,
+          "description": "Ergonomic task chair"
+        },
+        {
+          "sku": "STL-RUG-WOL-57",
+          "merchant_id": "MER-STL-1193",
+          "price": 420.0,
+          "description": "Hand-woven wool rug 5x7"
+        },
+        {
+          "sku": "VLT-MON-27U-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 429.0,
+          "description": "27in 4K monitor, USB-C"
+        },
+        {
+          "sku": "ATE-WOL-COA-S",
+          "merchant_id": "MER-ATE-3345",
+          "price": 445.0,
+          "description": "Wool overcoat, charcoal, S"
+        },
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-13T16:33:47-05:00",
+    "principal_id": "PRIN-F-F018",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 398.0,
+      "currency": "USD",
+      "merchant": "Aurora Audio Co Ltd",
+      "line_items": [
+        {
+          "sku": "AUR-SPK-BKS-02",
+          "qty": 1,
+          "unit_price": 398.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 400.0
+      }
+    },
+    "rendered_hash": "sha256:cabc93ee1ee20b333fbb72bb158f64e57f08bac4a6cb2c2551a18ff2b57d01be",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0713-0018",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0713-0018",
+      "prev_mandate_hash": "sha256:8fbecc40b72c85f49dbc984c1c15d15ce08f09d8ef0462b601869142dbaba199"
+    },
+    "created_at": "2026-07-13T16:33:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-AUR-4471",
+      "name": "Aurora Audio Co Ltd",
+      "mcc": "5732",
+      "country": "KR",
+      "region": "APAC",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "AUR-SPK-BKS-02",
+        "description": "Bookshelf speaker pair",
+        "qty": 1,
+        "unit_price": 398.0
+      }
+    ],
+    "cart_total": 398.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Aurora Audio Co Ltd's catalogue and selected the closest in-stock option at $398.00, within the stated $400.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "ZXL+czSQgkCtt+grr7dMCXtgjujDufe11O5kJSPWLpwhFn28sili7qxV0mi+BvJcVC3cJiAasO8AHbRclNtoAA==",
+      "signed_payload_hash": "sha256:2aa2b5381706e6a1be96dd07606e970107c976fe25a3bf25ee070e342d87fa8f",
+      "signed_at": "2026-07-13T16:33:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0713-0018",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0713-0018",
+      "prev_mandate_hash": "sha256:2aa2b5381706e6a1be96dd07606e970107c976fe25a3bf25ee070e342d87fa8f"
+    },
+    "authorized_at": "2026-07-13T16:35:19-05:00",
+    "amount": 398.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1017",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2017",
+      "scheme": "card_settlement",
+      "country": "KR",
+      "beneficiary_name_on_account": "Aurora Audio Co Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "eM2igp0til+pOWi9Dw5XN9Io30S3A+kqPmBraingRpbRDBH7DyRPK3RjovYO1LwN85icC3bDeYOqtTLWCrNAAg==",
+      "signed_payload_hash": "sha256:bc08e816e84f4df9424b70405b35aca9e928f215775ecdb539d99666264f7393",
+      "signed_at": "2026-07-13T16:35:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-07-13T16:34:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-07-13T16:34:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-07-13T16:34:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-07-13T16:34:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-07-13T16:34:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-07-13T16:34:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-07-13T16:34:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-07-13T16:34:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-07-13T16:34:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

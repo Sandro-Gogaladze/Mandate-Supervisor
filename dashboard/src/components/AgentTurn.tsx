@@ -84,6 +84,10 @@ export function AgentTurn({ agent, runId, events, facts, liveCounts, status, onO
   // wins (a controlled `open` that flipped back closed the turn under them).
   const [open, setOpen] = useState(running)
   useEffect(() => { if (running) setOpen(true) }, [running])
+  // The narration arrives as its own ledger event from this agent, so the
+  // turn needs nothing new plumbed through to show it.
+  const narration = events.filter(e => e.event_type === 'specialist_narrated')
+    .map(e => String(e.payload.narration)).at(-1)
   const dispatch = events.find(e => e.event_type === 'dispatch_recorded')
   const context = dispatch?.payload.context_blocks as Record<string, unknown> | undefined
   const visible = [...ownFacts.values()].filter(f => filter === 'all' || f.kind === filter)
@@ -92,12 +96,26 @@ export function AgentTurn({ agent, runId, events, facts, liveCounts, status, onO
       <ChevronRight className="size-3 shrink-0 transition-transform group-open/turn:rotate-90" />
       <meta.icon className="size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1"><span className="text-xs font-semibold">{meta.label}</span>
-        <p className="text-[10px] text-muted-foreground">{total} facts · {counts('satisfied')} satisfied · {counts('breach')} breach · {counts('absent')} absent · {assessments.length} assessments</p>
+        <p className="truncate text-[10px] text-muted-foreground group-open/turn:whitespace-normal">
+          {narration && !open
+            ? narration
+            : `${total} facts · ${counts('satisfied')} satisfied · ${counts('breach')} breach · ${counts('absent')} absent · ${assessments.length} assessments`}
+        </p>
       </div>
       {running ? <Loader2 className="size-3 animate-spin text-amber-600" /> : status === 'complete' || assessments.length ? <CheckCheck className="size-3 text-emerald-600" /> : null}
     </summary>
     <div className="space-y-2 border-t p-2.5">
-      <p className="text-xs text-muted-foreground">{meta.blurb}</p>
+      {/* The specialist's own line, first: what a supervisor should be
+          worried about, before the evidence that establishes it. Written
+          over this agent's assessments only, so it cannot carry a claim the
+          review did not make. */}
+      {narration ? (
+        <p className="rounded-md border-l-2 border-brand-blue/50 bg-muted/40 px-3 py-2 text-xs leading-relaxed">
+          {narration}
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">{meta.blurb}</p>
+      )}
       {dispatch?.payload.instruction ? <p className="text-xs italic">{String(dispatch.payload.instruction)}</p> : null}
       {context && <p className="text-[10px] text-muted-foreground">Evidence blocks: {Object.keys(context).map(k => k.replaceAll('_', ' ')).join(' · ')}</p>}
       {events.filter(e => e.event_type === 'specialist_failed').map(e => <p key={e.seq} className="text-xs text-amber-700">{String(e.payload.message)}</p>)}

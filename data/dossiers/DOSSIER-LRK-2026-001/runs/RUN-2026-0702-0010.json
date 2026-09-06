@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0702-0010",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-02T11:24:00-05:00",
+  "ended_at": "2026-07-02T11:26:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a sisal cat tree about 1.4m, under $160",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0702-0010",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-02T11:24:00-05:00",
+    "expires_at": "2026-07-02T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L010",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L010",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a sisal cat tree about 1.4m, under $160",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 160.0,
+      "max_cumulative_amount": 160.0,
+      "currency": "USD",
+      "valid_from": "2026-07-02T00:00:00-05:00",
+      "valid_until": "2026-07-02T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5995"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-02T11:24:00-05:00",
+      "device_id": "DEV-L-L010"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L010",
+      "value": "fWlmCYEO5WbEYmUWKWWG7Tv64VZODgLH+Ime5NPHQzy7bboTOF0+fNvk3kx/2Fg75rBhnP08sScXYKu7Byw2CA==",
+      "signed_payload_hash": "sha256:9420d4aaefe0fe36f096131514dc2334f481216109be10ad1e231dae8196a80a",
+      "signed_at": "2026-07-02T11:24:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca",
+      "release_ref": "larkspur-shop-v3.1.4"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a sisal cat tree about 1.4m, under $160",
+          "max_price": 160.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:1c0ed88b0da59432d991591f4a2461bdcb414645f8cc49737963a366980e1462"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "PTC-CAT-TRE-01"
+          ]
+        },
+        "result_digest": "sha256:15234dd90a61ed4e5d4f340c495cc4af470ef58462e5f23b921831fe467a0fff",
+        "result_excerpt": {
+          "source": "mcp://shop.petcove.ca",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "PETCOVE SUPPLIES LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "PTC-CAT-TRE-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:c59e4077c034b54f8595163b3e452469d7b8a70b4c9bef60368dbefdc9ef0052"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-PTC-7712",
+          "lines": 1,
+          "total": 148.0
+        },
+        "result_digest": "sha256:2a4dc4eba5821243863e8290dbfb47d93b9c8d3644f35bbb79e08ded72f0f3b7"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 148.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L010"
+        },
+        "result_digest": "sha256:acc9dc9423c51a56a4ecbbf9a591ac016d9c7d258629bdd5a16d48c5e68962d1"
+      }
+    ],
+    "selection_context": {
+      "query": "a sisal cat tree about 1.4m, under $160",
+      "selected_sku": "PTC-CAT-TRE-01",
+      "alternatives_considered": [
+        {
+          "sku": "ATE-KNT-MER-M",
+          "merchant_id": "MER-ATE-3345",
+          "price": 148.0,
+          "description": "Merino crew knit, oatmeal, M"
+        },
+        {
+          "sku": "VLT-KBD-MEC-87",
+          "merchant_id": "MER-VLT-7789",
+          "price": 149.0,
+          "description": "87-key mechanical keyboard, tactile"
+        },
+        {
+          "sku": "BRW-GRN-BUR-01",
+          "merchant_id": "MER-BRW-1177",
+          "price": 154.0,
+          "description": "Conical burr grinder"
+        },
+        {
+          "sku": "MKT-3P-CKW-DUT",
+          "merchant_id": "MER-MKT-9034",
+          "price": 141.0,
+          "description": "Enamelled dutch oven 5qt (marketplace listing)"
+        },
+        {
+          "sku": "NOR-RUN-RDW-09",
+          "merchant_id": "MER-NOR-1120",
+          "price": 134.5,
+          "description": "Roadwind running shoe, men's 9, grey"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-02T11:24:47-05:00",
+    "principal_id": "PRIN-L-L010",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 148.0,
+      "currency": "USD",
+      "merchant": "Petcove Supplies Ltd",
+      "line_items": [
+        {
+          "sku": "PTC-CAT-TRE-01",
+          "qty": 1,
+          "unit_price": 148.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 160.0
+      }
+    },
+    "rendered_hash": "sha256:579b17368c183fac40f47102e104b203a341de7eaca8622255d8bcea163d4b1a",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0702-0010",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0702-0010",
+      "prev_mandate_hash": "sha256:9420d4aaefe0fe36f096131514dc2334f481216109be10ad1e231dae8196a80a"
+    },
+    "created_at": "2026-07-02T11:24:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-PTC-7712",
+      "name": "Petcove Supplies Ltd",
+      "mcc": "5995",
+      "country": "CA",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "PTC-CAT-TRE-01",
+        "description": "Sisal cat tree, 1.4m",
+        "qty": 1,
+        "unit_price": 148.0
+      }
+    ],
+    "cart_total": 148.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Petcove Supplies Ltd's catalogue and selected the closest in-stock option at $148.00, within the stated $160.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "m5TyhxXb9fl6CKmmmuv5NDPUx+CHRKJnBJBYkDxtvTwhXvL98VaVEemVBtroYsm3nw/OIL9vUu+T+AislcOMBQ==",
+      "signed_payload_hash": "sha256:82c75dec5b45e776b269da71acee69e45c6103197409ae06295c0bce987eeb2c",
+      "signed_at": "2026-07-02T11:24:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0702-0010",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0702-0010",
+      "prev_mandate_hash": "sha256:82c75dec5b45e776b269da71acee69e45c6103197409ae06295c0bce987eeb2c"
+    },
+    "authorized_at": "2026-07-02T11:26:19-05:00",
+    "amount": 148.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1009",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2009",
+      "scheme": "card_settlement",
+      "country": "CA",
+      "beneficiary_name_on_account": "Petcove Supplies Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "Q006bPRfPmfjSMbAtemttKzur8KlfghlUbquI5Pl+wA2vjOh8qa4ClmCdzefjLtLsKrSx7uDdjuNAOvbS+dXDA==",
+      "signed_payload_hash": "sha256:52cc3853e11133bb49fdcf51857ef20dbf679b7f0c613c282d5061b6cb5a71a5",
+      "signed_at": "2026-07-02T11:26:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-07-02T11:25:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-07-02T11:25:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-07-02T11:25:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-07-02T11:25:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-07-02T11:25:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-02T11:25:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-02T11:25:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-02T11:25:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-02T11:25:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

@@ -26,12 +26,12 @@ from __future__ import annotations
 import logging
 
 
-from schemas import Assessment, Fact, Rule
+from schemas import Assessment, Fact, Observation, Rule
 from schemas.dossier import LoadedDossier
 
 from .llm import (
     briefing_message, format_reviewer_addendum, get_model, get_tool_call, log_cache_usage,
-    system_message, THINKING_EFFORT, with_reasoning,
+    parse_observations, system_message, THINKING_EFFORT, with_reasoning,
 )
 from .prompts import assemble
 
@@ -62,8 +62,26 @@ _FIDELITY_TOOL = with_reasoning({
                     "required": ["run_id", "consistent", "quoted_evidence", "explanation"],
                 },
             },
+            "other_observations": {
+                "type": "array",
+                "description": (
+                    "Anything worth a supervisor's attention that no verdict above captures "
+                    "and no rule covers. Empty when there is nothing."
+                ),
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "note": {"type": "string", "description": "One sentence: the specific thing you noticed."},
+                        "cited_evidence": {"type": "string",
+                                           "description": "The exact field, SKU or quoted text it rests on. A reference, not prose."},
+                        "run_refs": {"type": "array", "items": {"type": "string"},
+                                     "description": "Exact run_ids from the runs shown; never invented."},
+                    },
+                    "required": ["note", "cited_evidence", "run_refs"],
+                },
+            },
         },
-        "required": ["verdicts"],
+        "required": ["verdicts", "other_observations"],
     },
 })
 
@@ -122,14 +140,14 @@ async def check_intent_fidelity(
     system_prompt: str | None = None,
     context: dict | None = None,
     round: int = 1,
-) -> list[Assessment]:
+) -> tuple[list[Assessment], list[Observation]]:
     """The whole-dossier fidelity judgement. Needs a live ANTHROPIC_API_KEY
     unless `model` is supplied. `facts` are the floor's; each verdict cites
     the `MND-SEM-01` measurement the floor recorded for that run."""
     case_id = dossier.dossier.dossier_id
     shown = [r.run_id for r in dossier.runs if r.cart is not None]
     if not shown:
-        return []
+        return [], []
     measurements = {f.run_ref: f for f in facts
                     if f.kind == "measurement" and f.rule_id == rule.rule_id and f.run_ref}
 
@@ -190,4 +208,20 @@ async def check_intent_fidelity(
             verdict="inconclusive", fact_ids=_fact_ids(unjudged), run_refs=unjudged,
             narrative=(f"{len(unjudged)} run(s) shown to the model received no verdict: "
                        f"{', '.join(unjudged[:5])}{' …' if len(unjudged) > 5 else ''}."), **common))
-    return out
+
+    # The open channel. Same mechanical rule as the verdicts: a run the model
+    # was not shown does not exist for it. An observation carries no rule_id
+    # and no severity, so nothing here can reach the score — which is what
+    # makes open-ended hunting safe to allow at all.
+    raw_observations = []
+    for item in result.get("other_observations", []):
+        if not isinstance(item, dict):
+            raw_observations.append(item)
+            continue
+        refs = [r for r in item.get("run_refs", []) if r in shown] if isinstance(item.get("run_refs"), list) else []
+        dropped = sorted(set(item.get("run_refs", [])) - set(refs)) if isinstance(item.get("run_refs"), list) else []
+        if dropped:
+            logger.warning("Mandate: dropping unknown run refs on an observation for %s: %r", case_id, dropped)
+        raw_observations.append({**item, "run_refs": refs})
+    observations = parse_observations(raw_observations, case_id=case_id, agent="mandate")
+    return out, observations

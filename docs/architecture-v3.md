@@ -14,7 +14,7 @@
 Branch `feat/supervision-architecture-v3`. Supersedes `architecture-v2.md` §14–18; v2 §5 (where
 guarantees live) survives, extended.
 
-Companions: `coverage-model.md` (73 failures) · `kya-ruleset.md` (57 rules) ·
+Companions: `coverage-model.md` (the failure catalogue) · `kya-ruleset.md` (57 rules) ·
 `kya-and-the-sandbox.md` (positioning).
 
 ---
@@ -177,8 +177,7 @@ assessment. **Both are KYA's, both run when KYA runs, neither runs anywhere else
 | **Round 2+ dispatch** | — | the orchestrator judges the officer's question against round 1's facts |
 | **Synthesis** (critic → synthesizer → control assurance → score) | ✅ always, after any round | — |
 | **Report** | — | only on explicit request |
-| **Portfolio sweep** | ✅ scheduled | — |
-| **Red Team probe** | — | officer-initiated only |
+| **Portfolio sweep** | ✅ always — inside the first pass, as Systemic | — |
 
 **The line that matters: an agent never chooses which of its rules to run.** Dispatch is a decision;
 rule coverage inside a dispatched agent is not. If KYA runs, all 42 KYA rules are evaluated. That is
@@ -311,7 +310,6 @@ when it assembles the case.
 | # | Specialist | Skill | Cadence |
 |---|---|---|---|
 | 11 | **Systemic** | `portfolio.sweep` | scheduled, across the ledger |
-| 12 | **Red Team** | `probe.generate` | on-demand; LLM-generated attacks against the firm's *declared* controls |
 
 **Support:** Orchestrator · Investigator · Critic *(deterministic)* · Synthesizer · Drafting ·
 Grounding *(deterministic)*.
@@ -822,7 +820,7 @@ as candidate rules.
 > iterative review, and an agent whose job is finding what the rules missed.
 
 **8 · New specialists** *(2d)* — Provenance · Injection · Counterparty · Consent.
-**9 · `monitor` + Systemic · agentic Red Team · supervisory query** *(2.5d)*
+**9 · `monitor` + Systemic · supervisory query** *(2.5d)*
 
 **Sequencing:** 1–3 before any new agent — adding specialists to an unmeasured pipeline multiplies
 output without improving supervision. 5–6 before 8, because the orchestration and the round loop are

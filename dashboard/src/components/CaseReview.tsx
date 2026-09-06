@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import {
   ArrowLeft,
   BadgeCheck,
+  Expand,
   FolderOpen,
   History,
   ListChecks,
@@ -32,6 +33,7 @@ import type {
   CaseSummary,
   FullMap,
   GateContext,
+  GateSubmission,
   LedgerEvent,
   ReviewerDirective,
 } from '@/lib/types'
@@ -42,7 +44,6 @@ import { CaseChat } from '@/components/CaseChat'
 import { ReportCard } from '@/components/ReportCard'
 import { ResultsPanel } from '@/components/ResultsPanel'
 import { CaseTimeline } from '@/components/CaseTimeline'
-import type { GateSubmission } from '@/components/ReviewGate'
 import { ExecutionRuns, ExecutionInspector } from '@/components/ExecutionRuns'
 import { AuthorisationPanel } from '@/components/AuthorisationPanel'
 import { turnAnchor } from '@/components/AgentTurn'
@@ -77,7 +78,7 @@ const STEP_ALIAS: Record<string, string | null> = {
 // goes active on its first step and STAYS active until the run moves past
 // the fan (any non-worker step starting = the join), when every active
 // worker settles at once — which is what actually happened.
-const WORKER_NODES = new Set(['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'investigator', 'systemic', 'red_team'])
+const WORKER_NODES = new Set(['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'investigator', 'systemic'])
 
 function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; onBack: () => void }) {
   const caseId = caseSummary.case_id
@@ -86,6 +87,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
   const [selectedRun, setSelectedRun] = useState<string | null>(null)
   const [progress, setProgress] = useState<Record<string, SpecialistProgress>>({})
   const [mapOpen, setMapOpen] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth >= 1280)
+  const [mapExpanded, setMapExpanded] = useState(false)
   const [focusedStep, setFocusedStep] = useState<string | null>(null)
   const [loadError, setLoadError] = useState('')
   const [map, setMap] = useState<FullMap | null>(null)
@@ -367,6 +369,9 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     setGate(null)
     if (decision.action === 'rerun' && decision.directive) {
       pendingRerun.current = decision.directive
+      // Sending it back starts a directed pass. That work is watchable and the
+      // decision page is not, so hand the reviewer back to the room to see it.
+      setTab('room')
     }
     drafterAgent.runAgent({ resume: [{ interruptId: gate.id, status: 'resolved', payload: decision }] })
   }
@@ -408,6 +413,10 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
           Object.entries(feed.nodeStatus).map(([id, status]) => [id, status === 'active' ? ('done' as const) : status]),
         )
     if (session.running) base['orchestrator'] = 'active'
+    // The supervisor is a real participant in the loop, not a label: light it
+    // whenever the turn is actually theirs — before anything has been asked,
+    // between passes, and at the gate — and settle it while the machine works.
+    base['supervisor'] = anyRunning ? 'done' : 'awaiting'
     if (gate) {
       base['human_gate'] = 'awaiting'
       base['supervisor'] = 'awaiting'
@@ -424,6 +433,13 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
     // breach or concern → findings; only open judgements → unresolved; else clean
     return [name, verdicts.some(v => v === 'breach' || v === 'concern') ? 'findings' : verdicts.includes('inconclusive') ? 'unresolved' : 'clean']
   })), [displayNodeStatus, progress, ledger])
+
+  const openSpecialistTurn = (name: string) => {
+    const last = [...(ledger ?? [])].reverse().find((e) => e.event_type === 'dispatch_recorded' && e.payload.target === name)
+    if (!last?.run_id) { toast('This specialist has no turn on this dossier yet.'); return }
+    setFocusedStep(null)
+    requestAnimationFrame(() => setFocusedStep(turnAnchor(name, last.run_id!)))
+  }
 
   const liveLabel = triage.running
     ? 'Full review pass running'
@@ -498,7 +514,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
             { value: 'room', icon: MessageSquareText, label: 'Case room', badge: 0 },
             { value: 'findings', icon: ListChecks, label: 'Findings', badge: findingsBadge },
             { value: 'runs', icon: FolderOpen, label: 'Submission', badge: dossier?.dossier.submission_context.runs_submitted ?? 0 },
-            { value: 'decision', icon: BadgeCheck, label: 'Decision', badge: 0 },
+            { value: 'decision', icon: BadgeCheck, label: 'Decision', badge: gate ? 1 : 0 },
             { value: 'timeline', icon: History, label: 'Timeline', badge: 0 },
           ].map(({ value, icon: Icon, label, badge }) => (
             <TabsTrigger
@@ -554,13 +570,10 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
                 pendingQuestion={pendingQuestion}
                 pendingReply={pendingReply}
                 gate={gate}
-                gateRisk={drafter.state.risk_score ?? record?.risk_score ?? null}
-                findingsCount={view.findings.length}
                 officer={officer}
                 focusedStep={focusedStep}
                 onOpenRun={setSelectedRun}
                 onDecision={() => setTab('decision')}
-                onDecide={handleDecision}
                 onSend={handleSend}
                 onRun={handleRun}
                 onDraft={handleDraft}
@@ -571,26 +584,52 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
               />
             </div>
             {mapOpen && (
-              <aside className="hidden w-[360px] shrink-0 border-l bg-card/40 lg:block xl:w-[400px]">
+              <aside className="hidden w-[400px] shrink-0 border-l bg-card/40 lg:block xl:w-[470px] 2xl:w-[560px]">
                 <div className="flex items-center gap-2 border-b px-4 py-2.5 text-xs font-semibold text-muted-foreground">
                   <Waypoints className="size-3.5" />
                   Supervision loop
                   <span className={cn('ml-auto font-normal', !liveLabel && 'text-muted-foreground/60')}>{liveLabel ?? 'idle'}</span>
+                  {/* The rail is a glance view — nineteen boxes in 400px can
+                      only ever be small. This opens the same map at a size a
+                      person can actually read. */}
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Open the supervision map full screen"
+                    title="Expand map"
+                    onClick={() => setMapExpanded(true)}
+                  >
+                    <Expand />
+                  </Button>
                 </div>
                 <div className="h-[calc(100%-2.4rem)]">
                   {map ? (
-                    <SupervisionMap map={map} nodeStatus={mapNodeStatus} nodeStartSeq={feed.nodeStartSeq} onNodeClick={name => {
-                      const last = [...(ledger ?? [])].reverse().find(e => e.event_type === 'dispatch_recorded' && e.payload.target === name)
-                      if (!last?.run_id) { toast('This specialist has no turn on this dossier yet.'); return }
-                      setFocusedStep(null)
-                      requestAnimationFrame(() => setFocusedStep(turnAnchor(name, last.run_id!)))
-                    }} />
+                    <SupervisionMap map={map} nodeStatus={mapNodeStatus} nodeStartSeq={feed.nodeStartSeq} onNodeClick={openSpecialistTurn} />
                   ) : (
                     <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading map…</div>
                   )}
                 </div>
               </aside>
             )}
+            <Dialog open={mapExpanded} onOpenChange={setMapExpanded}>
+              <DialogContent className="flex h-[92vh] w-[96vw] max-w-[1500px] flex-col gap-0 p-0 sm:max-w-[1500px]">
+                <DialogHeader className="flex-row items-center gap-2 border-b px-4 py-3 text-left">
+                  <Waypoints className="size-4 text-muted-foreground" />
+                  <DialogTitle className="font-heading text-sm font-semibold">Supervision loop</DialogTitle>
+                  <span className={cn('text-xs', !liveLabel && 'text-muted-foreground/60')}>{liveLabel ?? 'idle'}</span>
+                </DialogHeader>
+                <div className="min-h-0 flex-1">
+                  {map && (
+                    <SupervisionMap
+                      map={map}
+                      nodeStatus={mapNodeStatus}
+                      nodeStartSeq={feed.nodeStartSeq}
+                      onNodeClick={(name) => { setMapExpanded(false); openSpecialistTurn(name) }}
+                    />
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </TabsContent>
@@ -599,8 +638,22 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
       <TabsContent value="runs" className="min-h-0 flex-1">
         <ExecutionRuns caseId={caseId} dossier={dossier} refreshKey={refreshKey} onOpenRun={setSelectedRun} />
       </TabsContent>
+      {/* The one place a decision is made. The paused human gate renders at the
+          top of this page — not in the case room, which only announces it —
+          so the reviewer signs in one place instead of two. */}
       <TabsContent value="decision" className="min-h-0 flex-1">
-        <AuthorisationPanel caseId={caseId} dossier={dossier} officer={officer} busy={anyRunning} onSaved={refreshRecord} onOpenRun={setSelectedRun} />
+        <AuthorisationPanel
+          caseId={caseId}
+          dossier={dossier}
+          officer={officer}
+          busy={anyRunning}
+          onSaved={refreshRecord}
+          onOpenRun={setSelectedRun}
+          gate={gate}
+          gateRisk={drafter.state.risk_score ?? record?.risk_score ?? null}
+          findingsCount={view.findings.length}
+          onGateDecide={handleDecision}
+        />
       </TabsContent>
       <ExecutionInspector caseId={caseId} runId={selectedRun} onClose={() => setSelectedRun(null)} dossier={dossier} onOpenRun={setSelectedRun} onInvestigate={run => { setSelectedRun(null); setTab('room'); handleSend(`Review ${run} in depth. Re-dispatch only the relevant specialists, scoped to this execution, and explain its findings.`) }} />
       <TabsContent value="findings" className="min-h-0 flex-1">

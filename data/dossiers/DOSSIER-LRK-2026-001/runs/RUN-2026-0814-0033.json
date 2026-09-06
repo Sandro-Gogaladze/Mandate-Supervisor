@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0814-0033",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-14T09:38:00-05:00",
+  "ended_at": "2026-08-14T09:40:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "road helmet, medium, under $140",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0814-0033",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-14T09:38:00-05:00",
+    "expires_at": "2026-08-14T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L031",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L031",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "road helmet, medium, under $140",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 140.0,
+      "max_cumulative_amount": 140.0,
+      "currency": "USD",
+      "valid_from": "2026-08-14T00:00:00-05:00",
+      "valid_until": "2026-08-14T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5940"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-14T09:38:00-05:00",
+      "device_id": "DEV-L-L031"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L031",
+      "value": "XTDvtyI2u8ZM5plXfZpOw7E7I7i3lDmatqHABeB6TeycTj1s78Asqkg61ZLM8Bv5WboLFptq9/gWTChUvvMYAg==",
+      "signed_payload_hash": "sha256:68f32c6f7d6b7c76ea8b2f70ad04113d7dac0864e5f2b856654b48f533cc7e84",
+      "signed_at": "2026-08-14T09:38:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41",
+      "release_ref": "larkspur-shop-v3.2.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "road helmet, medium, under $140",
+          "max_price": 140.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:a600ecba4d5a7e78fb8454580434cca043a68e0a89b5416a43cb84672ffb3911"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "CYC-HLM-ROD-M"
+          ]
+        },
+        "result_digest": "sha256:0a70d845e2e4769bb9db76ce5fbd0dc08753a8a89a8e24536590fd1f62643731",
+        "result_excerpt": {
+          "source": "mcp://shop.cyclora.fr",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "CYCLORA CYCLES SAS — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "CYC-HLM-ROD-M"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:82aab101c78c7c9694dec52703a5f39aa9175c62b22a98ac35b5d02206d62fb4"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-CYC-6650",
+          "lines": 1,
+          "total": 128.0
+        },
+        "result_digest": "sha256:1323e929a4c84d7fe8e836859c01695b9a97b1be177d01bbe2a40ebbd9708d84"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 128.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L031"
+        },
+        "result_digest": "sha256:ab25d5d4cfe700ff6d0066e52435880c1b24a56c4266407c03cf29afa988ff11"
+      }
+    ],
+    "selection_context": {
+      "query": "road helmet, medium, under $140",
+      "selected_sku": "CYC-HLM-ROD-M",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-SSD-1TB-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 132.0,
+          "description": "1TB portable NVMe SSD"
+        },
+        {
+          "sku": "NOR-RUN-RDW-09",
+          "merchant_id": "MER-NOR-1120",
+          "price": 134.5,
+          "description": "Roadwind running shoe, men's 9, grey"
+        },
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "merchant_id": "MER-HRT-9902",
+          "price": 119.0,
+          "description": "8in chef's knife, forged"
+        },
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 118.0,
+          "description": "Trailflex running shoe, women's 10, white"
+        },
+        {
+          "sku": "ATE-LIN-TRS-32",
+          "merchant_id": "MER-ATE-3345",
+          "price": 118.0,
+          "description": "Linen trouser, 32"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-14T09:38:47-05:00",
+    "principal_id": "PRIN-L-L031",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 128.0,
+      "currency": "USD",
+      "merchant": "Cyclora Cycles SAS",
+      "line_items": [
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "qty": 1,
+          "unit_price": 128.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 140.0
+      }
+    },
+    "rendered_hash": "sha256:5122e3fa9eb67095e8881e7b99431b3016310e3fdce229e0b6d6e82d605e100e",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0814-0033",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0814-0033",
+      "prev_mandate_hash": "sha256:68f32c6f7d6b7c76ea8b2f70ad04113d7dac0864e5f2b856654b48f533cc7e84"
+    },
+    "created_at": "2026-08-14T09:38:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-CYC-6650",
+      "name": "Cyclora Cycles SAS",
+      "mcc": "5940",
+      "country": "FR",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "CYC-HLM-ROD-M",
+        "description": "Road helmet, M",
+        "qty": 1,
+        "unit_price": 128.0
+      }
+    ],
+    "cart_total": 128.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Cyclora Cycles SAS's catalogue and selected the closest in-stock option at $128.00, within the stated $140.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "3HsE+eu7eSrk5Wxx8oca8hlNjg2Edwz/1dbG2BQAFElsXA8f8b11v/DTJaNfs4/BAS6JyBAU3XaXCbSh8sWOCA==",
+      "signed_payload_hash": "sha256:81e79986f3601ac959e1dee98aa4eb318a7fc2510584141582565c7d813dc1e5",
+      "signed_at": "2026-08-14T09:38:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0814-0033",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0814-0033",
+      "prev_mandate_hash": "sha256:81e79986f3601ac959e1dee98aa4eb318a7fc2510584141582565c7d813dc1e5"
+    },
+    "authorized_at": "2026-08-14T09:40:19-05:00",
+    "amount": 128.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1032",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2032",
+      "scheme": "card_settlement",
+      "country": "FR",
+      "beneficiary_name_on_account": "Cyclora Cycles SAS"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "klRTzfaDLpy3IkxJ631jdMcQUgwbGMZ9aPJXyCHYXbhUpxkIDRpCpR9EAvIadXnF2g1PZNRCQZv1auKLktl1AA==",
+      "signed_payload_hash": "sha256:76913e7223d3cc3194476b1ddd8310f47c30ee4e69a240afaf4d9150f2700671",
+      "signed_at": "2026-08-14T09:40:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-08-14T09:39:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-08-14T09:39:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-08-14T09:39:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-08-14T09:39:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-08-14T09:39:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-14T09:39:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-14T09:39:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-14T09:39:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-14T09:39:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

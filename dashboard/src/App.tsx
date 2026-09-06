@@ -5,9 +5,13 @@ import { AppSidebar, type SectionName } from '@/components/AppSidebar'
 import { Overview } from '@/components/Overview'
 import { CaseQueue } from '@/components/CaseQueue'
 import { CaseReview } from '@/components/CaseReview'
-import { PortfolioPanel } from '@/components/PortfolioPanel'
-import { listCases, getCase } from '@/lib/api'
-import { toast } from 'sonner'
+import { PolicySandbox } from '@/components/PolicySandbox'
+import { AgentPage } from '@/components/AgentPage'
+import { CataloguePage } from '@/components/CataloguePage'
+import { RulebookPage } from '@/components/RulebookPage'
+import { nodeMeta } from '@/lib/node-meta'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { listCases } from '@/lib/api'
 import type { CaseSummary } from '@/lib/types'
 
 function App() {
@@ -36,11 +40,19 @@ function App() {
     [],
   )
 
+  const agentId = section.startsWith('agent:') ? section.slice('agent:'.length) : null
+
   const crumb = openCase
-    ? `Case queue · ${openCase.case_id}`
-    : section === 'overview'
-      ? 'Overview'
-      : section === 'portfolio' ? 'Portfolio' : 'Case queue'
+    ? `Cases · ${openCase.case_id}`
+    : agentId
+      ? `Documentation · ${nodeMeta(agentId).label}`
+      : section === 'catalogue'
+      ? 'Documentation · Failure catalogue'
+      : section === 'rulebook'
+      ? 'Documentation · Rulebook'
+      : section === 'overview'
+        ? 'Overview'
+        : section === 'sandbox' ? 'Policy sandbox' : 'Cases'
 
   return (
     <SidebarProvider>
@@ -50,7 +62,10 @@ function App() {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-1 !h-4" />
           <span className="text-sm font-medium">{crumb}</span>
-          <span className="ml-auto font-mono text-[11px] text-muted-foreground">{today}</span>
+          <div className="ml-auto flex items-center gap-3">
+            <span className="font-mono text-[11px] text-muted-foreground">{today}</span>
+            <ThemeToggle />
+          </div>
         </header>
         <div className="min-h-0 flex-1">
           {openCase ? (
@@ -61,12 +76,22 @@ function App() {
             // which is how a review fired against one dossier while the console
             // was showing another.
             <CaseReview key={openCase.case_id} caseSummary={openCase} onBack={() => setOpenCase(null)} />
+          ) : section === 'catalogue' ? (
+            <div className="h-full overflow-auto"><CataloguePage /></div>
+          ) : section === 'rulebook' ? (
+            <div className="h-full overflow-auto">
+              <RulebookPage onOpenAgent={(id) => navigate(`agent:${id}`)} onOpenSandbox={() => navigate('sandbox')} />
+            </div>
+          ) : agentId ? (
+            <div className="h-full overflow-auto">
+              <AgentPage key={agentId} agentId={agentId} />
+            </div>
           ) : section === 'overview' ? (
             <div className="h-full overflow-auto">
               <Overview onOpenQueue={() => navigate('queue')} onOpenCase={handleOpenCase} />
             </div>
-          ) : section === 'portfolio' ? (
-            <div className="h-full overflow-auto"><PortfolioPanel onOpenDossier={id => { getCase(id).then(handleOpenCase).catch(e => toast.error(String(e))) }} /></div>
+          ) : section === 'sandbox' ? (
+            <PolicySandbox />
           ) : (
             <div className="h-full overflow-auto">
               <CaseQueue onSelect={handleOpenCase} />

@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   TriangleAlert,
   UserRound,
+  UserRoundCheck,
   Waypoints,
   XCircle,
 } from 'lucide-react'
@@ -31,7 +32,6 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { nodeMeta, AGENT_ICON } from '@/lib/node-meta'
 import { TIER_TONE } from '@/components/ResultsPanel'
-import { ReviewGate, type GateSubmission } from '@/components/ReviewGate'
 import { EvidenceFields, FactCard, RunCitation, turnAnchor } from '@/components/AgentTurn'
 import { FailureList, failureSummary } from '@/components/FailureList'
 import type { FeedEvent, ReasoningEvent, ToolCallEvent } from '@/hooks/usePipelineFeed'
@@ -56,7 +56,7 @@ function argsSummary(args: unknown): string {
  * A block with nothing in it is not a thought. */
 const spoken = (r: ReasoningEvent) => r.text.trim().length > 0
 
-const PEER_ORDER = ['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'control_assurance', 'systemic', 'red_team', 'investigator']
+const PEER_ORDER = ['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'control_assurance', 'systemic', 'investigator']
 const SUPPORT_NODES = new Set(['findings', 'critic', 'synthesizer', 'draft_report', 'grounding_check', 'human_gate', 'specialists_done', 'supervisor'])
 
 function orderAgents(agents: string[], selected: string[]): string[] {
@@ -73,7 +73,7 @@ function orderAgents(agents: string[], selected: string[]): string[] {
 
 export interface RunGroup {
   runId: string
-  kind: 'triage' | 'investigation' | 'drafting' | 'portfolio'
+  kind: 'triage' | 'investigation' | 'drafting'
   events: LedgerEvent[]
 }
 
@@ -86,7 +86,6 @@ type Item =
 function kindFromRunId(runId: string): RunGroup['kind'] {
   if (runId.startsWith('inv')) return 'investigation'
   if (runId.startsWith('dra')) return 'drafting'
-  if (runId.startsWith('por')) return 'portfolio'
   return 'triage'
 }
 
@@ -175,6 +174,34 @@ function Thinking({ text, working, startedAt, endedAt, label = 'Thinking' }: {
 function ToolReasoning({ tool }: { tool: ToolCallEvent }) {
   const text = typeof tool.args.reasoning === 'string' ? tool.args.reasoning : ''
   return <Thinking text={text} working={tool.status !== 'complete'} startedAt={tool.at} endedAt={tool.endedAt} />
+}
+
+/** One correlation the synthesizer drew, collapsed to a single line.
+ *
+ * Sixteen of these opened at once was a wall of prose nobody read: the step
+ * they live in is already a disclosure, and opening it should hand back a
+ * scannable list, not a document. The relationship and the finding count carry
+ * the shape of the link; the paragraph behind it is there when it is wanted. */
+function CorrelationLink({ relationship, explanation, findingIds }: {
+  relationship: string; explanation: string; findingIds: string[]
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="rounded-lg border">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-2 px-3 py-2 text-left">
+        <ChevronRight className={cn('size-3.5 shrink-0 text-muted-foreground transition-transform', open && 'rotate-90')} />
+        <span className="shrink-0 rounded-full bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium uppercase text-indigo-700 dark:text-indigo-400">{relationship}</span>
+        {!open && <span className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground">{explanation}</span>}
+        <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground">{findingIds.length} finding{findingIds.length === 1 ? '' : 's'}</span>
+      </button>
+      {open && (
+        <div className="border-t px-3 py-2.5">
+          <p className="text-[13px] leading-6">{explanation}</p>
+          <p className="mt-1 font-mono text-[10px] text-muted-foreground">{findingIds.join(' · ')}</p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 type StepStatus = 'queued' | 'working' | 'done' | 'failed' | 'flagged'
@@ -320,6 +347,10 @@ function SpecialistStep({ agent, group, running, live, progress, facts, factsLoa
     .filter((a) => !claimed.has(a.assessment_id))
     .sort((x, y) => ['breach', 'concern', 'inconclusive', 'explained', 'clear'].indexOf(x.verdict)
       - ['breach', 'concern', 'inconclusive', 'explained', 'clear'].indexOf(y.verdict))
+  // The specialist's own line for the officer, written over its assessments
+  // only. A later round re-narrates with the fuller picture, so take the last.
+  const narration = own.filter((e) => e.event_type === 'specialist_narrated')
+    .map((e) => String(pay(e).narration)).at(-1)
   const observations = own.filter((e) => e.event_type === 'observation_recorded').map(pay)
   const postures = own.filter((e) => e.event_type === 'control_posture_recorded').map(pay)
   const failure = own.find((e) => e.event_type === 'specialist_failed')
@@ -358,7 +389,6 @@ function SpecialistStep({ agent, group, running, live, progress, facts, factsLoa
   const failures = failureSummary(occurrences)
   const summary = [failures, specialistSummary(counts, assessments, status === 'flagged' ? 'done' : status,
     { verdictCounts: !failures })].filter(Boolean).join(' · ')
-  const context = dispatch ? (pay(dispatch).context_blocks as Record<string, unknown> | undefined) : undefined
   const instruction = dispatch ? (pay(dispatch).instruction as string) : ''
 
   return (
@@ -371,6 +401,14 @@ function SpecialistStep({ agent, group, running, live, progress, facts, factsLoa
           reasoning has nowhere else to go. */}
       {status === 'working' && (
         <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground"><Loader2 className="size-3 animate-spin" />Rules checked; reasoning over the evidence.</p>
+      )}
+      {/* First: what a supervisor should be worried about, in two or three
+          sentences, before the evidence that establishes it. Grounded in this
+          specialist's assessments — it cannot carry a claim they do not make. */}
+      {narration && (
+        <p className="rounded-lg border-l-2 border-brand-blue/50 bg-muted/40 px-3 py-2.5 text-[13px] leading-6">
+          {narration}
+        </p>
       )}
       {failure && <p className="rounded-lg border border-red-500/30 bg-red-500/[0.04] px-3 py-2 text-[13px] text-red-700 dark:text-red-400">{String(pay(failure).message)} The judged rules are recorded as inconclusive, not as clear.</p>}
       {occurrences.length > 0 && (
@@ -418,12 +456,15 @@ function SpecialistStep({ agent, group, running, live, progress, facts, factsLoa
           {observations.map((o, i) => <p key={i} className="rounded-lg border border-dashed px-3 py-2 text-[13px] leading-6">{o.note}<span className="block text-[11px] italic text-muted-foreground">{o.cited_evidence}</span></p>)}
         </div>
       )}
-      {context && (
-        <Section title="What it was given">
-          {instruction && <p className="mb-2 text-[13px] italic leading-6">Briefing from the orchestrator: “{instruction}”</p>}
-          <p className="text-[13px] leading-6 text-muted-foreground">Evidence: {Object.keys(context).filter((k) => k !== 'dossier_id').map((k) => k.replaceAll('_', ' ')).join(' · ')}</p>
-          {context.supplementary_context ? <p className="mt-1 text-[12px] text-muted-foreground">Plus record items the orchestrator attached verbatim.</p> : null}
-        </Section>
+      {/* "What it was given" lived here — a list of evidence block names. The
+          exact context is still recorded on dispatch_recorded and readable in
+          the timeline, which is where an auditor looks; inside a turn it sat
+          between the reader and the findings. The orchestrator's briefing
+          stays, because it is an instruction someone gave, not a manifest. */}
+      {instruction && (
+        <p className="text-[13px] italic leading-6 text-muted-foreground">
+          Briefing from the orchestrator: &ldquo;{instruction}&rdquo;
+        </p>
       )}
       {/* The full rule-by-rule dump used to live here. The counts are still in
           the step's summary line, and every rule result stays on the ledger and
@@ -438,11 +479,11 @@ function SpecialistStep({ agent, group, running, live, progress, facts, factsLoa
 // One run = one assistant turn
 // ---------------------------------------------------------------------------
 
-function RunTurn({ group, running, live, liveReply, progress, facts, officer, focusedStep, onOpenRun, onDecision, onDraft, gate, gateRisk, findingsCount, onDecide }: {
+function RunTurn({ group, running, live, liveReply, progress, facts, officer, focusedStep, onOpenRun, onDecision, gate }: {
   group: RunGroup; running: boolean; live: FeedEvent[]; liveReply?: string | null; progress: Record<string, SpecialistProgress>
   facts: Map<string, Fact>; officer: string; focusedStep: string | null
-  onOpenRun: (run: string) => void; onDecision: () => void; onDraft: () => void
-  gate: { context: GateContext } | null; gateRisk: RiskScore | null; findingsCount: number; onDecide: (d: GateSubmission) => void
+  onOpenRun: (run: string) => void; onDecision: () => void
+  gate: { context: GateContext } | null
 }) {
   const ev = group.events
   const find = (type: string) => ev.find((e) => e.event_type === type)
@@ -462,12 +503,16 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
 
   const userText = question ? String(pay(question).question)
     : group.kind === 'triage' ? (sp.directive ? `Look again — ${sp.directive.instructions}` : sp.deterministic_only ? 'Run the review with the rules only, no model judgement' : String(sp.request || 'Run the full review'))
-    : group.kind === 'drafting' ? 'Draft the supervisory report'
-    : group.kind === 'portfolio' ? 'Sweep the portfolio' : null
+    : group.kind === 'drafting' ? 'Draft the supervisory report' : null
   const by = question ? question.actor.replace('human:', '') : officer
 
-  const orchestratorThinking = live.filter((e): e is ReasoningEvent => e.kind === 'reasoning' && ORCHESTRATOR_STEPS.has(e.node)).filter(spoken)
-  const orchestratorTools = live.filter((e): e is ToolCallEvent => e.kind === 'tool' && ORCHESTRATOR_STEPS.has(e.node))
+  // The orchestrator speaks twice in a turn from two different nodes: it
+  // routes at `orchestrate` and closes at `record`. Keep the second one out
+  // of the routing step — it belongs to the closing brief at the bottom.
+  const orchestratorThinking = live.filter((e): e is ReasoningEvent => e.kind === 'reasoning' && ORCHESTRATOR_STEPS.has(e.node) && e.node !== 'record').filter(spoken)
+  const orchestratorTools = live.filter((e): e is ToolCallEvent => e.kind === 'tool' && ORCHESTRATOR_STEPS.has(e.node) && e.node !== 'record')
+  const closingThinking = live.filter((e): e is ReasoningEvent => e.kind === 'reasoning' && e.node === 'record').filter(spoken)
+  const closingTools = live.filter((e): e is ToolCallEvent => e.kind === 'tool' && e.node === 'record')
   const synthTools = live.filter((e): e is ToolCallEvent => e.kind === 'tool' && e.node === 'synthesizer')
   const draftTools = live.filter((e): e is ToolCallEvent => e.kind === 'tool' && e.node === 'draft_report')
   const synthThinking = live.filter((e): e is ReasoningEvent => e.kind === 'reasoning' && e.node === 'synthesizer').filter(spoken)
@@ -479,6 +524,7 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
   const escalations = all('escalation_round_started')
   const critic = all('critic_checked')
   const correlations = all('correlation_recorded')
+  const closing = all('orchestrator_summarised').at(-1)
   const investigation = find('investigation_completed')
   const investigatorDispatched = dispatched.includes('investigator') || liveWorkers.includes('investigator')
   const reports = all('report_drafted')
@@ -487,7 +533,6 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
   const decisions = all('decision_recorded')
   const score = all('score_computed').at(-1)
   const recommendation = all('authorisation_computed').at(-1)
-  const portfolioFindings = all('portfolio_finding_recorded')
   const took = started && completed ? durationLabel(new Date(completed.recorded_at).getTime() - new Date(started.recorded_at).getTime()) : null
 
   const plan: P = planned ? (pay(planned).plan ?? {}) : {}
@@ -525,7 +570,7 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
             {running && <span className="ml-1 inline-flex items-center gap-1 text-amber-700 dark:text-amber-400"><span className="size-1.5 animate-pulse rounded-full bg-amber-500" />live</span>}
           </div>
 
-          {group.kind !== 'drafting' && group.kind !== 'portfolio' && (
+          {group.kind !== 'drafting' && (
             <Step icon={Waypoints} tone={{ bg: 'bg-primary/10', text: 'text-primary' }} title="Orchestrator" summary={orchestratorSummary} status={orchestratorStatus}>
               {orchestratorThinking.map((r) => <Thinking key={r.key} text={r.text} working={!r.done} startedAt={r.at} endedAt={r.endedAt} />)}
               {orchestratorTools.map((t) => <ToolReasoning key={t.key} tool={t} />)}
@@ -600,18 +645,32 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
             </Step>
           )}
 
+          {/* Reasoning is deliberately NOT rendered here. The synthesizer records
+              none — every open pass showed "No reasoning was recorded for this
+              step", a disclosure control that only ever disclosed its own
+              emptiness. Its live activity still opens the step (the condition
+              below), so "Working · Connecting the findings" is unaffected. */}
           {(correlations.length > 0 || synthThinking.length > 0 || synthTools.length > 0) && (
             <Step icon={GitMerge} tone={AGENT_ICON.indigo} title="Synthesizer" summary={correlations.length ? `Connected the findings · ${correlations.length} ${correlations.length === 1 ? 'link' : 'links'}` : 'Connecting the findings'} status={correlations.length ? 'done' : running ? 'working' : 'done'}>
-              {synthThinking.map((r) => <Thinking key={r.key} text={r.text} working={!r.done} startedAt={r.at} endedAt={r.endedAt} />)}
-              {synthTools.map((t) => <ToolReasoning key={t.key} tool={t} />)}
               {correlations.map((c) => (
-                <div key={c.seq} className="rounded-lg border px-3 py-2.5 text-[13px]">
-                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium uppercase text-indigo-700 dark:text-indigo-400">{String(pay(c).relationship).replace('_', ' ')}</span>
-                  <p className="mt-1.5 leading-6">{pay(c).explanation}</p>
-                  <p className="mt-1 font-mono text-[10px] text-muted-foreground">{(pay(c).finding_ids as string[]).join(' · ')}</p>
-                </div>
+                <CorrelationLink
+                  key={c.seq}
+                  relationship={String(pay(c).relationship).replaceAll('_', ' ')}
+                  explanation={String(pay(c).explanation)}
+                  findingIds={(pay(c).finding_ids ?? []) as string[]}
+                />
               ))}
             </Step>
+          )}
+
+          {(closing || closingThinking.length > 0 || closingTools.length > 0) && (
+            <div className="rounded-xl border border-primary/20 bg-primary/[0.03] px-4 py-3">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary">Orchestrator</p>
+              {!closing && closingThinking.map((r) => <Thinking key={r.key} text={r.text} working={!r.done} startedAt={r.at} endedAt={r.endedAt} />)}
+              {closing
+                ? <Prose><p>{String(pay(closing).message)}</p></Prose>
+                : <p className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Reading back what came in</p>}
+            </div>
           )}
 
           {reports.map((r, i) => (
@@ -625,16 +684,12 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
                   {(pay(r).sections ?? []).length} section{((pay(r).sections ?? []).length) === 1 ? '' : 's'}, each citing the findings it rests on. The full report is on the Findings tab.
                 </p>
                 {i === reports.length - 1 && (
-                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
+                  <div className="mt-3 border-t pt-3">
                     <p className="text-[13px] text-muted-foreground">
-                      {decisions.length ? 'A named decision is on the record.' : 'A report cannot issue without a named supervisory decision.'}
+                      {decisions.length
+                        ? 'A named decision is on the record.'
+                        : 'Read the draft on the Findings tab, then sign it on the Decision tab: a report cannot issue until a named supervisor records the decision it rests on.'}
                     </p>
-                    {!decisions.length && (
-                      <Button size="sm" className="ml-auto" onClick={onDecision}>
-                        <ScrollText data-icon="inline-start" />
-                        Sign the decision
-                      </Button>
-                    )}
                   </div>
                 )}
               </div>
@@ -655,68 +710,76 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
             </p>
           ))}
 
-          {portfolioFindings.map((f) => (
-            <div key={f.seq} className="rounded-lg border px-3 py-2.5 text-[13px]"><span className="font-semibold">{pay(f).failure}</span> · {pay(f).summary}<p className="mt-1 text-[11px] text-muted-foreground">{(pay(f).subject_refs ?? []).join(' · ')}</p></div>
-          ))}
-
           {(score || recommendation) && (
-            <Outcome score={score ? (pay(score) as unknown as RiskScore) : null} rec={recommendation ? pay(recommendation) : null} kind={group.kind} onDecision={onDecision} onDraft={onDraft} onOpenRun={onOpenRun} />
+            <Outcome score={score ? (pay(score) as unknown as RiskScore) : null} rec={recommendation ? pay(recommendation) : null} kind={group.kind} drafted={reports.length > 0} />
           )}
 
           {running && !ev.length && !live.length && (
             <p className="flex items-center gap-2 text-[13px] text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Starting…</p>
           )}
 
-          {gate && group.kind === 'drafting' && !completed && (
-            <ReviewGate key={gate.context.error ?? 'gate'} context={gate.context} onDecide={onDecide} risk={gateRisk} findingsCount={findingsCount} defaultReviewer={officer !== 'Case officer' ? officer : undefined} />
-          )}
+          {gate && group.kind === 'drafting' && !completed && <GateNotice onDecision={onDecision} />}
         </div>
       </div>
     </div>
   )
 }
 
-/** The turn's answer: what the review concluded, in sentences a supervisor
- * can act on, with the two things they can do next. */
-function Outcome({ score, rec, kind, onDecision, onDraft, onOpenRun }: {
-  score: RiskScore | null; rec: P | null; kind: RunGroup['kind']; onDecision: () => void; onDraft: () => void; onOpenRun: (run: string) => void
-}) {
-  const gates: P[] = rec?.hard_gates ?? []
-  const adequacy: P[] = rec?.adequacy ?? []
-  const breachRuns = (rec?.runs ?? []).filter((r: P) => r.verdict === 'breach').length
+/** The gate itself is NOT here. A paused pipeline is a state the room has to
+ * announce, but the sign-off — reviewer name, approve/reject, send-back with
+ * instructions — is one act with one home, the Decision tab. The room says
+ * what is waiting and hands the officer over; it does not offer a second copy
+ * of the form. */
+function GateNotice({ onDecision }: { onDecision: () => void }) {
   return (
-    <div className="space-y-3">
-      <Prose>
-        <p>
-          <strong>{kind === 'investigation' ? 'Record updated.' : 'Review complete.'}</strong>{' '}
-          {rec && <>{rec.factors?.length ?? 0} adverse {rec.factors?.length === 1 ? 'verdict' : 'verdicts'} across {breachRuns} {breachRuns === 1 ? 'run' : 'runs'}; {rec.clean_runs} of {rec.runs?.length ?? 0} runs are clean and {rec.rules_exercised} of {rec.active_rules} active rules produced a determinate result.</>}
-        </p>
-        {rec && (
-          <p>
-            Recommendation: <strong>{DISPOSITION_LABEL[rec.disposition as keyof typeof DISPOSITION_LABEL] ?? rec.disposition}</strong>
-            {gates.length > 0 && <> — {gates.map((g) => g.reason).join('; ')}</>}.
-            {gates.length > 0 && <span className="ml-1 inline-flex flex-wrap gap-x-2">{gates.flatMap((g) => g.run_refs ?? []).map((r: string) => <RunCitation key={r} run={r} onOpenRun={onOpenRun} />)}</span>}
-          </p>
-        )}
-        {adequacy.length > 0 && (
-          <div>
-            <p className="text-[14px] font-medium">Still needed before authorisation</p>
-            <ul className="ml-5 list-disc text-[14px] leading-6 text-foreground/90">{adequacy.map((a, i) => <li key={i}>{a.reason}</li>)}</ul>
-          </div>
-        )}
-      </Prose>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-3 ring-1 ring-primary/10">
+      <UserRoundCheck className="size-4 shrink-0 text-primary" />
+      <div className="min-w-[14rem] flex-1">
+        <p className="text-sm font-semibold">Reviewer decision required</p>
+        <p className="text-[13px] text-muted-foreground">The pipeline is paused — nothing issues without a named sign-off.</p>
+      </div>
+      <Button size="sm" onClick={onDecision}>
+        <ScrollText data-icon="inline-start" />
+        Go to the decision
+      </Button>
+    </div>
+  )
+}
+
+/** Where the turn leaves the officer: the numbers the orchestrator's brief
+ * does NOT state, and the choice of what to do next.
+ *
+ * The prose that used to live here — the verdict counts, the recommendation,
+ * the outstanding-evidence list — is now the orchestrator's closing brief a
+ * few lines above, said once in its own voice instead of twice in two
+ * registers. What stays is what the brief does not say: the score, the policy
+ * that produced it, and the two ways forward. No decision is offered here;
+ * a decision follows a report, and the report has not been drafted yet. */
+function Outcome({ score, rec, kind, drafted }: {
+  score: RiskScore | null; rec: P | null; kind: RunGroup['kind']; drafted: boolean
+}) {
+  // Both ways forward stay open after a review AND after a follow-up: the
+  // officer either asks another question below or draws the report.
+  const canDraft = kind !== 'drafting' && !drafted
+  return (
+    <div className="space-y-2.5">
       <div className="flex flex-wrap items-center gap-2">
         {score && (
           <span className={cn('inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[12px] font-medium', TIER_TONE[score.tier])}>
             Risk score {score.total.toFixed(2)} · {score.tier_label}
           </span>
         )}
-        {rec && <span className="text-[12px] text-muted-foreground">Policy {rec.policy_version}</span>}
-        <span className="ml-auto flex gap-2">
-          {kind !== 'investigation' && <Button size="sm" variant="outline" onClick={onDraft}><FileText data-icon="inline-start" />Draft report</Button>}
-          <Button size="sm" onClick={onDecision}><BadgeCheck data-icon="inline-start" />Open the decision</Button>
-        </span>
+        {rec && (
+          <span className="text-[12px] text-muted-foreground">
+            {DISPOSITION_LABEL[rec.disposition as keyof typeof DISPOSITION_LABEL] ?? rec.disposition} · policy {rec.policy_version}
+          </span>
+        )}
       </div>
+      {canDraft && (
+        <p className="text-[13px] text-muted-foreground">
+          Ask a follow-up below to take this further, or use <span className="font-medium text-foreground">Draft report</span> in the composer when you have seen enough — the report is what a signed decision rests on.
+        </p>
+      )}
     </div>
   )
 }
@@ -739,13 +802,10 @@ export interface CaseChatProps {
   pendingQuestion: string | null
   pendingReply: string | null
   gate: { context: GateContext } | null
-  gateRisk: RiskScore | null
-  findingsCount: number
   officer: string
   focusedStep: string | null
   onOpenRun: (run: string) => void
   onDecision: () => void
-  onDecide: (d: GateSubmission) => void
   onSend: (text: string) => void
   onRun: () => void
   onDraft: () => void
@@ -758,8 +818,8 @@ export interface CaseChatProps {
 const LIVE_KIND: Record<NonNullable<CaseChatProps['running']>, RunGroup['kind']> = { triage: 'triage', session: 'investigation', drafting: 'drafting' }
 
 export function CaseChat({
-  events, factsSource, hiddenCount, onShowEarlier, live, running, progress, pendingQuestion, pendingReply, gate, gateRisk, findingsCount,
-  officer, focusedStep, onOpenRun, onDecision, onDecide, onSend, onRun, onDraft, onCloseCase, busy, hasTriage, closable,
+  events, factsSource, hiddenCount, onShowEarlier, live, running, progress, pendingQuestion, pendingReply, gate,
+  officer, focusedStep, onOpenRun, onDecision, onSend, onRun, onDraft, onCloseCase, busy, hasTriage, closable,
 }: CaseChatProps) {
   const [draft, setDraft] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -801,7 +861,7 @@ export function CaseChat({
     onSend(text)
   }
 
-  const turnProps = { progress, facts, officer, focusedStep, onOpenRun, onDecision, onDraft, gate, gateRisk, findingsCount, onDecide }
+  const turnProps = { progress, facts, officer, focusedStep, onOpenRun, onDecision, gate }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -840,9 +900,7 @@ export function CaseChat({
             </>
           )}
           {gate && !runs.some((r) => r.group.kind === 'drafting' && !r.group.events.some((e) => e.event_type === 'run_completed')) && (
-            <div className="pl-10">
-              <ReviewGate key={gate.context.error ?? 'gate'} context={gate.context} onDecide={onDecide} risk={gateRisk} findingsCount={findingsCount} defaultReviewer={officer !== 'Case officer' ? officer : undefined} />
-            </div>
+            <div className="pl-10"><GateNotice onDecision={onDecision} /></div>
           )}
           <div ref={bottomRef} />
         </div>

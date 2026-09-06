@@ -18,7 +18,12 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 RuleStatus = Literal["active", "draft", "retired"]
-FailureRef = Annotated[str, StringConstraints(pattern=r"^[FS]\d{1,2}$")]
+# A rule's declared failure ids. `\d{1,3}` rather than a hard range: this is a
+# REFERENCE, and the catalogue is what says whether the id exists — duplicating
+# the range here bought nothing and broke on the first three-digit id. The
+# authoritative check is schemas/failure.py plus the loader's contiguity guard.
+# `S` covers submission-level labels, which are not catalogue failures.
+FailureRef = Annotated[str, StringConstraints(pattern=r"^[FS]\d{1,3}$")]
 
 # Rule `type` is the key a checker function is registered under. It was a
 # closed Literal through v2026.1, which worked at 33 rules in two domains and
@@ -142,6 +147,49 @@ class DriftBaselineParams(BaseModel):
     min_total_transactions: int = 30
 
 
+class BaselineStabilityParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # How far the two halves of the baseline may differ in average transaction
+    # size, in standard deviations, before the baseline cannot be treated as a
+    # baseline. Methodological, not supervisory: it decides whether the
+    # evidence can carry a drift question, never whether the agent misbehaved.
+    #
+    # Decided on the amount z-score alone. Mix PSI is recorded beside it and
+    # must not be dialled here — on a consumer shopping agent, whose merchants
+    # differ almost every run, baseline-half PSI measured 10.3 and 11.7 across
+    # the corpus with nothing wrong in either case.
+    max_baseline_z: float = 2.0
+
+
+class SharedPayeeParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # Narrow-and-deep rather than broad-and-shallow: the share one payee must
+    # hold at EACH operator before shared custom reads as concentration.
+    min_share: float = 15.0
+    min_operators: int = 2
+    # An incumbent that grew into a large share over years looks nothing like
+    # one that arrived last month.
+    recent_days: int = 90
+
+
+class ModelMonocultureParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    max_share: float = 60.0
+
+
+class BehaviouralCorrelationParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # Asserted, not proven — see the rule's notes. The corpus runs -0.22..+0.51.
+    max_correlation: float = 0.7
+    # A correlation over a fortnight is arithmetic, not evidence.
+    min_overlap_days: int = 30
+
+
+class SharedPayloadParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    min_operators: int = 2
+
+
 class MandateRiskCoverageParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     # The risks a mandate of this shape creates. CTL-REP-02 asks whether the
@@ -205,6 +253,11 @@ _PARAM_MODEL_BY_TYPE: dict[str, type[BaseModel]] = {
     "new_payee_concentration": ConcentrationParams,
     "payee_not_on_a_barring_list": BarringFlagsParams,
     "behavioral_drift_detected": DriftBaselineParams,
+    "shared_payee_concentration": SharedPayeeParams,
+    "model_monoculture": ModelMonocultureParams,
+    "behavioural_correlation": BehaviouralCorrelationParams,
+    "shared_attack_payload": SharedPayloadParams,
+    "baseline_window_is_stable": BaselineStabilityParams,
 }
 
 

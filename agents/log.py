@@ -21,14 +21,15 @@ from __future__ import annotations
 from schemas import Assessment, EvidencePack, Fact, FactBuilder, Observation, Ruleset
 from schemas.dossier import LoadedDossier
 
-from .base import SpecialistReview
+from .base import SpecialistReview, narrated
 from .log_reasoning import analyze_log, structured_view
 from .prompts import effective_text
 
 LogReview = SpecialistReview
 
 _RULE_TYPES = ("transaction_structuring_detected", "counterparty_concentration_anomaly",
-               "transaction_velocity_anomaly")
+               "transaction_velocity_anomaly", "round_number_pattern",
+               "probing_the_authorisation_ceiling")
 
 
 def _rules(ruleset: Ruleset | None) -> dict:
@@ -37,13 +38,27 @@ def _rules(ruleset: Ruleset | None) -> dict:
     return {r.type: r for r in ruleset.rules if r.status == "active" and r.type in _RULE_TYPES}
 
 
+def _draft_facts(fb, ruleset) -> list[Fact]:
+    """A draft rule in this book still says so. Log does not run its ruleset
+    through `evaluate_ruleset`, so without this a drafted rule would be
+    invisible rather than merely inactive — and silence reads as clean."""
+    if ruleset is None:
+        return []
+    return [fb.absent(r, "rule_draft",
+                      f"{r.rule_id} is draft in {ruleset.ruleset_id} v{ruleset.version} and was "
+                      f"not evaluated" + (f": {r.notes}" if r.notes else "."),
+                      values={"status": r.status, "evaluation": r.evaluation})
+            for r in ruleset.rules if r.status == "draft"]
+
+
 class LogAgent:
     name = "log"
 
     def run(self, dossier: LoadedDossier, ruleset: Ruleset | None, *,
             evidence: EvidencePack | None = None) -> list[Fact]:
         rules = _rules(ruleset)
-        if len(rules) < 3:
+        if len({"transaction_structuring_detected", "counterparty_concentration_anomaly",
+                "transaction_velocity_anomaly"} & set(rules)) < 3:
             return []
         fb = FactBuilder(dossier.dossier.dossier_id, self.name)
         n = len(dossier.transaction_history)
@@ -52,7 +67,7 @@ class LogAgent:
                               f"{r.rule_id} judges the transaction pattern; no transaction history "
                               f"was submitted.", missing="transaction_history",
                               values={"transactions": 0})
-                    for r in rules.values()]
+                    for r in rules.values()] + _draft_facts(fb, ruleset)
         view = structured_view(dossier, rules["transaction_structuring_detected"],
                                rules["counterparty_concentration_anomaly"])
         npc = view["latest_month_concentration"]
@@ -91,7 +106,39 @@ class LogAgent:
                            values=view["amount_stats"]),
             fb.measurement("hourly_distribution", "Transactions by hour of day.",
                            values=view["hourly_distribution"]),
-        ]
+        ] + self._extra_measurements(fb, rules, dossier, view) + _draft_facts(fb, ruleset)
+
+    def _extra_measurements(self, fb, rules, dossier, view) -> list[Fact]:
+        """Evidence for the judged rules added after the original three. Each
+        is recorded only when its rule is in force, so retiring one in the
+        sandbox stops both the measurement and the question."""
+        from .log_stats import cap_utilisation, roundness, to_dataframe
+
+        out: list[Fact] = []
+        df = to_dataframe(dossier.transaction_history)
+        rnd = rules.get("round_number_pattern")
+        if rnd is not None:
+            stats = roundness(df)
+            out.append(fb.measurement(
+                "roundness",
+                f"{stats['multiples_of_100']} of {stats['transactions']} payments are multiples of "
+                f"100 ({stats['rate_multiples_of_100']:.1%}); {stats['whole_currency_units']} are "
+                f"whole currency units.",
+                rule=rnd, values=stats))
+        lim = rules.get("probing_the_authorisation_ceiling")
+        if lim is not None:
+            caps = {t.transaction_id: cap for t in dossier.transaction_history
+                    for cap in [next((r.intent_mandate.authorization_scope.max_transaction_amount
+                                      for r in dossier.runs if r.run_id == t.run_ref), None)] if cap}
+            stats = cap_utilisation(df.set_index("transaction_id"), caps)
+            out.append(fb.measurement(
+                "cap_utilisation",
+                (f"Median draw {stats['median_utilisation']} of the authorised cap across "
+                 f"{stats['transactions_with_a_cap']} payment(s); "
+                 f"{stats['distribution']['at_or_over_99pct']} at or over 99%."
+                 ) if stats["evaluable"] else stats["reason"],
+                rule=lim, values=stats))
+        return out
 
     def assess(self, facts: list[Fact], ruleset: Ruleset | None,
                dossier: LoadedDossier, *, round: int = 1) -> list[Assessment]:
@@ -113,6 +160,7 @@ class LogAgent:
         prompts: dict[str, dict] | None = None,
         context: dict | None = None,
         round: int = 1,
+        narrate: bool = True,
     ) -> SpecialistReview:
         rules = _rules(ruleset)
         if len(rules) < 3:
@@ -120,6 +168,8 @@ class LogAgent:
         facts = self.run(dossier, ruleset, evidence=evidence)
         assessments = self.assess(facts, ruleset, dossier, round=round)
         if not dossier.transaction_history:
+            # No history: the data-gap assessment says so plainly, and a call
+            # to paraphrase it would buy nothing. This node stays model-free.
             return SpecialistReview(facts=facts, assessments=assessments)
 
         judged, observations = await analyze_log(
@@ -132,6 +182,9 @@ class LogAgent:
             reviewer_directive=reviewer_directive,
             system_prompt=effective_text(prompts, "SPECIALIST-LOG") if prompts else None,
             context=context, round=round,
+            extra_rules=[rules[t] for t in ("round_number_pattern",
+                                            "probing_the_authorisation_ceiling") if t in rules],
         )
-        return SpecialistReview(facts=facts, assessments=assessments + judged,
-                                observations=observations)
+        return await narrated(SpecialistReview(facts=facts, assessments=assessments + judged,
+                                observations=observations), self.name, dossier,
+                              model=model, prompts=prompts, narrate=narrate)

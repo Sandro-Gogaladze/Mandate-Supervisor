@@ -74,6 +74,26 @@ def scoped(dossier: LoadedDossier, run_scope: list[str] | None) -> LoadedDossier
     })
 
 
+async def narrated(review: SpecialistReview, agent: str, dossier: LoadedDossier, *,
+                   model=None, prompts: dict | None = None, narrate: bool = True) -> SpecialistReview:
+    """The second call every specialist ends on: the briefing line an officer
+    reads first, over this specialist's own assessments and nothing else.
+
+    Skipped when there is nothing to narrate — a specialist that could not run
+    should say nothing rather than produce prose about an empty list.
+    """
+    if not narrate or not review.assessments:
+        return review
+    from .narration import narrate as _narrate
+    from .prompts import effective_text
+
+    review.narration = await _narrate(
+        agent, dossier.dossier.dossier_id, review.assessments,
+        observations=review.observations, model=model,
+        system_prompt=effective_text(prompts, "SPECIALIST-NARRATION") if prompts else None)
+    return review
+
+
 def floor(facts: list[Fact], ruleset: Ruleset, dossier: LoadedDossier, *, agent: str,
           round: int = 1) -> list[Assessment]:
     """The mechanical assessments every specialist starts from."""

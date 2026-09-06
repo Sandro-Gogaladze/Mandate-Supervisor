@@ -44,6 +44,7 @@ class FakeChatModel:
             "last_bind_kwargs": None,
             "last_messages": None,
             "messages_by_tool": {},
+            "bind_by_tool": {},
         }
         self._bound_tool_name: str | None = None
 
@@ -54,6 +55,15 @@ class FakeChatModel:
     @property
     def last_messages(self) -> list | None:
         return self._state["last_messages"]
+
+    def bind_kwargs_for(self, tool_name: str) -> dict | None:
+        """The bind arguments of the most recent call that bound `tool_name`.
+
+        `last_bind_kwargs` is the last bind of the whole run, which since every
+        specialist ends on a narration call is almost never the one a test
+        means. This asks for the specific tool — needed to assert that a tool's
+        schema grew or shrank with the ruleset it was built from."""
+        return self._state["bind_by_tool"].get(tool_name)
 
     def last_messages_for(self, tool_name: str) -> list | None:
         """The messages sent on the most recent call that bound `tool_name` —
@@ -67,6 +77,8 @@ class FakeChatModel:
         bound = FakeChatModel(self.responses, self.call_log, self._state)
         tools = kwargs.get("tools") or []
         bound._bound_tool_name = tools[0]["name"] if tools else None
+        if bound._bound_tool_name:
+            self._state["bind_by_tool"][bound._bound_tool_name] = kwargs
         return bound
 
     async def ainvoke(self, messages) -> FakeAIMessage:
@@ -102,14 +114,25 @@ CLEAN_DRIFT = {**CLEAN_VERDICT, "onset_event_ref": None}
 
 def grounded_draft(messages) -> dict:
     """Payload-aware fake draftsman: cites exactly the finding_ids the case
-    actually produced, so grounding passes first try."""
+    actually produced, declares the character its cited verdicts add up to,
+    and restates the computed score — so grounding passes first try. Derived
+    from the payload rather than hardcoded, so it stays a fake of a COMPLIANT
+    model instead of a fixture that would sail past a rule it never met."""
     payload = _json.loads(message_text(messages[-1]))
-    ids = [f["finding_id"] for f in payload["findings"]]
+    findings = payload["findings"]
+    ids = [f["finding_id"] for f in findings]
+    breaches = sum(1 for f in findings if f.get("verdict") == "breach")
+    character = ("mixed" if breaches and breaches < len(findings)
+                 else "adverse" if breaches else "clear")
     sections = (
-        [{"title": "Findings", "body": "See cited findings.", "cited_finding_ids": ids}] if ids else []
+        [{"title": "Findings", "body": "See cited findings.", "cited_finding_ids": ids,
+          "character": character}] if ids else []
     )
     note = "Unverified items for officer review." if payload["unverified_observations"] else None
-    return {"overall_assessment": "Review complete.", "sections": sections, "open_observations_note": note}
+    risk = payload.get("risk")
+    assessment = (f"Risk score {risk['total']} — tier {risk['tier_label']}. Review complete."
+                  if risk else "Review complete.")
+    return {"overall_assessment": assessment, "sections": sections, "open_observations_note": note}
 
 
 def all_consistent(messages) -> dict:
@@ -136,6 +159,19 @@ def route_default(messages) -> dict:
             "message_to_officer": "Nothing to add beyond what is on the record.", "dispatches": []}
 
 
+def closing_brief(messages) -> dict:
+    """Payload-aware fake orchestrator close-out: counts straight from the
+    recommendation it was handed, so a test can assert the brief describes the
+    same arithmetic the authorisation policy computed."""
+    payload = _json.loads(message_text(messages[-1]))
+    counts = payload["counts"]
+    return {"reasoning": "Reporting what came back.",
+            "message_to_officer": f"{counts['adverse_verdicts']} adverse verdicts across "
+                                  f"{counts['runs_with_a_breach']} of {counts['runs_filed']} executions; "
+                                  f"the policy reached {payload['disposition']}. Open the findings list.",
+            "main_risks": [g["rule_id"] for g in payload["hard_gates"]][:3]}
+
+
 def nothing_acted(messages) -> dict:
     """Payload-aware fake Injection: the agent ignored every flagged item."""
     payload = _json.loads(message_text(messages[-1]))
@@ -148,11 +184,21 @@ def nothing_acted(messages) -> dict:
 
 DEFAULT_GRAPH_RESPONSES = {
     "route_supervisor_request": route_default,
-    "record_observations": {"observations": []},
+    # KYA-REG-03 is in force, so a well-behaved model answers its slot. The
+    # "no verdict arrived" path has its own unit test; a fake that silently
+    # omitted it would turn every graph test into an inconclusive.
+    "record_observations": {"observations": [], "classification_fit": {
+        "consistent": True, "explanation": "Activity fits a consumer shopping agent.",
+        "cited_evidence": "settled_total 12408.55 across 18 counterparties"}},
     "write_narration": {"narration": "Nothing to report."},
     "record_log_analysis": {
         "structuring": CLEAN_VERDICT, "concentration": CLEAN_VERDICT,
-        "velocity": CLEAN_VERDICT, "other_observations": [],
+        "velocity": CLEAN_VERDICT,
+        # The slots the tool grows when LOG-RND-01 and LOG-LIM-01 are in
+        # force. A fake that omitted them would turn every graph test into an
+        # inconclusive; that path has its own unit test.
+        "roundness": CLEAN_VERDICT, "ceiling_probing": CLEAN_VERDICT,
+        "other_observations": [],
     },
     "record_drift_analysis": {"drift": CLEAN_DRIFT, "other_observations": []},
     "record_intent_fidelity": all_consistent,
@@ -164,6 +210,7 @@ DEFAULT_GRAPH_RESPONSES = {
     "record_provenance_reconciliation": {"reconciled": True, "disagreements": [], "explanation": "n/a",
                                          "other_observations": []},
     "record_correlations": {"correlations": []},
+    "record_closing_brief": closing_brief,
     "draft_case_report": grounded_draft,
 }
 

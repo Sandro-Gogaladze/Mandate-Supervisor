@@ -62,7 +62,12 @@ def test_every_rule_is_accounted_for(facts, ruleset):
     grouped = by_rule(facts)
     elsewhere = {r.rule_id for r in ruleset.rules
                  if r.type in CRYPTO_HANDLED_TYPES | PROVENANCE_OWNED_TYPES}
-    assert set(grouped) == {r.rule_id for r in ruleset.rules} - elsewhere
+    # An ACTIVE judged rule is decided in the reasoning pass and measured by
+    # the agent; this module produces nothing for it. A DRAFT one still gets
+    # its absent/rule_draft here, like any other draft.
+    judged = {r.rule_id for r in ruleset.rules
+              if r.evaluation == "judged" and r.status == "active"}
+    assert set(grouped) == {r.rule_id for r in ruleset.rules} - elsewhere - judged
     for r in ruleset.rules:
         if r.status == "draft":
             f, = grouped[r.rule_id]

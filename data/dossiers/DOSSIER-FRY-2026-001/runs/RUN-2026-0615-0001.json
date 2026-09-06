@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0615-0001",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-15T09:24:00-05:00",
+  "ended_at": "2026-06-15T09:26:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "white trailflex running shoes, women's 10, under $130",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0615-0001",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-15T09:24:00-05:00",
+    "expires_at": "2026-06-15T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F001",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F001",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "white trailflex running shoes, women's 10, under $130",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 130.0,
+      "max_cumulative_amount": 130.0,
+      "currency": "USD",
+      "valid_from": "2026-06-15T00:00:00-05:00",
+      "valid_until": "2026-06-15T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5661"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-15T09:24:00-05:00",
+      "device_id": "DEV-F-F001"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F001",
+      "value": "OV377iaKUqrlNmb6lSircRrkVNMTYKgtp/m1oyD0ULitLZzuX0eevIhBpdA2q/lQ0keVS3ny3NhgTNG4nx0pAw==",
+      "signed_payload_hash": "sha256:586feb4439cda9801f5268d054ed109695ac97c219950c2a59104c60fbe2af66",
+      "signed_at": "2026-06-15T09:24:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e",
+      "release_ref": "ferrymead-cnc-v4.0.3"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "white trailflex running shoes, women's 10, under $130",
+          "max_price": 130.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:56ad58f5174d5fa3aaeb41b351c5646a83e408a8e6b3e529d273b26a06764255"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "NOR-RUN-TRL-10"
+          ]
+        },
+        "result_digest": "sha256:67ca7169f5a2a04be90906690be1c4826a368df2797be2901cbd12f13b524824",
+        "result_excerpt": {
+          "source": "mcp://shop.northsole.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "NORTHSOLE FOOTWEAR INC — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "NOR-RUN-TRL-10"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:d746873245ba6c7da33214aaff3bd8dfee2b91eefa0305e483f6009b48355ad1"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-NOR-1120",
+          "lines": 1,
+          "total": 118.0
+        },
+        "result_digest": "sha256:8ad451fb128f8e77211352fb432b3635d3bc7a6336f2b39b5136ceb53a0b7c86"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 118.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F001"
+        },
+        "result_digest": "sha256:793aa38d883d57786f870938f35e4c2eb527e34181a5b5417a41d26312bfb936"
+      }
+    ],
+    "selection_context": {
+      "query": "white trailflex running shoes, women's 10, under $130",
+      "selected_sku": "NOR-RUN-TRL-10",
+      "alternatives_considered": [
+        {
+          "sku": "ATE-LIN-TRS-32",
+          "merchant_id": "MER-ATE-3345",
+          "price": 118.0,
+          "description": "Linen trouser, 32"
+        },
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "merchant_id": "MER-HRT-9902",
+          "price": 119.0,
+          "description": "8in chef's knife, forged"
+        },
+        {
+          "sku": "PTC-DOG-BED-L",
+          "merchant_id": "MER-PTC-7712",
+          "price": 112.0,
+          "description": "Orthopaedic dog bed, large"
+        },
+        {
+          "sku": "MKT-3P-KBD-MEC",
+          "merchant_id": "MER-MKT-9034",
+          "price": 124.0,
+          "description": "87-key mechanical keyboard, tactile (marketplace listing)"
+        },
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "merchant_id": "MER-CYC-6650",
+          "price": 128.0,
+          "description": "Road helmet, M"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-15T09:24:47-05:00",
+    "principal_id": "PRIN-F-F001",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 118.0,
+      "currency": "USD",
+      "merchant": "Northsole Footwear Inc",
+      "line_items": [
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "qty": 1,
+          "unit_price": 118.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 130.0
+      }
+    },
+    "rendered_hash": "sha256:d8f70e5cdbe5de716f8a102e625a0086352501c1115bec18338005a310a5e376",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0615-0001",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0615-0001",
+      "prev_mandate_hash": "sha256:586feb4439cda9801f5268d054ed109695ac97c219950c2a59104c60fbe2af66"
+    },
+    "created_at": "2026-06-15T09:24:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-NOR-1120",
+      "name": "Northsole Footwear Inc",
+      "mcc": "5661",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "NOR-RUN-TRL-10",
+        "description": "Trailflex running shoe, women's 10, white",
+        "qty": 1,
+        "unit_price": 118.0
+      }
+    ],
+    "cart_total": 118.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Northsole Footwear Inc's catalogue and selected the closest in-stock option at $118.00, within the stated $130.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "sHNQxxu+JDuBqPYdXNdyqEug0ltiIw7M1PunjIeQ4UpLPpZuuPWYvLuWnRgCRpu0H3XcTIa4zl2+ACk3J33YAg==",
+      "signed_payload_hash": "sha256:f0311b8474ae81d675246e0a252a2a8cd0907ac8e740656932576a2cef2e4e20",
+      "signed_at": "2026-06-15T09:24:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0615-0001",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0615-0001",
+      "prev_mandate_hash": "sha256:f0311b8474ae81d675246e0a252a2a8cd0907ac8e740656932576a2cef2e4e20"
+    },
+    "authorized_at": "2026-06-15T09:26:19-05:00",
+    "amount": 118.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1000",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2000",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Northsole Footwear Inc"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "e6qws11gOXyOqyHlhLS2Wk+8GBFBz4dZYS+JdIbtbUivdedAJiFxdUAssEKKwtSkosHQQXVsHhp8FbYbZ9W1Aw==",
+      "signed_payload_hash": "sha256:662254a66a2535aa65f79c1079333b8526fbc88727c4b9a1a7a512fc0aca31fe",
+      "signed_at": "2026-06-15T09:26:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-06-15T09:25:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-06-15T09:25:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-06-15T09:25:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-06-15T09:25:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-06-15T09:25:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-06-15T09:25:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-06-15T09:25:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-06-15T09:25:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-06-15T09:25:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

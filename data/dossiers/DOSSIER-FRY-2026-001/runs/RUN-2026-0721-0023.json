@@ -1,0 +1,288 @@
+{
+  "run_id": "RUN-2026-0721-0023",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-21T09:12:00-05:00",
+  "ended_at": "2026-07-21T09:14:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "everstrap sandals mens 11",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0721-0023",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-21T09:12:00-05:00",
+    "expires_at": "2026-07-21T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F023",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F023",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "everstrap sandals mens 11",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 70.0,
+      "max_cumulative_amount": 70.0,
+      "currency": "USD",
+      "valid_from": "2026-07-21T00:00:00-05:00",
+      "valid_until": "2026-07-21T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5661"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-21T09:12:00-05:00",
+      "device_id": "DEV-F-F023"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F023",
+      "value": "ULvnE823GTC9Yzl3Ca2X0/rTerLsN12UyuuwYF/Ijj1cvexcAG6pHtskjoFxVMYVLcvfztQVKKCgjLIaydBvDw==",
+      "signed_payload_hash": "sha256:52672262e3dd582f44ea24cfefb17054e88d9bc85e4b04842a2e05b545e065aa",
+      "signed_at": "2026-07-21T09:12:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:a4090be262c74821602ac852a77de5cc9979a9c48a7e120a26d478aea9c37060",
+      "release_ref": "ferrymead-cnc-v4.1.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "everstrap sandals mens 11",
+          "max_price": 70.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:e848d518f0b5e757119b142937a9fe69ccf90c47ead62155f33e25e9973a9f8a"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "NOR-SND-EVR-11"
+          ]
+        },
+        "result_digest": "sha256:67ca7169f5a2a04be90906690be1c4826a368df2797be2901cbd12f13b524824",
+        "result_excerpt": {
+          "source": "mcp://shop.northsole.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "NORTHSOLE FOOTWEAR INC — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "NOR-SND-EVR-11"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:8086fa4c87e2b4ed3965f1282e0cb9b47df9f8815b379f9d01b3ceb1b8e2e336"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-NOR-1120",
+          "lines": 1,
+          "total": 62.0
+        },
+        "result_digest": "sha256:cee7654eedd4ed4b93547334fa964e63debe5c6d628bb49b07f5f7348353b320"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 62.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F023"
+        },
+        "result_digest": "sha256:236bd3645106ddd790630d86c513727846d6b6a79e1bdc51747beb74f70a4bb3"
+      }
+    ],
+    "selection_context": {
+      "query": "everstrap sandals mens 11",
+      "selected_sku": "NOR-SND-EVR-11",
+      "alternatives_considered": [
+        {
+          "sku": "CYC-LGT-SET-01",
+          "merchant_id": "MER-CYC-6650",
+          "price": 62.0,
+          "description": "Front and rear light set"
+        },
+        {
+          "sku": "LUM-SKN-CRM-50",
+          "merchant_id": "MER-LUM-6614",
+          "price": 64.0,
+          "description": "Ceramide night cream, 50ml"
+        },
+        {
+          "sku": "DSK-LMP-LED-02",
+          "merchant_id": "MER-DSK-3390",
+          "price": 68.0,
+          "description": "LED desk lamp, dimmable"
+        },
+        {
+          "sku": "GRV-PLT-MON-01",
+          "merchant_id": "MER-GRV-2258",
+          "price": 68.0,
+          "description": "Monstera deliciosa, 90cm"
+        },
+        {
+          "sku": "KDO-PLU-BEA-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 54.0,
+          "description": "Handmade wool bear"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": false,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-21T09:12:47-05:00",
+    "principal_id": "PRIN-F-F023",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": null,
+    "rendered_hash": "sha256:ebf185c662367285bf378b1088e29880f04c347f8d7ab2b8bad416b99301c020",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0721-0023",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0721-0023",
+      "prev_mandate_hash": "sha256:52672262e3dd582f44ea24cfefb17054e88d9bc85e4b04842a2e05b545e065aa"
+    },
+    "created_at": "2026-07-21T09:12:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-NOR-1120",
+      "name": "Northsole Footwear Inc",
+      "mcc": "5661",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "NOR-SND-EVR-11",
+        "description": "Everstrap sandal, men's 11",
+        "qty": 1,
+        "unit_price": 62.0
+      }
+    ],
+    "cart_total": 62.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Northsole Footwear Inc's catalogue and selected the closest in-stock option at $62.00, within the stated $70.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "NW8//ZKr/Ir85txhwe8JApD14eRfuc8VwxhDZteh/moB09aqQNjnd5RfEY9RRqLp9EqOE00A7p5DyT/38mqhBw==",
+      "signed_payload_hash": "sha256:3fd8cd9f02bd9a0e8150c3124da648004da16f7c5c7c23336c5d0f6e0423af56",
+      "signed_at": "2026-07-21T09:12:00-05:00"
+    }
+  },
+  "payment": null,
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-07-21T09:13:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-07-21T09:13:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-07-21T09:13:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-07-21T09:13:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-07-21T09:13:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-07-21T09:13:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-07-21T09:13:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-07-21T09:13:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-07-21T09:13:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "abandoned"
+}

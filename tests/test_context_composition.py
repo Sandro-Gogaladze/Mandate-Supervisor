@@ -13,7 +13,7 @@ from agents.context import (
     compose_context,
     context_digest,
 )
-from registry.loader import load_drift_ruleset, load_kya_ruleset, load_log_ruleset, load_mandate_ruleset
+from registry.loader import load_failure_catalogue, load_drift_ruleset, load_kya_ruleset, load_log_ruleset, load_mandate_ruleset
 from tests.fakes import FakeChatModel
 from agents.llm import message_text
 
@@ -61,7 +61,7 @@ def test_canonical_context_per_skill_matches_the_reasoning_modules(kst) -> None:
     assert {k: v for k, v in drift_view.items() if k != "evidence_contract"} == drift_reasoning.structured_view(kst, drift_rule)
     for specialist, view in (("mandate", mandate_view), ("log", log_view), ("drift", drift_view)):
         assert view["evidence_contract"]["specialist"] == specialist
-        assert view["evidence_contract"]["failure_catalogue_version"] == "2026.1"
+        assert view["evidence_contract"]["failure_catalogue_version"] == load_failure_catalogue().version
 
 
 def test_the_floor_is_summarised_by_rule_not_dumped(kst) -> None:
@@ -93,8 +93,12 @@ async def test_recorded_context_byte_matches_what_the_agent_receives(kst) -> Non
     base = canonical_context("log.analyze", kst, ruleset=load_log_ruleset())
     composed = compose_context(base, [ContextBlock(block_id="officer_note", content="focus on August")])
     verdict = {"anomalous": False, "explanation": "n", "cited_evidence": "e"}
-    fake = FakeChatModel({"record_log_analysis": {
-        "structuring": verdict, "concentration": verdict, "velocity": verdict, "other_observations": []}})
+    fake = FakeChatModel({
+        "record_log_analysis": {"structuring": verdict, "concentration": verdict,
+                                "velocity": verdict, "other_observations": []},
+        # review() now ends on the narration call; this test is about the
+        # first one's briefing, but the fake has to answer both.
+        "write_narration": {"narration": "Nothing anomalous in the history."}})
     await LogAgent().review(kst, load_log_ruleset(), model=fake, context=composed)
     sent_human = message_text(fake.last_messages_for("record_log_analysis")[1])
     assert json.loads(sent_human) == composed

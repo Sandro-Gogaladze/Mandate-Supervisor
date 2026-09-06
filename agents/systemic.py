@@ -10,6 +10,8 @@ Three failures live here, and each is invisible from inside a single dossier:
        each other
   F67  everyone is running the same model, so one provider incident is a
        correlated failure across the whole population
+  F68  agents at unrelated firms are moving together, and no single
+       submission can see it
   F69  the same attack is running at several firms at once
 
 The hard part of F57 is not finding shared counterparties — most are shared,
@@ -157,7 +159,8 @@ def model_monoculture(dossiers: list[LoadedDossier], *,
     return findings
 
 
-def shared_attack_content(dossiers: list[LoadedDossier]) -> list[PortfolioFinding]:
+def shared_attack_content(dossiers: list[LoadedDossier], *,
+                          min_operators: int = 2) -> list[PortfolioFinding]:
     """F69 — the same attack running at several firms at once.
 
     This is where `result_digest` earns its place. The digest cannot reveal that
@@ -181,7 +184,7 @@ def shared_attack_content(dossiers: list[LoadedDossier]) -> list[PortfolioFindin
 
     findings, n = [], 0
     for digest, hits in by_digest.items():
-        if len(hits) < 2 or digest not in poisoned:
+        if len(hits) < min_operators or digest not in poisoned:
             continue
         n += 1
         findings.append(PortfolioFinding(
@@ -195,24 +198,121 @@ def shared_attack_content(dossiers: list[LoadedDossier]) -> list[PortfolioFindin
     return findings
 
 
-def sweep(dossiers: list[LoadedDossier]) -> list[PortfolioFinding]:
-    """The full portfolio sweep. A scheduled run kind, not a per-case one."""
+def behavioural_correlation(dossiers: list[LoadedDossier], *,
+                            min_overlap_days: int = 30,
+                            max_correlation: float = 0.7) -> list[PortfolioFinding]:
+    """F68 — independent agents moving together.
+
+    Agents at unrelated firms converging on the same rhythm at the same time.
+    Individually every day is unremarkable; the correlation is the finding. It
+    matters because correlated behaviour amplifies market stress — agents on
+    similar models emphasise the same signals and make the same errors under
+    pressure, which is the mechanism behind a flash crash, and the reason the
+    FSB and BIS name it. Genuinely independent agents should not move this
+    tightly together, so tight correlation means an undeclared shared trigger,
+    a real market event, or a common compromise.
+
+    Pearson correlation of daily transaction counts over the span two agents
+    actually share — first to last shared active day, absences inside it kept.
+    The span matters: correlating over the whole calendar union counts the
+    months before one agent existed as agreement, which turned a -0.117 pair
+    into +0.513 when first measured that way.
+
+    Measured over the span two agents actually share, pairwise daily-count correlation across the four corpus dossiers runs -0.34 to +0.06, and two of the six pairs have too little overlap to measure at all. So 0.7 leaves
+    real headroom, but four agents is a small population and daily counts are
+    sparse: the dial is asserted rather than proven and belongs in a sandbox
+    sweep before it binds anyone.
+
+    `min_overlap_days` exists because a correlation over a fortnight is
+    arithmetic, not evidence — and it is why two corpus pairs report nothing
+    rather than a number nobody should trust.
+    """
+    import statistics
+
+    series: dict[str, dict[str, int]] = {}
+    for d in dossiers:
+        by_day: dict[str, int] = defaultdict(int)
+        for t in d.transaction_history:
+            by_day[t.timestamp[:10]] += 1
+        if by_day:
+            series[d.dossier.dossier_id] = by_day
+
+    findings, n = [], 0
+    for a, b in sorted((a, b) for i, a in enumerate(sorted(series))
+                       for b in sorted(series)[i + 1:]):
+        overlap = sorted(set(series[a]) & set(series[b]))
+        if len(overlap) < min_overlap_days:
+            continue
+        # Every day in the shared span, absences included: two agents that are
+        # both quiet on the same days are correlated, and dropping the zeros
+        # would hide exactly that.
+        span = [d for d in sorted(set(series[a]) | set(series[b]))
+                if overlap[0] <= d <= overlap[-1]]
+        xs = [series[a].get(d, 0) for d in span]
+        ys = [series[b].get(d, 0) for d in span]
+        if len(set(xs)) < 2 or len(set(ys)) < 2:
+            continue
+        r = round(statistics.correlation(xs, ys), 3)
+        if r < max_correlation:
+            continue
+        n += 1
+        findings.append(PortfolioFinding(
+            finding_id=f"PORT-F68-{n:03d}", failure="F68", subject=f"{a}~{b}",
+            subject_refs=[a, b],
+            summary=(f"Daily activity at {a} and {b} moves together with a correlation of {r} "
+                     f"across {len(span)} shared days. Neither firm can see this, and nothing in "
+                     f"either submission is wrong on its own."),
+            details={"correlation": r, "shared_days": len(span),
+                     "window": [span[0], span[-1]], "max_correlation": max_correlation}))
+    return findings
+
+
+def _dials(ruleset, rule_type: str) -> dict:
+    """The active rule's params, or {} — which leaves each sweep on its own
+    signature defaults. Every dial here is data now: a threshold that lives
+    only in a Python default is the one supervisory judgement a regulator
+    cannot sweep, compare or promote, which is precisely backwards for the
+    market-level layer."""
+    if ruleset is None:
+        return {}
+    rule = next((r for r in ruleset.rules if r.type == rule_type and r.status == "active"), None)
+    return typed_params(rule).model_dump() if rule is not None else {}
+
+
+def sweep(dossiers: list[LoadedDossier], ruleset=None) -> list[PortfolioFinding]:
+    """The full portfolio sweep. A scheduled run kind, not a per-case one.
+
+    `ruleset` is taken as an argument rather than loaded, exactly as every
+    other specialist takes its book — which is what lets the sandbox run this
+    sweep against a draft without touching the code.
+    """
     if len(dossiers) < 2:
         # Honest rather than empty: with one submission there is no portfolio,
         # and reporting nothing would read as "nothing found".
         raise ValueError("a portfolio sweep needs at least two dossiers")
-    return [*shared_counterparty_concentration(dossiers),
-            *model_monoculture(dossiers),
-            *shared_attack_content(dossiers)]
+    # A rule that is retired or drafted in the book handed in does not sweep.
+    def on(rule_type: str) -> bool:
+        return ruleset is None or any(r.type == rule_type and r.status == "active"
+                                      for r in ruleset.rules)
+    out: list[PortfolioFinding] = []
+    if on("shared_payee_concentration"):
+        out += shared_counterparty_concentration(dossiers, **_dials(ruleset, "shared_payee_concentration"))
+    if on("model_monoculture"):
+        out += model_monoculture(dossiers, **_dials(ruleset, "model_monoculture"))
+    if on("shared_attack_payload"):
+        out += shared_attack_content(dossiers, **_dials(ruleset, "shared_attack_payload"))
+    if on("behavioural_correlation"):
+        out += behavioural_correlation(dossiers, **_dials(ruleset, "behavioural_correlation"))
+    return out
 
 
 # ---------------------------------------------------------------------------
 # The agent (E2)
 # ---------------------------------------------------------------------------
 
-from schemas import Assessment, EvidencePack, Fact, FactBuilder, Ruleset  # noqa: E402
+from schemas import Assessment, EvidencePack, Fact, FactBuilder, Ruleset, typed_params  # noqa: E402
 
-from .base import SpecialistReview  # noqa: E402
+from .base import SpecialistReview, narrated  # noqa: E402
 
 
 class SystemicAgent:
@@ -237,7 +337,7 @@ class SystemicAgent:
                                    values={"portfolio": ids, "size": len(ids), "swept": False})]
         facts = [fb.measurement("portfolio", f"{len(ids)} submissions swept.",
                                 values={"portfolio": ids, "size": len(ids), "swept": True})]
-        for pf in sweep(portfolio):
+        for pf in sweep(portfolio, ruleset):
             facts.append(fb.measurement(
                 pf.finding_id, pf.summary,
                 values={"failure": pf.failure, "subject": pf.subject, "subject_refs": pf.subject_refs, **pf.details}))
@@ -265,6 +365,12 @@ class SystemicAgent:
     async def review(self, dossier: LoadedDossier, ruleset: Ruleset | None = None, *,
                      evidence: EvidencePack | None = None, model=None,
                      portfolio: list[LoadedDossier] | None = None, round: int = 1,
+                     prompts: dict | None = None, narrate: bool = True,
                      **_ignored) -> SpecialistReview:
         facts = self.run(dossier, ruleset, evidence=evidence, portfolio=portfolio)
-        return SpecialistReview(facts=facts, assessments=self.assess(facts, ruleset, dossier, round=round))
+        # Narrates like the peers do. The sweep itself stays model-free: what
+        # it found is arithmetic over every submission on the ledger, and the
+        # call only puts that in the officer's language.
+        return await narrated(
+            SpecialistReview(facts=facts, assessments=self.assess(facts, ruleset, dossier, round=round)),
+            self.name, dossier, model=model, prompts=prompts, narrate=narrate)

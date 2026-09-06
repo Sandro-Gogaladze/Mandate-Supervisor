@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0715-0020",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-15T13:07:00-05:00",
+  "ended_at": "2026-07-15T13:09:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "stormshell rain jacket, medium, under $230",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0715-0020",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-15T13:07:00-05:00",
+    "expires_at": "2026-07-15T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F020",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F020",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "stormshell rain jacket, medium, under $230",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 230.0,
+      "max_cumulative_amount": 230.0,
+      "currency": "USD",
+      "valid_from": "2026-07-15T00:00:00-05:00",
+      "valid_until": "2026-07-15T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5941"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-15T13:07:00-05:00",
+      "device_id": "DEV-F-F020"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F020",
+      "value": "khJDK8agDe6QC2H0siwDM36w5V4K6snsAnamF7OcpLVJx7cW65WrdSMbOZE8Kk/SpuSR+zJsLILRbB/wBRsPCw==",
+      "signed_payload_hash": "sha256:4716e24afc261156557a272c40c92db560abcbe64e3db691bb17337d3efac0db",
+      "signed_at": "2026-07-15T13:07:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:a4090be262c74821602ac852a77de5cc9979a9c48a7e120a26d478aea9c37060",
+      "release_ref": "ferrymead-cnc-v4.1.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "stormshell rain jacket, medium, under $230",
+          "max_price": 230.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:29f68fd52fe15e18666e1fbd8ba19fc613078a6f98d5e2c5aee53da4ec9bf841"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "TRK-JKT-RAI-M"
+          ]
+        },
+        "result_digest": "sha256:854280e5d3e10ee9b6ad06a70b86cac69e30280c51069608f108f1f3e7f16263",
+        "result_excerpt": {
+          "source": "mcp://shop.trekline.nl",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "TREKLINE OUTDOOR BV — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "TRK-JKT-RAI-M"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:7000d6996bffa276fae070f3c7ec99b79cded997b1890b5dfcbe0d89613e9fa0"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-TRK-4408",
+          "lines": 1,
+          "total": 214.0
+        },
+        "result_digest": "sha256:9398721fd0f87feff035bb9081a66fe05f93667d1dd3c55f05828fc2f0752843"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 214.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F020"
+        },
+        "result_digest": "sha256:93d2e99eb827d30e131f90a1a34a9c662f1ebcb4ba9241a6740ad7e3ed6a2e59"
+      }
+    ],
+    "selection_context": {
+      "query": "stormshell rain jacket, medium, under $230",
+      "selected_sku": "TRK-JKT-RAI-M",
+      "alternatives_considered": [
+        {
+          "sku": "MKT-3P-HDP-ANC",
+          "merchant_id": "MER-MKT-9034",
+          "price": 238.0,
+          "description": "Noise-cancelling headphones (marketplace listing)"
+        },
+        {
+          "sku": "NOR-BOO-WTR-08",
+          "merchant_id": "MER-NOR-1120",
+          "price": 189.0,
+          "description": "Fjord waterproof boot, women's 8"
+        },
+        {
+          "sku": "HRT-CKW-DUT-05",
+          "merchant_id": "MER-HRT-9902",
+          "price": 168.0,
+          "description": "Enamelled cast-iron dutch oven, 5qt"
+        },
+        {
+          "sku": "SLV-NEC-SIL-01",
+          "merchant_id": "MER-SLV-8830",
+          "price": 165.0,
+          "description": "Sterling silver pendant necklace"
+        },
+        {
+          "sku": "NOR-RUN-PRO-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 268.0,
+          "description": "Trailflex Pro carbon-plate racer, women's 10"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-15T13:07:47-05:00",
+    "principal_id": "PRIN-F-F020",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 214.0,
+      "currency": "USD",
+      "merchant": "Trekline Outdoor BV",
+      "line_items": [
+        {
+          "sku": "TRK-JKT-RAI-M",
+          "qty": 1,
+          "unit_price": 214.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 230.0
+      }
+    },
+    "rendered_hash": "sha256:d507186184d52f29b178860aed75d3576c1cfcf8366a5d3b0d933a6fa95cfd6d",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0715-0020",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0715-0020",
+      "prev_mandate_hash": "sha256:4716e24afc261156557a272c40c92db560abcbe64e3db691bb17337d3efac0db"
+    },
+    "created_at": "2026-07-15T13:07:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-TRK-4408",
+      "name": "Trekline Outdoor BV",
+      "mcc": "5941",
+      "country": "NL",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "TRK-JKT-RAI-M",
+        "description": "Stormshell rain jacket, M",
+        "qty": 1,
+        "unit_price": 214.0
+      }
+    ],
+    "cart_total": 214.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Trekline Outdoor BV's catalogue and selected the closest in-stock option at $214.00, within the stated $230.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "HH7ZeeEaBTGoDwmj7CAjSU3Sx4yYyrtcJjSotIIP47IWfzQYVpxckhnRrY7gxa/nWjZZM7dcUwdNTnfOIsddCw==",
+      "signed_payload_hash": "sha256:22c82786382913fef18b2ae822d2d0d2cdb409db395cfac53b189a3639e55368",
+      "signed_at": "2026-07-15T13:07:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0715-0020",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0715-0020",
+      "prev_mandate_hash": "sha256:22c82786382913fef18b2ae822d2d0d2cdb409db395cfac53b189a3639e55368"
+    },
+    "authorized_at": "2026-07-15T13:09:19-05:00",
+    "amount": 214.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1019",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2019",
+      "scheme": "card_settlement",
+      "country": "NL",
+      "beneficiary_name_on_account": "Trekline Outdoor BV"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "P1Mcj2ucScLBAmo3NeZk0lrn/b8X5wa4nMDhq6hgxEyD8aumKmE9WJ9OrEgSPC3MJwHWJrQb16Sd8NHWw9PhBw==",
+      "signed_payload_hash": "sha256:833b6cf740502d28aee285feeb7e25faaafe281a0a5a4f790537497310f0c573",
+      "signed_at": "2026-07-15T13:09:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-07-15T13:08:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-07-15T13:08:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-07-15T13:08:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-07-15T13:08:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-07-15T13:08:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-07-15T13:08:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-07-15T13:08:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-07-15T13:08:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-07-15T13:08:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

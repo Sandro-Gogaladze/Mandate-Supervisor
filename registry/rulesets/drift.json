@@ -1,7 +1,7 @@
 {
   "ruleset_id": "DRIFT-RULESET",
   "domain": "drift",
-  "version": "2026.3",
+  "version": "2026.4",
   "as_of": "2026-09-04",
   "description": "Drift ruleset. One LLM-evaluated rule (agents/drift_reasoning.py) against real pre-computed statistics (agents/drift_stats.py: baseline-vs-comparison PSI, z-score, frequency, mix breakdown) — no hardcoded threshold decides drift, same design as the Log ruleset. Below min_total_transactions, DriftAgent.review() reports insufficient_baseline instead of calling the model at all.",
   "rules": [
@@ -14,10 +14,49 @@
       "evaluation": "judged",
       "severity_weight": 0.6,
       "finding_type": "behavioral_drift_detected",
-      "description": "The agent's behavior in the comparison window (everything after the first baseline_window_days of visible history) has shifted meaningfully from its own established baseline — average transaction size, frequency, and/or counterparty/category mix — even though no single transaction breaches the mandate. This is case-006's defect: baseline avg ₾187.95 (14 tx, June) vs comparison avg ₾316.51 (35 tx, July-August), z-score 7.15, counterparty-mix PSI 5.86, MCC-mix PSI 2.02 (both far past the conventional 0.25 'major shift' threshold) — a brand-new vendor (Batumi Express Freight) and a brand-new category (vehicle maintenance, MCC 7538) both entering the mix.",
-      "notes": "PSI/z-score are computed deterministically (agents/drift_stats.py) and handed to the model as real evidence, not a conclusion — whether the shift is meaningful drift (vs. e.g. legitimate seasonal or business-growth variation) is the model's judgment, same design choice as the Log ruleset's structuring rule.",
-      "failures": ["F65"],
-      "params": { "baseline_window_days": 30, "min_total_transactions": 30 }
+      "description": "The agent's behavior in the comparison window (everything after the first baseline_window_days of visible history) has shifted meaningfully from its own established baseline — average transaction size, frequency, and/or counterparty/category mix — even though no single transaction breaches the mandate.",
+      "notes": "Illustrative magnitude, from a case that motivated this rule: baseline avg 187.95 (14 tx) vs comparison avg 316.51 (35 tx), z-score 7.15, counterparty-mix PSI 5.86, MCC-mix PSI 2.02 — both far past the conventional 0.25 'major shift' threshold, with a brand-new vendor and a brand-new category entering the mix. Kept in `notes`, not `description`: descriptions are sent to the model in every evidence bundle, and another case's concrete figures arriving beside this case's real ones read as injected content. A specialist correctly flagged exactly that.",
+      "failures": [
+        "F65"
+      ],
+      "params": {
+        "baseline_window_days": 30,
+        "min_total_transactions": 30
+      }
+    },
+    {
+      "rule_id": "DRIFT-UNX-01",
+      "type": "drift_has_no_logged_cause",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-05",
+      "evaluation": "judged",
+      "severity_weight": 0.75,
+      "finding_type": "drift_unexplained",
+      "description": "Behaviour shifted and no event in the operator's own change log accounts for it. “The agent gradually changed” is a monitoring finding; “the agent changed on 11 July, immediately after a model update” is an investigation with a scope and a look-back period. A shift the operator cannot explain from its own record is the worse of the two, and until now it was the one with no name.",
+      "notes": "JUDGED, and it has to be: its condition is 'drift is present AND no logged event accounts for it', and the first half is DRIFT-BHV-01's verdict. With no model there is no drift verdict to qualify, so no floor can reach this outcome. The computable alternative — 'the largest measured shift has no change_log entry within N days' — was rejected because it needs a constant to decide which shift is big enough to demand an explanation, and no hardcoded threshold decides drift in this book.",
+      "params": {},
+      "failures": [
+        "F89"
+      ]
+    },
+    {
+      "rule_id": "DRIFT-BAS-01",
+      "type": "baseline_window_is_stable",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-05",
+      "evaluation": "computable",
+      "severity_weight": 0.4,
+      "finding_type": "baseline_unstable",
+      "description": "The baseline window is steady enough to be a baseline. Every drift verdict is a comparison against the agent's first weeks; if it was already changing during those weeks, the comparison measures nothing and any finding built on it is unsound.",
+      "notes": "COMPUTABLE, and the threshold is methodological rather than supervisory: it decides whether the evidence can carry the question, not whether the agent misbehaved — the same family as min_total_transactions. Decides on the amount z-score between the two halves of the baseline ONLY. The mix PSIs are recorded for context and must not be decided on: a consumer shopping agent buys from a different merchant almost every run, so baseline-half PSI measured 10.3 and 11.7 on the two corpus dossiers, both ordinary. Weighing that is the judgement DRIFT-BHV-01 hands to a model.",
+      "params": {
+        "max_baseline_z": 2.0
+      },
+      "failures": [
+        "F90"
+      ]
     }
   ]
 }

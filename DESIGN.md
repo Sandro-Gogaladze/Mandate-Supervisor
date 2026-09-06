@@ -1,19 +1,21 @@
 ---
 name: Mandate Supervisor
-description: A bank regulator's live supervision console for AI payment agents — navy ink, electric blue, drafting-table precision.
+description: A bank regulator's live supervision console for AI payment agents — institutional navy, verification teal, drafting-table precision.
 colors:
-  primary: "oklch(0.55 0.21 262)"
-  primary-foreground: "oklch(0.99 0.005 255)"
-  ink: "oklch(0.21 0.045 265)"
-  canvas: "oklch(0.985 0.003 255)"
+  primary: "oklch(0.5 0.175 257)"
+  primary-foreground: "oklch(0.99 0.005 250)"
+  ink: "oklch(0.22 0.052 258)"
+  canvas: "oklch(0.984 0.005 250)"
   card: "oklch(1 0 0)"
-  muted: "oklch(0.955 0.008 255)"
-  muted-foreground: "oklch(0.5 0.03 262)"
-  border: "oklch(0.905 0.012 255)"
-  rail: "oklch(0.235 0.07 266)"
-  rail-foreground: "oklch(0.9 0.015 255)"
+  muted: "oklch(0.955 0.009 250)"
+  muted-foreground: "oklch(0.505 0.035 255)"
+  border: "oklch(0.905 0.014 250)"
+  rail: "oklch(0.225 0.068 258)"
+  rail-foreground: "oklch(0.9 0.016 250)"
+  brand-navy: "oklch(0.27 0.096 257)"
+  brand-teal: "oklch(0.625 0.115 181)"
   status-working: "#f59e0b"
-  status-done: "#10b981"
+  status-done: "oklch(0.66 0.118 181)"
   status-flag: "#dc2626"
   agent-mandate: "#3b82f6"
   agent-kya: "#8b5cf6"
@@ -68,11 +70,11 @@ components:
 
 ## Overview
 
-An **Operate-mode** product: a case officer completes supervisory reviews here. Scanability, consistency, and earned familiarity outrank expression; the brand lives in precise details, not decoration. The visual world derives from the logo's two colors — deep navy (the human figure) and electric blue (the robot) — on cool near-white paper, with a fine blueprint-grid motif standing for the drafting table a regulator works at. The one deliberately expressive element is the dark navy sidebar rail; everything to its right stays calm.
+An **Operate-mode** product: a case officer completes supervisory reviews here. Scanability, consistency, and earned familiarity outrank expression; the brand lives in precise details, not decoration. The visual world derives from the logo — the institutional navy of the mandate document and payment card (`#002454` → `#003c78`), the blue the card lifts to, and the teal of the verification check (`#0e9d8b`) — on cool near-white paper, with a fine blueprint-grid motif standing for the drafting table a regulator works at. The mark is that card with the agent's face on it — the thing being supervised — and it appears as vector, never bitmap: `dashboard/public/mark.svg` (favicon and app icon) and the matching `<BrandMark>` component. Its tile is a full-bleed rounded square, never a disc — the glyph is wider than it is tall, so a circle spends the canvas on empty corners and leaves the drawing unreadable in a browser tab. The glyph runs nearly edge to edge and its strokes are set far heavier than the logo's, because a hairline vanishes at 32px; it is drawn to read down to 16px. `favicon.ico` carries five natively-rendered frames (16/24/32/48/64) rather than one raster downscaled, and the 16 and 24 frames drop the card's chip and thicken the strokes further — at that size the chip is four sub-pixel blobs that only muddy the glyph. Its tile takes `{colors.rail}`, so on the sidebar it dissolves into the rail and the mark reads as the white glyph alone. Note that `SidebarMenuButton` clamps any direct `<svg>` child to `size-4`, so the rail mark is wrapped in a sized `<span>` — dropping it in bare silently renders it at 16px. The one deliberately expressive element is the dark navy sidebar rail; everything to its right stays calm.
 
 ## Colors
 
-Every gray leans navy — nothing warm anywhere. `{colors.primary}` is reserved for primary actions, active/selected states, focus, and the human-gate "awaiting" state; never decoration. Status hues are signal, not brand, and keep their conventional meanings: amber = machine working, emerald = complete/clean, red = flagged/blocked. Each specialist agent owns one identity hue (see `dashboard/src/lib/node-meta.tsx`) used at low opacity for icon chips and badges — full saturation only on live pipeline states.
+Every gray leans navy — nothing warm anywhere. `{colors.primary}` is reserved for primary actions, active/selected states, focus, and the human-gate "awaiting" state; never decoration. Status hues are signal and keep their conventional meanings: amber = machine working, green = complete/clean, red = flagged/blocked — but "complete/clean" is the logo's own check-mark teal, not a generic emerald. That is enforced centrally: `index.css` redefines the whole `emerald-*` ramp in `@theme`, so every `emerald-` class in the app resolves to the brand teal and the success hue cannot drift. Each specialist agent owns one identity hue (see `dashboard/src/lib/node-meta.tsx`) used at low opacity for icon chips and badges — full saturation only on live pipeline states.
 
 ## Typography
 
@@ -102,7 +104,8 @@ Radius scale tops out at 16px (`rounded-2xl` on the hero card); interactive cont
 
 - **Buttons**: shadcn variants; primary = `{colors.primary}`. Press feedback is a 1px translate, not a scale bounce.
 - **Badges** carry all severity/status signaling (never colored side-borders). Scenario badges: emerald family for clean, amber for flagged, muted for unreviewed.
-- **Pipeline nodes** (React Flow): 236px cards, agent-hue icon roundel at rest, amber ring while working, emerald when complete, primary-blue "Awaiting reviewer" while the human gate holds. Edges light only along actually-traversed paths.
+- **Supervision map** (React Flow): a 4-column bench of 122px specialist chips between a centred spine. The bench's fan-in join (`specialists_done`) is **drawn, not folded away** — hiding it made the projection claim each specialist reports onward by itself. Chips take agent-hue icon roundel at rest, blue ring while working, teal when clean, red when it returned findings, primary-blue while the human gate holds. Node sizes are **declared, not measured** — React Flow measures 0×0 inside a hidden dialog and renders the boxes invisible.
+- **Map edges**: two trunks flank the bench and nothing crosses it — work goes **out** down the left trunk, results come **back** up the right. Each row gap carries two rails 16px apart: the row below being dispatched to, and the row above handing its results out. So every specialist has exactly one line in at its top and one out at its bottom, and the dispatch rails never reach the collect trunk (101px clear) while the collect rails never reach the dispatch trunk (97px clear). The remaining lanes — the join's short-circuit, the synthesizer's return, the draft route, the grounding loop — each get their own channel outside the grid. An edge lights only when the run **actually walked it** — the step sequence proves the target started after the source, with the synthetic supervisor holding seq 0 as the run's origin. Lighting every edge that merely *enters* an active node was wrong: it lit the join's short-circuit and the synthesizer's return the moment the orchestrator picked up a question, wrapping three arms round an idle bench. The one exception is the human gate, which holds without emitting a step. A lit edge takes the colour of the box it enters, from `--map-*` tokens carrying the same hues as that box's ring — so a line can never disagree with the node it points at, and a path not taken never glows. Conditional edges the run skipped stay at the border colour, and the join's conditional escape — real, but never taken on a pass that dispatched any specialist — recedes to a 1px hairline at 22% with a small arrowhead: present on the map, but plainly a road not travelled. Direction is carried by an arrowhead at the target plus a chevron on the edge's longest straight run, because one head at the far end of a map-wide trunk does not tell you which way work is flowing.
 - **Panel headers**: icon + title left, live-dot/meta right, hairline bottom border.
 - **Empty states** name the action that fills them.
 - **Focus**: 3px ring at `{colors.primary}`/50 via shadcn's ring token. Selection, caret, scrollbars, and accent-color are all themed from primary — browser surfaces carry the design too.

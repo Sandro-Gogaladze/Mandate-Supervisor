@@ -43,12 +43,16 @@ def test_active_vs_draft_split() -> None:
     # LIF-04) and construction_context (TEC-02..06). That is what a draft rule
     # IS here: one whose evidence the submission cannot yet carry.
     #
-    # The 5 still draft need cross-case ledger history (IDN-04/05), judgement
-    # the sandbox has to tune (CAP-03/04), or data deliberately not required
-    # of firms. TEC-02/05/06 left for the Provenance book in Phase 4 (ids kept).
+    # The 4 still draft need cross-case ledger history (IDN-04/05), a
+    # purpose-to-capability mapping the registry does not carry (CAP-03), or
+    # a threshold the sandbox has to tune first (CAP-04 — judged, and wired,
+    # so promoting it needs no code change). REG-03 is judged and IN FORCE:
+    # the floor measures the activity, the specialist judges the fit.
+    # TEC-02/05/06 left for the Provenance book in Phase 4 (ids kept).
     assert len(rs.rules) == 39
-    assert len(active) == 34
-    assert len(draft) == 5
+    assert len(active) == 35
+    assert len(draft) == 4
+    assert {r.rule_id for r in draft} == {"KYA-IDN-04", "KYA-IDN-05", "KYA-CAP-03", "KYA-CAP-04"}
     # every draft rule must explain what blocks it
     assert all(r.notes for r in draft)
 

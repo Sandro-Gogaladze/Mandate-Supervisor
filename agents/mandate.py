@@ -6,9 +6,10 @@
   No model, no key.
 - `review()` — the floor as assessments, plus the one contained model
   call: per-line-item intent fidelity against the shopper's own sentence,
-  one call over every run that reached a cart, a verdict per run
-  (agents/mandate_reasoning.py). Only runs when `MND-SEM-01` is active in
-  the ruleset it is handed — a draft rule never fires, model or not.
+  one call over every run that reached a cart, a verdict per run, plus the
+  open channel (agents/mandate_reasoning.py) — one tool call carries both.
+  Only runs when `MND-SEM-01` is active in the ruleset it is handed — a
+  draft rule never fires, model or not.
 """
 from __future__ import annotations
 
@@ -16,7 +17,7 @@ from ingestion.verify import RawSubmissionMissing, chain_facts_with_ruleset
 from schemas import Assessment, EvidencePack, Fact, Ruleset
 from schemas.dossier import LoadedDossier
 
-from .base import SpecialistReview, floor
+from .base import SpecialistReview, floor, narrated
 from .mandate_checks import run_policy_checks
 from .mandate_reasoning import check_intent_fidelity
 from .prompts import effective_text
@@ -51,15 +52,19 @@ class MandateAgent:
         prompts: dict[str, dict] | None = None,
         context: dict | None = None,
         round: int = 1,
+        narrate: bool = True,
     ) -> SpecialistReview:
         facts = self.run(dossier, ruleset, evidence=evidence)
         assessments = self.assess(facts, ruleset, dossier, round=round)
         rule = next((r for r in (ruleset.rules if ruleset else [])
                      if r.type == "cart_reasoning_matches_intent" and r.status == "active"), None)
+        observations = []
         if semantic_check and rule is not None:
-            assessments = assessments + await check_intent_fidelity(
+            judged, observations = await check_intent_fidelity(
                 dossier, facts, rule, model=model, reviewer_directive=reviewer_directive,
                 system_prompt=effective_text(prompts, "SPECIALIST-MANDATE") if prompts else None,
                 context=context, round=round,
             )
-        return SpecialistReview(facts=facts, assessments=assessments)
+            assessments = assessments + judged
+        return await narrated(SpecialistReview(facts=facts, assessments=assessments, observations=observations), self.name, dossier,
+                              model=model, prompts=prompts, narrate=narrate)

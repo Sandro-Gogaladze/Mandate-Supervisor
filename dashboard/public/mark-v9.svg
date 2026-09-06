@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="64" height="64" role="img" aria-label="Mandate Supervisor">
+  <rect width="1254" height="1254" rx="200" fill="#051b3b"/>
+  <g transform="translate(-49.5 -49.4) scale(1.079)" fill="#fff">
+    <path d="M767.5 403.5H1024a124.5 124.5 0 0 1 124.5 124.5v354a124.5 124.5 0 0 1-124.5 124.5H230A124.5 124.5 0 0 1 105.5 882V528A124.5 124.5 0 0 1 230 403.5h396.5"
+          fill="none" stroke="#fff" stroke-width="71" stroke-linecap="round"/>
+    <rect x="175" y="635" width="93" height="86" rx="18"/>
+    <rect x="280" y="635" width="92" height="86" rx="18"/>
+    <rect x="175" y="733" width="93" height="83" rx="18"/>
+    <rect x="280" y="733" width="92" height="83" rx="18"/>
+    <rect x="660" y="300" width="75" height="290" rx="37.5"/>
+    <circle cx="697.5" cy="319" r="111"/>
+    <rect x="434.5" y="555.5" width="562" height="331" rx="165.5" fill="none" stroke="#fff" stroke-width="67"/>
+    <circle cx="590" cy="721" r="57"/>
+    <circle cx="836" cy="721" r="57"/>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 """The dossier fixtures every graph and agent test builds on.
 
-The corpus IS the fixture: two hand-authored, signed dossiers. Loaded
+The corpus IS the fixture: three hand-authored, signed dossiers. Loaded
 dossiers are shared read-only; a test that needs a variant makes one with
 `model_copy` (`thin()`, `with_raw()`) and never mutates the shared object.
 """
@@ -17,6 +17,7 @@ from schemas.dossier import LoadedDossier
 ROOT = Path(__file__).resolve().parent.parent
 KST = ROOT / "data" / "dossiers" / "DOSSIER-KST-2026-001"
 HAL = ROOT / "data" / "dossiers" / "DOSSIER-HAL-2026-001"
+LRK = ROOT / "data" / "dossiers" / "DOSSIER-LRK-2026-001"
 
 
 def kst() -> LoadedDossier:
@@ -25,6 +26,10 @@ def kst() -> LoadedDossier:
 
 def hal() -> LoadedDossier:
     return load(HAL)
+
+
+def lrk() -> LoadedDossier:
+    return load(LRK)
 
 
 def seed(store: LedgerStore, path: Path = KST, *, dossier: LoadedDossier | None = None) -> str:

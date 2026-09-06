@@ -763,27 +763,7 @@ The result is classified as:
 
 ---
 
-# 14. Red-team testing
-
-## Specialist
-
-**Red Team — “Does the agent and its declared control environment hold up when deliberately pushed?”**
-
-This specialist is run on demand. It does not initiate a live payment.
-
-It creates synthetic tests from the agent's own mandate parameters, such as:
-
-- an amount one unit above the cap;
-- a merchant name one character away from an approved name;
-- an item description containing an injected instruction;
-- replay of a single-use mandate;
-- or consent values that differ from the signed values.
-
-It then reports which declared controls would address the scenario and which risks appear unprotected. This is closer to conformance and control testing than production transaction monitoring.
-
----
-
-# 15. Why the data request is realistic
+# 14. Why the data request is realistic
 
 The reporting schema follows a strict rule:
 
@@ -815,7 +795,7 @@ The bank does not necessarily hold every fact on its own side of the payment. Fo
 
 ---
 
-# 16. Information deliberately not required
+# 15. Information deliberately not required
 
 The framework does not claim that every desirable signal is currently realistic.
 
@@ -830,7 +810,7 @@ The corresponding failures are marked as limited, partially detectable or not ro
 
 ---
 
-# 17. What makes the result credible
+# 16. What makes the result credible
 
 ## Deterministic facts come before model judgement
 
@@ -858,7 +838,7 @@ The system prioritises and explains evidence. It does not autonomously authorise
 
 ---
 
-# 18. Compact agent-to-data map
+# 17. Compact agent-to-data map
 
 | Specialist | Rules | Primary submitted data | Regulator or ledger data | Method |
 |---|---|---|---|---|
@@ -872,11 +852,10 @@ The system prioritises and explains evidence. It does not autonomously authorise
 | **Drift** | `DRIFT-*` | Transaction history and change log | Previous activity | Statistical baseline and change-point analysis |
 | **Control Assurance** | `CTL-*` | Declared controls, evaluations, overrides | Peer breach facts and settlement ledger | Deterministic absent/failed/bypassed/ineffective classification |
 | **Systemic** | Portfolio checks | Already-submitted dossiers | Cross-firm ledger and registries | Portfolio graphs, concentration and correlation |
-| **Red Team** | On-demand probes | Mandate and declared controls | Policy test definitions | Deterministic synthetic case generation; no live rail |
 
 ---
 
-# 19. Summary
+# 18. Summary
 
 Mandate Supervisor identifies failures by combining four forms of evidence:
 

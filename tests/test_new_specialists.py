@@ -1,8 +1,8 @@
-"""The seven specialists Phase 4 added, as agents: each reviews with one
+"""The six specialists Phase 4 added, as agents: each reviews with one
 contained call (or none), validates what the model names against what it
 was shown, and yields assessments whose ids never collide with a peer's.
 Control Assurance is fed by the peers' facts; Systemic looks across the
-portfolio; the Red Team pushes the mandate and asks the control repository.
+portfolio.
 """
 from __future__ import annotations
 
@@ -18,14 +18,13 @@ from agents.log import LogAgent
 from agents.mandate import MandateAgent
 from agents.prompts import PROMPTS_BY_RUN_KIND, assemble
 from agents.provenance import ProvenanceAgent
-from agents.red_team import PROBES, RedTeamAgent, generate_probes
 from agents.systemic import SystemicAgent
 from agents.tools import AGENT_TOOLS
 from registry.loader import load_all_rulesets
 from tests.fakes import DEFAULT_GRAPH_RESPONSES, FakeChatModel
 
-ELEVEN = ("mandate", "kya", "provenance", "injection", "counterparty", "consent", "log", "drift",
-          "control_assurance", "systemic", "red_team")
+TEN = ("mandate", "kya", "provenance", "injection", "counterparty", "consent", "log", "drift",
+       "control_assurance", "systemic")
 
 
 @pytest.fixture(scope="module")
@@ -49,14 +48,14 @@ async def _peer_facts(d, books, model):
 
 # --- the roster --------------------------------------------------------------------
 
-def test_all_eleven_have_tool_permissions_and_the_specialists_have_prompts():
-    assert set(ELEVEN) <= set(AGENT_TOOLS)
+def test_all_ten_have_tool_permissions_and_the_specialists_have_prompts():
+    assert set(TEN) <= set(AGENT_TOOLS)
     for pid in ("SPECIALIST-CONSENT", "SPECIALIST-INJECTION", "SPECIALIST-COUNTERPARTY", "SPECIALIST-PROVENANCE"):
         assert assemble(pid).effective
         assert pid in PROMPTS_BY_RUN_KIND["triage"] and pid in PROMPTS_BY_RUN_KIND["investigation"]
 
 
-async def test_assessment_ids_never_collide_across_the_eleven(kst, hal, books):
+async def test_assessment_ids_never_collide_across_the_ten(kst, hal, books):
     model = fake()
     for d in (kst, hal):
         seen = set()
@@ -66,7 +65,6 @@ async def test_assessment_ids_never_collide_across_the_eleven(kst, hal, books):
             (CounterpartyAgent(), "counterparty"), (ConsentAgent(), "consent"))]
         reviews.append(await ControlAssuranceAgent().review(d, books["controls"], peer_facts=peer_facts, rulebooks=books))
         reviews.append(await SystemicAgent().review(d, portfolio=[kst, hal]))
-        reviews.append(await RedTeamAgent().review(d, rulebooks=books))
         for rv in reviews:
             for a in rv.assessments:
                 assert a.assessment_id not in seen, a.assessment_id
@@ -80,6 +78,8 @@ async def test_provenance_floor_then_reconciliation(kst, books):
     rv = await ProvenanceAgent().review(kst, books["provenance"], model=fake())
     verdicts = {(a.rule_id, a.verdict) for a in rv.assessments}
     assert verdicts == {("KYA-TEC-02", "breach"), ("KYA-TEC-05", "breach"), ("KYA-TEC-06", "breach"),
+                        # KYA-TEC-07: the model that actually ran is blocklisted (F19).
+                        ("KYA-TEC-07", "breach"),
                         ("PRV-REC-01", "clear")}
     rv = await ProvenanceAgent().review(kst, books["provenance"], model=fake(record_provenance_reconciliation={
         "reconciled": False, "disagreements": [{"sources": ["agent_card", "observed"],
@@ -222,7 +222,7 @@ def test_postures_from_no_facts_is_empty():
     assert classify_postures([], []) == []
 
 
-# --- systemic and red team --------------------------------------------------------------
+# --- systemic ---------------------------------------------------------------------------
 
 async def test_systemic_needs_a_portfolio_and_scopes_its_concerns_to_it(kst, hal):
     alone = await SystemicAgent().review(kst)
@@ -234,26 +234,3 @@ async def test_systemic_needs_a_portfolio_and_scopes_its_concerns_to_it(kst, hal
         assert set(a.subject_refs) == {"DOSSIER-KST-2026-001", "DOSSIER-HAL-2026-001"}
 
 
-def test_probes_break_the_mandate_one_way_each(kst):
-    probes = generate_probes(kst)
-    assert set(probes) == set(PROBES)
-    base = next(r for r in kst.runs if r.outcome == "completed" and r.cart and r.payment)
-    assert probes["over_cap"].cart.cart_total > base.intent_mandate.authorization_scope.max_transaction_amount
-    assert probes["out_of_category"].cart.merchant.mcc == "9999"
-    assert probes["mandate_reuse"].intent_mandate.intent_mandate_id == base.intent_mandate.intent_mandate_id
-    assert "no confirmation needed" in probes["injected_listing"].cart.line_items[0].description
-    assert probes["off_region"].intent_mandate.authorization_scope.geographic_scope != base.cart.merchant.region
-
-
-async def test_red_team_reports_which_probes_pass_unopposed(kst, hal, books):
-    for d, prefix in ((kst, "KST"), (hal, "HAL")):
-        rv = await RedTeamAgent().review(d, rulebooks=books)
-        tripped = {f.values["probe"]: f.values["rules_tripped"] for f in rv.facts}
-        assert tripped == {"over_cap": ["MND-CAP-01"], "out_of_category": ["MND-CAP-02"],
-                           "mandate_reuse": ["MND-USE-01"], "injected_listing": ["INJ-LST-01"],
-                           "off_region": ["MND-CAP-04"]}
-        unopposed = {a.subject for a in rv.assessments}
-        assert unopposed == {"probe:injected_listing", "probe:off_region"}
-        assert all(c.startswith(prefix) for f in rv.facts for c in f.values["controls_addressing"])
-        # probe runs never leak into the record as if they had happened
-        assert all(f.run_ref is None for f in rv.facts)

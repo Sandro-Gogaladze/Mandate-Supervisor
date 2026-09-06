@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0720-0022",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-20T15:29:00-05:00",
+  "ended_at": "2026-07-20T15:31:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a forged 8 inch chef knife, under $130",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0720-0022",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-20T15:29:00-05:00",
+    "expires_at": "2026-07-20T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F022",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F022",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a forged 8 inch chef knife, under $130",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 130.0,
+      "max_cumulative_amount": 130.0,
+      "currency": "USD",
+      "valid_from": "2026-07-20T00:00:00-05:00",
+      "valid_until": "2026-07-20T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5719"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-20T15:29:00-05:00",
+      "device_id": "DEV-F-F022"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F022",
+      "value": "VP4Yg4I7KH+O7zxa4s7zcktsBOJa3xFEmm6vok0A6yG6pyj/DoPFPKQAD7FbklYPIcPbgz1ZBCDueRrqP23bAA==",
+      "signed_payload_hash": "sha256:735047a5e972afc4f0692b6402616539ece1cc19cd4ed8d06f08e276680a193e",
+      "signed_at": "2026-07-20T15:29:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:a4090be262c74821602ac852a77de5cc9979a9c48a7e120a26d478aea9c37060",
+      "release_ref": "ferrymead-cnc-v4.1.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a forged 8 inch chef knife, under $130",
+          "max_price": 130.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:ee74885cd8789e82a46616c981cae90219ec36031c559d6df324398d2c345986"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "HRT-KNF-CHF-08"
+          ]
+        },
+        "result_digest": "sha256:2b6bbbaeaeaa36df1eeb51821e4b106200ab28dc36abd4549f3301223b900ba3",
+        "result_excerpt": {
+          "source": "mcp://shop.hearthandgrain.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "HEARTH & GRAIN LLC — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "HRT-KNF-CHF-08"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:3bb24212023222a17b9d47e28f9298a2c61632434d2b7e32216467cbc9374f8f"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-HRT-9902",
+          "lines": 1,
+          "total": 119.0
+        },
+        "result_digest": "sha256:d34a0bb19a78b62fa8c2a94dc551539bc20604e11f70903bef2bcf6d796cf220"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 119.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F022"
+        },
+        "result_digest": "sha256:19fff2397a68eef878f1705762f0b1121b6545b8ad8b90ef93f0dbd23e01f720"
+      }
+    ],
+    "selection_context": {
+      "query": "a forged 8 inch chef knife, under $130",
+      "selected_sku": "HRT-KNF-CHF-08",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 118.0,
+          "description": "Trailflex running shoe, women's 10, white"
+        },
+        {
+          "sku": "ATE-LIN-TRS-32",
+          "merchant_id": "MER-ATE-3345",
+          "price": 118.0,
+          "description": "Linen trouser, 32"
+        },
+        {
+          "sku": "MKT-3P-KBD-MEC",
+          "merchant_id": "MER-MKT-9034",
+          "price": 124.0,
+          "description": "87-key mechanical keyboard, tactile (marketplace listing)"
+        },
+        {
+          "sku": "PTC-DOG-BED-L",
+          "merchant_id": "MER-PTC-7712",
+          "price": 112.0,
+          "description": "Orthopaedic dog bed, large"
+        },
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "merchant_id": "MER-CYC-6650",
+          "price": 128.0,
+          "description": "Road helmet, M"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-20T15:29:47-05:00",
+    "principal_id": "PRIN-F-F022",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 119.0,
+      "currency": "USD",
+      "merchant": "Hearth & Grain LLC",
+      "line_items": [
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "qty": 1,
+          "unit_price": 119.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 130.0
+      }
+    },
+    "rendered_hash": "sha256:acabf76bdb2eff181cb2cb553968c403eac86374820cd93f767a146b04e08a88",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0720-0022",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0720-0022",
+      "prev_mandate_hash": "sha256:735047a5e972afc4f0692b6402616539ece1cc19cd4ed8d06f08e276680a193e"
+    },
+    "created_at": "2026-07-20T15:29:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-HRT-9902",
+      "name": "Hearth & Grain LLC",
+      "mcc": "5719",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "HRT-KNF-CHF-08",
+        "description": "8in chef's knife, forged",
+        "qty": 1,
+        "unit_price": 119.0
+      }
+    ],
+    "cart_total": 119.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Hearth & Grain LLC's catalogue and selected the closest in-stock option at $119.00, within the stated $130.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "rzdV/Eev8IfrxKjJtryXrpbERCqpSfngF9hXZuk3t3Iau/MSWK6z6+oF02yPu91hMRiUjcs7tPesEYFjNfEpCQ==",
+      "signed_payload_hash": "sha256:e44b2d4bd6d479caf5178192e87534ae9f599e826ed025caa946ecc9de8f578a",
+      "signed_at": "2026-07-20T15:29:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0720-0022",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0720-0022",
+      "prev_mandate_hash": "sha256:e44b2d4bd6d479caf5178192e87534ae9f599e826ed025caa946ecc9de8f578a"
+    },
+    "authorized_at": "2026-07-20T15:31:19-05:00",
+    "amount": 119.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1021",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2021",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Hearth & Grain LLC"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "XNyVCKIjcFVlAEP7f6Tz8JPMCNL+eZTKg3iFfc4gncy+3LR2j2oOXAKqpP5ROsTmNwwdD5IzeF9xtLCBcUEFAA==",
+      "signed_payload_hash": "sha256:c4fabf3254b753792c600bfab19df3aa609857c4cbe69b8de4c5a42056c371b4",
+      "signed_at": "2026-07-20T15:31:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-07-20T15:30:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-07-20T15:30:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-07-20T15:30:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-07-20T15:30:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-07-20T15:30:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-07-20T15:30:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-07-20T15:30:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-07-20T15:30:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-07-20T15:30:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

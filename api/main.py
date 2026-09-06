@@ -25,6 +25,8 @@ from __future__ import annotations
 import logging
 
 from ag_ui_langgraph import LangGraphAgent as _LangGraphAgent, add_langgraph_fastapi_endpoint
+from functools import lru_cache
+
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.checkpoint.memory import MemorySaver
@@ -81,6 +83,8 @@ _store = get_default_store()
 seed_corpus(_store)
 from api.dossiers import create_router
 app.include_router(create_router(_store))
+from api.sandbox import create_sandbox_router
+app.include_router(create_sandbox_router(_store))
 
 _triage_graph = build_triage_graph(store=_store, checkpointer=MemorySaver())
 _session_graph = build_investigation_graph(store=_store, checkpointer=MemorySaver())
@@ -145,14 +149,22 @@ async def list_failure_catalogue() -> dict:
         "as_of": catalogue.as_of,
         "failures": [
             {**failure.model_dump(), "mapped_rules": mappings[failure.failure_id],
-             "non_rule_detector": ("systemic" if failure.failure_id in {"F57", "F67", "F69"}
+             "non_rule_detector": ("systemic" if failure.failure_id in {"F57", "F67", "F68", "F69"}
                                    else None)}
             for failure in catalogue.failures
         ],
     }
 
 
+@lru_cache(maxsize=64)
 def _submission_line(case_id: str) -> str | None:
+    """One line describing the submission, for the queue.
+
+    Cached: it deserialises the whole submission — the dossier and every run —
+    to produce a dozen words, and a submission is immutable once filed, so the
+    answer can never change for a given case id. Uncached this was 450 ms of
+    the queue's 2 s on a fifty-run dossier, paid again on every page load.
+    """
     try:
         payload = latest_submission(_store, case_id)
     except ValueError:
@@ -164,10 +176,17 @@ def _submission_line(case_id: str) -> str | None:
             f"{dossier.get('submission_purpose', 'submission')} via {firm.get('institution_name', '?')}")
 
 
-def _summary(record, case_id: str) -> dict:
+def _summary(record, case_id: str, events: list | None = None) -> dict:
+    """`events` is this case's ledger, if the caller already has it.
+
+    The queue projects every case from its events and then called this, which
+    read the same events a second time for two fields — 27,000 events twice
+    over on the largest case. Callers that have already paid for the read now
+    hand it in; the default keeps the one-off callers working.
+    """
     # Through the same filter the projection uses: a cleared case must not
     # keep advertising the disposition of the review that was cleared.
-    events = visible_events(_store.events_for(case_id))
+    events = visible_events(events if events is not None else _store.events_for(case_id))
     recommendation = next((e.payload.get('disposition') for e in reversed(events) if e.event_type == 'authorisation_computed'), None)
     decision = next((e.payload.get('disposition') for e in reversed(events) if e.event_type == 'authorisation_decided'), None)
     return {
@@ -193,11 +212,19 @@ def _summary(record, case_id: str) -> dict:
 @app.get("/cases")
 async def list_cases() -> list[dict]:
     """The prioritised queue: highest risk first, unscored (still
-    `submitted`) cases last, stable by first-seen within a band."""
+    `submitted`) cases last, stable by first-seen within a band.
+
+    Deliberately NOT run in a threadpool. Projecting a ledger is CPU-bound
+    Python, so threads share the GIL and serialise anyway — measured, four
+    concurrent requests took 5.5 s through a threadpool against 3.7 s inline.
+    The way to make this cheap is to stop projecting tens of thousands of
+    fact events to produce a dozen scalars, not to move the same work onto
+    another thread.
+    """
     summaries = []
     for case_id in _store.all_case_ids():
-        record = project_case(_store.events_for(case_id))
-        summaries.append(_summary(record, case_id))
+        events = _store.events_for(case_id)
+        summaries.append(_summary(project_case(events), case_id, events))
     summaries.sort(key=lambda s: (s["risk_total"] is None, -(s["risk_total"] or 0.0)))
     return summaries
 

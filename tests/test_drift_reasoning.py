@@ -19,11 +19,17 @@ _CLEAN = {"drift": {"anomalous": False, "explanation": "n/a", "cited_evidence": 
                     "transaction_ids": [], "onset_event_ref": None}, "other_observations": []}
 
 
+def _split(facts):
+    """The baseline measurement, by rule rather than by position — the floor
+    also carries DRIFT-BAS-01 now."""
+    return next(f for f in facts if f.rule_id == "DRIFT-BHV-01" and f.kind == "measurement")
+
+
 async def test_clean_judgement_is_a_clear_assessment(kst) -> None:
     facts = DriftAgent().run(kst, load_drift_ruleset())
     (a,), observations = await analyze_drift(kst, facts, _rule(), model=FakeChatModel({"record_drift_analysis": _CLEAN}))
     assert a.verdict == "clear" and not a.scores
-    assert a.fact_ids == [facts[0].fact_id] and observations == []
+    assert a.fact_ids == [_split(facts).fact_id] and observations == []
 
 
 async def test_drift_judged_present_is_a_breach(kst) -> None:
@@ -50,7 +56,7 @@ async def test_the_onset_lands_on_a_logged_event_and_never_an_invented_one(kst) 
     """F65: 'something specific changed it'. A valid ref becomes the
     assessment's subject and an evidence ref; an invented one is dropped."""
     facts = DriftAgent().run(kst, load_drift_ruleset())
-    assert [c["ref"] for c in facts[0].values["change_points"] if c["evaluable"]][-1] == "MER-QVC-8801"
+    assert [c["ref"] for c in _split(facts).values["change_points"] if c["evaluable"]][-1] == "MER-QVC-8801"
 
     def verdict(ref):
         return FakeChatModel({"record_drift_analysis": {"drift": {

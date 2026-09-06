@@ -25,7 +25,7 @@ from __future__ import annotations
 from schemas import Assessment, ControlPosture, EvidencePack, Fact, Ruleset
 from schemas.dossier import LoadedDossier
 
-from .base import SpecialistReview, floor
+from .base import SpecialistReview, floor, narrated
 from .control_checks import run_control_checks
 
 
@@ -126,7 +126,7 @@ class ControlAssuranceAgent:
                      rulebooks: dict[str, Ruleset] | None = None,
                      prior_observations=None, reviewer_directive: str | None = None,
                      prompts: dict | None = None, context: dict | None = None,
-                     round: int = 1) -> SpecialistReview:
+                     round: int = 1, narrate: bool = True) -> SpecialistReview:
         if ruleset is None:
             return SpecialistReview(facts=[], assessments=[])
         peers = peers_from_evidence(
@@ -134,5 +134,12 @@ class ControlAssuranceAgent:
         ) if peer_facts is not None else None
         facts = self.run(dossier, ruleset, evidence=evidence, peers=peers)
         assessments = self.assess(facts, ruleset, dossier, round=round)
-        return SpecialistReview(facts=facts, assessments=assessments,
-                                postures=classify_postures(facts, assessments))
+        # The one call this agent makes, and it decides nothing: five posture
+        # values across fifteen rules is the least self-explanatory output in
+        # the system, and the officer reads it first. Grounded in its own
+        # assessments, so it cannot introduce a claim the rules did not make —
+        # every verdict above stays computed, with no model in the chain.
+        return await narrated(
+            SpecialistReview(facts=facts, assessments=assessments,
+                             postures=classify_postures(facts, assessments)),
+            self.name, dossier, model=model, prompts=prompts, narrate=narrate)

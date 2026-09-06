@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0616-0002",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-16T13:48:00-05:00",
+  "ended_at": "2026-06-16T13:50:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "salt fat acid heat, hardback",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0616-0002",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-16T13:48:00-05:00",
+    "expires_at": "2026-06-16T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F002",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F002",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "salt fat acid heat, hardback",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 40.0,
+      "max_cumulative_amount": 40.0,
+      "currency": "USD",
+      "valid_from": "2026-06-16T00:00:00-05:00",
+      "valid_until": "2026-06-16T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5942"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-16T13:48:00-05:00",
+      "device_id": "DEV-F-F002"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F002",
+      "value": "TemC3s8dBSSPFb7ihMTPepoKcVubJ8FieVVU0c/9Ao16OVPmuEc0oD6QNBK39FA2RUxC1PNH1FBTJffCWqlpCw==",
+      "signed_payload_hash": "sha256:9b97d2d77def958c1f8fd39e4aa542a643769a827bef35f366ab0269d406ab55",
+      "signed_at": "2026-06-16T13:48:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e",
+      "release_ref": "ferrymead-cnc-v4.0.3"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "salt fat acid heat, hardback",
+          "max_price": 40.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:12c367155246742032a1c148dc40582dcf3558288781cc1d8d08e04dfb06336c"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-COK-02"
+          ]
+        },
+        "result_digest": "sha256:b65ad8815c26df6ee326702e076a4b4980004d6037976a2ac8f3b7dbe1b3d809",
+        "result_excerpt": {
+          "source": "mcp://shop.pagegrove.co.uk",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "PAGEGROVE BOOKS LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-COK-02"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:bd9a087bad3101343e6b00ada5e850fa486472cc4de29ffcdf70d07ffb70a29f"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-PGE-2201",
+          "lines": 1,
+          "total": 34.0
+        },
+        "result_digest": "sha256:7ebfebcdcd0060d33bca6bf424f89067e3bae5180a9999635699d663c0b3ca55"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 34.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F002"
+        },
+        "result_digest": "sha256:fc3e60099b18d98b7241481cff5c91ca0528329b2ebad00005c7bb0f8d88f32a"
+      }
+    ],
+    "selection_context": {
+      "query": "salt fat acid heat, hardback",
+      "selected_sku": "PGE-BOK-COK-02",
+      "alternatives_considered": [
+        {
+          "sku": "BRW-COF-BEA-1K",
+          "merchant_id": "MER-BRW-1177",
+          "price": 38.0,
+          "description": "Single-origin coffee beans, 1kg"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        },
+        {
+          "sku": "DSK-NTB-A5-10",
+          "merchant_id": "MER-DSK-3390",
+          "price": 42.0,
+          "description": "A5 dotted notebook, 10-pack"
+        },
+        {
+          "sku": "BRW-CLN-TAB-30",
+          "merchant_id": "MER-BRW-1177",
+          "price": 26.0,
+          "description": "Espresso machine cleaning tablets, 30-pack"
+        },
+        {
+          "sku": "VLT-CAB-USB-03",
+          "merchant_id": "MER-VLT-7789",
+          "price": 24.0,
+          "description": "USB-C braided cable, 2m, 3-pack"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-16T13:48:47-05:00",
+    "principal_id": "PRIN-F-F002",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 34.0,
+      "currency": "USD",
+      "merchant": "Pagegrove Books Ltd",
+      "line_items": [
+        {
+          "sku": "PGE-BOK-COK-02",
+          "qty": 1,
+          "unit_price": 34.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 40.0
+      }
+    },
+    "rendered_hash": "sha256:fd7aff281d31da4c0007a28b86380100b5fe718dc0f38367d2b49eba7010d795",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0616-0002",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0616-0002",
+      "prev_mandate_hash": "sha256:9b97d2d77def958c1f8fd39e4aa542a643769a827bef35f366ab0269d406ab55"
+    },
+    "created_at": "2026-06-16T13:48:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-PGE-2201",
+      "name": "Pagegrove Books Ltd",
+      "mcc": "5942",
+      "country": "GB",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "PGE-BOK-COK-02",
+        "description": "Salt Fat Acid Heat, hardback",
+        "qty": 1,
+        "unit_price": 34.0
+      }
+    ],
+    "cart_total": 34.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Pagegrove Books Ltd's catalogue and selected the closest in-stock option at $34.00, within the stated $40.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "rg+4XCuJ9EfVWxwMbww6qaW6Ab7BfjSKsS/Tie94Ef+LwRCW4eB8xaL6gAOuIhjtH7RSoGf//tBa1kN4aiG0CA==",
+      "signed_payload_hash": "sha256:ecbf96586aac03ebb665b5885065e9616da02eb5aed7829c09809c16866fb120",
+      "signed_at": "2026-06-16T13:48:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0616-0002",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0616-0002",
+      "prev_mandate_hash": "sha256:ecbf96586aac03ebb665b5885065e9616da02eb5aed7829c09809c16866fb120"
+    },
+    "authorized_at": "2026-06-16T13:50:19-05:00",
+    "amount": 34.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1001",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2001",
+      "scheme": "card_settlement",
+      "country": "GB",
+      "beneficiary_name_on_account": "Pagegrove Books Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "v0JM6lpa8NzxA+2EVpR9AfeLY+me/gSOi04xgKw9hXvzFphKUj8PdELq3llryUkJPgW6Mb7ecf9S0I2HZd2YBA==",
+      "signed_payload_hash": "sha256:6616a3e68574ba7fa9fecd51faa5bb22a1f8c95cb3045a9b7b08858a08756c5a",
+      "signed_at": "2026-06-16T13:50:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-06-16T13:49:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-06-16T13:49:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-06-16T13:49:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-06-16T13:49:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-06-16T13:49:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-06-16T13:49:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-06-16T13:49:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-06-16T13:49:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-06-16T13:49:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0619-0005",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-19T08:57:00-05:00",
+  "ended_at": "2026-06-19T08:59:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a large monstera, about 90cm",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0619-0005",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-19T08:57:00-05:00",
+    "expires_at": "2026-06-19T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F005",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F005",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a large monstera, about 90cm",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 80.0,
+      "max_cumulative_amount": 80.0,
+      "currency": "USD",
+      "valid_from": "2026-06-19T00:00:00-05:00",
+      "valid_until": "2026-06-19T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5261"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-19T08:57:00-05:00",
+      "device_id": "DEV-F-F005"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F005",
+      "value": "dwFjdfm8WqO1cDvrkEw57ud/cayrL68Dspsl3r6KgeJkpclgwQOZPVhBCS5vUexdvvZGRhNsvtJrsNeGttBfAQ==",
+      "signed_payload_hash": "sha256:6ee226d624c4997c5a589233f7099fae257b3df37ae79f3c4cfe0b119a5cb181",
+      "signed_at": "2026-06-19T08:57:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e",
+      "release_ref": "ferrymead-cnc-v4.0.3"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a large monstera, about 90cm",
+          "max_price": 80.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:61f9e0ab45ca58192b6477c7b0f796a21f6ec4ab757bbb4902c63596193d6f1d"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "GRV-PLT-MON-01"
+          ]
+        },
+        "result_digest": "sha256:19822f82fdd2482253be7e7dbf97ea76fe0b3a46063ad957c467e0b92a754aaa",
+        "result_excerpt": {
+          "source": "mcp://shop.groveline.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "GROVELINE GARDEN CO — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "GRV-PLT-MON-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:a6561f13cd162b522f2dd1e612849186d3db2ad01f1ff75e1f6d2f86bcc33109"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.groveline.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-GRV-2258",
+          "lines": 1,
+          "total": 68.0
+        },
+        "result_digest": "sha256:261aafe72f1c6d81491503cc3af61cfe196ffd73e02f083c42c59e0b3e5496e2"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 68.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F005"
+        },
+        "result_digest": "sha256:595d4e6e946e93a2b890631092ff8291791cb024e3aa0acae542bcfbe6fab345"
+      }
+    ],
+    "selection_context": {
+      "query": "a large monstera, about 90cm",
+      "selected_sku": "GRV-PLT-MON-01",
+      "alternatives_considered": [
+        {
+          "sku": "DSK-LMP-LED-02",
+          "merchant_id": "MER-DSK-3390",
+          "price": 68.0,
+          "description": "LED desk lamp, dimmable"
+        },
+        {
+          "sku": "LUM-SKN-CRM-50",
+          "merchant_id": "MER-LUM-6614",
+          "price": 64.0,
+          "description": "Ceramide night cream, 50ml"
+        },
+        {
+          "sku": "NOR-SND-EVR-11",
+          "merchant_id": "MER-NOR-1120",
+          "price": 62.0,
+          "description": "Everstrap sandal, men's 11"
+        },
+        {
+          "sku": "CYC-LGT-SET-01",
+          "merchant_id": "MER-CYC-6650",
+          "price": 62.0,
+          "description": "Front and rear light set"
+        },
+        {
+          "sku": "TRK-STV-CMP-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 74.5,
+          "description": "Compact camping stove"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-19T08:57:47-05:00",
+    "principal_id": "PRIN-F-F005",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 68.0,
+      "currency": "USD",
+      "merchant": "Groveline Garden Co",
+      "line_items": [
+        {
+          "sku": "GRV-PLT-MON-01",
+          "qty": 1,
+          "unit_price": 68.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 80.0
+      }
+    },
+    "rendered_hash": "sha256:79ebdec58325b0c8fd51eb79c61575d8d8588a7baeb6c07f81833b4af9ac9528",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0619-0005",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0619-0005",
+      "prev_mandate_hash": "sha256:6ee226d624c4997c5a589233f7099fae257b3df37ae79f3c4cfe0b119a5cb181"
+    },
+    "created_at": "2026-06-19T08:57:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-GRV-2258",
+      "name": "Groveline Garden Co",
+      "mcc": "5261",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "GRV-PLT-MON-01",
+        "description": "Monstera deliciosa, 90cm",
+        "qty": 1,
+        "unit_price": 68.0
+      }
+    ],
+    "cart_total": 68.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Groveline Garden Co's catalogue and selected the closest in-stock option at $68.00, within the stated $80.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "LD83ecT/dOWu2maMUsnadgFt90GMqtWpSgXO62AKgrfDJK4scQS6mQahuai4C5UKQ/4K/gK6TiZA5uLWfkChBw==",
+      "signed_payload_hash": "sha256:3bede9c01cf3c4db70af344d62addcd96d5fbcbd743e216c329fe04e049735c3",
+      "signed_at": "2026-06-19T08:57:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0619-0005",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0619-0005",
+      "prev_mandate_hash": "sha256:3bede9c01cf3c4db70af344d62addcd96d5fbcbd743e216c329fe04e049735c3"
+    },
+    "authorized_at": "2026-06-19T08:59:19-05:00",
+    "amount": 68.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1004",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2004",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Groveline Garden Co"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "iJ28dlvmHv20TweEEnHbKy1H2rTOUucsF2Ei4xWl9iQyZRBJJIES4B3HgdCbwOEM92+BqqCCvVQ/yEJOLGJACg==",
+      "signed_payload_hash": "sha256:a74adba38b5ffcc06b2186d6c851ea90350bbb0100c0ccb36a0394823fdbb303",
+      "signed_at": "2026-06-19T08:59:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-06-19T08:58:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-06-19T08:58:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-06-19T08:58:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-06-19T08:58:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-06-19T08:58:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-06-19T08:58:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-06-19T08:58:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-06-19T08:58:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-06-19T08:58:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

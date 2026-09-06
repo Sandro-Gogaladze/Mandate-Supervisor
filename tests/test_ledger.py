@@ -163,3 +163,19 @@ def test_events_for_run_filters(store) -> None:
                  payload={"run_id": "r2", "kind": "triage"}, actor="system:triage", run_id="r2")
     assert [e.run_id for e in store.events_for_run("r1")] == ["r1"]
     assert store.all_case_ids() == ["CASE-T-001"]
+
+
+def test_registry_streams_are_on_the_chain_but_are_not_cases(tmp_path) -> None:
+    """A sandbox promotion is hash-chained like everything else, but it is not
+    a dossier — projecting it as one put a phantom "unknown" firm in the queue
+    and in every cross-dossier sweep."""
+    store = LedgerStore(tmp_path / "ledger.db")
+    store.append(case_id="DOSSIER-A-2026-001", event_type="case_submitted",
+                 payload={}, actor="system:ingestion")
+    store.append(case_id="registry:kya", event_type="ruleset_promoted",
+                 payload={"domain": "kya"}, actor="human:Ana Beridze")
+    assert store.all_case_ids() == ["DOSSIER-A-2026-001"]
+    assert store.all_stream_ids() == ["DOSSIER-A-2026-001", "registry:kya"]
+    # the promotion is still on the chain, and the chain still verifies
+    assert [e.event_type for e in store.events_for("registry:kya")] == ["ruleset_promoted"]
+    assert store.verify() == []

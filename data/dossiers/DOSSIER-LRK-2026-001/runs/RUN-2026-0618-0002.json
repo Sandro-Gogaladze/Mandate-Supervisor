@@ -1,0 +1,337 @@
+{
+  "run_id": "RUN-2026-0618-0002",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-18T10:41:00-05:00",
+  "ended_at": "2026-06-18T10:43:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "the silk roads paperback and salt fat acid heat",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0618-0002",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-18T10:41:00-05:00",
+    "expires_at": "2026-06-18T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L002",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L002",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "the silk roads paperback and salt fat acid heat",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 60.0,
+      "max_cumulative_amount": 60.0,
+      "currency": "USD",
+      "valid_from": "2026-06-18T00:00:00-05:00",
+      "valid_until": "2026-06-18T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5942"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-18T10:41:00-05:00",
+      "device_id": "DEV-L-L002"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L002",
+      "value": "OmxtbvyMnM321ZBzwgaHrmcaor+MEcI2QWpuJAdem+TbgmCTV1GR7HWz48haMjgP5nbUDrCvZ4Kef1Jv/Wd+AA==",
+      "signed_payload_hash": "sha256:0dc153f4ec4913cecbaaf02ef17bce19b4a54c309e2f935a7da138689431b0b3",
+      "signed_at": "2026-06-18T10:41:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca",
+      "release_ref": "larkspur-shop-v3.1.4"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "the silk roads paperback and salt fat acid heat",
+          "max_price": 60.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:389e30500ca2488b9474d314f0106d5f814ebd2e0c00d3fb68ced916a86fbd46"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-HIS-01",
+            "PGE-BOK-COK-02"
+          ]
+        },
+        "result_digest": "sha256:b65ad8815c26df6ee326702e076a4b4980004d6037976a2ac8f3b7dbe1b3d809",
+        "result_excerpt": {
+          "source": "mcp://shop.pagegrove.co.uk",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "PAGEGROVE BOOKS LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-HIS-01",
+            "PGE-BOK-COK-02"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:3f7fa5f8516f748d8ed6b7e443c5630d45769eb92beda4b8fd68f3e2dc310d9a"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-PGE-2201",
+          "lines": 2,
+          "total": 52.5
+        },
+        "result_digest": "sha256:3a6ed5511b9e2024308e323b7e04cba23672d3479c591fc89b4fb4d37f086fc7"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 52.5,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L002"
+        },
+        "result_digest": "sha256:f8bb2bb6eae293750bafbb301f2e31247584011028f72380025b3c4c5c0a7816"
+      }
+    ],
+    "selection_context": {
+      "query": "the silk roads paperback and salt fat acid heat",
+      "selected_sku": "PGE-BOK-HIS-01",
+      "alternatives_considered": [
+        {
+          "sku": "GRV-SOI-MIX-20",
+          "merchant_id": "MER-GRV-2258",
+          "price": 21.5,
+          "description": "Peat-free potting mix, 20L"
+        },
+        {
+          "sku": "KDO-PZL-1000-04",
+          "merchant_id": "MER-KDO-5573",
+          "price": 22.0,
+          "description": "1000-piece landscape puzzle"
+        },
+        {
+          "sku": "VLT-CAB-USB-03",
+          "merchant_id": "MER-VLT-7789",
+          "price": 24.0,
+          "description": "USB-C braided cable, 2m, 3-pack"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-18T10:41:47-05:00",
+    "principal_id": "PRIN-L-L002",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 52.5,
+      "currency": "USD",
+      "merchant": "Pagegrove Books Ltd",
+      "line_items": [
+        {
+          "sku": "PGE-BOK-HIS-01",
+          "qty": 1,
+          "unit_price": 18.5
+        },
+        {
+          "sku": "PGE-BOK-COK-02",
+          "qty": 1,
+          "unit_price": 34.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 60.0
+      }
+    },
+    "rendered_hash": "sha256:9c42a4a06a36b63b552bf94107137b99457b566c676b330ff0afe43fe958e8fd",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0618-0002",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0618-0002",
+      "prev_mandate_hash": "sha256:0dc153f4ec4913cecbaaf02ef17bce19b4a54c309e2f935a7da138689431b0b3"
+    },
+    "created_at": "2026-06-18T10:41:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-PGE-2201",
+      "name": "Pagegrove Books Ltd",
+      "mcc": "5942",
+      "country": "GB",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "PGE-BOK-HIS-01",
+        "description": "The Silk Roads, paperback",
+        "qty": 1,
+        "unit_price": 18.5
+      },
+      {
+        "sku": "PGE-BOK-COK-02",
+        "description": "Salt Fat Acid Heat, hardback",
+        "qty": 1,
+        "unit_price": 34.0
+      }
+    ],
+    "cart_total": 52.5,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Pagegrove Books Ltd's catalogue and selected the closest in-stock option at $52.50, within the stated $60.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "13L6Hu9oD3Dt1VaNMneFQV+HYvCuPAGDgW/JedLLJCvfeZP9mVtW1ONtJeOG9mFc/vK9CVkeAX72h+JYIDzsDA==",
+      "signed_payload_hash": "sha256:f11302058d33765d8f7a55dd9055c4ad858598b326c4d898296628e8ea957619",
+      "signed_at": "2026-06-18T10:41:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0618-0002",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0618-0002",
+      "prev_mandate_hash": "sha256:f11302058d33765d8f7a55dd9055c4ad858598b326c4d898296628e8ea957619"
+    },
+    "authorized_at": "2026-06-18T10:43:19-05:00",
+    "amount": 52.5,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1001",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2001",
+      "scheme": "card_settlement",
+      "country": "GB",
+      "beneficiary_name_on_account": "Pagegrove Books Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "tbrNYxStWv410DHcZf4p0snEVpPlI2aOUh9VaOJpw9gNrJdWL7AN3WjISA9Fv/O2soYe+xLDeZOulmKYL9azBQ==",
+      "signed_payload_hash": "sha256:a88fb4ef01a8191ac9f6f68f9e3ac2e373fc733647ca6688c4230392312c0c05",
+      "signed_at": "2026-06-18T10:43:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-06-18T10:42:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-06-18T10:42:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-06-18T10:42:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-06-18T10:42:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-06-18T10:42:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-18T10:42:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-18T10:42:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-18T10:42:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-18T10:42:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

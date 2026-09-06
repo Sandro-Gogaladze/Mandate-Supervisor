@@ -36,11 +36,15 @@ PROMPTS_DIR = Path(__file__).resolve().parent.parent / "registry" / "prompts"
 # on run_started, and made overridable per run.
 _REVIEW_PROMPTS: tuple[str, ...] = (
     "ORCHESTRATOR",
+    # The same agent's closing voice at the end of the turn, with its own
+    # body a supervisor can override for one run like any other.
+    "ORCHESTRATOR-CLOSING",
     "INVESTIGATOR",
     "SYNTHESIZER",
     "SPECIALIST-MANDATE",
     "SPECIALIST-KYA",
-    "KYA-NARRATION",
+    # One narration prompt for all eight specialists (agents/narration.py).
+    "SPECIALIST-NARRATION",
     "SPECIALIST-PROVENANCE",
     "SPECIALIST-INJECTION",
     "SPECIALIST-COUNTERPARTY",

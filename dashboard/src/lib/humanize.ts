@@ -128,7 +128,6 @@ export const RUN_TITLE: Record<string, string> = {
   triage: 'Full review',
   investigation: 'Question',
   drafting: 'Report',
-  portfolio: 'Portfolio sweep',
 }
 
 /** Skill ids → the agent they belong to. */

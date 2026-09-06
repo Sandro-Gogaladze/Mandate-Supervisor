@@ -59,8 +59,18 @@ _REPORT_TOOL = with_reasoning({
                             "items": {"type": "string"},
                             "description": "finding_id values from the input that this section's claims rest on.",
                         },
+                        "character": {
+                            "type": "string",
+                            "enum": ["adverse", "clear", "mixed"],
+                            "description": (
+                                "What this section asserts, checked against the findings it cites: "
+                                "'adverse' if it reports something the agent got wrong, 'clear' if it "
+                                "reports checks that were satisfied, 'mixed' if both. Every input "
+                                "finding carries a `verdict` — use it."
+                            ),
+                        },
                     },
-                    "required": ["title", "body", "cited_finding_ids"],
+                    "required": ["title", "body", "cited_finding_ids", "character"],
                 },
             },
             "open_observations_note": {
@@ -97,12 +107,17 @@ def _structured_view(
             if risk_score
             else None
         ),
+        # `verdict` is derived, not new evidence: a finding with no severity
+        # weight is a rule that was SATISFIED, and on the current corpus 59% of
+        # findings are that kind. Leaving the drafter to infer it from a null
+        # severity is how a clean check gets written up as a breach.
         "findings": [
             {
                 "finding_id": f.finding_id,
                 "agent": f.agent,
                 "type": f.type,
                 "rule_id": f.rule_id,
+                "verdict": "breach" if (f.severity_weight or 0) > 0 else "satisfied",
                 "severity_weight": f.severity_weight,
                 "summary": f.summary,
                 "details": f.details,

@@ -41,7 +41,7 @@ export interface CaseSummary {
   last_event_at: string
 }
 
-export type FindingAgent = 'mandate' | 'kya' | 'log' | 'drift' | 'provenance' | 'injection' | 'counterparty' | 'consent' | 'control_assurance' | 'systemic' | 'red_team'
+export type FindingAgent = 'mandate' | 'kya' | 'log' | 'drift' | 'provenance' | 'injection' | 'counterparty' | 'consent' | 'control_assurance' | 'systemic'
 export type ObservationAgent = FindingAgent | 'investigator'
 
 export interface Finding {
@@ -123,6 +123,10 @@ export interface ReportSection {
   title: string
   body: string
   cited_finding_ids: string[]
+  /** What the section asserts about the findings it cites, verified against
+   * their severities by the grounding validator. Null on reports drafted
+   * before the field existed. */
+  character?: 'adverse' | 'clear' | 'mixed' | null
 }
 
 export interface DraftReport {
@@ -156,6 +160,16 @@ export interface ReviewerDirective {
   run_scope?: string[]
 }
 
+/** What the decision page submits to the paused human gate. The same shape as
+ * `ReviewerDecision` minus `decided_at`, which the gate node stamps itself —
+ * a client-supplied signing time is not evidence of anything. */
+export interface GateSubmission {
+  action: 'approve' | 'reject' | 'rerun'
+  reviewer: string
+  comment: string | null
+  directive: ReviewerDirective | null
+}
+
 export interface ReviewerDecision {
   action: 'approve' | 'reject' | 'rerun'
   reviewer: string
@@ -176,7 +190,7 @@ export interface DispatchPlan {
   message_to_officer?: string
 }
 
-export type RunKind = 'triage' | 'investigation' | 'drafting' | 'portfolio'
+export type RunKind = 'triage' | 'investigation' | 'drafting'
 
 // prompt_id -> the assembled text recorded on run_started
 export interface RecordedPrompt {
@@ -372,7 +386,7 @@ export interface FullMap {
   edges: MapEdge[]
 }
 
-export const SPECIALIST_NODES = ['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'control_assurance', 'systemic', 'red_team'] as const
+export const SPECIALIST_NODES = ['mandate', 'kya', 'provenance', 'injection', 'counterparty', 'consent', 'log', 'drift', 'control_assurance', 'systemic'] as const
 
 export const AGENT_LABELS: Record<ObservationAgent, string> = {
   mandate: 'Mandate',
@@ -381,5 +395,5 @@ export const AGENT_LABELS: Record<ObservationAgent, string> = {
   drift: 'Drift',
   investigator: 'Investigator',
   provenance: 'Provenance', injection: 'Injection', counterparty: 'Counterparty', consent: 'Consent & Harm',
-  control_assurance: 'Control Assurance', systemic: 'Systemic', red_team: 'Red Team',
+  control_assurance: 'Control Assurance', systemic: 'Systemic',
 }

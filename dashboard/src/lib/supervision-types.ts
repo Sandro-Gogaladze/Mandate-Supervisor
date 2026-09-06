@@ -15,9 +15,21 @@ export interface Assessment {
   supersedes: string | null; review_run_refs: string[] | null
 }
 export type Disposition = 'authorise' | 'monitor' | 'refuse' | 'incomplete-submission'
+/** The wire values are frozen: `disposition` is inside `recommendation_digest`
+ *  and inside every signed decision on the hash chain, so renaming one would
+ *  invalidate the digests of cases already decided. What a supervisor reads is
+ *  a label over the top.
+ *
+ *  'Incomplete submission' was the wrong label for its own state. It reaches
+ *  the supervisor two ways — the institution filed short (S1-S4), or OUR review
+ *  could not conclude on evidence that did arrive (coverage, judgment,
+ *  evidence) — and it read as an accusation about the filing in both. Halcyon
+ *  is the second kind: 12 target runs, 94% coverage, nothing missing.
+ *  'Inconclusive' states the review's own status instead of blaming a filing,
+ *  and the reason codes underneath say which side has to close it. */
 export const DISPOSITION_LABEL: Record<Disposition, string> = {
   authorise: 'Authorise', monitor: 'Authorise with conditions', refuse: 'Refuse',
-  'incomplete-submission': 'Incomplete submission',
+  'incomplete-submission': 'Inconclusive',
 }
 export interface RunResult {
   run_id: string; verdict: 'clean' | 'breach' | 'unresolved'
@@ -72,8 +84,6 @@ export interface ExecutionDetail {
   }
   transactions: { transaction_id: string; amount: number; currency: string; status: string; timestamp: string }[]
 }
-export interface PortfolioFinding { finding_id: string; failure: string; subject_refs: string[]; summary: string; evidence: Record<string, unknown> }
-export interface PortfolioSweep { sweep_id: string | null; completed_at?: string; findings: PortfolioFinding[] }
 
 // One specialist's live progress on the AG-UI stream (pipeline/graph.py::
 // _stream_specialist). Small on purpose: counts and a ledger sequence range,

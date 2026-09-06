@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0713-0017",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-13T15:58:00-05:00",
+  "ended_at": "2026-07-13T15:59:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "stormshell rain jacket, medium, under $230",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0713-0017",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-13T15:58:00-05:00",
+    "expires_at": "2026-07-13T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L016",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L016",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "stormshell rain jacket, medium, under $230",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 230.0,
+      "max_cumulative_amount": 230.0,
+      "currency": "USD",
+      "valid_from": "2026-07-13T00:00:00-05:00",
+      "valid_until": "2026-07-13T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5941"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-13T15:58:00-05:00",
+      "device_id": "DEV-L-L016"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L016",
+      "value": "O4mQnWnBLNG6Q7/o67IkmwcHcw3zy7PE+Yetil2JVdaQspwKzW6fkH6fTTlh9n3KJxekUjjol4rNWIZGuzRvCg==",
+      "signed_payload_hash": "sha256:31c36fbf2fa9b3768a89c54f34d3e5b25e9324b036d3f6a8124ab6e9dc28331a",
+      "signed_at": "2026-07-13T15:58:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca",
+      "release_ref": "larkspur-shop-v3.1.4"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "stormshell rain jacket, medium, under $230",
+          "max_price": 230.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:4ce3ee1ed1b395b278f29f82c9a13c9c922c1e93edf809e78441df3972959985"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "TRK-JKT-RAI-M"
+          ]
+        },
+        "result_digest": "sha256:854280e5d3e10ee9b6ad06a70b86cac69e30280c51069608f108f1f3e7f16263",
+        "result_excerpt": {
+          "source": "mcp://shop.trekline.nl",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "TREKLINE OUTDOOR BV — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "TRK-JKT-RAI-M"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:9808f83177a9d88a1482bc2647f492c7798c99fe40968c8a91bd0e740d74f4c7"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-TRK-4408",
+          "lines": 1,
+          "total": 214.0
+        },
+        "result_digest": "sha256:df0a7f0f402f745b94f5937ee1a5437c7547c0941f62d979a4a05b7251f65424"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 214.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L016"
+        },
+        "result_digest": "sha256:4eeecaa601c4c087c909d872d359c6eaabaae2c0a442b991752d7841feadba45"
+      }
+    ],
+    "selection_context": {
+      "query": "stormshell rain jacket, medium, under $230",
+      "selected_sku": "TRK-JKT-RAI-M",
+      "alternatives_considered": [
+        {
+          "sku": "MKT-3P-HDP-ANC",
+          "merchant_id": "MER-MKT-9034",
+          "price": 238.0,
+          "description": "Noise-cancelling headphones (marketplace listing)"
+        },
+        {
+          "sku": "NOR-BOO-WTR-08",
+          "merchant_id": "MER-NOR-1120",
+          "price": 189.0,
+          "description": "Fjord waterproof boot, women's 8"
+        },
+        {
+          "sku": "HRT-CKW-DUT-05",
+          "merchant_id": "MER-HRT-9902",
+          "price": 168.0,
+          "description": "Enamelled cast-iron dutch oven, 5qt"
+        },
+        {
+          "sku": "SLV-NEC-SIL-01",
+          "merchant_id": "MER-SLV-8830",
+          "price": 165.0,
+          "description": "Sterling silver pendant necklace"
+        },
+        {
+          "sku": "NOR-RUN-PRO-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 268.0,
+          "description": "Trailflex Pro carbon-plate racer, women's 10"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-13T15:58:47-05:00",
+    "principal_id": "PRIN-L-L016",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 214.0,
+      "currency": "USD",
+      "merchant": "Trekline Outdoor BV",
+      "line_items": [
+        {
+          "sku": "TRK-JKT-RAI-M",
+          "qty": 1,
+          "unit_price": 214.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 230.0
+      }
+    },
+    "rendered_hash": "sha256:3b4696a77081bd63ba02db37bb03d6f67394f43dcc6b0281a74e1727d0d711f1",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0713-0017",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0713-0017",
+      "prev_mandate_hash": "sha256:31c36fbf2fa9b3768a89c54f34d3e5b25e9324b036d3f6a8124ab6e9dc28331a"
+    },
+    "created_at": "2026-07-13T15:58:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-TRK-4408",
+      "name": "Trekline Outdoor BV",
+      "mcc": "5941",
+      "country": "NL",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "TRK-JKT-RAI-M",
+        "description": "Stormshell rain jacket, M",
+        "qty": 1,
+        "unit_price": 214.0
+      }
+    ],
+    "cart_total": 214.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Trekline Outdoor BV's catalogue and selected the closest in-stock option at $214.00, within the stated $230.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "jsuPHA6gPqgmM8wBqt8V/3JLdlnGVhNPj5CBupMnfRcWxNneVfTjaCbQMmSXFU0lHC1lKYXoz5cS2hOMI44VAQ==",
+      "signed_payload_hash": "sha256:0b29193e966403ddabc090d61754dbef7c86192e73b21303ba932ffc250c0397",
+      "signed_at": "2026-07-13T15:58:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0713-0017",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0713-0017",
+      "prev_mandate_hash": "sha256:0b29193e966403ddabc090d61754dbef7c86192e73b21303ba932ffc250c0397"
+    },
+    "authorized_at": "2026-07-13T15:59:19-05:00",
+    "amount": 214.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1016",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2016",
+      "scheme": "card_settlement",
+      "country": "NL",
+      "beneficiary_name_on_account": "Trekline Outdoor BV"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "TcFWoZUg/urSchAh+eCROMuFfaVA4xqxS7Im3RvwZuGnYxjmthCOqogDPUs402o97DkotMXJNKeh4mRs8PxYDw==",
+      "signed_payload_hash": "sha256:cac2a21c38cd0e295289d58b47c71c21d14981bc5097a1711c398d7098c278e5",
+      "signed_at": "2026-07-13T15:59:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-07-13T15:59:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-07-13T15:59:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-07-13T15:59:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-07-13T15:59:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-07-13T15:59:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-13T15:59:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-13T15:59:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-13T15:59:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-13T15:59:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

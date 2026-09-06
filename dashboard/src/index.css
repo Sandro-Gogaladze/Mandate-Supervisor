@@ -8,78 +8,113 @@
   --font-heading: "Archivo", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
 
-  /* Palette derived from the logo itself — deep navy (#062869) and electric
-     blue (#0065FD) on cool near-white. Nothing warm anywhere; every gray
-     leans slightly navy so surfaces and brand read as one system. Status
-     colors (amber/emerald/red for active/done/flagged) stay conventional —
-     that's signal, not brand. */
-  --background: oklch(0.985 0.003 255);
-  --foreground: oklch(0.21 0.045 265);
+  /* Palette derived from the logo itself — the institutional navy of the
+     document/card (#002454 → #003c78), the blue the card lifts to, and the
+     verification teal of the check mark (#0e9d8b). Nothing warm anywhere;
+     every gray leans navy so surfaces and brand read as one system. Amber
+     and red stay conventional for "working" and "flagged" — that's signal,
+     not brand — but "clean/complete" is the logo's own teal (see the
+     emerald ramp override in @theme). */
+  --brand-navy: oklch(0.27 0.096 257);
+  --brand-blue: oklch(0.5 0.175 257);
+  --brand-teal: oklch(0.625 0.115 181);
+  --brand-paper: oklch(0.95 0.021 248);
+
+  --background: oklch(0.984 0.005 250);
+  --foreground: oklch(0.22 0.052 258);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.045 265);
+  --card-foreground: oklch(0.22 0.052 258);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.045 265);
-  --primary: oklch(0.55 0.21 262);
-  --primary-foreground: oklch(0.99 0.005 255);
-  --secondary: oklch(0.955 0.008 255);
-  --secondary-foreground: oklch(0.28 0.06 265);
-  --muted: oklch(0.955 0.008 255);
-  --muted-foreground: oklch(0.5 0.03 262);
-  --accent: oklch(0.94 0.025 258);
-  --accent-foreground: oklch(0.4 0.14 263);
+  --popover-foreground: oklch(0.22 0.052 258);
+  --primary: oklch(0.5 0.175 257);
+  --primary-foreground: oklch(0.99 0.005 250);
+  --secondary: oklch(0.955 0.009 250);
+  --secondary-foreground: oklch(0.29 0.065 257);
+  --muted: oklch(0.955 0.009 250);
+  --muted-foreground: oklch(0.505 0.035 255);
+  --accent: oklch(0.94 0.026 250);
+  --accent-foreground: oklch(0.38 0.14 257);
   --destructive: oklch(0.5 0.16 25);
-  --border: oklch(0.905 0.012 255);
-  --input: oklch(0.905 0.012 255);
-  --ring: oklch(0.55 0.21 262);
-  --chart-1: oklch(0.55 0.21 262);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  /* The sidebar is the logo's own navy, deepened to a rail — dark even in
-     light mode, the product's signature element. */
-  --sidebar: oklch(0.235 0.07 266);
-  --sidebar-foreground: oklch(0.9 0.015 255);
-  --sidebar-primary: oklch(0.55 0.21 262);
-  --sidebar-primary-foreground: oklch(0.99 0.005 255);
-  --sidebar-accent: oklch(0.31 0.085 265);
-  --sidebar-accent-foreground: oklch(0.97 0.01 255);
+  --border: oklch(0.905 0.014 250);
+  --input: oklch(0.905 0.014 250);
+  --ring: oklch(0.5 0.175 257);
+  /* Charts read as the brand: blue, the check-mark teal, then the deep navy
+     and its lighter paper tint before any hue that isn't in the logo. */
+  --chart-1: oklch(0.5 0.175 257);
+  --chart-2: oklch(0.625 0.115 181);
+  --chart-3: oklch(0.34 0.11 255);
+  --chart-4: oklch(0.718 0.066 249);
+  --chart-5: oklch(0.75 0.15 70);
+  /* A muted navy rail — about half the logo's chroma. At full saturation it
+     competed with the brand blue it carries, so nothing on it could read as
+     an accent; stripped to neutral it read as black. Dark even
+     in light mode, the product's signature element. */
+  --sidebar: oklch(0.228 0.036 258);
+  --sidebar-foreground: oklch(0.9 0.012 250);
+  --sidebar-primary: oklch(0.56 0.17 257);
+  --sidebar-primary-foreground: oklch(0.99 0.005 250);
+  /* Kept a trace of blue: the active row is the one place on a neutral
+     rail that should still read as brand, not as a lighter grey. */
+  --sidebar-accent: oklch(0.31 0.052 257);
+  --sidebar-accent-foreground: oklch(0.97 0.01 250);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.62 0.19 262);
+  --sidebar-ring: oklch(0.58 0.17 257);
+
+  /* Supervision-map edges. Each token is the SAME hue as the ring the node it
+     enters wears (SupervisionMap's STATUS_RING), so a line can never disagree
+     with the box it points at. Defined on :root, not in @theme inline —
+     inlined theme values are not emitted as CSS variables, so SVG stroke
+     attributes could not read them. */
+  --map-live: oklch(62.3% 0.214 259.8);      /* ring-blue-500  — working */
+  --map-findings: oklch(63.7% 0.237 25.3);   /* ring-red-500   — findings */
+  --map-clean: oklch(0.66 0.118 181);        /* ring-emerald-500, brand teal */
+  --map-await: var(--primary);               /* ring-primary   — human gate */
+  --map-unresolved: var(--muted-foreground);
+  --map-idle: var(--border);
+  --map-arrow-idle: oklch(0.72 0.02 255);
 }
 
 .dark {
-  --background: oklch(0.16 0.03 265);
-  --foreground: oklch(0.955 0.01 255);
-  --card: oklch(0.2 0.04 265);
-  --card-foreground: oklch(0.955 0.01 255);
-  --popover: oklch(0.2 0.04 265);
-  --popover-foreground: oklch(0.955 0.01 255);
-  --primary: oklch(0.62 0.19 262);
-  --primary-foreground: oklch(0.99 0.005 255);
-  --secondary: oklch(0.26 0.045 265);
-  --secondary-foreground: oklch(0.955 0.01 255);
-  --muted: oklch(0.26 0.045 265);
-  --muted-foreground: oklch(0.7 0.02 258);
-  --accent: oklch(0.3 0.07 264);
-  --accent-foreground: oklch(0.9 0.04 258);
+  --brand-navy: oklch(0.27 0.096 257);
+  --brand-blue: oklch(0.6 0.165 257);
+  --brand-teal: oklch(0.7 0.12 182);
+  --brand-paper: oklch(0.95 0.021 248);
+
+  --background: oklch(0.165 0.035 258);
+  --foreground: oklch(0.955 0.011 250);
+  --card: oklch(0.205 0.045 258);
+  --card-foreground: oklch(0.955 0.011 250);
+  --popover: oklch(0.205 0.045 258);
+  --popover-foreground: oklch(0.955 0.011 250);
+  --primary: oklch(0.6 0.165 257);
+  --primary-foreground: oklch(0.99 0.005 250);
+  --secondary: oklch(0.265 0.05 258);
+  --secondary-foreground: oklch(0.955 0.011 250);
+  --muted: oklch(0.265 0.05 258);
+  --muted-foreground: oklch(0.705 0.024 252);
+  --accent: oklch(0.305 0.072 257);
+  --accent-foreground: oklch(0.9 0.045 252);
   --destructive: oklch(0.65 0.19 25);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.62 0.19 262);
-  --chart-1: oklch(0.62 0.19 262);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.14 0.03 266);
-  --sidebar-foreground: oklch(0.92 0.012 255);
-  --sidebar-primary: oklch(0.62 0.19 262);
-  --sidebar-primary-foreground: oklch(0.99 0.005 255);
-  --sidebar-accent: oklch(0.24 0.055 265);
-  --sidebar-accent-foreground: oklch(0.97 0.01 255);
+  --ring: oklch(0.6 0.165 257);
+  --chart-1: oklch(0.6 0.165 257);
+  --chart-2: oklch(0.7 0.12 182);
+  --chart-3: oklch(0.718 0.066 249);
+  --chart-4: oklch(0.45 0.15 257);
+  --chart-5: oklch(0.77 0.15 70);
+  --sidebar: oklch(0.158 0.019 258);
+  --sidebar-foreground: oklch(0.92 0.007 250);
+  --sidebar-primary: oklch(0.6 0.165 257);
+  --sidebar-primary-foreground: oklch(0.99 0.005 250);
+  --sidebar-accent: oklch(0.25 0.04 258);
+  --sidebar-accent-foreground: oklch(0.97 0.01 250);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.62 0.19 262);
+  --sidebar-ring: oklch(0.6 0.165 257);
+
+  /* Only the neutrals move in dark; the status hues are the same classes. */
+  --map-idle: oklch(1 0 0 / 18%);
+  --map-arrow-idle: oklch(0.5 0.02 255);
 }
 
 @theme inline {
@@ -118,19 +153,32 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-paper: var(--brand-paper);
   --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
+  /* "Clean / complete / verified" is the logo's check-mark teal, not a
+     generic emerald. Overriding the ramp here retunes every emerald-* class
+     in the app at once, so the success hue can never drift out of brand. */
+  --color-emerald-300: oklch(0.83 0.09 180);
+  --color-emerald-400: oklch(0.75 0.113 181);
+  --color-emerald-500: oklch(0.66 0.118 181);
+  --color-emerald-600: oklch(0.575 0.108 182);
+  --color-emerald-700: oklch(0.485 0.09 183);
+  --color-emerald-800: oklch(0.4 0.073 184);
   /* Elevation: shadows tint from the navy ink, never gray-black — gray
      shadows on a tinted palette read dirty (see DESIGN.md, Elevation).
      Redefining the theme tokens here upgrades every shadow-* utility in
      one spot: cards (shadow-sm), floating chrome (shadow-md), overlays
      (shadow-lg). */
-  --shadow-2xs: 0 1px 2px oklch(0.25 0.06 265 / 0.06);
-  --shadow-xs: 0 1px 2px oklch(0.25 0.06 265 / 0.07);
-  --shadow-sm: 0 1px 3px oklch(0.25 0.06 265 / 0.08), 0 1px 2px oklch(0.25 0.06 265 / 0.05);
-  --shadow-md: 0 4px 12px oklch(0.25 0.06 265 / 0.08), 0 2px 4px oklch(0.25 0.06 265 / 0.05);
-  --shadow-lg: 0 8px 24px oklch(0.25 0.06 265 / 0.1), 0 2px 6px oklch(0.25 0.06 265 / 0.05);
-  --shadow-xl: 0 16px 40px oklch(0.25 0.06 265 / 0.12), 0 4px 10px oklch(0.25 0.06 265 / 0.05);
+  --shadow-2xs: 0 1px 2px oklch(0.24 0.055 258 / 0.06);
+  --shadow-xs: 0 1px 2px oklch(0.24 0.055 258 / 0.07);
+  --shadow-sm: 0 1px 3px oklch(0.24 0.055 258 / 0.08), 0 1px 2px oklch(0.24 0.055 258 / 0.05);
+  --shadow-md: 0 4px 12px oklch(0.24 0.055 258 / 0.08), 0 2px 4px oklch(0.24 0.055 258 / 0.05);
+  --shadow-lg: 0 8px 24px oklch(0.24 0.055 258 / 0.1), 0 2px 6px oklch(0.24 0.055 258 / 0.05);
+  --shadow-xl: 0 16px 40px oklch(0.24 0.055 258 / 0.12), 0 4px 10px oklch(0.24 0.055 258 / 0.05);
 }
 
 @layer base {
@@ -145,7 +193,7 @@
      caret, scrollbars, and the numerals in tabular data all ship with
      defaults that belong to no design system. Theme them from the palette. */
   ::selection {
-    background: oklch(0.55 0.21 262 / 0.18);
+    background: color-mix(in oklab, var(--primary) 18%, transparent);
     color: var(--foreground);
   }
   input,
@@ -155,20 +203,20 @@
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: oklch(0.55 0.21 262 / 0.25) transparent;
+    scrollbar-color: color-mix(in oklab, var(--primary) 25%, transparent) transparent;
   }
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   ::-webkit-scrollbar-thumb {
-    background: oklch(0.55 0.21 262 / 0.22);
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
     border-radius: 5px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.55 0.21 262 / 0.4);
+    background: color-mix(in oklab, var(--primary) 40%, transparent);
     border: 2px solid transparent;
     background-clip: padding-box;
   }

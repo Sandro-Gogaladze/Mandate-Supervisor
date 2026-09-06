@@ -227,10 +227,41 @@ def _rec_01(rule: Rule, ctx: ProvenanceContext) -> Fact:
         })
 
 
+def _tec_07(rule: Rule, run: Run, ctx: ProvenanceContext) -> Fact:
+    """The model that ACTUALLY RAN is not on the blocklist.
+
+    `KYA-TEC-03` asks the same question of the *declared* version, because
+    that is what lives in the credential. Neither alone is enough: a firm can
+    pin an approved model on the form and run a barred one, which is exactly
+    the case this rule was written for — declared claude-sonnet-5, observed
+    claude-sonnet-4-5-20250929, blocklisted six months earlier and still
+    authorising payments.
+
+    F19 was unreachable in that shape. `KYA-TEC-02` sees the mismatch but is
+    a mismatch rule: it establishes F37 and must not mint F19 as well, or
+    every benign version drift would become a barred-model finding. A precise
+    failure needs its own precise rule.
+    """
+    observed = run.construction_context.model.observed_version
+    blocked = ctx.blocklist.get(observed)
+    return ctx.fb.verdict(
+        rule, blocked is not None,
+        f"{run.run_id}: the model that built this run, {observed!r}, was blocklisted on "
+        f"{blocked['blocked_at'] if blocked else ''} and authorised a payment anyway.",
+        f"{run.run_id}: the model that built this run, {observed!r}, is not on the blocklist.",
+        run_ref=run.run_id,
+        values={"observed_version": observed, "observed_blocklisted": blocked is not None,
+                "blocked_at": blocked and blocked["blocked_at"],
+                "reason": blocked and blocked.get("reason")},
+        refs=[EvidenceRef(kind="field", ref="construction_context.model.observed_version",
+                          value=observed)])
+
+
 _RUN_CHECKERS = {
     "observed_model_matches_declared": _tec_02,
     "prompt_bound_to_released_artifact": _tec_05,
     "tool_servers_declared": _tec_06,
+    "observed_model_not_blocklisted": _tec_07,
 }
 
 _DOSSIER_CHECKERS = {
@@ -243,7 +274,18 @@ _PROVENANCE_CHECKERS = {**_RUN_CHECKERS, **_DOSSIER_CHECKERS}
 # The three rules that read construction_context and once lived in the KYA
 # book. KYA's dispatcher skips these types if it ever meets them again — the
 # split is on evidence rather than topic, see kya-ruleset.md Part 3.5.
-PROVENANCE_RULE_TYPES = frozenset(_RUN_CHECKERS)
+#
+# Named explicitly rather than derived from _RUN_CHECKERS. The two sets were
+# identical while every Provenance run checker was a migrated KYA rule, and
+# deriving one from the other quietly meant "anything Provenance evaluates is
+# something KYA must skip". That is false for a rule that only ever lived in
+# the Provenance book — KYA-TEC-07 is not in kya.json, so KYA never meets it
+# and has nothing to skip.
+PROVENANCE_RULE_TYPES = frozenset({
+    "observed_model_matches_declared",
+    "prompt_bound_to_released_artifact",
+    "tool_servers_declared",
+})
 
 
 def run_provenance_checks(dossier: LoadedDossier, ruleset: Ruleset, *,

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0727-0024",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-27T20:37:00-05:00",
+  "ended_at": "2026-07-27T20:39:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "conical burr grinder, under $170",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0727-0024",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-27T20:37:00-05:00",
+    "expires_at": "2026-07-27T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L023",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L023",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "conical burr grinder, under $170",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 170.0,
+      "max_cumulative_amount": 170.0,
+      "currency": "USD",
+      "valid_from": "2026-07-27T00:00:00-05:00",
+      "valid_until": "2026-07-27T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5499"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-27T20:37:00-05:00",
+      "device_id": "DEV-L-L023"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L023",
+      "value": "FNJu2JnC2pNgPIuOF6xr5/u3ZXv0qLnpMPMmDPt/u9GsAyfWf//AEHcVFOaQMcySVR/vX0XIb1J+kDaco7JTAA==",
+      "signed_payload_hash": "sha256:a4d42c3edc84b6e519c389597353ebe711a0b9afb2691dd08551d2f2733fbd0c",
+      "signed_at": "2026-07-27T20:37:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41",
+      "release_ref": "larkspur-shop-v3.2.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.brewhouse.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "conical burr grinder, under $170",
+          "max_price": 170.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:0e2b5ca34fd0f6fbcf75c66e9af1e499a4f69dcece99928a8cb133cc6b902bef"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.brewhouse.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "BRW-GRN-BUR-01"
+          ]
+        },
+        "result_digest": "sha256:9bf7dc10e20de3229e9b1631641cc7cd52097ab04482069753918145d7af3d8d",
+        "result_excerpt": {
+          "source": "mcp://shop.brewhouse.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "BREWHOUSE SUPPLY CO — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.brewhouse.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "BRW-GRN-BUR-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:7906ba8dcb3685f21273fcdc6bf2284e56207c1ca70d07af38e2fdb2da210b25"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.brewhouse.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-BRW-1177",
+          "lines": 1,
+          "total": 154.0
+        },
+        "result_digest": "sha256:4f63d5c05d7bd2eda4e02e5f8e8b6758beae28fc85ef7bd5a0b7573a52ac9687"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 154.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L023"
+        },
+        "result_digest": "sha256:e6a75a62b6002d955f3f45ccd715986b9f3ef8e01821db5bfa08081a7583628b"
+      }
+    ],
+    "selection_context": {
+      "query": "conical burr grinder, under $170",
+      "selected_sku": "BRW-GRN-BUR-01",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-KBD-MEC-87",
+          "merchant_id": "MER-VLT-7789",
+          "price": 149.0,
+          "description": "87-key mechanical keyboard, tactile"
+        },
+        {
+          "sku": "ATE-KNT-MER-M",
+          "merchant_id": "MER-ATE-3345",
+          "price": 148.0,
+          "description": "Merino crew knit, oatmeal, M"
+        },
+        {
+          "sku": "PTC-CAT-TRE-01",
+          "merchant_id": "MER-PTC-7712",
+          "price": 148.0,
+          "description": "Sisal cat tree, 1.4m"
+        },
+        {
+          "sku": "SLV-NEC-SIL-01",
+          "merchant_id": "MER-SLV-8830",
+          "price": 165.0,
+          "description": "Sterling silver pendant necklace"
+        },
+        {
+          "sku": "MKT-3P-CKW-DUT",
+          "merchant_id": "MER-MKT-9034",
+          "price": 141.0,
+          "description": "Enamelled dutch oven 5qt (marketplace listing)"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-27T20:37:47-05:00",
+    "principal_id": "PRIN-L-L023",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 154.0,
+      "currency": "USD",
+      "merchant": "Brewhouse Supply Co",
+      "line_items": [
+        {
+          "sku": "BRW-GRN-BUR-01",
+          "qty": 1,
+          "unit_price": 154.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 170.0
+      }
+    },
+    "rendered_hash": "sha256:bcfce17bc8f4db380449d2639b153b409eb66129bcc734cd52a9086c5af9c6ab",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0727-0024",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0727-0024",
+      "prev_mandate_hash": "sha256:a4d42c3edc84b6e519c389597353ebe711a0b9afb2691dd08551d2f2733fbd0c"
+    },
+    "created_at": "2026-07-27T20:37:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-BRW-1177",
+      "name": "Brewhouse Supply Co",
+      "mcc": "5499",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "BRW-GRN-BUR-01",
+        "description": "Conical burr grinder",
+        "qty": 1,
+        "unit_price": 154.0
+      }
+    ],
+    "cart_total": 154.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Brewhouse Supply Co's catalogue and selected the closest in-stock option at $154.00, within the stated $170.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "CHmwuUGzf8PRq5sieSIQXpOSoAkXocYlGJOzu2juH9U9NxQXu3h2gS4q1K56LorJkHdnKlRfX9pX2xejg9VsDg==",
+      "signed_payload_hash": "sha256:625a5b0394aa5d7fb8547ba333a37def4cd61ec59aac32981f2f26642e5eb3c5",
+      "signed_at": "2026-07-27T20:37:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0727-0024",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0727-0024",
+      "prev_mandate_hash": "sha256:625a5b0394aa5d7fb8547ba333a37def4cd61ec59aac32981f2f26642e5eb3c5"
+    },
+    "authorized_at": "2026-07-27T20:39:19-05:00",
+    "amount": 154.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1023",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2023",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Brewhouse Supply Co"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "42HzNQb1Bg8RiUQ7xzSKAstAUIepkMGbqyyLxFEm9zYbwf8jmHnXlUwMYpITkcjKhE7wEZORlg1Y4oH5DyVjDw==",
+      "signed_payload_hash": "sha256:bce4288e964b3b1ed1306bc9a7be010abaf91263a078d35aa7e8dcea80f497eb",
+      "signed_at": "2026-07-27T20:39:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-07-27T20:38:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-07-27T20:38:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-07-27T20:38:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-07-27T20:38:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-07-27T20:38:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-27T20:38:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-27T20:38:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-27T20:38:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-27T20:38:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

@@ -1,80 +1,721 @@
 {
   "catalogue_id": "agentic-payment-failures",
-  "version": "2026.1",
-  "as_of": "2026-09-04",
+  "version": "2026.7",
+  "as_of": "2026-09-05",
   "failures": [
-    {"failure_id":"F1","name":"The organisation that issued the credential was never approved","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F2","name":"The issuer was shut down before it issued this","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F3","name":"The issuer isn't trusted enough for this kind of money","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F4","name":"Nobody has re-checked this issuer in years","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F5","name":"The credential's dates are impossible","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F6","name":"The chain of responsibility never reaches a person","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F7","name":"The person at the end isn't the person who authorised the payment","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F8","name":"One link in the chain is forged","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F9","name":"The same entity appears twice in the chain","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F10","name":"The chain has too many steps","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F11","name":"A middle party granted more authority than it had","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F12","name":"The firm operating the agent isn't licensed","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F13","name":"The firm is licensed but in trouble","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F14","name":"The firm changed hands after the credential was issued","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F15","name":"There's no named person at the firm to contact","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F16","name":"The agent was never declared to us","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F17","name":"The agent has no declared risk class","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F18","name":"Nobody recorded which model made the decisions","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F19","name":"The model has known vulnerabilities and is still in production","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F20","name":"The agent's permissions have been quietly widening","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F21","name":"Two credentials for the same agent are valid at once","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F22","name":"One key is backing two supposedly different agents","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F23","name":"The same credential id is used by different agents","domain":"kya","phase":"P0","default_scope":"case"},
-    {"failure_id":"F24","name":"A human was required to be present and wasn't","domain":"consent","phase":"P1","default_scope":"run"},
-    {"failure_id":"F25","name":"The consent is old","domain":"consent","phase":"P1","default_scope":"run"},
-    {"failure_id":"F26","name":"The agent spent it on something the person didn't agree to","domain":"consent","phase":"P1","default_scope":"run"},
-    {"failure_id":"F27","name":"The consent was obtained in a way that isn't strong enough","domain":"consent","phase":"P1","default_scope":"run"},
-    {"failure_id":"F28","name":"The consent screen was designed to get a yes","domain":"consent","phase":"P1","default_scope":"run"},
-    {"failure_id":"F29","name":"The person approved one thing and signed another","domain":"consent","phase":"P1","default_scope":"run"},
-    {"failure_id":"F30","name":"A one-time yes became a standing authority","domain":"consent","phase":"P1","default_scope":"run"},
-    {"failure_id":"F31","name":"There's no record that a human was ever involved","domain":"consent","phase":"P1","default_scope":"run"},
-    {"failure_id":"F32","name":"The agent acted on instructions hidden in content it read","domain":"injection","phase":"P2","default_scope":"run"},
-    {"failure_id":"F33","name":"The agent called a tool nobody authorised","domain":"provenance","phase":"P2","default_scope":"run"},
-    {"failure_id":"F34","name":"The agent transacted with a counterparty it couldn't verify","domain":"provenance","phase":"P2","default_scope":"run"},
-    {"failure_id":"F35","name":"The agent's objective was redirected, and stayed redirected","domain":"injection","phase":"P2","default_scope":"run_set"},
-    {"failure_id":"F36","name":"The agent's instructions were changed outside any review","domain":"provenance","phase":"P2","default_scope":"run"},
-    {"failure_id":"F37","name":"A different model made the decisions than the one declared","domain":"provenance","phase":"P2","default_scope":"run"},
-    {"failure_id":"F38","name":"The agent is quietly choosing worse options","domain":"consent","phase":"P2","default_scope":"run_set"},
-    {"failure_id":"F39","name":"The cart doesn't match the authorisation it claims to come from","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F40","name":"The payment doesn't match the cart it claims to come from","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F41","name":"The payment amount isn't the cart total","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F42","name":"The order is bigger than the person allowed","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F43","name":"Individually fine, collectively over the limit","domain":"mandate","phase":"P3","default_scope":"run_set"},
-    {"failure_id":"F44","name":"The agent bought from the wrong kind of business","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F45","name":"The agent paid someone not on the approved list","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F46","name":"The currency isn't the one authorised","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F47","name":"The payment happened outside the mandate's lifetime","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F48","name":"The merchant is in a region the mandate excludes","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F49","name":"Technically within the rules, but not what the person meant","domain":"mandate","phase":"P3","default_scope":"run"},
-    {"failure_id":"F50","name":"The same authorisation was used twice","domain":"mandate","phase":"P3","default_scope":"run_set"},
-    {"failure_id":"F51","name":"Nobody knows who was paid","domain":"counterparty","phase":"P4","default_scope":"run"},
-    {"failure_id":"F52","name":"A platform is hiding who actually sold the goods","domain":"counterparty","phase":"P4","default_scope":"run"},
-    {"failure_id":"F53","name":"The money went to a wallet with no identifiable owner","domain":"counterparty","phase":"P4","default_scope":"run_set"},
-    {"failure_id":"F54","name":"The recipient is on a list they shouldn't be paid from","domain":"counterparty","phase":"P4","default_scope":"run"},
-    {"failure_id":"F55","name":"A brand-new recipient is suddenly getting most of the money","domain":"counterparty","phase":"P4","default_scope":"run_set"},
-    {"failure_id":"F56","name":"One recipient is masquerading as several","domain":"counterparty","phase":"P4","default_scope":"run_set"},
-    {"failure_id":"F57","name":"The same recipient is being paid by firms that have nothing to do with each other","domain":"counterparty","phase":"P4","default_scope":"portfolio"},
-    {"failure_id":"F58","name":"Reversals and declines are clustering oddly","domain":"counterparty","phase":"P4","default_scope":"run_set"},
-    {"failure_id":"F59","name":"One payment was split to stay under the reporting threshold","domain":"log","phase":"P5","default_scope":"run_set"},
-    {"failure_id":"F60","name":"Too many payments too fast","domain":"log","phase":"P5","default_scope":"run_set"},
-    {"failure_id":"F61","name":"Nearly all the money goes to one recipient","domain":"log","phase":"P5","default_scope":"run_set"},
-    {"failure_id":"F62","name":"Suspiciously round numbers","domain":"log","phase":"P5","default_scope":"run_set"},
-    {"failure_id":"F63","name":"Payments at hours the business doesn't operate","domain":"log","phase":"P5","default_scope":"run_set"},
-    {"failure_id":"F64","name":"The agent is feeling for its limit","domain":"log","phase":"P5","default_scope":"run_set"},
-    {"failure_id":"F65","name":"The agent doesn't behave like it used to — and something specific changed it","domain":"drift","phase":"P5","default_scope":"run_set"},
-    {"failure_id":"F66","name":"Someone is generating noise to exhaust the reviewers","domain":"log","phase":"P5","default_scope":"run_set"},
-    {"failure_id":"F67","name":"Everyone is running the same model","domain":"systemic","phase":"P6","default_scope":"portfolio"},
-    {"failure_id":"F68","name":"Independent agents are all moving together","domain":"systemic","phase":"P6","default_scope":"portfolio"},
-    {"failure_id":"F69","name":"The same attack is running at several firms at once","domain":"systemic","phase":"P6","default_scope":"portfolio"},
-    {"failure_id":"F70","name":"The firm has no control for a risk its own mandate creates","domain":"controls","phase":"X1","default_scope":"case"},
-    {"failure_id":"F71","name":"A control existed, should have fired, and didn't","domain":"controls","phase":"X1","default_scope":"run"},
-    {"failure_id":"F72","name":"A control fired and someone switched it off","domain":"controls","phase":"X1","default_scope":"run"},
-    {"failure_id":"F73","name":"A control fired, held, and the breach happened anyway","domain":"controls","phase":"X1","default_scope":"run"}
+    {
+      "failure_id": "F1",
+      "name": "The organisation that issued the credential was never approved",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F2",
+      "name": "The issuer was shut down before it issued this",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F3",
+      "name": "The issuer isn't trusted enough for this kind of money",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F4",
+      "name": "Nobody has re-checked this issuer in years",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F5",
+      "name": "The credential's dates are impossible",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F6",
+      "name": "The chain of responsibility never reaches a person",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F7",
+      "name": "The person at the end isn't the person who authorised the payment",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F8",
+      "name": "One link in the chain is forged",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F9",
+      "name": "The same entity appears twice in the chain",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F10",
+      "name": "The chain has too many steps",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F11",
+      "name": "A middle party granted more authority than it had",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F12",
+      "name": "The firm operating the agent isn't licensed",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F13",
+      "name": "The firm is licensed but in trouble",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F14",
+      "name": "The firm changed hands after the credential was issued",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F15",
+      "name": "There's no named person at the firm to contact",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F16",
+      "name": "The agent was never declared to us",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F17",
+      "name": "The agent has no declared risk class",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F18",
+      "name": "Nobody recorded which model made the decisions",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F19",
+      "name": "The model has known vulnerabilities and is still in production",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F20",
+      "name": "The agent's permissions have been quietly widening",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F21",
+      "name": "Two credentials for the same agent are valid at once",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F22",
+      "name": "One key is backing two supposedly different agents",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F23",
+      "name": "The same credential id is used by different agents",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F24",
+      "name": "A human was required to be present and wasn't",
+      "domain": "consent",
+      "phase": "P1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F25",
+      "name": "The consent is old",
+      "domain": "consent",
+      "phase": "P1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F26",
+      "name": "The agent spent it on something the person didn't agree to",
+      "domain": "consent",
+      "phase": "P1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F27",
+      "name": "The consent was obtained in a way that isn't strong enough",
+      "domain": "consent",
+      "phase": "P1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F28",
+      "name": "The consent screen was designed to get a yes",
+      "domain": "consent",
+      "phase": "P1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F29",
+      "name": "The person approved one thing and signed another",
+      "domain": "consent",
+      "phase": "P1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F30",
+      "name": "A one-time yes became a standing authority",
+      "domain": "consent",
+      "phase": "P1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F31",
+      "name": "There's no record that a human was ever involved",
+      "domain": "consent",
+      "phase": "P1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F32",
+      "name": "The agent acted on instructions hidden in content it read",
+      "domain": "injection",
+      "phase": "P2",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F33",
+      "name": "The agent called a tool nobody authorised",
+      "domain": "provenance",
+      "phase": "P2",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F34",
+      "name": "The agent transacted with a counterparty it couldn't verify",
+      "domain": "provenance",
+      "phase": "P2",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F35",
+      "name": "The agent's objective was redirected, and stayed redirected",
+      "domain": "injection",
+      "phase": "P2",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F36",
+      "name": "The agent's instructions were changed outside any review",
+      "domain": "provenance",
+      "phase": "P2",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F37",
+      "name": "A different model made the decisions than the one declared",
+      "domain": "provenance",
+      "phase": "P2",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F38",
+      "name": "The agent is quietly choosing worse options",
+      "domain": "consent",
+      "phase": "P2",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F39",
+      "name": "The cart doesn't match the authorisation it claims to come from",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F40",
+      "name": "The payment doesn't match the cart it claims to come from",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F41",
+      "name": "The payment amount isn't the cart total",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F42",
+      "name": "The order is bigger than the person allowed",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F43",
+      "name": "Individually fine, collectively over the limit",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F44",
+      "name": "The agent bought from the wrong kind of business",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F45",
+      "name": "The agent paid someone not on the approved list",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F46",
+      "name": "The currency isn't the one authorised",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F47",
+      "name": "The payment happened outside the mandate's lifetime",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F48",
+      "name": "The merchant is in a region the mandate excludes",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F49",
+      "name": "Technically within the rules, but not what the person meant",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F50",
+      "name": "The same authorisation was used twice",
+      "domain": "mandate",
+      "phase": "P3",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F51",
+      "name": "Nobody knows who was paid",
+      "domain": "counterparty",
+      "phase": "P4",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F52",
+      "name": "A platform is hiding who actually sold the goods",
+      "domain": "counterparty",
+      "phase": "P4",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F53",
+      "name": "The money went to a wallet with no identifiable owner",
+      "domain": "counterparty",
+      "phase": "P4",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F54",
+      "name": "The recipient is on a list they shouldn't be paid from",
+      "domain": "counterparty",
+      "phase": "P4",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F55",
+      "name": "A brand-new recipient is suddenly getting most of the money",
+      "domain": "counterparty",
+      "phase": "P4",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F56",
+      "name": "One recipient is masquerading as several",
+      "domain": "counterparty",
+      "phase": "P4",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F57",
+      "name": "The same recipient is being paid by firms that have nothing to do with each other",
+      "domain": "counterparty",
+      "phase": "P4",
+      "default_scope": "portfolio"
+    },
+    {
+      "failure_id": "F58",
+      "name": "Reversals and declines are clustering oddly",
+      "domain": "counterparty",
+      "phase": "P4",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F59",
+      "name": "One payment was split to stay under the reporting threshold",
+      "domain": "log",
+      "phase": "P5",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F60",
+      "name": "Too many payments too fast",
+      "domain": "log",
+      "phase": "P5",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F61",
+      "name": "Nearly all the money goes to one recipient",
+      "domain": "log",
+      "phase": "P5",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F62",
+      "name": "Suspiciously round numbers",
+      "domain": "log",
+      "phase": "P5",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F63",
+      "name": "Payments at hours the business doesn't operate",
+      "domain": "log",
+      "phase": "P5",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F64",
+      "name": "The agent is feeling for its limit",
+      "domain": "log",
+      "phase": "P5",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F65",
+      "name": "The agent doesn't behave like it used to — and something specific changed it",
+      "domain": "drift",
+      "phase": "P5",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F66",
+      "name": "Someone is generating noise to exhaust the reviewers",
+      "domain": "log",
+      "phase": "P5",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F67",
+      "name": "Everyone is running the same model",
+      "domain": "systemic",
+      "phase": "P6",
+      "default_scope": "portfolio"
+    },
+    {
+      "failure_id": "F68",
+      "name": "Independent agents are all moving together",
+      "domain": "systemic",
+      "phase": "P6",
+      "default_scope": "portfolio"
+    },
+    {
+      "failure_id": "F69",
+      "name": "The same attack is running at several firms at once",
+      "domain": "systemic",
+      "phase": "P6",
+      "default_scope": "portfolio"
+    },
+    {
+      "failure_id": "F70",
+      "name": "The firm has no control for a risk its own mandate creates",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F71",
+      "name": "A control existed, should have fired, and didn't",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F72",
+      "name": "A control fired and someone switched it off",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F73",
+      "name": "A control fired, held, and the breach happened anyway",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F74",
+      "name": "The credential's own signature doesn't verify",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F75",
+      "name": "The credential was signed with an algorithm we don't accept",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F76",
+      "name": "The credential's contents were altered after it was signed",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F77",
+      "name": "The person at the end of the chain can't sign for the firm",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F78",
+      "name": "The agent is behaving unlike the kind of agent it registered as",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F79",
+      "name": "The agent's registration has lapsed",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F80",
+      "name": "The agent is being used for a purpose it never registered",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F81",
+      "name": "Nobody validated the model before it was put to work",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F82",
+      "name": "The credential grants no capabilities at all",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F83",
+      "name": "The credential grants capabilities nobody defined",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F84",
+      "name": "The agent lacks the permissions its own purpose needs",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F85",
+      "name": "The agent holds far more authority than its purpose needs",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F86",
+      "name": "The credential had already expired when it was used",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F87",
+      "name": "Nobody has checked recently whether this credential was revoked",
+      "domain": "kya",
+      "phase": "P0",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F88",
+      "name": "The operator's own description of the agent claims more than the issuer granted",
+      "domain": "provenance",
+      "phase": "P2",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F89",
+      "name": "The agent changed and nothing in the operator's own record explains it",
+      "domain": "drift",
+      "phase": "P5",
+      "default_scope": "run_set"
+    },
+    {
+      "failure_id": "F90",
+      "name": "The agent's first weeks are not a steady baseline, so “unlike it used to be” has no meaning",
+      "domain": "drift",
+      "phase": "P5",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F91",
+      "name": "The person who confirmed the purchase isn't the person the mandate was issued to",
+      "domain": "consent",
+      "phase": "P1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F92",
+      "name": "The firm never declared what controls it runs",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F93",
+      "name": "Nobody can tell which version of a control was actually running",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F94",
+      "name": "A control everyone believed would block was only ever advisory",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F95",
+      "name": "The agent acted without the controls ever looking at it",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F96",
+      "name": "The controls ran and never said what they decided",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F97",
+      "name": "It was sent to a human for review and no human ever decided",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "run"
+    },
+    {
+      "failure_id": "F98",
+      "name": "Overriding the controls has become routine rather than exceptional",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F99",
+      "name": "The audit log has holes in it",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F100",
+      "name": "The audit log could have been edited after the fact",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F101",
+      "name": "Payments happened that the audit log never recorded",
+      "domain": "controls",
+      "phase": "X1",
+      "default_scope": "case"
+    },
+    {
+      "failure_id": "F102",
+      "name": "The money settled in a country the merchant has no presence in",
+      "domain": "counterparty",
+      "phase": "P4",
+      "default_scope": "run"
+    }
   ]
 }

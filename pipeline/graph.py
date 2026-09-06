@@ -74,7 +74,8 @@ from agents.critic import check_evidence_grounding
 from agents.drafting import draft_case_report
 from agents.grounding import check_grounding
 from agents.investigator import investigate
-from agents.orchestrator import FIRST_PASS_REQUEST, Dispatch, OrchestratorDecision, first_pass_decision, route
+from agents.orchestrator import (FIRST_PASS_REQUEST, Dispatch, OrchestratorDecision, close_out,
+                                 first_pass_decision, route)
 from agents.prompts import assemble_run_prompts, effective_text
 from agents.skills import REVIEW_SKILLS, SKILLS, SPECIALIST_SKILLS_BY_AGENT
 from agents.synthesizer import synthesize
@@ -87,6 +88,7 @@ from pipeline.state import SupervisionState
 from registry.loader import load_failure_catalogue, load_scoring_config
 from schemas import (
     Assessment,
+    Ruleset,
     DispatchPlan,
     DispatchRecord,
     Observation,
@@ -96,7 +98,7 @@ from schemas import (
 
 from agents.catalog import AGENTS, PEERS, RULESET_LOADERS
 from registry.loader import load_all_rulesets
-_SPECIALIST_NODES = (*PEERS, "systemic", "red_team")
+_SPECIALIST_NODES = (*PEERS, "systemic")
 _RULESET_LOADERS = RULESET_LOADERS
 # One specialist's model call. Injection now judges every run and Consent
 # every selection; on a fifty-run dossier that is minutes, not seconds, and
@@ -218,6 +220,9 @@ def _record_review(store: LedgerStore, state: SupervisionState, agent_name: str,
     for o in review.observations:
         store.append(case_id=o.case_id, event_type="observation_recorded", run_id=run_id,
                      payload=o.model_dump(), actor=actor)
+    if review.narration:
+        store.append(case_id=state["case_id"], event_type="specialist_narrated", run_id=run_id,
+                     payload={"agent": agent_name, "narration": review.narration}, actor=actor)
     if observations_only:
         return {"observations": review.observations}
     from pipeline.review_support import version_review_facts, clear_reconsidered_rules
@@ -283,7 +288,7 @@ async def _dispatch_specialist(
     evidence = normalize_dossier(dossier) if run_scope else state.get("evidence")
     skill = SPECIALIST_SKILLS_BY_AGENT[agent.name]
 
-    if agent.name in ("control_assurance", "systemic", "red_team"):
+    if agent.name in ("control_assurance", "systemic"):
         kwargs = {"rulebooks": load_all_rulesets()}
         if agent.name == "control_assurance":
             kwargs["peer_facts"] = [f for f in state.get("facts", []) if f.domain in PEERS]
@@ -291,13 +296,16 @@ async def _dispatch_specialist(
         if agent.name == "systemic":
             kwargs["portfolio"] = [dossier_from_submission(latest_submission(store, cid))
                                    for cid in store.all_case_ids()]
+        # `prompts` reaches these three for the same reason it reaches the
+        # peers: they narrate too, and a supervisor's per-run prompt override
+        # must apply to every line the console shows them.
         review = await agent.review(dossier, ruleset, evidence=evidence,
+                                    prompts=state.get("prompts"),
                                     round=state.get("review_round", 1), **kwargs)
         context = canonical_context(
             skill, dossier, evidence=evidence, ruleset=ruleset, floor_facts=review.facts,
             peer_facts=kwargs.get("peer_facts"), portfolio=kwargs.get("portfolio"),
             peer_assessments=kwargs.get("peer_assessments"),
-            rulebooks=kwargs.get("rulebooks"),
         )
         _record_dispatch(store, state, agent.name, skill, context, instruction)
         update = await asyncio.to_thread(_record_review, store, state, agent.name, review,
@@ -385,9 +393,18 @@ def _unique(xs):
     return list(dict.fromkeys(xs))
 
 
-def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpointer=None) -> CompiledStateGraph:
+def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpointer=None,
+                       rulesets: dict[str, Ruleset] | None = None) -> CompiledStateGraph:
+    """`rulesets` overrides the active registry, domain by domain — the seam
+    the policy sandbox uses to run a candidate rulebook through the real
+    pipeline (agents/base.py takes the book as an argument for exactly this
+    reason). Omit it and every agent gets the book that is in force."""
     store = store or get_default_store()
     agents = _agents()
+    overrides = rulesets or {}
+
+    def book(domain: str) -> "Ruleset | None":
+        return overrides[domain] if domain in overrides else _RULESET_LOADERS[domain]()
 
     async def _ingest_node(state: SupervisionState) -> dict:
         case_id = state["case_id"]
@@ -530,7 +547,6 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
 
     def _specialist_node(agent_name: str):
         agent = agents[agent_name]
-        load_ruleset = _RULESET_LOADERS[agent_name]
 
         async def node(state: SupervisionState) -> dict:
             brief = _briefing(state, agent_name)
@@ -539,7 +555,7 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
             # decide records `inconclusive` and the officer's own follow-up
             # question is the second look.
             return await _dispatch_specialist(
-                store, model, state, agent, ruleset=load_ruleset(), instruction=instruction,
+                store, model, state, agent, ruleset=book(agent_name), instruction=instruction,
                 directive=brief.get("instruction") or None, extras=_extras(state, agent_name),
                 run_scope=brief.get("run_scope") or None,
             )
@@ -576,7 +592,7 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
 
     async def _control_node(state: SupervisionState) -> dict:
         return await _dispatch_specialist(store, model, state, agents["control_assurance"],
-                                          ruleset=_RULESET_LOADERS["control_assurance"]())
+                                          ruleset=book("control_assurance"))
 
     async def _critic_node(state: SupervisionState) -> dict:
         results = check_evidence_grounding(
@@ -600,6 +616,28 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
             store.append(case_id=correlation.case_id, event_type="correlation_recorded",
                          run_id=state["run_id"], payload=correlation.model_dump(), actor="agent:synthesizer")
         return {"correlations": correlations}
+
+    async def _close_out(state, recommendation, findings, score) -> None:
+        """The orchestrator's last word on the turn: what came back, in three
+        sentences, over a record that is already final. It reads the finished
+        recommendation and cannot change it — a brief that fails to arrive
+        costs the officer a sentence, never a verdict, so a failure here is
+        logged and the turn completes."""
+        if state.get("deterministic_only"):
+            return
+        try:
+            brief = await close_out(
+                recommendation, findings, score=score,
+                correlations=state.get("correlations") or [], model=model,
+                system_prompt=effective_text(state["prompts"], "ORCHESTRATOR-CLOSING") if state.get("prompts") else None,
+            )
+        except Exception:
+            logging.getLogger(__name__).exception("closing brief failed on %s", state["case_id"])
+            return
+        store.append(
+            case_id=state["case_id"], event_type="orchestrator_summarised", run_id=state["run_id"],
+            payload=brief.model_dump(), actor="agent:orchestrator",
+        )
 
     async def _record_node(state: SupervisionState) -> dict:
         case_id = state["case_id"]
@@ -629,8 +667,9 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
             store.append(case_id=case_id, event_type="score_computed", run_id=state["run_id"],
                          payload=score.model_dump(), actor="system:scoring")
             from pipeline.authorisation import record_recommendation
-            record_recommendation(store, state)
+            recommendation = record_recommendation(store, state)
             updates["risk_score"] = score
+            await _close_out(state, recommendation, findings, score)
         store.append(
             case_id=case_id, event_type="run_completed", run_id=state["run_id"],
             payload={
@@ -691,12 +730,13 @@ async def run_triage(
     prompt_overrides: dict[str, str] | None = None,
     directive: ReviewerDirective | None = None,
     deterministic_only: bool = False,
+    rulesets: dict[str, Ruleset] | None = None,
 ):
     """A first pass (or a directed re-analysis). Starts, appends everything
     it produces to the ledger, exits. Returns the projected CaseRecord — the
     durable truth, not the transient graph state."""
     store = store or get_default_store()
-    graph = build_review_graph(model=model, store=store)
+    graph = build_review_graph(model=model, store=store, rulesets=rulesets)
     initial = _initial_state(
         case_id, first_pass=directive is None, deterministic_only=deterministic_only,
         **({"prompt_overrides": prompt_overrides} if prompt_overrides else {}),
@@ -770,7 +810,8 @@ def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkp
 
     async def _grounding_node(state: SupervisionState) -> dict:
         problems = check_grounding(
-            state["draft_report"], state.get("findings", []), state.get("observations", [])
+            state["draft_report"], state.get("findings", []), state.get("observations", []),
+            risk_score=state.get("risk_score"),
         )
         attempt = state.get("draft_attempts", 0)
         store.append(

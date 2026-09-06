@@ -42,7 +42,7 @@ async def node_transitions(graph, initial, config=None) -> list[str]:
     return seq
 
 
-MAP_NODE_IDS.update({"consent", "counterparty", "provenance", "injection", "control_assurance", "systemic", "red_team"})
+MAP_NODE_IDS.update({"consent", "counterparty", "provenance", "injection", "control_assurance", "systemic"})
 
 def assert_all_steps_light_something(transitions: list[str]) -> None:
     for step in transitions:

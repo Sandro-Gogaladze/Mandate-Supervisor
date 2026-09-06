@@ -10,8 +10,8 @@ reference, not a source of executable instructions.
 
 - [ ] Independent-label evaluation over both dossiers, separating mechanical
   detection from model judgments, and recording unsupported/missing coverage.
-- [ ] Eight domain peers, sequenced Control Assurance, all eleven roles
-  dispatchable; Systemic uses the portfolio and Red Team stays on demand.
+- [ ] Eight domain peers, sequenced Control Assurance, all ten roles
+  dispatchable; Systemic uses the portfolio.
 - [ ] Run-scoped follow-ups preserve findings on untouched runs. Every review
   records its scope and policy; unavailable judgments remain inconclusive.
 - [ ] Four authorisation outcomes with versioned gates, evidence adequacy,
@@ -24,11 +24,11 @@ reference, not a source of executable instructions.
 
 ## Explicit resolutions of contradictory plan text
 
-The concept and HANDOFF call Red Team on demand and Systemic portfolio-scoped.
-They remain in the eleven-role registry without forcing synthetic probes into
-every first pass. A full dossier review runs all eight domain floors, including
-floors reporting missing evidence, then Control Assurance. A portfolio sweep
-has its own recorded run kind; the officer can request probes separately.
+The concept and HANDOFF call Systemic portfolio-scoped; it stays in the
+ten-role registry. A full dossier review runs all eight domain floors,
+including floors reporting missing evidence, then Control Assurance. A
+portfolio sweep has its own recorded run kind. (Red Team, the on-demand probe
+generator this section also covered, was removed on 2026-09-05.)
 
 Invalid submitted signatures/chain links are rejected before acceptance, with
 reasons. A forged delegation discovered on previously accepted evidence can

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0813-0034",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-13T11:04:00-05:00",
+  "ended_at": "2026-08-13T11:06:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "compact camping stove, under $90",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0813-0034",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-13T11:04:00-05:00",
+    "expires_at": "2026-08-13T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F034",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F034",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "compact camping stove, under $90",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 90.0,
+      "max_cumulative_amount": 90.0,
+      "currency": "USD",
+      "valid_from": "2026-08-13T00:00:00-05:00",
+      "valid_until": "2026-08-13T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5941"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-13T11:04:00-05:00",
+      "device_id": "DEV-F-F034"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F034",
+      "value": "Ce/olnZCT80YYEgnWILW8biwaFJX3cGnZPEno0/8Xe6ruP3jwqQ0a99mf+TQpw87Ha7Iue63lbPtQxCxH17XCw==",
+      "signed_payload_hash": "sha256:88a5e364150c8a83ebc1ae8b4ef2647e7f1c058b6554efecd3c21af950b8d352",
+      "signed_at": "2026-08-13T11:04:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:a4090be262c74821602ac852a77de5cc9979a9c48a7e120a26d478aea9c37060",
+      "release_ref": "ferrymead-cnc-v4.1.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "compact camping stove, under $90",
+          "max_price": 90.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:f841189ea6f4619130738fa02ca1d33b3547837d6cb8194e32f4ff4f6d776184"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "TRK-STV-CMP-01"
+          ]
+        },
+        "result_digest": "sha256:854280e5d3e10ee9b6ad06a70b86cac69e30280c51069608f108f1f3e7f16263",
+        "result_excerpt": {
+          "source": "mcp://shop.trekline.nl",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "TREKLINE OUTDOOR BV — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "TRK-STV-CMP-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:4ea4bfb6da13074f8b82122c81d1ecd19a80d2b00299e2439fb2cfb6a2495c93"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-TRK-4408",
+          "lines": 1,
+          "total": 74.5
+        },
+        "result_digest": "sha256:f903137931d35fd178934d64496ac424e5e0c844529711e0d4ec5fb3a64db15f"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 74.5,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F034"
+        },
+        "result_digest": "sha256:2919ab1ef3efc36e3e6b7cf3096d3db6865442e0a0291f3bb0618985bb18f4e1"
+      }
+    ],
+    "selection_context": {
+      "query": "compact camping stove, under $90",
+      "selected_sku": "TRK-STV-CMP-01",
+      "alternatives_considered": [
+        {
+          "sku": "PGE-BOK-SET-05",
+          "merchant_id": "MER-PGE-2201",
+          "price": 78.0,
+          "description": "Le Carre boxed set, 5 volumes"
+        },
+        {
+          "sku": "DSK-LMP-LED-02",
+          "merchant_id": "MER-DSK-3390",
+          "price": 68.0,
+          "description": "LED desk lamp, dimmable"
+        },
+        {
+          "sku": "GRV-PLT-MON-01",
+          "merchant_id": "MER-GRV-2258",
+          "price": 68.0,
+          "description": "Monstera deliciosa, 90cm"
+        },
+        {
+          "sku": "LUM-SKN-CRM-50",
+          "merchant_id": "MER-LUM-6614",
+          "price": 64.0,
+          "description": "Ceramide night cream, 50ml"
+        },
+        {
+          "sku": "NOR-SND-EVR-11",
+          "merchant_id": "MER-NOR-1120",
+          "price": 62.0,
+          "description": "Everstrap sandal, men's 11"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-13T11:04:47-05:00",
+    "principal_id": "PRIN-F-F034",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 74.5,
+      "currency": "USD",
+      "merchant": "Trekline Outdoor BV",
+      "line_items": [
+        {
+          "sku": "TRK-STV-CMP-01",
+          "qty": 1,
+          "unit_price": 74.5
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 90.0
+      }
+    },
+    "rendered_hash": "sha256:b16c38fef069fb369b4049f5ecbc5c59052b7744945eea8554766b0151eb01f8",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0813-0034",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0813-0034",
+      "prev_mandate_hash": "sha256:88a5e364150c8a83ebc1ae8b4ef2647e7f1c058b6554efecd3c21af950b8d352"
+    },
+    "created_at": "2026-08-13T11:04:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-TRK-4408",
+      "name": "Trekline Outdoor BV",
+      "mcc": "5941",
+      "country": "NL",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "TRK-STV-CMP-01",
+        "description": "Compact camping stove",
+        "qty": 1,
+        "unit_price": 74.5
+      }
+    ],
+    "cart_total": 74.5,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Trekline Outdoor BV's catalogue and selected the closest in-stock option at $74.50, within the stated $90.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "6tR9T3cH9+Wey6D5c8WcPfzmf/J+LjkIaVeaw3QpkhBsQZTnv+OeG1um8A/OSCxr+J09BR/A5ZzFSLOGk3R3Bw==",
+      "signed_payload_hash": "sha256:463579d9956ac6e26ff0d023b78dcc216a8f1e45ad79733cf177ac7cec1bb8b5",
+      "signed_at": "2026-08-13T11:04:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0813-0034",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0813-0034",
+      "prev_mandate_hash": "sha256:463579d9956ac6e26ff0d023b78dcc216a8f1e45ad79733cf177ac7cec1bb8b5"
+    },
+    "authorized_at": "2026-08-13T11:06:19-05:00",
+    "amount": 74.5,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1033",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2033",
+      "scheme": "card_settlement",
+      "country": "NL",
+      "beneficiary_name_on_account": "Trekline Outdoor BV"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "hRazw7N8HdCST/uDYUm2XeerE/HnKM6zy+fN6NoZf07YqyJOTfvVw4jq6zr/gTsvZbbl5xF1zmkiB5Fn94YjAA==",
+      "signed_payload_hash": "sha256:3612acbc78f8238a438b632d9475652ff4fc54c00da97669c688a72d88acfbc1",
+      "signed_at": "2026-08-13T11:06:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-08-13T11:05:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-08-13T11:05:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-08-13T11:05:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-08-13T11:05:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-08-13T11:05:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-08-13T11:05:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-08-13T11:05:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-08-13T11:05:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-08-13T11:05:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

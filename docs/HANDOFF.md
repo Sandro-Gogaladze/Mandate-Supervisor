@@ -6,7 +6,7 @@ is not, what was decided and why, and what to build next.
 **Supersedes `architecture-v3.md`**, which predates the authorisation reframe
 and still describes a case-based system. Where the two disagree, this is right.
 
-Depth lives in: `coverage-model.md` (the 73 failures + the data contract),
+Depth lives in: `coverage-model.md` (the failure catalogue + the data contract),
 `kya-ruleset.md` (the 57 rules), `data-and-agents.md` (rule→agent map),
 `synthetic-data-spec.md` (corpus design), `migration-plan.md` (build order).
 
@@ -272,7 +272,6 @@ LLM call.** Determinism establishes facts; agents establish meaning.
 | D2 | **Drift** | What changed, **and when did it start**? | F65 | baseline/comparison split, change-point detection | Which `change_log` event sits at the onset boundary |
 | E1 | **Control Assurance** | Did the firm's own controls work? | F70–F73 | 15 `CTL-*` | Classify posture: **absent / failed / bypassed / ineffective**. This is what makes it a supervision tool rather than a detection tool |
 | E2 | **Systemic** | What is true across the portfolio? | F57, F67, F69 | shared-payee, monoculture, shared-digest sweeps | Is this concentration meaningful or ordinary popularity |
-| E3 | **Red Team** | Does it hold up when pushed? | on demand | generates cases from the mandate's own parameters | — |
 
 Support agents unchanged: Orchestrator · Investigator · Critic · Synthesizer ·
 Drafting · Grounding.
@@ -501,9 +500,27 @@ Control Assurance runs after the peers and learns which risk materialised
 from their breach facts through `Rule.failures`; posture (absent / failed /
 bypassed / ineffective / effective) is computed, not judged. Systemic is an
 agent over the ledger's portfolio, concerns scoped to the dossiers they span.
-The Red Team builds five probe runs from the mandate's own parameters and
-reports which the declared controls address — at both operators, listing
-injection and geography pass unopposed. `docs/phases/17-the-seven-new-specialists.md`.
+`docs/phases/17-the-seven-new-specialists.md`.
+
+**Red Team removed (2026-09-05).** E3 generated probe runs by mutating a run's
+JSON, ran them through our own `MND-*`/`INJ-*` checkers — which by construction
+always tripped — and then reported whether the firm had written a matching
+`risk_addressed` label. That is a completeness check on a declaration form, not
+adversarial testing: it never touched the operator's runtime and could not say
+whether any control works. The part that is genuinely informative — did declared
+controls fire — is Control Assurance's, with execution evidence behind it. The
+roster is ten specialists.
+
+**Portfolio page and second sweep removed (2026-09-05).** `POST /portfolio/sweep`
+called `sweep()` directly, bypassing `SystemicAgent`: it wrote three bespoke
+event types carrying raw dicts, with no Fact, Assessment, failure occurrence,
+narration or dispatch record behind them — a second execution path and a second
+ledger shape for one question. Systemic now reviews on every first pass, so the
+market view already exists as portfolio-scoped assessments naming their
+`subject_refs`. Gone: the `/portfolio` and `/portfolio/sweep` routes, the three
+`portfolio_*` event types, the `portfolio` run kind, the Portfolio page and its
+sidebar entry, and `recommend(portfolio_findings=...)` — portfolio concerns were
+already counted by the `concerns` term, so no disposition changes.
 
 **One orchestrator, skills-driven (2026-09-04).** The dispatch node and the
 deterministic floor are gone. One review graph answers every request: the
@@ -531,7 +548,7 @@ migration's debt.
 
 ## Known weaknesses — do not discover these later
 
-- **The corpus exercises 17 of 73 failures (23%).** 96 active rules, 17 distinct
+- **The corpus exercises 17 of 87 failures (20%).** 96 active rules, 17 distinct
   planted failures — most rules have never fired on anything. They are
   asserted-correct, not demonstrated-correct.
 - **`eval/` does not exist.** There is no precision/recall number for anything.

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0625-0009",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-25T16:07:00-05:00",
+  "ended_at": "2026-06-25T16:09:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "brushed oxford shirt, large, under $100",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0625-0009",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-25T16:07:00-05:00",
+    "expires_at": "2026-06-25T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F009",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F009",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "brushed oxford shirt, large, under $100",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 100.0,
+      "max_cumulative_amount": 100.0,
+      "currency": "USD",
+      "valid_from": "2026-06-25T00:00:00-05:00",
+      "valid_until": "2026-06-25T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5651"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-25T16:07:00-05:00",
+      "device_id": "DEV-F-F009"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F009",
+      "value": "OSr9N2VoFdfeV04ngPrHeYG0Ns0x5oXE1pL1hw9yQloho7/p6tN95G8qtjmOX83CDw675WYwemQWqqnePn8GDA==",
+      "signed_payload_hash": "sha256:95f91379eff8b2062c8c8ce46d694f48a10d91421bf4c39d7ec0cfd047b205d2",
+      "signed_at": "2026-06-25T16:07:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e",
+      "release_ref": "ferrymead-cnc-v4.0.3"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "brushed oxford shirt, large, under $100",
+          "max_price": 100.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:a3833b9df38028e71386ed4f68bbfacedc6b8b768875c26a3d600c0a002bb143"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "ATE-COT-OXF-L"
+          ]
+        },
+        "result_digest": "sha256:653346c8fd909cab3b16803d98ebfe41ab4b0971c0d3d6dbc3ae55df14d0b9ba",
+        "result_excerpt": {
+          "source": "mcp://shop.ateliernord.se",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "ATELIER NORD AB — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "ATE-COT-OXF-L"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:97a26e029a99bae3e7bbf773b00c668d7cecae90fa511b571653b854381cb478"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.ateliernord.se",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-ATE-3345",
+          "lines": 1,
+          "total": 92.0
+        },
+        "result_digest": "sha256:056ad47507e12020065f985022e0b8eb8b71639cec7f54526b9e49e8fa31c83e"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 92.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F009"
+        },
+        "result_digest": "sha256:8c30d99181bd8fa90f307bdc7424ade3efde722b2de1993620efd48edac23c75"
+      }
+    ],
+    "selection_context": {
+      "query": "brushed oxford shirt, large, under $100",
+      "selected_sku": "ATE-COT-OXF-L",
+      "alternatives_considered": [
+        {
+          "sku": "BRW-KTL-POR-01",
+          "merchant_id": "MER-BRW-1177",
+          "price": 89.0,
+          "description": "Gooseneck pour-over kettle, 1L"
+        },
+        {
+          "sku": "HRT-LIN-TWL-06",
+          "merchant_id": "MER-HRT-9902",
+          "price": 88.0,
+          "description": "Waffle bath towel set of 6"
+        },
+        {
+          "sku": "KDO-BLD-CTY-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 96.0,
+          "description": "Modular city building set, 1200pc"
+        },
+        {
+          "sku": "CYC-TYR-GRV-02",
+          "merchant_id": "MER-CYC-6650",
+          "price": 96.0,
+          "description": "Gravel tyre 700x40, pair"
+        },
+        {
+          "sku": "PGE-BOK-SET-05",
+          "merchant_id": "MER-PGE-2201",
+          "price": 78.0,
+          "description": "Le Carre boxed set, 5 volumes"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-25T16:07:47-05:00",
+    "principal_id": "PRIN-F-F009",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 92.0,
+      "currency": "USD",
+      "merchant": "Atelier Nord AB",
+      "line_items": [
+        {
+          "sku": "ATE-COT-OXF-L",
+          "qty": 1,
+          "unit_price": 92.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 100.0
+      }
+    },
+    "rendered_hash": "sha256:f7de3f0a922b92856fde79ef81ad60e57f49a03e69471b7a6e6104f0f4bc909b",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0625-0009",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0625-0009",
+      "prev_mandate_hash": "sha256:95f91379eff8b2062c8c8ce46d694f48a10d91421bf4c39d7ec0cfd047b205d2"
+    },
+    "created_at": "2026-06-25T16:07:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-ATE-3345",
+      "name": "Atelier Nord AB",
+      "mcc": "5651",
+      "country": "SE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "ATE-COT-OXF-L",
+        "description": "Brushed oxford shirt, L",
+        "qty": 1,
+        "unit_price": 92.0
+      }
+    ],
+    "cart_total": 92.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Atelier Nord AB's catalogue and selected the closest in-stock option at $92.00, within the stated $100.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "8ChqnEDxEA/Y3IGLPUY9VsrI8v8npCih3jIK2XZz5fDo+OVqrCQSnAEX00FmkGpr+Ts+3EtCmpIwJcDaZpdrCg==",
+      "signed_payload_hash": "sha256:55811f9b200a68e86a36598526ec54eadb5195f828c69fdc9797a4a3859f7df8",
+      "signed_at": "2026-06-25T16:07:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0625-0009",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0625-0009",
+      "prev_mandate_hash": "sha256:55811f9b200a68e86a36598526ec54eadb5195f828c69fdc9797a4a3859f7df8"
+    },
+    "authorized_at": "2026-06-25T16:09:19-05:00",
+    "amount": 92.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1008",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2008",
+      "scheme": "card_settlement",
+      "country": "SE",
+      "beneficiary_name_on_account": "Atelier Nord AB"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "DV0odDkOuzIjcaXP5DfaIzvxHXe+iJVuSYfzWoyf1l8xstd1FoC7gH3UfqUM/ctR96zQaZgk0jzWkAqiSTRVDA==",
+      "signed_payload_hash": "sha256:20312091d1c239f3af28e843fdfa0d4912342e31fb879bc8ffc92df3d5734caf",
+      "signed_at": "2026-06-25T16:09:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-06-25T16:08:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-06-25T16:08:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-06-25T16:08:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-06-25T16:08:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-06-25T16:08:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-06-25T16:08:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-06-25T16:08:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-06-25T16:08:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-06-25T16:08:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

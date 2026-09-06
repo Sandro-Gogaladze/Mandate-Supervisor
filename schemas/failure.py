@@ -1,7 +1,7 @@
 """Versioned failure catalogue entries and concrete detected occurrences.
 
 Rules say how a condition is tested.  Failure definitions say which stable
-supervisory failure (F1--F73) that condition represents.  An occurrence is
+supervisory failure (F1--F102) that condition represents.  An occurrence is
 the auditable join between the two: it names the failure, the rule and
 ruleset version, the assessment, every supporting fact and every affected
 execution run.
@@ -15,7 +15,7 @@ from typing_extensions import Annotated
 
 from .fact import EvidenceRef
 
-FailureId = Annotated[str, StringConstraints(pattern=r"^F(?:[1-9]|[1-6][0-9]|7[0-3])$")]
+FailureId = Annotated[str, StringConstraints(pattern=r"^F(?:[1-9]|[1-9][0-9]|10[0-2])$")]
 
 
 class FailureDefinition(BaseModel):

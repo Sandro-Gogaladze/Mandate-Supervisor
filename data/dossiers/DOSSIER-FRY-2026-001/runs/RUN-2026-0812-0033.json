@@ -1,0 +1,208 @@
+{
+  "run_id": "RUN-2026-0812-0033",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-12T15:53:00-05:00",
+  "ended_at": "2026-08-12T15:55:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a 3 pack of 2m usb-c cables",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0812-0033",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-12T15:53:00-05:00",
+    "expires_at": "2026-08-12T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F033",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F033",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a 3 pack of 2m usb-c cables",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 35.0,
+      "max_cumulative_amount": 35.0,
+      "currency": "USD",
+      "valid_from": "2026-08-12T00:00:00-05:00",
+      "valid_until": "2026-08-12T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-12T15:53:00-05:00",
+      "device_id": "DEV-F-F033"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F033",
+      "value": "cqUFDiVnUT1Tuadm5HOuIcYRZjq5nvIC3u4nW2F8V5yv9x7n4DvN5AAFaPAl2fas+CJNmAphyEfRiM3Y4aIDCg==",
+      "signed_payload_hash": "sha256:af6a07b51552531624041841eff7f54f1d789fd4600f2e742ebe11f98fc030ac",
+      "signed_at": "2026-08-12T15:53:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:a4090be262c74821602ac852a77de5cc9979a9c48a7e120a26d478aea9c37060",
+      "release_ref": "ferrymead-cnc-v4.1.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a 3 pack of 2m usb-c cables",
+          "max_price": 35.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:95e15d26ab8008d1ef037f40a7e7074769a144c7e2b43bc45577875c05d7a11a"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "VLT-CAB-USB-03"
+          ]
+        },
+        "result_digest": "sha256:a34d2511dbca77734c86e7fd61b9d4e694f3434a6c814562a089855f6d7d0633"
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "VLT-CAB-USB-03"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:8f5dad2820ea5b087313c35a95472a9dc88069d16db298221cbf04de98d674ee"
+      }
+    ],
+    "selection_context": {
+      "query": "a 3 pack of 2m usb-c cables",
+      "selected_sku": "VLT-CAB-USB-03",
+      "alternatives_considered": [
+        {
+          "sku": "KDO-PZL-1000-04",
+          "merchant_id": "MER-KDO-5573",
+          "price": 22.0,
+          "description": "1000-piece landscape puzzle"
+        },
+        {
+          "sku": "BRW-CLN-TAB-30",
+          "merchant_id": "MER-BRW-1177",
+          "price": 26.0,
+          "description": "Espresso machine cleaning tablets, 30-pack"
+        },
+        {
+          "sku": "GRV-SOI-MIX-20",
+          "merchant_id": "MER-GRV-2258",
+          "price": 21.5,
+          "description": "Peat-free potting mix, 20L"
+        },
+        {
+          "sku": "PGE-BOK-HIS-01",
+          "merchant_id": "MER-PGE-2201",
+          "price": 18.5,
+          "description": "The Silk Roads, paperback"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": null,
+  "cart": null,
+  "payment": null,
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-08-12T15:54:10-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-08-12T15:54:11-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-08-12T15:54:12-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-08-12T15:54:13-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-08-12T15:54:14-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-08-12T15:54:15-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-08-12T15:54:16-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-08-12T15:54:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-08-12T15:54:18-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    }
+  ],
+  "outcome": "failed"
+}

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0806-0028",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-06T14:33:00-05:00",
+  "ended_at": "2026-08-06T14:35:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "roadwind running shoe mens 9, under $150",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0806-0028",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-06T14:33:00-05:00",
+    "expires_at": "2026-08-06T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L027",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L027",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "roadwind running shoe mens 9, under $150",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 150.0,
+      "max_cumulative_amount": 150.0,
+      "currency": "USD",
+      "valid_from": "2026-08-06T00:00:00-05:00",
+      "valid_until": "2026-08-06T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5661"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-06T14:33:00-05:00",
+      "device_id": "DEV-L-L027"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L027",
+      "value": "nlgPA9sF74bC6NYFOI7lfVuTGaJNwE9hhcdiLENjm/Fc1+EgjkTyqS2zjoV3qY9sEDsUUahLg7mbzrj3jz9JBA==",
+      "signed_payload_hash": "sha256:d1d73e12803e40b61308c1651c3b6cb941937feaa26379622ebb8817dc90d2d3",
+      "signed_at": "2026-08-06T14:33:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41",
+      "release_ref": "larkspur-shop-v3.2.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "roadwind running shoe mens 9, under $150",
+          "max_price": 150.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:abe9b3940aec9b9841f37775c51a99fb1b1eccff081ef72abbfef2d6d29476db"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "NOR-RUN-RDW-09"
+          ]
+        },
+        "result_digest": "sha256:67ca7169f5a2a04be90906690be1c4826a368df2797be2901cbd12f13b524824",
+        "result_excerpt": {
+          "source": "mcp://shop.northsole.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "NORTHSOLE FOOTWEAR INC — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "NOR-RUN-RDW-09"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:ce8bca436e951a60b6d5ac49f94b020e655c2883753479360f9f5a66454a06ca"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.northsole.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-NOR-1120",
+          "lines": 1,
+          "total": 134.5
+        },
+        "result_digest": "sha256:55bf723276bdc72c3c663909db7b8d0068db898b7c06c23f7bf8a4f8f0cea18a"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 134.5,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L027"
+        },
+        "result_digest": "sha256:5e9392e498b10c50b8781eb745aff10c49b9c2e4474aa22e7cc1edcf3b4c5012"
+      }
+    ],
+    "selection_context": {
+      "query": "roadwind running shoe mens 9, under $150",
+      "selected_sku": "NOR-RUN-RDW-09",
+      "alternatives_considered": [
+        {
+          "sku": "VLT-SSD-1TB-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 132.0,
+          "description": "1TB portable NVMe SSD"
+        },
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "merchant_id": "MER-CYC-6650",
+          "price": 128.0,
+          "description": "Road helmet, M"
+        },
+        {
+          "sku": "MKT-3P-CKW-DUT",
+          "merchant_id": "MER-MKT-9034",
+          "price": 141.0,
+          "description": "Enamelled dutch oven 5qt (marketplace listing)"
+        },
+        {
+          "sku": "ATE-KNT-MER-M",
+          "merchant_id": "MER-ATE-3345",
+          "price": 148.0,
+          "description": "Merino crew knit, oatmeal, M"
+        },
+        {
+          "sku": "PTC-CAT-TRE-01",
+          "merchant_id": "MER-PTC-7712",
+          "price": 148.0,
+          "description": "Sisal cat tree, 1.4m"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-06T14:33:47-05:00",
+    "principal_id": "PRIN-L-L027",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 134.5,
+      "currency": "USD",
+      "merchant": "Northsole Footwear Inc",
+      "line_items": [
+        {
+          "sku": "NOR-RUN-RDW-09",
+          "qty": 1,
+          "unit_price": 134.5
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 150.0
+      }
+    },
+    "rendered_hash": "sha256:0ec46a58d57552a594a373a3831529e112bb2a224c48227013436b7ccd78e15e",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0806-0028",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0806-0028",
+      "prev_mandate_hash": "sha256:d1d73e12803e40b61308c1651c3b6cb941937feaa26379622ebb8817dc90d2d3"
+    },
+    "created_at": "2026-08-06T14:33:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-NOR-1120",
+      "name": "Northsole Footwear Inc",
+      "mcc": "5661",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "NOR-RUN-RDW-09",
+        "description": "Roadwind running shoe, men's 9, grey",
+        "qty": 1,
+        "unit_price": 134.5
+      }
+    ],
+    "cart_total": 134.5,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Northsole Footwear Inc's catalogue and selected the closest in-stock option at $134.50, within the stated $150.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "38SFVS+ZGWItuHUGaLJEYoYJFoQPl21hb37BlYh0fKFJW3HbU06LwdIkM0wYsw7fGoI6tk69ZnBVeY8etJICAg==",
+      "signed_payload_hash": "sha256:7dbbd99be7e424c2ccaf0d8d16c7ee6cecb282ac17e0952d9531f7b2f73f7c71",
+      "signed_at": "2026-08-06T14:33:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0806-0028",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0806-0028",
+      "prev_mandate_hash": "sha256:7dbbd99be7e424c2ccaf0d8d16c7ee6cecb282ac17e0952d9531f7b2f73f7c71"
+    },
+    "authorized_at": "2026-08-06T14:35:19-05:00",
+    "amount": 134.5,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1027",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2027",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Northsole Footwear Inc"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "5l1FSIz5B6qih8oy6v/vsNyADiLF+4295J7gH1fYKrAj0Qp1J+W+57lQbgYVFrUvjUgUryCgPB9eVaOuKyENAw==",
+      "signed_payload_hash": "sha256:afd3aa97837046ece25f181b4c154006518fddecdf7f41f7e72d547fccf5de98",
+      "signed_at": "2026-08-06T14:35:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-08-06T14:34:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-08-06T14:34:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-08-06T14:34:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-08-06T14:34:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-08-06T14:34:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-06T14:34:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-06T14:34:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-06T14:34:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-06T14:34:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

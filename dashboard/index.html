@@ -2,12 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- ?v=3 busts the favicon cache — browsers cling to the old tab icon
-         (the Vite boilerplate one) for the bare URLs otherwise. -->
-    <link rel="icon" href="/favicon.ico?v=3" sizes="48x48" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=3" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=3" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
+    <!-- Versioned FILENAMES, not "?v=" query strings. Safari keys its
+         favicon cache by host and ignores the query string, so a bumped
+         "?v=" never dislodges a cached icon there (Chrome and Firefox do
+         honour it). A path Safari has never fetched cannot come from that
+         cache. Bump the -v9 suffix on every icon change.
+         /favicon.ico stays unversioned alongside these: browsers and crawlers
+         probe that exact path whether or not a <link> points at it. -->
+    <link rel="icon" href="/icon-v9.ico" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/mark-v9.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32-v9.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192-v9.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-v9.png" />
+    <meta name="theme-color" content="#003c78" />
+    <meta
+      name="description"
+      content="Continuous supervision of AI payment agents — the National Bank of Georgia's regulator-side console for AP2 mandate chains."
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

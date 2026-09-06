@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0703-0011",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-03T09:03:00-05:00",
+  "ended_at": "2026-07-03T09:05:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "1kg of single origin coffee beans",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0703-0011",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-03T09:03:00-05:00",
+    "expires_at": "2026-07-03T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L011",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L011",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "1kg of single origin coffee beans",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 45.0,
+      "max_cumulative_amount": 45.0,
+      "currency": "USD",
+      "valid_from": "2026-07-03T00:00:00-05:00",
+      "valid_until": "2026-07-03T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5499"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-03T09:03:00-05:00",
+      "device_id": "DEV-L-L011"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L011",
+      "value": "ZAlAdVTJ6sWrphd1UcNzpW/EVf6lvIFIX8bEzI1U0mYdshO2wkH+EvLVcfKfydZP7B8qhi6loq5DPqme99uqDw==",
+      "signed_payload_hash": "sha256:61c9a5c4f0b541c269a268f93dd19e7d6b523b1a24a04d12401c3c00b8811b24",
+      "signed_at": "2026-07-03T09:03:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca",
+      "release_ref": "larkspur-shop-v3.1.4"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.brewhouse.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "1kg of single origin coffee beans",
+          "max_price": 45.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:59f8d3a100a307a52c158c0ba74ac95cd0f5fdbfcaedb0433c98d8acbbd62af1"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.brewhouse.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "BRW-COF-BEA-1K"
+          ]
+        },
+        "result_digest": "sha256:9bf7dc10e20de3229e9b1631641cc7cd52097ab04482069753918145d7af3d8d",
+        "result_excerpt": {
+          "source": "mcp://shop.brewhouse.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "BREWHOUSE SUPPLY CO — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.brewhouse.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "BRW-COF-BEA-1K"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:5255cf5c028a8b8e93fe18498fc7e9b2a729807a2f57383b6e6bdc00a6efd13b"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.brewhouse.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-BRW-1177",
+          "lines": 1,
+          "total": 38.0
+        },
+        "result_digest": "sha256:807e157f6466fa26204c2ce2161711eea4799260459c96d9c1371c347dc54881"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 38.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L011"
+        },
+        "result_digest": "sha256:4f81a668462a866cf86981ceda7e28370458cd4760dae1cf8667b005607b39c7"
+      }
+    ],
+    "selection_context": {
+      "query": "1kg of single origin coffee beans",
+      "selected_sku": "BRW-COF-BEA-1K",
+      "alternatives_considered": [
+        {
+          "sku": "PGE-BOK-COK-02",
+          "merchant_id": "MER-PGE-2201",
+          "price": 34.0,
+          "description": "Salt Fat Acid Heat, hardback"
+        },
+        {
+          "sku": "DSK-NTB-A5-10",
+          "merchant_id": "MER-DSK-3390",
+          "price": 42.0,
+          "description": "A5 dotted notebook, 10-pack"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        },
+        {
+          "sku": "LUM-SKN-SER-30",
+          "merchant_id": "MER-LUM-6614",
+          "price": 48.0,
+          "description": "Vitamin C serum, 30ml"
+        },
+        {
+          "sku": "VLT-CAB-USB-03",
+          "merchant_id": "MER-VLT-7789",
+          "price": 24.0,
+          "description": "USB-C braided cable, 2m, 3-pack"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-03T09:03:47-05:00",
+    "principal_id": "PRIN-L-L011",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 38.0,
+      "currency": "USD",
+      "merchant": "Brewhouse Supply Co",
+      "line_items": [
+        {
+          "sku": "BRW-COF-BEA-1K",
+          "qty": 1,
+          "unit_price": 38.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 45.0
+      }
+    },
+    "rendered_hash": "sha256:9c2c3203f81600c1b48bac5b89ca466a9e4f45d2aa566330442495e7592b1c28",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0703-0011",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0703-0011",
+      "prev_mandate_hash": "sha256:61c9a5c4f0b541c269a268f93dd19e7d6b523b1a24a04d12401c3c00b8811b24"
+    },
+    "created_at": "2026-07-03T09:03:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-BRW-1177",
+      "name": "Brewhouse Supply Co",
+      "mcc": "5499",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "BRW-COF-BEA-1K",
+        "description": "Single-origin coffee beans, 1kg",
+        "qty": 1,
+        "unit_price": 38.0
+      }
+    ],
+    "cart_total": 38.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Brewhouse Supply Co's catalogue and selected the closest in-stock option at $38.00, within the stated $45.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "m4dszF66jvPVHYiYOe7IFxtU5ZY50CNNYxGCe7KXmpexgSJr0Oy5U5NpGgRBZmoY2NYEx8kEffcG4axlxt0tCA==",
+      "signed_payload_hash": "sha256:40e1f1021a7050638cad592d7dab3b5076ed8f5c8524d005e8e4e0554008fb88",
+      "signed_at": "2026-07-03T09:03:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0703-0011",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0703-0011",
+      "prev_mandate_hash": "sha256:40e1f1021a7050638cad592d7dab3b5076ed8f5c8524d005e8e4e0554008fb88"
+    },
+    "authorized_at": "2026-07-03T09:05:19-05:00",
+    "amount": 38.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1010",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2010",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Brewhouse Supply Co"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "RYjDWd9q9lQlVwXA+3iiNyp8GAO9wz47Nbj3cP63s2Sll97ljeNh0O2PekkA5ZqH+fnNDVYlOIfixObW+HUSBw==",
+      "signed_payload_hash": "sha256:a325195f8b838346b9ab100c0c71a818c1ec098c75ffba23d950e44c0afe6c33",
+      "signed_at": "2026-07-03T09:05:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-07-03T09:04:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-07-03T09:04:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-07-03T09:04:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-07-03T09:04:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-07-03T09:04:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-03T09:04:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-03T09:04:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-03T09:04:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-03T09:04:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

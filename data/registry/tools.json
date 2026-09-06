@@ -102,8 +102,12 @@
     {
       "tool_name": "request_shopper_confirmation",
       "authorised_server_ids": [
+        "mcp://core.ashgrovecommerce.com",
+        "mcp://core.ferrymead.com",
         "mcp://core.halcyonagents.co.uk",
-        "mcp://core.kestrelcommerce.com"
+        "mcp://core.kestrelcommerce.com",
+        "mcp://core.larkspurshopping.com",
+        "mcp://core.marchmont-digital.com"
       ],
       "schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307"
     }

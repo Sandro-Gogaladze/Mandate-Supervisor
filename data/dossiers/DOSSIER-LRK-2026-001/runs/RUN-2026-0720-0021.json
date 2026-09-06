@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0720-0021",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-20T09:29:00-05:00",
+  "ended_at": "2026-07-20T09:31:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "the le carre boxed set",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0720-0021",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-20T09:29:00-05:00",
+    "expires_at": "2026-07-20T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L020",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L020",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "the le carre boxed set",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 90.0,
+      "max_cumulative_amount": 90.0,
+      "currency": "USD",
+      "valid_from": "2026-07-20T00:00:00-05:00",
+      "valid_until": "2026-07-20T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5942"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-20T09:29:00-05:00",
+      "device_id": "DEV-L-L020"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L020",
+      "value": "LXkI/ZufHV3eWOyLmX7tXqeneGhf7+NotuDLPf16FQzmhcf4NpJjGOujsivCN/izpksHyE8zjH7yDc1dUeFFBA==",
+      "signed_payload_hash": "sha256:821e7d2a84ff339013524b58ac1449f65c19cf415454879691b7e49418358f37",
+      "signed_at": "2026-07-20T09:29:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41",
+      "release_ref": "larkspur-shop-v3.2.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "the le carre boxed set",
+          "max_price": 90.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:b2202ff40d777c6202999ae3f6d42170111d2a686250125c9d64675f86b0b7e1"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-SET-05"
+          ]
+        },
+        "result_digest": "sha256:b65ad8815c26df6ee326702e076a4b4980004d6037976a2ac8f3b7dbe1b3d809",
+        "result_excerpt": {
+          "source": "mcp://shop.pagegrove.co.uk",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "PAGEGROVE BOOKS LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "PGE-BOK-SET-05"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:e69040594038ce1f0e7ba962f17e4a34ee0cbf609080de0738334d8ca65c2478"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.pagegrove.co.uk",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-PGE-2201",
+          "lines": 1,
+          "total": 78.0
+        },
+        "result_digest": "sha256:22063b62d69c236b89ed6c230c2de5ebc4786ceaa0c5dee8bd16339c64dacc2e"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 78.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L020"
+        },
+        "result_digest": "sha256:b68644477634805c67e261c719ab2d74f425111c08a8f8c4df29e4c6804ccefb"
+      }
+    ],
+    "selection_context": {
+      "query": "the le carre boxed set",
+      "selected_sku": "PGE-BOK-SET-05",
+      "alternatives_considered": [
+        {
+          "sku": "TRK-STV-CMP-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 74.5,
+          "description": "Compact camping stove"
+        },
+        {
+          "sku": "HRT-LIN-TWL-06",
+          "merchant_id": "MER-HRT-9902",
+          "price": 88.0,
+          "description": "Waffle bath towel set of 6"
+        },
+        {
+          "sku": "DSK-LMP-LED-02",
+          "merchant_id": "MER-DSK-3390",
+          "price": 68.0,
+          "description": "LED desk lamp, dimmable"
+        },
+        {
+          "sku": "GRV-PLT-MON-01",
+          "merchant_id": "MER-GRV-2258",
+          "price": 68.0,
+          "description": "Monstera deliciosa, 90cm"
+        },
+        {
+          "sku": "ATE-COT-OXF-L",
+          "merchant_id": "MER-ATE-3345",
+          "price": 92.0,
+          "description": "Brushed oxford shirt, L"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-20T09:29:47-05:00",
+    "principal_id": "PRIN-L-L020",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 78.0,
+      "currency": "USD",
+      "merchant": "Pagegrove Books Ltd",
+      "line_items": [
+        {
+          "sku": "PGE-BOK-SET-05",
+          "qty": 1,
+          "unit_price": 78.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 90.0
+      }
+    },
+    "rendered_hash": "sha256:8d349df3be27f31a951c86ff5fdf1cfdaea0f0ea70cee3c0173102930524bb5f",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0720-0021",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0720-0021",
+      "prev_mandate_hash": "sha256:821e7d2a84ff339013524b58ac1449f65c19cf415454879691b7e49418358f37"
+    },
+    "created_at": "2026-07-20T09:29:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-PGE-2201",
+      "name": "Pagegrove Books Ltd",
+      "mcc": "5942",
+      "country": "GB",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "PGE-BOK-SET-05",
+        "description": "Le Carre boxed set, 5 volumes",
+        "qty": 1,
+        "unit_price": 78.0
+      }
+    ],
+    "cart_total": 78.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Pagegrove Books Ltd's catalogue and selected the closest in-stock option at $78.00, within the stated $90.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "m3bmaD6X3BlNAcnWXAziwPM3A9hGVYxxfxUpxb1DExqSsMtrOzMX/m0SJiJvWoxpg8oBICcg+KL/IGQ25ZwpBg==",
+      "signed_payload_hash": "sha256:cee8a67213456b3d4ef4d63a93a64026b0fd2b99fa30fed11afcbe303cd53146",
+      "signed_at": "2026-07-20T09:29:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0720-0021",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0720-0021",
+      "prev_mandate_hash": "sha256:cee8a67213456b3d4ef4d63a93a64026b0fd2b99fa30fed11afcbe303cd53146"
+    },
+    "authorized_at": "2026-07-20T09:31:19-05:00",
+    "amount": 78.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1020",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2020",
+      "scheme": "card_settlement",
+      "country": "GB",
+      "beneficiary_name_on_account": "Pagegrove Books Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "w/PjGhMKC24J0PDidgamk6MURGFTEQCCBlVYWWz/AQ9Kxcp4kaBciRX71LsF2rlGLHA0MmIcbIm4K5RiB45WCg==",
+      "signed_payload_hash": "sha256:01263d0a0563ec42e694a95a48d2413e06988c4e58444ee7b9c795e6ce7ff553",
+      "signed_at": "2026-07-20T09:31:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-07-20T09:30:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-07-20T09:30:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-07-20T09:30:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-07-20T09:30:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-07-20T09:30:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-20T09:30:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-20T09:30:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-20T09:30:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-20T09:30:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

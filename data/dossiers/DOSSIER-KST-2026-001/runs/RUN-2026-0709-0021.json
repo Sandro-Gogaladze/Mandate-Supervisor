@@ -53,7 +53,7 @@
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "KEY-SHOPPER-0021",
-      "value": "1SxyiAjkABWJCrGAYnMT7k1iu5OqGegnJ1+Y4pLR2cEaYqTPFWER/8BPv+LHIy5v/eqMas+2ES0duwlfBkbcAw==",
+      "value": "H1XYzpRpSpmwpwOTwyIfLbmNOaGpB2vn/YPkuddY5KOV8/wHAusw8tjKUXHV0/AMzqiuJ/iRaQbiwr9TNMwdDA==",
       "signed_payload_hash": "sha256:09edca782152527f226e487af71c59bd1ba6786c115e813328fa0f9c30637ae3",
       "signed_at": "2026-07-09T09:07:00-05:00"
     }
@@ -236,7 +236,7 @@
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "KEY-KST-AGT-01",
-      "value": "ZlwjFNO3P/kjTfAdfcRWdzOivrZSvMrkOyLrYFVHxx6ynGhnV14x/A7m5bNom8EdbBMSmAM+lxhKjuVEJOeWDw==",
+      "value": "Ih6DzqBIEqPUPqHsxI/IOUs0BLyydy2rtoXC47w1hbnrxZ5i8eKAElmI13uol4K6ESCGcyWEbCBhZRfE4wxwAQ==",
       "signed_payload_hash": "sha256:eec075458eb860b1abe96d86aaa1c2835948c9df7584b5cdfda8cad00f134d53",
       "signed_at": "2026-07-09T09:07:00-05:00"
     }
@@ -265,7 +265,7 @@
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "KEY-KST-AGT-01",
-      "value": "Ppo4f5eZXuWrmL9QJU6dL6uGBG2sLrddD4Om2HIUxp3E3IFL5mC2xUkFJHqrbUUxUX+FPwgU/XelBje8b6MoDg==",
+      "value": "nEWLBw0POqP3XfLGAlVUx2Hk5fjSrSIca6dtRFov/ZC6ADNmNkyWLa0QrlBgsIxZ8ndIgVJ5OS/bXNUIx71vAA==",
       "signed_payload_hash": "sha256:073d882c490bb908d56cdd326ccc822b29d850413d7d96dcd6f55c3279fc1399",
       "signed_at": "2026-07-09T09:09:19-05:00"
     }

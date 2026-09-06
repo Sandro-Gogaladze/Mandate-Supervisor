@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0630-0008",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-30T09:36:00-05:00",
+  "ended_at": "2026-06-30T09:38:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "front and rear bike light set",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0630-0008",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-30T09:36:00-05:00",
+    "expires_at": "2026-06-30T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L008",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L008",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "front and rear bike light set",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 70.0,
+      "max_cumulative_amount": 70.0,
+      "currency": "USD",
+      "valid_from": "2026-06-30T00:00:00-05:00",
+      "valid_until": "2026-06-30T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5940"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-30T09:36:00-05:00",
+      "device_id": "DEV-L-L008"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L008",
+      "value": "PeWaZSCY5Vn3WrXqJeTnfIkJ0rp0w9C/hy10F27GyBl3c3skyzqDs+XDl7VAGb7uzluew1t/C7mPWy35d6HBCg==",
+      "signed_payload_hash": "sha256:add120b9a034158eac3b8eb6bc3c02da3348f3abcb8c1f099513b9eb04cd366e",
+      "signed_at": "2026-06-30T09:36:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca",
+      "release_ref": "larkspur-shop-v3.1.4"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "front and rear bike light set",
+          "max_price": 70.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:12965d2080b251143a1dad23fa3fa1e17eb0d6ad115bd7a75a83a0d9173c7603"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "CYC-LGT-SET-01"
+          ]
+        },
+        "result_digest": "sha256:0a70d845e2e4769bb9db76ce5fbd0dc08753a8a89a8e24536590fd1f62643731",
+        "result_excerpt": {
+          "source": "mcp://shop.cyclora.fr",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "CYCLORA CYCLES SAS — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "CYC-LGT-SET-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:8d0942effbf951abfd8fc49684e354e8cd44c877cc5be18dbeb35c0cc1032ad9"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.cyclora.fr",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-CYC-6650",
+          "lines": 1,
+          "total": 62.0
+        },
+        "result_digest": "sha256:39be999dc894339e67acd944788a9062d28db36ca00523c1f6dcfadd56eca0db"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 62.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L008"
+        },
+        "result_digest": "sha256:2164d24ef2fa49405eeff94a0936cb46a41ebce15ec910b758455a5e1a4f8429"
+      }
+    ],
+    "selection_context": {
+      "query": "front and rear bike light set",
+      "selected_sku": "CYC-LGT-SET-01",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-SND-EVR-11",
+          "merchant_id": "MER-NOR-1120",
+          "price": 62.0,
+          "description": "Everstrap sandal, men's 11"
+        },
+        {
+          "sku": "LUM-SKN-CRM-50",
+          "merchant_id": "MER-LUM-6614",
+          "price": 64.0,
+          "description": "Ceramide night cream, 50ml"
+        },
+        {
+          "sku": "DSK-LMP-LED-02",
+          "merchant_id": "MER-DSK-3390",
+          "price": 68.0,
+          "description": "LED desk lamp, dimmable"
+        },
+        {
+          "sku": "GRV-PLT-MON-01",
+          "merchant_id": "MER-GRV-2258",
+          "price": 68.0,
+          "description": "Monstera deliciosa, 90cm"
+        },
+        {
+          "sku": "KDO-PLU-BEA-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 54.0,
+          "description": "Handmade wool bear"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-30T09:36:47-05:00",
+    "principal_id": "PRIN-L-L008",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 62.0,
+      "currency": "USD",
+      "merchant": "Cyclora Cycles SAS",
+      "line_items": [
+        {
+          "sku": "CYC-LGT-SET-01",
+          "qty": 1,
+          "unit_price": 62.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 70.0
+      }
+    },
+    "rendered_hash": "sha256:a27d7ee64983b75a92ca4cb919e4f51d26c383fc85e10b67431bfd62375eba71",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0630-0008",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0630-0008",
+      "prev_mandate_hash": "sha256:add120b9a034158eac3b8eb6bc3c02da3348f3abcb8c1f099513b9eb04cd366e"
+    },
+    "created_at": "2026-06-30T09:36:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-CYC-6650",
+      "name": "Cyclora Cycles SAS",
+      "mcc": "5940",
+      "country": "FR",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "CYC-LGT-SET-01",
+        "description": "Front and rear light set",
+        "qty": 1,
+        "unit_price": 62.0
+      }
+    ],
+    "cart_total": 62.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Cyclora Cycles SAS's catalogue and selected the closest in-stock option at $62.00, within the stated $70.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "96R9bipMmwF3P0xb1YEYF4D0l0INvPbGvLBO2nMAdCwOR4Cwlyn4O34ez9UgLvMuomoyno6Pdl+TWdTvaLTkDw==",
+      "signed_payload_hash": "sha256:b12941625cfaba6141102dff0a29ef03b811be77cebdb81708258ed7311027b9",
+      "signed_at": "2026-06-30T09:36:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0630-0008",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0630-0008",
+      "prev_mandate_hash": "sha256:b12941625cfaba6141102dff0a29ef03b811be77cebdb81708258ed7311027b9"
+    },
+    "authorized_at": "2026-06-30T09:38:19-05:00",
+    "amount": 62.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1007",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2007",
+      "scheme": "card_settlement",
+      "country": "FR",
+      "beneficiary_name_on_account": "Cyclora Cycles SAS"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "fJXODxrpf1Y0we/PLyS4KvYJphIaerbConsjisD0pYS2Kt8kAz/Tf8eLxntM7dArACp8+F/w7VV3571x/PvBCw==",
+      "signed_payload_hash": "sha256:cd435c431f0241cbcaad8098e4402fbcefe3828e5e2089799ccc511b9801d665",
+      "signed_at": "2026-06-30T09:38:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-06-30T09:37:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-06-30T09:37:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-06-30T09:37:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-06-30T09:37:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-06-30T09:37:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-30T09:37:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-30T09:37:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-30T09:37:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-30T09:37:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

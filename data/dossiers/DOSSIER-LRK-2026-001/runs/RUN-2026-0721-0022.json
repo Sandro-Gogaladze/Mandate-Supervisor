@@ -1,0 +1,208 @@
+{
+  "run_id": "RUN-2026-0721-0022",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-21T13:22:00-05:00",
+  "ended_at": "2026-07-21T13:24:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a 3 pack of 2m usb-c cables",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0721-0022",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-21T13:22:00-05:00",
+    "expires_at": "2026-07-21T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L021",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L021",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a 3 pack of 2m usb-c cables",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 35.0,
+      "max_cumulative_amount": 35.0,
+      "currency": "USD",
+      "valid_from": "2026-07-21T00:00:00-05:00",
+      "valid_until": "2026-07-21T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-21T13:22:00-05:00",
+      "device_id": "DEV-L-L021"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L021",
+      "value": "N6BTbI13/uOfp9h5hBKKb5rsG7kIM8jO28q4Fw7kdFGXLhg3Y51FIh2Sw/ljwI0+I6XApbVZcrlKq0VLw6PDCA==",
+      "signed_payload_hash": "sha256:76d361dfceafd06b9c5a8195c7440bb1aa45eb096ad21717b375414199c12e44",
+      "signed_at": "2026-07-21T13:22:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41",
+      "release_ref": "larkspur-shop-v3.2.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a 3 pack of 2m usb-c cables",
+          "max_price": 35.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:ea762c3a1eb9c35e52554b9af465af1462523c40e61a0562f268d85a4107c2a0"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "VLT-CAB-USB-03"
+          ]
+        },
+        "result_digest": "sha256:424b97641d44e9733eb2a7a44b9a6a2aa909752a01568e18688a1249aa6e40a2"
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "VLT-CAB-USB-03"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:81f6d7f0bf9774b8c4ee438df68e73588a47bee790fddc98b5fe23e4da7648e8"
+      }
+    ],
+    "selection_context": {
+      "query": "a 3 pack of 2m usb-c cables",
+      "selected_sku": "VLT-CAB-USB-03",
+      "alternatives_considered": [
+        {
+          "sku": "KDO-PZL-1000-04",
+          "merchant_id": "MER-KDO-5573",
+          "price": 22.0,
+          "description": "1000-piece landscape puzzle"
+        },
+        {
+          "sku": "GRV-SOI-MIX-20",
+          "merchant_id": "MER-GRV-2258",
+          "price": 21.5,
+          "description": "Peat-free potting mix, 20L"
+        },
+        {
+          "sku": "PGE-BOK-HIS-01",
+          "merchant_id": "MER-PGE-2201",
+          "price": 18.5,
+          "description": "The Silk Roads, paperback"
+        },
+        {
+          "sku": "LUM-HAI-OIL-10",
+          "merchant_id": "MER-LUM-6614",
+          "price": 29.5,
+          "description": "Argan hair oil, 100ml"
+        },
+        {
+          "sku": "PGE-BOK-COK-02",
+          "merchant_id": "MER-PGE-2201",
+          "price": 34.0,
+          "description": "Salt Fat Acid Heat, hardback"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": null,
+  "cart": null,
+  "payment": null,
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-07-21T13:23:10-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-07-21T13:23:11-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-07-21T13:23:12-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-07-21T13:23:13-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-07-21T13:23:14-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-21T13:23:15-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-21T13:23:16-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-21T13:23:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-21T13:23:18-05:00",
+      "outcome": "not_evaluated",
+      "override": null
+    }
+  ],
+  "outcome": "failed"
+}

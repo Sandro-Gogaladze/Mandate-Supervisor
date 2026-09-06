@@ -1,7 +1,7 @@
 {
   "ruleset_id": "PRV-RULESET",
   "domain": "provenance",
-  "version": "2026.2",
+  "version": "2026.5",
   "as_of": "2026-09-04",
   "description": "Provenance (B1): was this mandate built from inputs anyone should trust? The three TEC rules answered from construction_context, moved here from kya.json in migration Phase 4 with their ids kept; a card-versus-credential check; and one judged reconciliation of the four sources that should agree — the agent card, the credential, the register and the tool calls actually observed.",
   "rules": [
@@ -64,7 +64,9 @@
       "finding_type": "agent_card_credential_mismatch",
       "description": "The agent card's declared_capabilities are within the credential's capabilities, and the card is signed. A card that claims more than the credential grants is the operator advertising authority the issuer never gave.",
       "notes": "Dossier-level integrity check on the subject agent's own filed card. It deliberately has no F34 mapping: F34 concerns verification of a counterparty's discovery card, while this dossier currently carries only the subject agent's card. An unsigned card remains a generic provenance finding until the data contract captures the counterparty card.",
-      "failures": [],
+      "failures": [
+        "F88"
+      ],
       "params": {}
     },
     {
@@ -77,9 +79,41 @@
       "severity_weight": 0.6,
       "finding_type": "provenance_sources_disagree",
       "description": "The agent card, the credential, the register and the observed tool calls describe the same agent: capabilities, tool servers, model, prompt release. Any pair disagreeing is a question about which one is lying.",
-      "notes": "JUDGED over the reconciliation measurement the floor records. This broad reconciliation has no direct F mapping because the precise F33/F36/F37 occurrences are emitted by the computable pairwise rules; mapping every broad disagreement to all three would over-label it.",
+      "notes": "Claims no failure id ON PURPOSE. It reconciles the same sources KYA-TEC-02/05/06 each check pairwise, so a disagreement it reports has already been named by whichever specific rule owns it — minting a harm here would count one event twice. Its output is which source is the odd one out, which is what no specific rule can say.",
       "failures": [],
       "params": {}
+    },
+    {
+      "rule_id": "KYA-TEC-07",
+      "type": "observed_model_not_blocklisted",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-05",
+      "evaluation": "computable",
+      "severity_weight": 1.0,
+      "finding_type": "observed_model_blocklisted",
+      "description": "The model that actually built the run is not on the regulator's blocklist. KYA-TEC-03 asks the same of the declared version; both are needed, because a firm can pin an approved model on the form and run a barred one.",
+      "notes": "F19 was unreachable when only the observed model was barred: KYA-TEC-03 reads the declared version and correctly passed, and KYA-TEC-02 saw the mismatch but establishes F37 — a mismatch rule must not also mint F19, or benign version drift would become a barred-model finding.",
+      "failures": [
+        "F19"
+      ],
+      "params": {}
+    },
+    {
+      "rule_id": "PRV-CPT-01",
+      "type": "counterparty_independently_verified",
+      "version": 1,
+      "status": "draft",
+      "effective_from": "2026-09-05",
+      "evaluation": "computable",
+      "severity_weight": 0.7,
+      "finding_type": "cpt_unverified_source",
+      "description": "Before the cart was built, what the agent knew about the counterparty came from somewhere other than the counterparty. An agent that knows who it is paying only because that party told it so has verified nothing — a question about the moment of selection, not about whether the payee later resolved in the register.",
+      "notes": "Needs one link the registries do not yet carry. merchants.json holds every merchant with its legal name, beneficial owner and watchlist flags, and tools.json holds the servers authorised to answer each tool — but nothing joins a merchant to the server that speaks for it, so 'was this established from a source independent of the counterparty' cannot be decided from a server_id. No run in the corpus performs a verification step at all: every fact about the selected merchant comes from that merchant's own server. Promoting this needs a merchant-to-server mapping in merchants.json, or a declared verification call in the run schema. Deliberately NOT a re-check of whether the payee resolves in the register — CPT-REG-01 and CPT-BEN-01 already establish that at P4, and asserting the same harm from two books is the double-count the evidence-based ownership split exists to prevent.",
+      "params": {},
+      "failures": [
+        "F34"
+      ]
     }
   ]
 }

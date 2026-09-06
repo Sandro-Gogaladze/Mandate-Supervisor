@@ -8,14 +8,14 @@ from agents.context import canonical_context
 from agents.control_assurance import peers_from_facts
 from agents.skills import SPECIALIST_SKILLS_BY_AGENT
 from ingestion.normalize import normalize_dossier
-from registry.loader import load_all_rulesets
+from registry.loader import load_failure_catalogue, load_all_rulesets
 
 
 def _assert_contract(context: dict, *, agent: str, ruleset, facts) -> None:
     contract = context["evidence_contract"]
     assert contract["specialist"] == agent
     assert contract["review_scope"]["run_refs"]
-    assert contract["failure_catalogue_version"] == "2026.1"
+    assert contract["failure_catalogue_version"] == load_failure_catalogue().version
     assert len(contract["rule_inventory"]) == len(ruleset.rules)
     assert contract["ruleset"]["version"] == ruleset.version
     assert {r["rule_id"] for r in contract["rule_results"]} == {
@@ -82,7 +82,7 @@ def test_deterministic_specialists_record_the_inputs_their_checks_consumed(kst, 
     )
     control_context = canonical_context(
         "control_assurance.review", kst, evidence=evidence, ruleset=control_rules,
-        floor_facts=control_facts, peer_facts=peer_facts, peer_assessments=[], rulebooks=books,
+        floor_facts=control_facts, peer_facts=peer_facts, peer_assessments=[],
     )
     _assert_contract(control_context, agent="control_assurance",
                      ruleset=control_rules, facts=control_facts)
@@ -99,11 +99,3 @@ def test_deterministic_specialists_record_the_inputs_their_checks_consumed(kst, 
     assert len(systemic_context["portfolio"]) == 2
     assert systemic_context["evidence_contract"]["ruleset"] is None
 
-    red_team = AGENTS["red_team"]()
-    red_facts = red_team.run(kst, rulebooks=books)
-    red_context = canonical_context(
-        "red_team.review", kst, floor_facts=red_facts, rulebooks=books
-    )
-    assert red_context["probe_results"]
-    assert set(red_context["rulebooks"]) == set(books)
-    assert red_context["evidence_contract"]["ruleset"] is None

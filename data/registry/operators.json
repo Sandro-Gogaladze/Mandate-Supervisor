@@ -75,6 +75,162 @@
         "role": "Managing Director"
       },
       "notes": "A second consumer shopping agent sponsored by the same institution. Its merchant set overlaps Kestrel's, which is ordinary — and is what makes a genuinely shared counterparty distinguishable from ordinary popularity."
+    },
+    {
+      "operator_id": "OPR-004",
+      "legal_name": "Larkspur Digital, Inc.",
+      "trading_name": "Larkspur",
+      "is_institution": false,
+      "sponsoring_institution_id": "INST-001",
+      "sector": "agentic_commerce_platform",
+      "hq": "Denver, CO, US",
+      "timezone": "America/Denver",
+      "incorporated": "2023-11-30",
+      "standing": "good",
+      "licence_status": "not_licensed",
+      "authority_basis": "sponsored",
+      "sponsorship": {
+        "institution_id": "INST-001",
+        "status": "active",
+        "granted_at": "2026-04-14",
+        "expires_at": "2027-04-14",
+        "scope": "agent-initiated consumer card payments"
+      },
+      "ownership_changes": [],
+      "authorised_signatories": [
+        {
+          "principal_id": "PRIN-LRK-0001",
+          "name": "Marisol Okonjo",
+          "role": "Chief Executive"
+        },
+        {
+          "principal_id": "PRIN-LRK-0002",
+          "name": "Priya Raghunathan",
+          "role": "Head of Risk"
+        }
+      ],
+      "compliance_contact": {
+        "name": "Priya Raghunathan",
+        "role": "Head of Risk"
+      },
+      "notes": "Runs a consumer personal-shopper agent on the shared catalogue federation. Its shoppers are retail consumers, so every purchase runs the human-present flow: the shopper's request becomes an Intent Mandate and they sign the exact cart."
+    },
+    {
+      "operator_id": "OPR-005",
+      "legal_name": "Ferrymead Retail Technologies, Inc.",
+      "trading_name": "Ferrymead",
+      "is_institution": false,
+      "sponsoring_institution_id": "INST-002",
+      "sector": "agentic_commerce_platform",
+      "hq": "Portland, OR, US",
+      "timezone": "America/Los_Angeles",
+      "incorporated": "2022-06-27",
+      "standing": "good",
+      "licence_status": "not_licensed",
+      "authority_basis": "sponsored",
+      "sponsorship": {
+        "institution_id": "INST-002",
+        "status": "active",
+        "granted_at": "2025-12-04",
+        "expires_at": "2027-05-20",
+        "scope": "agent-initiated consumer card payments"
+      },
+      "ownership_changes": [],
+      "authorised_signatories": [
+        {
+          "principal_id": "PRIN-FRY-0001",
+          "name": "Ines Baptista",
+          "role": "Chief Executive"
+        },
+        {
+          "principal_id": "PRIN-FRY-0002",
+          "name": "Tomas Wierzbicki",
+          "role": "Head of Risk"
+        }
+      ],
+      "compliance_contact": {
+        "name": "Tomas Wierzbicki",
+        "role": "Head of Risk"
+      },
+      "notes": "Runs a consumer concierge agent on the shared catalogue federation, sponsored by Rivermont rather than Northgate. Human-present flow throughout: the shopper's request becomes an Intent Mandate and they sign the exact cart."
+    },
+    {
+      "operator_id": "OPR-006",
+      "legal_name": "Marchmont Digital Services Ltd",
+      "trading_name": "Marchmont",
+      "is_institution": false,
+      "sponsoring_institution_id": "INST-003",
+      "sector": "agentic_commerce_platform",
+      "hq": "Edinburgh, GB",
+      "timezone": "Europe/London",
+      "incorporated": "2021-10-08",
+      "standing": "good",
+      "licence_status": "not_licensed",
+      "authority_basis": "sponsored",
+      "sponsorship": {
+        "institution_id": "INST-003",
+        "status": "active",
+        "granted_at": "2025-09-15",
+        "expires_at": "2027-03-15",
+        "scope": "agent-initiated consumer card payments"
+      },
+      "ownership_changes": [],
+      "authorised_signatories": [
+        {
+          "principal_id": "PRIN-MRC-0001",
+          "name": "Callum Drummond",
+          "role": "Managing Director"
+        },
+        {
+          "principal_id": "PRIN-MRC-0002",
+          "name": "Eilidh Mackintosh",
+          "role": "Head of Risk"
+        }
+      ],
+      "compliance_contact": {
+        "name": "Eilidh Mackintosh",
+        "role": "Head of Risk"
+      },
+      "notes": "Builds and runs Caledon Union Bank's white-label assisted-checkout agent. The bank owns the cardholder relationship and sets the mandate constraints; Marchmont operates the agent inside them."
+    },
+    {
+      "operator_id": "OPR-007",
+      "legal_name": "Ashgrove Commerce, Inc.",
+      "trading_name": "Ashgrove",
+      "is_institution": false,
+      "sponsoring_institution_id": "INST-002",
+      "sector": "agentic_commerce_platform",
+      "hq": "Chicago, IL, US",
+      "timezone": "America/Chicago",
+      "incorporated": "2022-11-15",
+      "standing": "good",
+      "licence_status": "not_licensed",
+      "authority_basis": "sponsored",
+      "sponsorship": {
+        "institution_id": "INST-002",
+        "status": "active",
+        "granted_at": "2025-07-22",
+        "expires_at": "2027-02-27",
+        "scope": "agent-initiated consumer card payments"
+      },
+      "ownership_changes": [],
+      "authorised_signatories": [
+        {
+          "principal_id": "PRIN-ASH-0001",
+          "name": "Desmond Achebe",
+          "role": "Chief Executive"
+        },
+        {
+          "principal_id": "PRIN-ASH-0002",
+          "name": "Beatriz Colomer",
+          "role": "Head of Risk"
+        }
+      ],
+      "compliance_contact": {
+        "name": "Beatriz Colomer",
+        "role": "Head of Risk"
+      },
+      "notes": "Rivermont's second sponsored operator. Builds baskets for cardholders on the shared catalogue federation; some cardholders are on a domestic-sellers profile the bank sets, which the mandate carries as a geographic scope rather than a merchant list."
     }
   ]
 }

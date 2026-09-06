@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0818-0035",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-18T11:15:00-05:00",
+  "ended_at": "2026-08-18T11:17:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "large orthopaedic dog bed, under $120",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0818-0035",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-18T11:15:00-05:00",
+    "expires_at": "2026-08-18T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L033",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L033",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "large orthopaedic dog bed, under $120",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 120.0,
+      "max_cumulative_amount": 120.0,
+      "currency": "USD",
+      "valid_from": "2026-08-18T00:00:00-05:00",
+      "valid_until": "2026-08-18T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5995"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-18T11:15:00-05:00",
+      "device_id": "DEV-L-L033"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L033",
+      "value": "uKN6gdBmj30fX87F1xjzakENy9CcdHpW+xbrNbccoRr96e8L8OMjkBKYL1u5EdRfEur4ztd+T+DZu5idDrMcAQ==",
+      "signed_payload_hash": "sha256:dc946664e8bb954695069c3339f55210771868cf54d54391705a50e081b6cbf4",
+      "signed_at": "2026-08-18T11:15:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41",
+      "release_ref": "larkspur-shop-v3.2.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "large orthopaedic dog bed, under $120",
+          "max_price": 120.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:27e35721226b541e212507a3556f2f7cd99a2cd64a78cde03749f33e3be13376"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "PTC-DOG-BED-L"
+          ]
+        },
+        "result_digest": "sha256:15234dd90a61ed4e5d4f340c495cc4af470ef58462e5f23b921831fe467a0fff",
+        "result_excerpt": {
+          "source": "mcp://shop.petcove.ca",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "PETCOVE SUPPLIES LTD — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "PTC-DOG-BED-L"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:b5f65bad8d0ab5bdc059e0f94306c9c33a7e16756746494519943ea411461398"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.petcove.ca",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-PTC-7712",
+          "lines": 1,
+          "total": 112.0
+        },
+        "result_digest": "sha256:14eb00f0694f6d283afb94f43c1bc6707a365440812b4bf4d9c6a59a251c71d9"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 112.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L033"
+        },
+        "result_digest": "sha256:04f261933d4bebc8ac4bcdb21f813f8f387d45539724fe9c3bc8feb93374ed3f"
+      }
+    ],
+    "selection_context": {
+      "query": "large orthopaedic dog bed, under $120",
+      "selected_sku": "PTC-DOG-BED-L",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 118.0,
+          "description": "Trailflex running shoe, women's 10, white"
+        },
+        {
+          "sku": "ATE-LIN-TRS-32",
+          "merchant_id": "MER-ATE-3345",
+          "price": 118.0,
+          "description": "Linen trouser, 32"
+        },
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "merchant_id": "MER-HRT-9902",
+          "price": 119.0,
+          "description": "8in chef's knife, forged"
+        },
+        {
+          "sku": "KDO-BLD-CTY-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 96.0,
+          "description": "Modular city building set, 1200pc"
+        },
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "merchant_id": "MER-CYC-6650",
+          "price": 128.0,
+          "description": "Road helmet, M"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-18T11:15:47-05:00",
+    "principal_id": "PRIN-L-L033",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 112.0,
+      "currency": "USD",
+      "merchant": "Petcove Supplies Ltd",
+      "line_items": [
+        {
+          "sku": "PTC-DOG-BED-L",
+          "qty": 1,
+          "unit_price": 112.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 120.0
+      }
+    },
+    "rendered_hash": "sha256:271804873da862ad5b2a111e68270c080d3e60ac04a04aa4ecedf640b0c7afae",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0818-0035",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0818-0035",
+      "prev_mandate_hash": "sha256:dc946664e8bb954695069c3339f55210771868cf54d54391705a50e081b6cbf4"
+    },
+    "created_at": "2026-08-18T11:15:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-PTC-7712",
+      "name": "Petcove Supplies Ltd",
+      "mcc": "5995",
+      "country": "CA",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "PTC-DOG-BED-L",
+        "description": "Orthopaedic dog bed, large",
+        "qty": 1,
+        "unit_price": 112.0
+      }
+    ],
+    "cart_total": 112.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Petcove Supplies Ltd's catalogue and selected the closest in-stock option at $112.00, within the stated $120.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "ZNtm6ZCVg6fIKAYWKfOLw1OOrZTWicSzHREVWVDj2/Vq9iuFWlKEXxEpVYpRiCB3YjwqC5thQtG2v3W8HNy8AQ==",
+      "signed_payload_hash": "sha256:8900c320750da2c580a51666845d307f1886403e210cc45e8976a7f4aca76ac0",
+      "signed_at": "2026-08-18T11:15:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0818-0035",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0818-0035",
+      "prev_mandate_hash": "sha256:8900c320750da2c580a51666845d307f1886403e210cc45e8976a7f4aca76ac0"
+    },
+    "authorized_at": "2026-08-18T11:17:19-05:00",
+    "amount": 112.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1034",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2034",
+      "scheme": "card_settlement",
+      "country": "CA",
+      "beneficiary_name_on_account": "Petcove Supplies Ltd"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "bKAhX2BMoc7CsoOt0i15nGYpYvPfRpV97qbgdll1lDsAGt997WCwHr0uMTil0mr4EGq5IQL8GmjTuhj+JJFHCw==",
+      "signed_payload_hash": "sha256:1b5c846a70ee9cfec3e78913a4a3da49e791866112fef9cc2b9b180dea081187",
+      "signed_at": "2026-08-18T11:17:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-08-18T11:16:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-08-18T11:16:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-08-18T11:16:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-08-18T11:16:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-08-18T11:16:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-18T11:16:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-18T11:16:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-18T11:16:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-18T11:16:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

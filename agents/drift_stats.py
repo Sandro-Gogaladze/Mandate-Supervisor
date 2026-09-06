@@ -71,6 +71,49 @@ def mix_breakdown(df: pd.DataFrame, column: str) -> dict:
     return df[column].value_counts().to_dict()
 
 
+def baseline_stability(baseline: pd.DataFrame) -> dict:
+    """Is the baseline itself steady enough to be a baseline?
+
+    Every drift verdict is a comparison against the first window, so if the
+    agent was already changing *during* that window the comparison measures
+    nothing. Split the baseline in half and run the same statistics across the
+    halves: a baseline that fails its own drift test cannot support a finding
+    about what came after.
+
+    Deliberately arithmetic, not judgement. This does not ask whether the
+    agent misbehaved — that must never turn on a constant — it asks whether
+    the evidence can carry the question at all, which is the same family as
+    `min_total_transactions` and is rightly decided in code.
+
+    Only the amount z-score is offered as a decidable signal. The mix PSIs are
+    computed and returned for context, but a rule must NOT decide on them: a
+    consumer shopping agent buys from a different merchant almost every run,
+    so PSI between two halves of its own history is enormous whatever it does
+    — measured at 10.3 and 11.7 on the two corpus baselines, both of which are
+    ordinary. On a high-cardinality category with ten samples a side, PSI
+    measures sparsity, not instability. Weighing that is exactly the judgement
+    DRIFT-BHV-01 hands to a model; a computable rule cannot make it.
+    """
+    if len(baseline) < 4:
+        return {"evaluable": False, "reason": "fewer than 4 baseline transactions to split",
+                "baseline_transactions": len(baseline)}
+    ordered = baseline.sort_values("timestamp")
+    half = len(ordered) // 2
+    first, second = ordered.iloc[:half], ordered.iloc[half:]
+    amounts = amount_shift(first, second)
+    return {
+        "evaluable": True,
+        "baseline_transactions": len(baseline),
+        "first_half": len(first),
+        "second_half": len(second),
+        "counterparty_mix_psi": distribution_psi(first, second, "counterparty_id"),
+        "mcc_mix_psi": distribution_psi(first, second, "mcc"),
+        "amount_z_score": amounts["z_score"],
+        "first_half_mean": amounts["baseline_mean"],
+        "second_half_mean": amounts["comparison_mean"],
+    }
+
+
 def change_points(df: pd.DataFrame, events: list[dict]) -> list[dict]:
     """The baseline statistics evaluated BEFORE and AFTER each dated
     `change_log` event — what lets an onset land on a named event rather than

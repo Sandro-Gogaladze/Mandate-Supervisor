@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0625-0006",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-25T10:18:00-05:00",
+  "ended_at": "2026-06-25T10:20:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "a set of six waffle bath towels",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0625-0006",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-25T10:18:00-05:00",
+    "expires_at": "2026-06-25T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L006",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L006",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "a set of six waffle bath towels",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 100.0,
+      "max_cumulative_amount": 100.0,
+      "currency": "USD",
+      "valid_from": "2026-06-25T00:00:00-05:00",
+      "valid_until": "2026-06-25T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5719"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-25T10:18:00-05:00",
+      "device_id": "DEV-L-L006"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L006",
+      "value": "WGfWgkfm4XpK+QtCyOBRZNS5L6KNU7bJQiGsR1v0YAofqOZCoQTgmWTrZFvAKRzuUddjq90LQGPHQqsJXll1Dg==",
+      "signed_payload_hash": "sha256:c08142d9850d3a153047d6614f3815333372284fca9c292810d7f21dd8efdcc5",
+      "signed_at": "2026-06-25T10:18:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca",
+      "release_ref": "larkspur-shop-v3.1.4"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "a set of six waffle bath towels",
+          "max_price": 100.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:e06f164c95f97d3dc4c48c8f54be11d1edb51a214dd0f3d5ce6770e4d81f0ba8"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "HRT-LIN-TWL-06"
+          ]
+        },
+        "result_digest": "sha256:2b6bbbaeaeaa36df1eeb51821e4b106200ab28dc36abd4549f3301223b900ba3",
+        "result_excerpt": {
+          "source": "mcp://shop.hearthandgrain.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "HEARTH & GRAIN LLC — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "HRT-LIN-TWL-06"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:ec7bb7ac3926f37a268786895f587368cc36e3f1fba176fd303419ff2b41c26c"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.hearthandgrain.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-HRT-9902",
+          "lines": 1,
+          "total": 88.0
+        },
+        "result_digest": "sha256:c64c28d8a53ba87d3e21b4ce0e3daf12ee3551c89a3e2683f5200f69beb20b72"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 88.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L006"
+        },
+        "result_digest": "sha256:8705bd38363c92878f2d76b19a16b64f88b9238a2f7c7c6a8fd61889e4fa60b0"
+      }
+    ],
+    "selection_context": {
+      "query": "a set of six waffle bath towels",
+      "selected_sku": "HRT-LIN-TWL-06",
+      "alternatives_considered": [
+        {
+          "sku": "ATE-COT-OXF-L",
+          "merchant_id": "MER-ATE-3345",
+          "price": 92.0,
+          "description": "Brushed oxford shirt, L"
+        },
+        {
+          "sku": "KDO-BLD-CTY-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 96.0,
+          "description": "Modular city building set, 1200pc"
+        },
+        {
+          "sku": "CYC-TYR-GRV-02",
+          "merchant_id": "MER-CYC-6650",
+          "price": 96.0,
+          "description": "Gravel tyre 700x40, pair"
+        },
+        {
+          "sku": "PGE-BOK-SET-05",
+          "merchant_id": "MER-PGE-2201",
+          "price": 78.0,
+          "description": "Le Carre boxed set, 5 volumes"
+        },
+        {
+          "sku": "TRK-STV-CMP-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 74.5,
+          "description": "Compact camping stove"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-25T10:18:47-05:00",
+    "principal_id": "PRIN-L-L006",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 88.0,
+      "currency": "USD",
+      "merchant": "Hearth & Grain LLC",
+      "line_items": [
+        {
+          "sku": "HRT-LIN-TWL-06",
+          "qty": 1,
+          "unit_price": 88.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 100.0
+      }
+    },
+    "rendered_hash": "sha256:85260ca1dc523d683eb060d52b4bd413cae44d4e1f27a77f32725e6b3c82391a",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0625-0006",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0625-0006",
+      "prev_mandate_hash": "sha256:c08142d9850d3a153047d6614f3815333372284fca9c292810d7f21dd8efdcc5"
+    },
+    "created_at": "2026-06-25T10:18:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-HRT-9902",
+      "name": "Hearth & Grain LLC",
+      "mcc": "5719",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "HRT-LIN-TWL-06",
+        "description": "Waffle bath towel set of 6",
+        "qty": 1,
+        "unit_price": 88.0
+      }
+    ],
+    "cart_total": 88.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Hearth & Grain LLC's catalogue and selected the closest in-stock option at $88.00, within the stated $100.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "tB+QWpZMb8wnnRMKcTbv7DJDmDa+f73bMJiESXttdQ7x0kqucl4+CFzWImslSqQtbzc2Q3LF4Wl3rXiUC5LaCA==",
+      "signed_payload_hash": "sha256:c1611bab27a6f2b2781dfb1d6f023f6348904a4875ae2fdf0011501f4f2ad286",
+      "signed_at": "2026-06-25T10:18:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0625-0006",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0625-0006",
+      "prev_mandate_hash": "sha256:c1611bab27a6f2b2781dfb1d6f023f6348904a4875ae2fdf0011501f4f2ad286"
+    },
+    "authorized_at": "2026-06-25T10:20:19-05:00",
+    "amount": 88.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1005",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2005",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Hearth & Grain LLC"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "NNbMAw9uxGMYekchDmzsThIF5DteHMH7Cbmbc4YYVnUYWlqtcxPKAbTVV3FijgkGO/Ni3YknUF7giM+YGcIZBQ==",
+      "signed_payload_hash": "sha256:f488d7649478e348e0ba05004ab5437c7e3ee23ee60968a95cd075e7157a23a7",
+      "signed_at": "2026-06-25T10:20:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-06-25T10:19:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-06-25T10:19:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-06-25T10:19:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-06-25T10:19:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-06-25T10:19:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-25T10:19:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-25T10:19:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-25T10:19:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-25T10:19:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

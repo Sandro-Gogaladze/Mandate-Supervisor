@@ -15,7 +15,7 @@ cold, with its own task, its own tool calls, its own cart. Anything resembling
 continuity between runs — a drifting objective, a creeping amount, a supplier
 quietly taking over — is something the *supervisor* infers across runs, never
 something the agent carried forward. That is why it is worth detecting, and it
-is why 24 of the 73 failures in coverage-model.md cannot occur inside one run.
+is why 24 of the failures in coverage-model.md cannot occur inside one run.
 """
 from __future__ import annotations
 

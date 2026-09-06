@@ -73,7 +73,7 @@
         "signature": {
           "alg": "Ed25519",
           "signer_key_id": "KEY-KST-AGT-01",
-          "value": "AyXJvWUZQNW2WtzjDPU1DQVgoQZjf1XLMKnc8Yt+GMbggSjRpKRtsalPt7tkw0U7KcOHEj0cAWAJNzFs1SLxBA=="
+          "value": "BM5+s7GmZ0xbDU4lr1z8nZ8nruv4/NP2sfpOuTMmlu/+qphQ4mVwLern+iLhcn0UXdjlRmp3dB0Km+aOcEEsDg=="
         }
       },
       {
@@ -93,7 +93,7 @@
         "signature": {
           "alg": "Ed25519",
           "signer_key_id": "KEY-KST-ORG-01",
-          "value": "f5d0ePHuvY1iItBsaZUQedgwHotPh/27ulpZCTYOTilS7xoHj6azS6BJSx5nYp34AGA4NE9x0PCPfPWtmCVMDg=="
+          "value": "sYzBbbk67N3wUlqykZ3azQZcGpXD3BHB1w4A7OKTTCkZqqH97H/RBToeR9V0YvSqGqRkCHSkbNG6izIUqiWqCw=="
         }
       },
       {
@@ -113,15 +113,15 @@
         "signature": {
           "alg": "Ed25519",
           "signer_key_id": "KEY-KST-HUM-02",
-          "value": "NihVNE45TAK2Os1w1KD0SgC3m7hsr1ysy49H4ppDYWNiLEWccE0SF2FzJcU00u8+pucKE+R9OK33HicqRK+zAQ=="
+          "value": "C1E0ZcIRsM/hyrMoOj2C2Sykj/+ZiLfZy3VH5TGl37pkNXiDudOavNQBnb6jbPxosFTGYJPLU0K+7haT77FSAQ=="
         }
       }
     ],
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "KEY-ISS-002",
-      "value": "BXGHPXTXHZ22Yett7RgIKwCDLO+LE9aa/0qsHFv6XYSD/nPq+cXvwz00vV9EhCfYB1ym7W07dbO1refFpoV2Bg==",
-      "signed_payload_hash": "sha256:9c1ba0e54dc1d726f3faa587de1c87f008e1cf988c408e7101315b88a3b222e6",
+      "value": "aqMnZ20Hv7j1s/HkkVtu2OQVk1wFpo342aSuqFnvbjtLVp+AHUOl7piGGzftT6ksaMR5GSsF+om/V6eJs+E0Bg==",
+      "signed_payload_hash": "sha256:57600b15d1e24463d041bda1fae320f52b8464ebd8c8bf56fb15c638b48e944c",
       "signed_at": "2026-02-10T10:00:00-05:00"
     }
   },
@@ -160,7 +160,7 @@
           "signature": {
             "alg": "Ed25519",
             "signer_key_id": "KEY-KST-AGT-01",
-            "value": "5xNRNjHZ6hpvvWo+8KjVK3vr0HPO1Y5yUug9wWn04sPeT15mFG7CluknoihrIkmG1v2QFJN0/3OLPM9wAaswDw=="
+            "value": "8tovsWXI77o2KlQa9Qn4Dt3/xh3eR1/CikLoGcOh+0tB0SMSbKGjlNjl0b7qOiP+RbWguHvAOrQ3FU+/m2/GAw=="
           }
         },
         {
@@ -179,7 +179,7 @@
           "signature": {
             "alg": "Ed25519",
             "signer_key_id": "KEY-KST-ORG-01",
-            "value": "75H/NpmGNXgStfqEoU62JAzIM8dPNIGwr7G6A2meR1NPZnE047UvkZoYtBfCjEE/SsAjcFX+E06IhHRMTRXHBw=="
+            "value": "dJRQv+VYXQ9nkj6WADE7l1/qiGdJ0WGHIcgak6D4XF6x/y8n5zCKq65+ppf8UksRe+9TR9aJoB9Z8GCp3xVWBw=="
           }
         },
         {
@@ -198,15 +198,15 @@
           "signature": {
             "alg": "Ed25519",
             "signer_key_id": "KEY-KST-HUM-02",
-            "value": "pFsajNL3g8DquZzybRxPYIpQkkBPn8M4CV9lPadagm7DhnVysgQ7eL6qB7/+TtPfGFDlA+H5Sq2kuOiLvOCpCg=="
+            "value": "dNd0b3tnGbeGdeeJMnpvVd17C5E4U7lX668q65ISz4en8ixaqkKXekg3ldYdsjZf2PQ3EO07l1oDMoLqs5LnCQ=="
           }
         }
       ],
       "signature": {
         "alg": "Ed25519",
         "signer_key_id": "KEY-ISS-002",
-        "value": "ki3CH5BaeL8shtJX5tpbwdCdR9po2U/DduxK15XxpM1YHkQgvnwkrf5Bv+W9xgzOXWEyJmzo5AtaPByt72ajBg==",
-        "signed_payload_hash": "sha256:da31160b82fd4b7c518f774e3510e0321090066c91508cee2ba3fbdd4bcb7a27",
+        "value": "HhT+bM/sj0GhPWcRIHsj5lVl2wzs/awzcBl/UiFuZ3dQTj89GT49p1NMhSwHXFhkL2c4PFtjd2bBV1k7a1vQAg==",
+        "signed_payload_hash": "sha256:f60453dc680126fd95f0f76941053a543c0adf01b498df6778a571aa53536274",
         "signed_at": "2024-02-12T10:00:00-05:00"
       }
     },
@@ -246,7 +246,7 @@
           "signature": {
             "alg": "Ed25519",
             "signer_key_id": "KEY-KST-AGT-01",
-            "value": "Ui8Akyw+njYjG6P+ouzw+ZaVMIyJm5vX+FoyOSe1Cq52nbETJK4GmzQl3VpRYIjdel6LWgF9maeiXtQTlS9UCw=="
+            "value": "2YwC8SF7zJltCruratSCy8FhZeiD6EXUbIKISvChWMLyeK+kBmxoObttTZF+dfy6m+xlDcHRRIA+RcjwXQR3Cw=="
           }
         },
         {
@@ -266,7 +266,7 @@
           "signature": {
             "alg": "Ed25519",
             "signer_key_id": "KEY-KST-ORG-01",
-            "value": "1MX1W9uN6CBgcPd6xRqrkO6NEJH18scFCCvti9qGZsWImjz9D5QdwWiKv5Z0oUAiZn02Imi6KNBtQZpTxVHBCA=="
+            "value": "Ibq4unw2M1TSXhnMINQhUnVbSqSpxptN9e5+s0j+ItDmY+4mgo6W9bxpfNTzR6pQpiSaYornvXAuYC1GmxDmCw=="
           }
         },
         {
@@ -286,15 +286,15 @@
           "signature": {
             "alg": "Ed25519",
             "signer_key_id": "KEY-KST-HUM-02",
-            "value": "Og5MEfgrvV3iP1SXWG6hVA4DAvl5gSWl+dixaQU5DUde6+RD7OlUvox4+c6vV3eZG1NlhZzL91c73muHcNiKAQ=="
+            "value": "FhD0GR3zsnRPeJkWaLRp4EEaPi7cHpE6FA7NHGe+wgx2Qw4AUMpO3BVjMFUd6z7Dqn91nGt0+kViTGNQoFXRAQ=="
           }
         }
       ],
       "signature": {
         "alg": "Ed25519",
         "signer_key_id": "KEY-ISS-002",
-        "value": "LTa9MKB1uIV1WkWARjzn1q3Jyv0P0FxbLcja8jSrf6TKaTvLaByyG99/TnlIgq0TX/SaXoJEyAcUuo9bZtawAg==",
-        "signed_payload_hash": "sha256:b41c6789d5844029a12cd35b8537bb63d52f15411cb55ac9edf976eef1ae601d",
+        "value": "Xw4SBdAbdXPq8fU9lck1KIhPASdTsHQoxaJzZviuKL7wlyX2rUMqdWhVFlmJrkkmO3XPsxad/c1lAf+9DxxwBA==",
+        "signed_payload_hash": "sha256:2958e21c78e035a847e12f5d4a1c4a9abec124b4cbeeddfb8b3727e9d4dd0e1c",
         "signed_at": "2025-02-12T10:00:00-05:00"
       }
     }
@@ -419,7 +419,7 @@
     {
       "at": "2026-07-20T00:00:00-05:00",
       "kind": "prompt_release",
-      "ref": "kestrel-shop-v2.4.1 -> v2.5.0",
+      "ref": "kestrel-shop-v2.4.1 -> kestrel-shop-v2.5.0",
       "detail": "selection prompt now weights review volume above price rank"
     },
     {
@@ -433,252 +433,252 @@
     {
       "run_id": "RUN-2026-0616-0001",
       "file": "runs/RUN-2026-0616-0001.json",
-      "sha256": "sha256:bf9ec636fa6f157b04df2cc20ffa5d902ac43ded25d149a31203aa9c71c241c0"
+      "sha256": "sha256:a745417dace4dd6157877c750900e654466f27e65837599a309ae4cbb98206d4"
     },
     {
       "run_id": "RUN-2026-0616-0002",
       "file": "runs/RUN-2026-0616-0002.json",
-      "sha256": "sha256:7a5748281837d2a62abbf6a36e858028ffbaec785ba265bca3b46288b451b43a"
+      "sha256": "sha256:1785707c2710a4ea649c695d97015a2075142cd628ae0396433d6a89d1f3b561"
     },
     {
       "run_id": "RUN-2026-0617-0003",
       "file": "runs/RUN-2026-0617-0003.json",
-      "sha256": "sha256:1e0bbd123aa3dcf766b6fc3614bbd4c3d54aa4dba8f05ee06122169efdfa63c3"
+      "sha256": "sha256:88ff90a6591e11856051c4b5468236327d40a7f8ffbaf29b9b0b7e9e833be88c"
     },
     {
       "run_id": "RUN-2026-0617-0004",
       "file": "runs/RUN-2026-0617-0004.json",
-      "sha256": "sha256:cad308439b8cbdcc88de8fb499fb49f175ee1590ed0f887568d323a16f581e7f"
+      "sha256": "sha256:5e6227538e0800b44f7e4c8b109c42d8162955838ec39321476c0de4efc7ed87"
     },
     {
       "run_id": "RUN-2026-0618-0005",
       "file": "runs/RUN-2026-0618-0005.json",
-      "sha256": "sha256:c586d9614ee5c1447ca45b5898dcffe5114fd3bf4a42136f511bac98db7bc895"
+      "sha256": "sha256:63ef1eee777af0eb04b2ad4bcdd02569b509e7a3d9d626fa0fea6865282caf59"
     },
     {
       "run_id": "RUN-2026-0618-0006",
       "file": "runs/RUN-2026-0618-0006.json",
-      "sha256": "sha256:0f5d2f7cfbab9ec1c1ed3bb79de3e727fc7c131dbafad0ff6c8eb393cb5f85e6"
+      "sha256": "sha256:421e60b0752c26ca66819c188dfc368246b86ec502cc5346fc10a51198691534"
     },
     {
       "run_id": "RUN-2026-0619-0007",
       "file": "runs/RUN-2026-0619-0007.json",
-      "sha256": "sha256:6eab4f6e3aec6c7d1f72422c30cbf8733bd43a5ef60aba4808526dcac92f2d85"
+      "sha256": "sha256:76c910e20c4348f5fd073c351fe5603009926ad804f294af1fd9bb1c023148f5"
     },
     {
       "run_id": "RUN-2026-0622-0008",
       "file": "runs/RUN-2026-0622-0008.json",
-      "sha256": "sha256:7f07472c2cdc768ccc2a292085142962e6e084f5bd57a73763420ad44bc4ad4f"
+      "sha256": "sha256:6b4ba773526721f8a4185122aea15014673513735da415c0b711ba0142ea8225"
     },
     {
       "run_id": "RUN-2026-0623-0009",
       "file": "runs/RUN-2026-0623-0009.json",
-      "sha256": "sha256:11f03aaae712c49fec28bceeed144bfd11c48e6ed757df39bf10f4027aceb901"
+      "sha256": "sha256:c01d90cf6308c66026b73e45ee1ebd5b056b9a4a46ebb6dd64ed161dba8b5aff"
     },
     {
       "run_id": "RUN-2026-0624-0010",
       "file": "runs/RUN-2026-0624-0010.json",
-      "sha256": "sha256:ac55a7e71e2bd1468ded2e4560a994835108a651f6b4cc038f41e8a395390261"
+      "sha256": "sha256:b5941b8712e18ed832b108a5ad95a212cacca63a3aec303905e1dab5589ce7e7"
     },
     {
       "run_id": "RUN-2026-0625-0011",
       "file": "runs/RUN-2026-0625-0011.json",
-      "sha256": "sha256:88487cdbbd18d5db4a36bd2b53127b314993d4a55249d6026e9bed21f014f534"
+      "sha256": "sha256:7e6c767a377988fc552c07f8a4f9ee081fd1460bbc60f3626683dd3ffb2843e1"
     },
     {
       "run_id": "RUN-2026-0626-0012",
       "file": "runs/RUN-2026-0626-0012.json",
-      "sha256": "sha256:a6fbb0182a0c36b4fda356c7000aeb665a5222f36e63a4c581577d55cc0eb142"
+      "sha256": "sha256:27aa83d131fc15d0977f06e49d4ee886252f021699042d0b1cdd3b32bb4592f2"
     },
     {
       "run_id": "RUN-2026-0629-0013",
       "file": "runs/RUN-2026-0629-0013.json",
-      "sha256": "sha256:cb3aec30d0085ee1176c9cdae0fa8c124c1a5c2ec3c503d83e1e0a3951ab70d8"
+      "sha256": "sha256:f21b6ba306f449587f67c3d439cb65dc53e037468febebfcf648b6a224c01397"
     },
     {
       "run_id": "RUN-2026-0630-0014",
       "file": "runs/RUN-2026-0630-0014.json",
-      "sha256": "sha256:5c59c21f1dc3c2a3f2fb51b47918382063abe187c69d33e63f8153b1287da195"
+      "sha256": "sha256:59c0c36b8ffdd50cdba3eefdf127ccea744eb5f9dbceeaa5193db9d348dbed2a"
     },
     {
       "run_id": "RUN-2026-0701-0015",
       "file": "runs/RUN-2026-0701-0015.json",
-      "sha256": "sha256:86a3969acfc0dfef6a19450e92a0d8e41baa2d9de7cf3763607daa5791ec804e"
+      "sha256": "sha256:ef375b020fd3e5852f39610982618a6e706535075b23c0f62b564905b2f98795"
     },
     {
       "run_id": "RUN-2026-0702-0016",
       "file": "runs/RUN-2026-0702-0016.json",
-      "sha256": "sha256:588b06456e5dee5ec9bc03ec60155d031b4982e28e3d6dfc0e64b6861d809c10"
+      "sha256": "sha256:950a18b5b54506c01077b0a9851add21a0ab82ba148ad61d94113fdf8b8a33c6"
     },
     {
       "run_id": "RUN-2026-0703-0017",
       "file": "runs/RUN-2026-0703-0017.json",
-      "sha256": "sha256:8f7534407ab7b08e4c44b9e59d5b6800576f9b44833338de3d6edab69567ac59"
+      "sha256": "sha256:e38603009ac208bcb4396614eec440c83907a472976f15383030a26a01f76876"
     },
     {
       "run_id": "RUN-2026-0706-0018",
       "file": "runs/RUN-2026-0706-0018.json",
-      "sha256": "sha256:049c8cb451d16148c1644e78b0cce24fd74c92cde0cee33366352836c91724d2"
+      "sha256": "sha256:34676644749e8d33c42526b4f76c64615e8696c1294601478eaadccc31635a1f"
     },
     {
       "run_id": "RUN-2026-0707-0019",
       "file": "runs/RUN-2026-0707-0019.json",
-      "sha256": "sha256:60603572e8251ecd01e6add150ca56c73514f62cbf85c99aae33139972cc21ee"
+      "sha256": "sha256:33b9794382d57db6b97d843921a5ddc4ea193113e40f03746a8d63a77a7206d1"
     },
     {
       "run_id": "RUN-2026-0708-0020",
       "file": "runs/RUN-2026-0708-0020.json",
-      "sha256": "sha256:8b4c4d8cc5401c94c4501f09679d821622dcb095d67c14e884d748c12b18c56c"
+      "sha256": "sha256:b8ed27004d87de6219d069aecc6545c2df80d7443eb41ed24e78fe19d88ca659"
     },
     {
       "run_id": "RUN-2026-0709-0021",
       "file": "runs/RUN-2026-0709-0021.json",
-      "sha256": "sha256:8b11a1ac6fbb1061db37c1484dbbff71cf9a9aa5e2e75e86f29cc82f5e50f16d"
+      "sha256": "sha256:870752e3c5bf98de8b57211517f440dd64efa28900586e572ae73b5ef984aacc"
     },
     {
       "run_id": "RUN-2026-0710-0022",
       "file": "runs/RUN-2026-0710-0022.json",
-      "sha256": "sha256:653c09e72b4642f107120d3712a166045b0ccce475e7acc4d98c5bb7ccb20b4d"
+      "sha256": "sha256:3e7e86e5001d94b84e130d1ed105ca8dd272eed469276c9b65d657b950334154"
     },
     {
       "run_id": "RUN-2026-0713-0023",
       "file": "runs/RUN-2026-0713-0023.json",
-      "sha256": "sha256:98df4fe577bc3d3e87a88da722d4f395a9cb2270fdbd1e03dbf9da732318b4ea"
+      "sha256": "sha256:f65774e9edca25892d7e44efc4cffe16f45e5422917553901f8613bc1b1b6c91"
     },
     {
       "run_id": "RUN-2026-0714-0024",
       "file": "runs/RUN-2026-0714-0024.json",
-      "sha256": "sha256:965f9e8fdc5c0ed809da578dd2294511905a306dc19818a1adb8d0b25ac60060"
+      "sha256": "sha256:17fb04d038ecab42e4d5d15a7bb4de5a70fdb2d5c747a3147f69d6e5013b4764"
     },
     {
       "run_id": "RUN-2026-0715-0025",
       "file": "runs/RUN-2026-0715-0025.json",
-      "sha256": "sha256:97eec52877011dbb20e345b2d6bf2e38b24f71949c83e69ba772eaa6384811fc"
+      "sha256": "sha256:ff7fe96745c3e40a7c2c4c8d0b536dc967ee6a9ffbdd10f4eaa50e167b515496"
     },
     {
       "run_id": "RUN-2026-0716-0026",
       "file": "runs/RUN-2026-0716-0026.json",
-      "sha256": "sha256:09a15aeba92f811cb8c49b585f51f65c00553c48b925c2d6a5f8ff1644f51c4e"
+      "sha256": "sha256:45fc5c0cd0e0c638e74d6fcaeded6ac145531b683f222233cb39767c6f4a8258"
     },
     {
       "run_id": "RUN-2026-0717-0027",
       "file": "runs/RUN-2026-0717-0027.json",
-      "sha256": "sha256:2d23978b5fdbe4a4acd73aac239e868d96015cdde254cec287188e2a890f7dcc"
+      "sha256": "sha256:8fbd2340749777c01d292699b102d8ac7e231b98e6d7d316e37c37040db0cdc6"
     },
     {
       "run_id": "RUN-2026-0720-0028",
       "file": "runs/RUN-2026-0720-0028.json",
-      "sha256": "sha256:a1dd9e78ca1b5127e8854cba119731c8884b337c03a549825fb0b208548880eb"
+      "sha256": "sha256:ff7011b939289e09177c959dec7b491a5ffd15a523a44e24818ef7dfa18b43a8"
     },
     {
       "run_id": "RUN-2026-0721-0029",
       "file": "runs/RUN-2026-0721-0029.json",
-      "sha256": "sha256:28645be985437e0be8b1b6e929a35b504b001de2b84613211dd5a451d2c67cfb"
+      "sha256": "sha256:b79524adb8e0fed3a54e1b378059cf9c6849ac232c6cc2f4c90c4b3b03c8c410"
     },
     {
       "run_id": "RUN-2026-0722-0030",
       "file": "runs/RUN-2026-0722-0030.json",
-      "sha256": "sha256:1d272a92d2cde7f9b78ac4555a505423f0f67091a4029ab9e750dba0c8f10ad4"
+      "sha256": "sha256:8296c4bde5faf90625d9623dbeddb1c8b11777f996bf027bf3e6c994e0f93c85"
     },
     {
       "run_id": "RUN-2026-0723-0031",
       "file": "runs/RUN-2026-0723-0031.json",
-      "sha256": "sha256:254e52da687b6508573176be40799e61b1538345f5694edf74d8d86ebf1f609b"
+      "sha256": "sha256:cb5a5d17e7e9e7363dc5fd965889f4dce447354ce20d0be5139ee1b2c13e96a9"
     },
     {
       "run_id": "RUN-2026-0724-0032",
       "file": "runs/RUN-2026-0724-0032.json",
-      "sha256": "sha256:4a9e9e5d6d9597405d3b251b6923ce4437c4f02a175e3907658dae820e7c80a7"
+      "sha256": "sha256:df619b1b26aaee773ad47d2996fd518a5e62d3f558cd2b2b0bd59cf27a747341"
     },
     {
       "run_id": "RUN-2026-0727-0033",
       "file": "runs/RUN-2026-0727-0033.json",
-      "sha256": "sha256:8262cba48e0b816556155159a926b00019f1fbd486b6d4433db68ae61a6ee67a"
+      "sha256": "sha256:c47b29ea2a903c4d3377b33f058ea3c4eb680050fa5861b7a038eb82226e3395"
     },
     {
       "run_id": "RUN-2026-0728-0034",
       "file": "runs/RUN-2026-0728-0034.json",
-      "sha256": "sha256:753546228b13382d1075f39b9041a58b6dbf2067c24966619b9f58a9c7e2871d"
+      "sha256": "sha256:0b15079d56a5f53003a3ee7a68c6e202d02e314fefda2b692b43c59ec7ef26e7"
     },
     {
       "run_id": "RUN-2026-0729-0035",
       "file": "runs/RUN-2026-0729-0035.json",
-      "sha256": "sha256:afc9d958017ab5fb746791455dcd93a516d9b719ff4f21f3396131a044c93927"
+      "sha256": "sha256:8dd13797e15e8fbb3150ab3babc0b23519dc113ce2dd85aff7092882b0909784"
     },
     {
       "run_id": "RUN-2026-0730-0036",
       "file": "runs/RUN-2026-0730-0036.json",
-      "sha256": "sha256:06f0c9c4e01f3d21dc4f114ced404106487539c82932f43db5401175b878009b"
+      "sha256": "sha256:540d1fc89edc73d148c445b2ef455e32802295abe46ee682303c87ecc85eb8a2"
     },
     {
       "run_id": "RUN-2026-0731-0037",
       "file": "runs/RUN-2026-0731-0037.json",
-      "sha256": "sha256:6c33ae9c2cbd942478120644004c79a5c71a8cb9dc8afd0f9513d8526ec2ca5c"
+      "sha256": "sha256:7474d4fa14ad65080c6cb6b750d99ea04deaa78c749bb042655682e04dde663c"
     },
     {
       "run_id": "RUN-2026-0804-0038",
       "file": "runs/RUN-2026-0804-0038.json",
-      "sha256": "sha256:ef72b54a27cacae5be1d09b361ab3912ba95686aaf47ffd470ba8c9497a3e555"
+      "sha256": "sha256:f186fb9671121e62601b7e778b551e0bea5b0ac3308e45bfc1c2fe62e716cd9e"
     },
     {
       "run_id": "RUN-2026-0805-0039",
       "file": "runs/RUN-2026-0805-0039.json",
-      "sha256": "sha256:dd4fa8112e6b315dfc2a6dc82d9760bfb57d547f03acb97d4120f0b423265bfb"
+      "sha256": "sha256:cb9c52fc71e13af1b31022c439354d4b5bae62be2678d9f374202201267fb556"
     },
     {
       "run_id": "RUN-2026-0806-0040",
       "file": "runs/RUN-2026-0806-0040.json",
-      "sha256": "sha256:dbcdcac1b33b4e21a157d18eda0eb275c9eafc6f6946445c1de0498d78650fec"
+      "sha256": "sha256:1b574e8faeb059ad3d21ce736af5ce2f289ec2a0a6e639ed1efdaf20e8846810"
     },
     {
       "run_id": "RUN-2026-0807-0041",
       "file": "runs/RUN-2026-0807-0041.json",
-      "sha256": "sha256:3daca4d60a8b0a5d452465046e4b2727f3be3eddd1a589d63ec9f7801a962478"
+      "sha256": "sha256:3e1eeb9a2d5213adfab0d6bbfbd1617f0514e444c20c3a20930a9d8f03094a31"
     },
     {
       "run_id": "RUN-2026-0810-0042",
       "file": "runs/RUN-2026-0810-0042.json",
-      "sha256": "sha256:682271f7d374ec949c1b38906c80ae66d2acc561f9ab3f046a1adae803525761"
+      "sha256": "sha256:b11eb2bcfa9cba70c2bdc30a7ddd439e50323da8cbbc77d0d96687d9fe8e8331"
     },
     {
       "run_id": "RUN-2026-0811-0043",
       "file": "runs/RUN-2026-0811-0043.json",
-      "sha256": "sha256:4dfcdef4ddf0dc2b716fae1cabc4e5f3109a78934c1b6e1ede12fcc499fafaf2"
+      "sha256": "sha256:3eafbd25f2d76b909da4575b969aec862d94c21adb1e0abef13e01e105904327"
     },
     {
       "run_id": "RUN-2026-0812-0044",
       "file": "runs/RUN-2026-0812-0044.json",
-      "sha256": "sha256:f7712dc866cc012578b6e419f3af9a04e4a1048796dc57cb3dc9cbcba21f6d49"
+      "sha256": "sha256:4d0f2c7b3f003572fcf82d353cf7b501b77f104f752a5ced32fc35af0e9a1d90"
     },
     {
       "run_id": "RUN-2026-0813-0045",
       "file": "runs/RUN-2026-0813-0045.json",
-      "sha256": "sha256:e53a8ee6ba9d7f3f91ee6cfbcebc5508fba28aa0454834825c4a070aee7f8493"
+      "sha256": "sha256:7eccb8b9fd51cfce5389b2f158c363ceba81516255e1d59100793cf1ecfef840"
     },
     {
       "run_id": "RUN-2026-0814-0046",
       "file": "runs/RUN-2026-0814-0046.json",
-      "sha256": "sha256:afb077221db4343b784962a71a15d8129d691e3f3c0ea962ca5166c4a7e49613"
+      "sha256": "sha256:eaf327961864f8082df3341bf0313114061a154c347b93b756e65eb994c86a1b"
     },
     {
       "run_id": "RUN-2026-0817-0047",
       "file": "runs/RUN-2026-0817-0047.json",
-      "sha256": "sha256:5f35a97cc4f5cf8bdece6f590bb94140d594a524e8ce56dd61edd12d4afd61d5"
+      "sha256": "sha256:8024bed2115dc70f6f264c87c86487d9ef38f24f24d969ccf979d515ee17b28e"
     },
     {
       "run_id": "RUN-2026-0818-0048",
       "file": "runs/RUN-2026-0818-0048.json",
-      "sha256": "sha256:3794b92d1277b7f9a8d9462d0f29020391fea97b80ff2a0cc835d09d992397f8"
+      "sha256": "sha256:05690ef977449596ed354d98a60e1d36b79f6914e5fc3b932ddd2f046b7443e8"
     },
     {
       "run_id": "RUN-2026-0819-0049",
       "file": "runs/RUN-2026-0819-0049.json",
-      "sha256": "sha256:7b2250bfd2ef5d7d818e8564bfba42736ba9a5cf936fa043245a8c7bf0833ec4"
+      "sha256": "sha256:6196ec5aa647ced4bee22b2d145878cf45c4f8662f005f993fe11e337ac99e20"
     },
     {
       "run_id": "RUN-2026-0821-0050",
       "file": "runs/RUN-2026-0821-0050.json",
-      "sha256": "sha256:8cacc988ce51f8932c66d4378896a675839a55c2c65eebb3a6006d8d8131b1a8"
+      "sha256": "sha256:2cba464d7b75281237714cb321e0ebd33cf408cf0e71971a1ea1069d76e80f8a"
     }
   ]
 }

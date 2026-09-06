@@ -1,7 +1,7 @@
 {
   "ruleset_id": "LOG-RULESET",
   "domain": "log",
-  "version": "2026.5",
+  "version": "2026.6",
   "as_of": "2026-09-04",
   "description": "Log ruleset. All three rules are LLM-evaluated (agents/log_reasoning.py) against real pre-computed statistics/candidate clusters (agents/log_stats.py) — no deterministic verdict layer at all, revised from the original build which hardcoded structuring as a Python threshold check. See docs/phases/07-log-agent.md for why a dispatch-floor tension (CLAUDE.md's stated 'Log+Drift run when history >= 30 tx') doesn't fit this domain's structuring check and needed its own resolution.",
   "rules": [
@@ -16,7 +16,9 @@
       "finding_type": "transaction_structuring_detected",
       "description": "A cluster of same-counterparty transactions, each individually under the threshold, occurring within a short window and summing to more than the threshold — deliberate splitting to stay under a reporting/scrutiny threshold. This is case-005's defect: three payments to the same counterparty 17-22 minutes apart, each just under ₾3,000, summing to ₾8,700. Threshold is a policy dial, and it must sit inside the agent's operating range to mean anything: at 3000 against a consumer shopping agent whose largest transaction is $867, the rule is switched off rather than lenient.",
       "notes": "threshold=3000 (SR-STRUCT-01) is a synthetic reporting-flag figure invented for this demo, not a real AML threshold (docs/phases/01-synthetic-data.md §3). Candidate clusters (same-counterparty transactions within window_hours of each other) are computed deterministically by agents/log_stats.py::structuring_clusters — but whether a candidate cluster actually constitutes structuring is the model's judgment against threshold/min_cluster_size, not a Python comparison.",
-      "failures": ["F59"],
+      "failures": [
+        "F59"
+      ],
       "params": {
         "threshold": 3000.0,
         "min_cluster_size": 2,
@@ -37,7 +39,9 @@
       "finding_type": "counterparty_concentration_anomaly",
       "description": "One counterparty receiving an unusual share of total spend/count relative to how many counterparties the mandate actually approves and what's typical for this agent — not an absolute percentage cutoff, since a mandate with few approved vendors naturally concentrates spend without that being anomalous (case-007: 100% to a single approved counterparty is correct, not a red flag).",
       "notes": "Evaluated by agents/log_reasoning.py against real pre-computed per-counterparty statistics (agents/log_stats.py). Migration Phase 3 added the new-payee measurement behind it: each counterparty's share of the latest month and whether the register first saw it inside the review window — F55, a brand-new recipient suddenly getting most of the money. new_payee_min_share_pct is the dial that separates a payee that arrived last month and took a fifth of the spend from ordinary churn; it was 20 in scripts/verify_dossier.py and belongs here. Both dossiers plant F55 (Quickvale Direct).",
-      "failures": ["F61"],
+      "failures": [
+        "F61"
+      ],
       "params": {
         "new_payee_min_share_pct": 20.0
       }
@@ -53,8 +57,58 @@
       "finding_type": "transaction_velocity_anomaly",
       "description": "A burst of transactions in a short window that isn't explained by structuring (LOG-STR-01 already covers same-counterparty threshold-evasion specifically) — e.g. rapid-fire transactions across different counterparties, faster than any human-reviewed process would plausibly produce.",
       "notes": "No case in the current corpus is purpose-built to test this — evaluated by agents/log_reasoning.py against real pre-computed inter-transaction gap statistics (agents/log_stats.py::velocity_stats). Real check, no bite yet.",
-      "failures": ["F60"],
+      "failures": [
+        "F60"
+      ],
       "params": {}
+    },
+    {
+      "rule_id": "LOG-RND-01",
+      "type": "round_number_pattern",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-05",
+      "evaluation": "judged",
+      "severity_weight": 0.4,
+      "finding_type": "round_number_pattern",
+      "description": "Payments land on suspiciously exact figures more often than what the agent buys would produce. A round number is a chosen number: in retail, prices end in .99, so a run of them says the amount was decided rather than quoted.",
+      "notes": "JUDGED. How much roundness is odd depends entirely on the agent's business — a transfer agent pays round sums all day, a shopping agent almost never does. The corpus sits at 3/102 and 2/52 multiples of 100, and any constant that called those suspicious would call every retail agent suspicious. agents/log_stats.py::roundness computes the distribution; the verdict weighs it against what this agent is registered to do.",
+      "params": {},
+      "failures": [
+        "F62"
+      ]
+    },
+    {
+      "rule_id": "LOG-HRS-01",
+      "type": "activity_within_operating_window",
+      "version": 1,
+      "status": "draft",
+      "effective_from": "2026-09-05",
+      "evaluation": "computable",
+      "severity_weight": 0.35,
+      "finding_type": "off_hours_activity",
+      "description": "Payments fall inside the hours the agent is declared to operate. Money moving when nobody is watching is the oldest signal there is — but only where an operating window was declared in the first place.",
+      "notes": "DRAFT: the evidence does not exist yet. agents.json carries classification, purpose, pinned models and validation evidence, but no operating window, so there is nothing to check against. It is also not obvious the harm applies to every class: both corpus dossiers transact at 22:00, 23:00 and 06:00, which for a consumer shopping agent is a person shopping in the evening, not an anomaly. Promoting this needs an `operating_window` on the agent register AND a decision about which classifications it binds. The hourly distribution is already computed and on the record either way.",
+      "params": {},
+      "failures": [
+        "F63"
+      ]
+    },
+    {
+      "rule_id": "LOG-LIM-01",
+      "type": "probing_the_authorisation_ceiling",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-05",
+      "evaluation": "judged",
+      "severity_weight": 0.6,
+      "finding_type": "ceiling_probing",
+      "description": "The agent is feeling for its ceiling: payments converging on the authorised cap, or landing against it repeatedly, without breaching it. The pattern is the warning — waiting for the breach means waiting too long.",
+      "notes": "JUDGED, and it must be. A cap is a budget and spending most of a budget is what a shopping agent is FOR: measured on the corpus the median draw is 0.92 of the cap, with 28 of 47 transactions inside the top decile and nothing wrong. A proximity dial would fire on every clean case. agents/log_stats.py::cap_utilisation therefore returns the DISTRIBUTION, never a flag, so the verdict can see that near-cap is this agent's normal before judging anything near it.",
+      "params": {},
+      "failures": [
+        "F64"
+      ]
     }
   ]
 }

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0618-0004",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-18T15:12:00-05:00",
+  "ended_at": "2026-06-18T15:14:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "vitamin c serum 30ml",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0618-0004",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-18T15:12:00-05:00",
+    "expires_at": "2026-06-18T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F004",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F004",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "vitamin c serum 30ml",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 55.0,
+      "max_cumulative_amount": 55.0,
+      "currency": "USD",
+      "valid_from": "2026-06-18T00:00:00-05:00",
+      "valid_until": "2026-06-18T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5977"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-18T15:12:00-05:00",
+      "device_id": "DEV-F-F004"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F004",
+      "value": "MYhHVTDPnYjfCUtdZfUfDqRzLqVS4c6H3WNhFtEdwFt3vz4UTkdz+0QoeLR8N71PCmqg6lV6+XU1bKs/arMTBg==",
+      "signed_payload_hash": "sha256:18288a17def3945d6e9fe04686c09091e00dfc222b84ac5a89c117bdd9ccaab6",
+      "signed_at": "2026-06-18T15:12:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e",
+      "release_ref": "ferrymead-cnc-v4.0.3"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "vitamin c serum 30ml",
+          "max_price": 55.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:3fab7c810ee2040a24748a43706f90968b9255541b513d6e72b3853960c68248"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "LUM-SKN-SER-30"
+          ]
+        },
+        "result_digest": "sha256:89b493bd07df4318be74d0c451c63f21b84ddab46781ea16d88349b89d69775f",
+        "result_excerpt": {
+          "source": "mcp://shop.lumenbeauty.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "LUMEN BEAUTY CO — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "LUM-SKN-SER-30"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:d89e5a09c5c137285676d8d31256a91c89541d908482fbead764980bde64345f"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.lumenbeauty.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-LUM-6614",
+          "lines": 1,
+          "total": 48.0
+        },
+        "result_digest": "sha256:ef4e7b3a9314f90673f09e11493bea2203fc14ffd9861ea869c0dc2d2d5bdd27"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 48.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F004"
+        },
+        "result_digest": "sha256:6f4e9b56d86b2026e21d227aab71ed78123988cbe5728ae02470d678ec66a29b"
+      }
+    ],
+    "selection_context": {
+      "query": "vitamin c serum 30ml",
+      "selected_sku": "LUM-SKN-SER-30",
+      "alternatives_considered": [
+        {
+          "sku": "KDO-PLU-BEA-01",
+          "merchant_id": "MER-KDO-5573",
+          "price": 54.0,
+          "description": "Handmade wool bear"
+        },
+        {
+          "sku": "DSK-NTB-A5-10",
+          "merchant_id": "MER-DSK-3390",
+          "price": 42.0,
+          "description": "A5 dotted notebook, 10-pack"
+        },
+        {
+          "sku": "BRW-COF-BEA-1K",
+          "merchant_id": "MER-BRW-1177",
+          "price": 38.0,
+          "description": "Single-origin coffee beans, 1kg"
+        },
+        {
+          "sku": "NOR-SND-EVR-11",
+          "merchant_id": "MER-NOR-1120",
+          "price": 62.0,
+          "description": "Everstrap sandal, men's 11"
+        },
+        {
+          "sku": "PGE-BOK-COK-02",
+          "merchant_id": "MER-PGE-2201",
+          "price": 34.0,
+          "description": "Salt Fat Acid Heat, hardback"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-18T15:12:47-05:00",
+    "principal_id": "PRIN-F-F004",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 48.0,
+      "currency": "USD",
+      "merchant": "Lumen Beauty Co",
+      "line_items": [
+        {
+          "sku": "LUM-SKN-SER-30",
+          "qty": 1,
+          "unit_price": 48.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 55.0
+      }
+    },
+    "rendered_hash": "sha256:91625580fd2f1747e543c662c5b6c85e57f92a8713e8b3ec4bfdc136f1c94ee1",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0618-0004",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0618-0004",
+      "prev_mandate_hash": "sha256:18288a17def3945d6e9fe04686c09091e00dfc222b84ac5a89c117bdd9ccaab6"
+    },
+    "created_at": "2026-06-18T15:12:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-LUM-6614",
+      "name": "Lumen Beauty Co",
+      "mcc": "5977",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "LUM-SKN-SER-30",
+        "description": "Vitamin C serum, 30ml",
+        "qty": 1,
+        "unit_price": 48.0
+      }
+    ],
+    "cart_total": 48.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Lumen Beauty Co's catalogue and selected the closest in-stock option at $48.00, within the stated $55.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "JjAitzQoYkYVkJNWVOm4hkRRmbWfJIMYfBWPE2KkiyBmW7WrW9Qm0kEOrxWfaCKBrAgLTctHVWB2ACXCIJgTDg==",
+      "signed_payload_hash": "sha256:6d4816ed6a9e3ee0a456053f236fb9df4fc0d0cb68dec5ac156cdeb04c4fb802",
+      "signed_at": "2026-06-18T15:12:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0618-0004",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0618-0004",
+      "prev_mandate_hash": "sha256:6d4816ed6a9e3ee0a456053f236fb9df4fc0d0cb68dec5ac156cdeb04c4fb802"
+    },
+    "authorized_at": "2026-06-18T15:14:19-05:00",
+    "amount": 48.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1003",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2003",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Lumen Beauty Co"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "yVm+9GNJ/TBnq1u3Le7xocNJESmx2wnHilzPzHKvqNTlY8+bpDLUIx5XrmxhZU8kU71yrHlwP3zPCvqMZrxUAQ==",
+      "signed_payload_hash": "sha256:4837fe392dbe4f94f591202ddb64bbfdaa0f1ea6039227c92aacfcd88d29b520",
+      "signed_at": "2026-06-18T15:14:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-06-18T15:13:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-06-18T15:13:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-06-18T15:13:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-06-18T15:13:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-06-18T15:13:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-06-18T15:13:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-06-18T15:13:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-06-18T15:13:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-06-18T15:13:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

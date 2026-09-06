@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0807-0029",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-07T09:14:00-05:00",
+  "ended_at": "2026-08-07T09:16:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "14k gold hoop earrings, under $360",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0807-0029",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-07T09:14:00-05:00",
+    "expires_at": "2026-08-07T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L028",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L028",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "14k gold hoop earrings, under $360",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 360.0,
+      "max_cumulative_amount": 360.0,
+      "currency": "USD",
+      "valid_from": "2026-08-07T00:00:00-05:00",
+      "valid_until": "2026-08-07T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5944"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-07T09:14:00-05:00",
+      "device_id": "DEV-L-L028"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L028",
+      "value": "B56I2GyTyZ6K7SaPLeQf23AqTjmJLVkwO3kxXtPBo0OumiHJVg4hnDlL6WI+NY45taX3IUSIGlwat5cXt6KzAg==",
+      "signed_payload_hash": "sha256:08771852760906f4e42dc85f9acf71925ba529f9949ff591b0bfe82f726a8063",
+      "signed_at": "2026-08-07T09:14:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41",
+      "release_ref": "larkspur-shop-v3.2.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.silvara.it",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "14k gold hoop earrings, under $360",
+          "max_price": 360.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:42a6c27c929dce2db760d622d0aa3b236b7ea0bdf8c849c8101f5b47cf4a02d8"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.silvara.it",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "SLV-EAR-GLD-02"
+          ]
+        },
+        "result_digest": "sha256:b934d555420b4b6a4cb3f95a7fce84429a22befaf258232e357412ac3aac6cd2",
+        "result_excerpt": {
+          "source": "mcp://shop.silvara.it",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "SILVARA GIOIELLI S.R.L. — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.silvara.it",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "SLV-EAR-GLD-02"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:a5ee40988d34f37d4b720749a0fa6626aff0a37fa74553a63ce33fc172fd54d9"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.silvara.it",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-SLV-8830",
+          "lines": 1,
+          "total": 340.0
+        },
+        "result_digest": "sha256:4fab8d424508ad93a3eb28994a6f524980c2a3c8cbb92c2fbae63752be2a69de"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 340.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L028"
+        },
+        "result_digest": "sha256:4ceb76337fd689f453ac6ae91e41f478878a33a1ce2ef604fd1635a0179c8ac7"
+      }
+    ],
+    "selection_context": {
+      "query": "14k gold hoop earrings, under $360",
+      "selected_sku": "SLV-EAR-GLD-02",
+      "alternatives_considered": [
+        {
+          "sku": "TRK-TNT-2PR-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 329.0,
+          "description": "Ridgeline 2-person tent"
+        },
+        {
+          "sku": "DSK-CHR-ERG-01",
+          "merchant_id": "MER-DSK-3390",
+          "price": 385.0,
+          "description": "Ergonomic task chair"
+        },
+        {
+          "sku": "QVC-GEN-BDL-01",
+          "merchant_id": "MER-QVC-8801",
+          "price": 289.0,
+          "description": "Premium home bundle, assorted"
+        },
+        {
+          "sku": "AUR-SPK-BKS-02",
+          "merchant_id": "MER-AUR-4471",
+          "price": 398.0,
+          "description": "Bookshelf speaker pair"
+        },
+        {
+          "sku": "VLT-HDP-ANC-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 279.0,
+          "description": "Noise-cancelling over-ear headphones"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-07T09:14:47-05:00",
+    "principal_id": "PRIN-L-L028",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 340.0,
+      "currency": "USD",
+      "merchant": "Silvara Gioielli S.r.l.",
+      "line_items": [
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "qty": 1,
+          "unit_price": 340.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 360.0
+      }
+    },
+    "rendered_hash": "sha256:68b8a276b0278e727bf9bc513c3466af55059fc1f5516e66188d6da3abd346bc",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0807-0029",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0807-0029",
+      "prev_mandate_hash": "sha256:08771852760906f4e42dc85f9acf71925ba529f9949ff591b0bfe82f726a8063"
+    },
+    "created_at": "2026-08-07T09:14:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-SLV-8830",
+      "name": "Silvara Gioielli S.r.l.",
+      "mcc": "5944",
+      "country": "IT",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "SLV-EAR-GLD-02",
+        "description": "14k gold hoop earrings",
+        "qty": 1,
+        "unit_price": 340.0
+      }
+    ],
+    "cart_total": 340.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Silvara Gioielli S.r.l.'s catalogue and selected the closest in-stock option at $340.00, within the stated $360.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "YJxvUw3yJ4MOIiFguEtXBqAZuehiaLjIzaR3hN9jLUJcMsatanxPcQtNxHzx7tP/K0dvEjczIUc4M2vnvIC2Bg==",
+      "signed_payload_hash": "sha256:86e21e235eab21836c91275b4293004f2ef2d68500ed338eabaf2dbfb012e81d",
+      "signed_at": "2026-08-07T09:14:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0807-0029",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0807-0029",
+      "prev_mandate_hash": "sha256:86e21e235eab21836c91275b4293004f2ef2d68500ed338eabaf2dbfb012e81d"
+    },
+    "authorized_at": "2026-08-07T09:16:19-05:00",
+    "amount": 340.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1028",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2028",
+      "scheme": "card_settlement",
+      "country": "IT",
+      "beneficiary_name_on_account": "Silvara Gioielli S.r.l."
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "qw29W/O69Zb5lawlosrS0fUMhTBesuAMssXZ7jLovpSaS5Ar3DlG3lgdhwBSG52SRFky578oqtvp8pW3mrxwDQ==",
+      "signed_payload_hash": "sha256:763fcfc3209605619e40a46e0117e59f9a4acfee3f328b581a9410cc01f3db32",
+      "signed_at": "2026-08-07T09:16:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-08-07T09:15:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-08-07T09:15:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-08-07T09:15:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-08-07T09:15:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-08-07T09:15:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-07T09:15:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-07T09:15:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-07T09:15:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-07T09:15:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

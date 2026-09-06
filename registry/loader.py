@@ -48,6 +48,10 @@ def load_drift_ruleset() -> Ruleset:
     return load_ruleset(RULESETS_DIR / "drift.json")
 
 
+def load_systemic_ruleset() -> Ruleset:
+    return load_ruleset(RULESETS_DIR / "systemic.json")
+
+
 def load_ctl_ruleset() -> Ruleset:
     return load_ruleset(RULESETS_DIR / "ctl.json")
 
@@ -105,18 +109,23 @@ def load_scoring_config(path: Path | str = SCORING_PATH) -> ScoringConfig:
 
 
 def load_failure_catalogue(path: Path | str = FAILURE_CATALOGUE_PATH) -> FailureCatalogue:
-    """Load the stable F1--F73 vocabulary used by rules and occurrences."""
+    """Load the stable failure vocabulary used by rules and occurrences."""
     path = Path(path)
     raw = json.loads(path.read_text(encoding="utf-8"))
     try:
         catalogue = FailureCatalogue.model_validate(raw)
     except ValidationError as exc:
         raise RulesetLoadError(f"{path.name} failed schema validation:\n{exc}") from exc
+    # The invariant is contiguity, not a count: ids run from F1 upwards with
+    # no gaps, no duplicates and no reordering, so a failure id is stable for
+    # the life of the catalogue and a new harm can only ever be appended.
+    # Written against len() rather than a literal so growing the catalogue is
+    # a data change — the same rule the rulesets already live by.
     ids = [f.failure_id for f in catalogue.failures]
-    expected = [f"F{i}" for i in range(1, 74)]
+    expected = [f"F{i}" for i in range(1, len(ids) + 1)]
     if ids != expected:
         raise RulesetLoadError(
-            f"{path.name} must contain F1--F73 exactly once and in order; got {ids}"
+            f"{path.name} must run F1..F{len(ids)} exactly once and in order; got {ids}"
         )
     return catalogue
 

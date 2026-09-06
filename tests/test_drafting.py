@@ -17,7 +17,8 @@ _PLAN = DispatchPlan(skills=["mandate.review", "kya.review"], reasoning="thin hi
 
 _DRAFT_ARGS = {
     "overall_assessment": "One breach found.",
-    "sections": [{"title": "Cap breach", "body": "Cart exceeded the cap.", "cited_finding_ids": ["F-1"]}],
+    "sections": [{"title": "Cap breach", "body": "Cart exceeded the cap.", "cited_finding_ids": ["F-1"],
+                  "character": "adverse"}],
     "open_observations_note": None,
 }
 

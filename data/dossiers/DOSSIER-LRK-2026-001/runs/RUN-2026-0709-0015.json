@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0709-0015",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-07-09T13:41:00-05:00",
+  "ended_at": "2026-07-09T13:43:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "1tb portable nvme ssd, under $150",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0709-0015",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-07-09T13:41:00-05:00",
+    "expires_at": "2026-07-09T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L014",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L014",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "1tb portable nvme ssd, under $150",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 150.0,
+      "max_cumulative_amount": 150.0,
+      "currency": "USD",
+      "valid_from": "2026-07-09T00:00:00-05:00",
+      "valid_until": "2026-07-09T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5732"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-07-09T13:41:00-05:00",
+      "device_id": "DEV-L-L014"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L014",
+      "value": "Thsh1+o0P2Q4iA5rjzoIYhdbB7o/Ss8RqTc3j+3VX/XxkxU4IJZY1sGeiayVz+UKAQK7OOKJdfiEh/oOeJSECA==",
+      "signed_payload_hash": "sha256:e204cc112feca16ff6312f87889c9b88185e7055c91de47105f4de4b4f44565d",
+      "signed_at": "2026-07-09T13:41:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca",
+      "release_ref": "larkspur-shop-v3.1.4"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "1tb portable nvme ssd, under $150",
+          "max_price": 150.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:e1df7d463deb9bcfbab5745f92596c7a6634ab912c188afdd2253fad9b1316cd"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "VLT-SSD-1TB-01"
+          ]
+        },
+        "result_digest": "sha256:3a17c7c5828b2db24628ac0ea65682135485f0a5b36f9a07db6ce1029a73b3cf",
+        "result_excerpt": {
+          "source": "mcp://shop.voltic.de",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "VOLTIC ELEKTRONIK GMBH — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://inventory.fastcheck-partners.net",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "VLT-SSD-1TB-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:97151fc6460e19ef496c4133307326e41413bbff6e47b4dd5bf9e886fd701b38"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.voltic.de",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-VLT-7789",
+          "lines": 1,
+          "total": 132.0
+        },
+        "result_digest": "sha256:2ed8335a765e4c2f1cdaab116b033f4b2c364bf692d6d93f4bc9d125a88c733b"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 132.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L014"
+        },
+        "result_digest": "sha256:b2706fec224d4716a83c6c3070c607363de827f7c2c54909c12575fbf4c9801e"
+      }
+    ],
+    "selection_context": {
+      "query": "1tb portable nvme ssd, under $150",
+      "selected_sku": "VLT-SSD-1TB-01",
+      "alternatives_considered": [
+        {
+          "sku": "NOR-RUN-RDW-09",
+          "merchant_id": "MER-NOR-1120",
+          "price": 134.5,
+          "description": "Roadwind running shoe, men's 9, grey"
+        },
+        {
+          "sku": "CYC-HLM-ROD-M",
+          "merchant_id": "MER-CYC-6650",
+          "price": 128.0,
+          "description": "Road helmet, M"
+        },
+        {
+          "sku": "MKT-3P-CKW-DUT",
+          "merchant_id": "MER-MKT-9034",
+          "price": 141.0,
+          "description": "Enamelled dutch oven 5qt (marketplace listing)"
+        },
+        {
+          "sku": "HRT-KNF-CHF-08",
+          "merchant_id": "MER-HRT-9902",
+          "price": 119.0,
+          "description": "8in chef's knife, forged"
+        },
+        {
+          "sku": "NOR-RUN-TRL-10",
+          "merchant_id": "MER-NOR-1120",
+          "price": 118.0,
+          "description": "Trailflex running shoe, women's 10, white"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-07-09T13:41:47-05:00",
+    "principal_id": "PRIN-L-L014",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 132.0,
+      "currency": "USD",
+      "merchant": "Voltic Elektronik GmbH",
+      "line_items": [
+        {
+          "sku": "VLT-SSD-1TB-01",
+          "qty": 1,
+          "unit_price": 132.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 150.0
+      }
+    },
+    "rendered_hash": "sha256:7b291f9629ee0d6a12c0b38803b4a6200ae24200668dfa14dd510e0bb792e4fa",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0709-0015",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0709-0015",
+      "prev_mandate_hash": "sha256:e204cc112feca16ff6312f87889c9b88185e7055c91de47105f4de4b4f44565d"
+    },
+    "created_at": "2026-07-09T13:41:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-VLT-7789",
+      "name": "Voltic Elektronik GmbH",
+      "mcc": "5732",
+      "country": "DE",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "VLT-SSD-1TB-01",
+        "description": "1TB portable NVMe SSD",
+        "qty": 1,
+        "unit_price": 132.0
+      }
+    ],
+    "cart_total": 132.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Voltic Elektronik GmbH's catalogue and selected the closest in-stock option at $132.00, within the stated $150.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "lWfKm5e4VjjmSmexqXx47xxcjWp/6W1kdAPNIMsX7eXLmPtc6rV8Wsftdhm7X3tUHqugsVh9PzEE49xdFsz1Bw==",
+      "signed_payload_hash": "sha256:dcd7203c46d9b655bbaa1416ed49fb6883576e2ca3119be1eed2f2f7a66c7975",
+      "signed_at": "2026-07-09T13:41:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0709-0015",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0709-0015",
+      "prev_mandate_hash": "sha256:dcd7203c46d9b655bbaa1416ed49fb6883576e2ca3119be1eed2f2f7a66c7975"
+    },
+    "authorized_at": "2026-07-09T13:43:19-05:00",
+    "amount": 132.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1014",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2014",
+      "scheme": "card_settlement",
+      "country": "DE",
+      "beneficiary_name_on_account": "Voltic Elektronik GmbH"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "EPKlrA32b75skMkzix+PF46JySeLiV3yxYBYWFNGhfwDO+mCbCV0dzTDbc1tDWRYrWdRClHzYU2l0MBRzC2FBA==",
+      "signed_payload_hash": "sha256:058238a2259c7b7edb0b8da5205af8910ea97cab3b00a9126fbeb08136267a3c",
+      "signed_at": "2026-07-09T13:43:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-07-09T13:42:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-07-09T13:42:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-07-09T13:42:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-07-09T13:42:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-07-09T13:42:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-07-09T13:42:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-07-09T13:42:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-07-09T13:42:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-07-09T13:42:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

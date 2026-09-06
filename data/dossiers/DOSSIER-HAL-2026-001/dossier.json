@@ -47,7 +47,7 @@
       "issuer_name": "AP2 Global Trust Consortium"
     },
     "revocation_checked_at": "2026-09-02T08:15:00-05:00",
-    "revocation_source": "https://trust.ap2consortium.org/status/CRED-KST",
+    "revocation_source": "https://trust.ap2consortium.org/status/CRED-HAL",
     "issued_at": "2026-03-06T10:00:00-05:00",
     "expires_at": "2027-03-06T10:00:00-05:00",
     "capabilities": [
@@ -73,7 +73,7 @@
         "signature": {
           "alg": "Ed25519",
           "signer_key_id": "KEY-HAL-AGT-01",
-          "value": "sAWvd4bawRnYDkXnk0GQZFQra8438xofpgH3ZVUg2hMVuTE8lYgzfCzkfZzESmPqCt+2LQK65oxxKRo7unJQBA=="
+          "value": "9CHmJGD2wFbG9vJsXlpZ4lsaF6eX0WKyrz0v2GLxjKVfSpWmHMe4SWvu/RrzFzDFtt+1K9ohppJS1Aqiynk2Aw=="
         }
       },
       {
@@ -93,7 +93,7 @@
         "signature": {
           "alg": "Ed25519",
           "signer_key_id": "KEY-HAL-ORG-01",
-          "value": "5WGlOqybayXSW9m20m/nf9mR36dculIwyIdtfr1r0p+KYGRflWbEtqhueeZfV3UVVsN2ndmj24W7mhq12tAyCA=="
+          "value": "X2WLR6iAdkZH5DDPBPSxxxcFgA7VkfjOnoE4ZQnFRlfwooEFJPg5VmgyY6HCXnI9mf1jF8Sxto1PLjkKvysrBA=="
         }
       },
       {
@@ -113,15 +113,15 @@
         "signature": {
           "alg": "Ed25519",
           "signer_key_id": "KEY-HAL-HUM-02",
-          "value": "7PNYGeFV6km02RYdvscgQT2T83TeA6lYFzCvMJX9K33CH1AJFFw7qy+GF9WD7jW901fiPyihw/KEp3nEKlSZCw=="
+          "value": "yMpyw8PZzwPelKcma3YRhxFIPENfRXNk7f/vWUtzqD8Fo7l5bc5qmbakkE+Ux3IGZRNcfDAGe0crxsytJ84fAQ=="
         }
       }
     ],
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "KEY-ISS-002",
-      "value": "zDY+JlVjZhNrx+8RqeUbsKfkmLFnyBjIhxN4CxOqWcOWNxDD3w2HVTWOQnSKq/su1HKk1BRuOXlC/NUMaRVQBw==",
-      "signed_payload_hash": "sha256:0a1163455d924b48ed026059c59e9105b3c91e0715fdecfc043233e433ef8ace",
+      "value": "7FxHneBo5ybSECmTkqTQhGyMeDAC3hpVDDiUa3/5M4ga7si31X/INrt8n5/32UqRqXfmnh2U6cHDXs0rKqMUCQ==",
+      "signed_payload_hash": "sha256:89e33e3ed4ba429be89b1afe95ab9a86837aeeb841481627f45c1665168e338b",
       "signed_at": "2026-03-06T10:00:00-05:00"
     }
   },
@@ -136,7 +136,7 @@
         "issuer_name": "AP2 Global Trust Consortium"
       },
       "revocation_checked_at": "2026-09-02T08:15:00-05:00",
-      "revocation_source": "https://trust.ap2consortium.org/status/CRED-KST",
+      "revocation_source": "https://trust.ap2consortium.org/status/CRED-HAL",
       "issued_at": "2025-03-06T10:00:00-05:00",
       "expires_at": "2026-03-05T10:00:00-05:00",
       "capabilities": [
@@ -160,7 +160,7 @@
           "signature": {
             "alg": "Ed25519",
             "signer_key_id": "KEY-HAL-AGT-01",
-            "value": "ehZ+tGSlfZFEK/zczm8eRDU+ec+gS1iUx5qU6bDzJXMyezlpF7FvOXX8gGoz2mCIGCEqEsOfrUrykyeTMfiEDA=="
+            "value": "gWlaVhIoEsks2vJ93bGADV9zvF7VSI/++MFcB5ad9+BIYgvGn23JM8GMP6Zkk0VR6MrxmBJictbzXeaZbPgoCg=="
           }
         },
         {
@@ -179,7 +179,7 @@
           "signature": {
             "alg": "Ed25519",
             "signer_key_id": "KEY-HAL-ORG-01",
-            "value": "EAbcofEOUnWfb+2MpAVGTxKoiCE1kqhJCPmr/GcKFW4vNT2+hgDlwHJxjd6VgfGtVSHKs0ILD6LJleL4Tf1hDQ=="
+            "value": "3TKwwVxL/ivZuoFN8OA8VYM6I3yOOvHtuB9torAeTDFsBe4EzK3IIxDX84s1GWifw6U6ZEg3ynr7gS74b5RHDA=="
           }
         },
         {
@@ -198,15 +198,15 @@
           "signature": {
             "alg": "Ed25519",
             "signer_key_id": "KEY-HAL-HUM-02",
-            "value": "eR2oHnsJyPLIijnnUS+esfU/SNiG5r7wLW4y80j7Vs1c8u/f4EVyF68tbS4UuMFciKX3vBhsyz2Qoamr7mo/Cw=="
+            "value": "IcgDn/UMFXwnV6YnEtlFicOvlqEhtCp0PlSfLH8EMXMB1Znv8MufbcFjvAHX6+b+bfOe3DdU2ImyQteYR6atAw=="
           }
         }
       ],
       "signature": {
         "alg": "Ed25519",
         "signer_key_id": "KEY-ISS-002",
-        "value": "HuItYwVa+aoQrFAgKTdehLGpeSeKG0CrO9ySZGXiRQRQqvXHWhiOSFM3iPb1rYQRyubidE8i8FTjslFVnn9rCg==",
-        "signed_payload_hash": "sha256:fec65de5c3a22b4cc944dc59cdec9cba47ed103e5396b1900b254d763b5f2b3d",
+        "value": "tpwgcmuPGJNtPkTid2GQIfd7BdYqNe0iENAmItEQVpkW+k9upLDHARczoC22uTNuw9sj8c8eP7XeRFOhAH8VCQ==",
+        "signed_payload_hash": "sha256:f71dbddb39339545c3450fd4e71b167c1a86f33be88481ce61294170fddf07be",
         "signed_at": "2025-03-06T10:00:00-05:00"
       }
     }
@@ -345,102 +345,102 @@
     {
       "run_id": "RUN-2026-0618-0001",
       "file": "runs/RUN-2026-0618-0001.json",
-      "sha256": "sha256:20ad750f7df884be9fa000fdcb8a39a2545ac65328e5ff8a2b0f9205efbd4eff"
+      "sha256": "sha256:b5aecd41acdbbeed85b3a2e076a54b626eb40b1b9d667221a4d131fa8dcc688e"
     },
     {
       "run_id": "RUN-2026-0622-0002",
       "file": "runs/RUN-2026-0622-0002.json",
-      "sha256": "sha256:76374f3bef245570a3737efd172d3a52b7114438bc0f19b18665d0392593714b"
+      "sha256": "sha256:9bb86b34b2d3c468676514d320c3583cbca440ac75c06f623108f79e5ca2c996"
     },
     {
       "run_id": "RUN-2026-0625-0003",
       "file": "runs/RUN-2026-0625-0003.json",
-      "sha256": "sha256:fedd190b7ce28fc957d3d52c3b1e4e291d5d3b4bcb7ce42d230e1ff5c4bfca41"
+      "sha256": "sha256:dae5781ec4254a45d435fb91872537accb1c106dca7428efb7585ca7c53a93b7"
     },
     {
       "run_id": "RUN-2026-0629-0004",
       "file": "runs/RUN-2026-0629-0004.json",
-      "sha256": "sha256:959fe2e9cf0c00c5869cf782aa47a90fe82d3d69d904f745e2484ccd11510c2e"
+      "sha256": "sha256:e40b5b3e9bbc1ddd9412f30a5a0573d4f4ad9a39724a54b0a5664fa64a2560ad"
     },
     {
       "run_id": "RUN-2026-0702-0005",
       "file": "runs/RUN-2026-0702-0005.json",
-      "sha256": "sha256:bee5a72ae71e8c096052bd5640fd912848cd4092f1050017244ddd093eb6cbcf"
+      "sha256": "sha256:f33456b25bd7eae27f68944f0a706e9f98a416c5f7c14b2a1a61d42c52dd9749"
     },
     {
       "run_id": "RUN-2026-0706-0006",
       "file": "runs/RUN-2026-0706-0006.json",
-      "sha256": "sha256:753d53107c0702cf0e3f90eae7db295280eae368cb645d3dfc2a378acc73fffc"
+      "sha256": "sha256:3415dd1ee1e355056c2a380a8a9ca2284dbef36bd7c089a304acf1a0984e3105"
     },
     {
       "run_id": "RUN-2026-0709-0007",
       "file": "runs/RUN-2026-0709-0007.json",
-      "sha256": "sha256:678a5d6db97914340bf721a8c32f4d048f19d18e3e492deac5c27c5d0aae3689"
+      "sha256": "sha256:5a24a98d47a264cfbcf30542e968f573c70ea2673607e102c432d7f963138dbe"
     },
     {
       "run_id": "RUN-2026-0713-0008",
       "file": "runs/RUN-2026-0713-0008.json",
-      "sha256": "sha256:1e4a3e0fe98923fe5ab42e70bcffe369e9b24768dd507f04c9c45215f46b731f"
+      "sha256": "sha256:85d1c3bafd8f11b4f7b2abc2b3d77459cedd9ed49a92b76144ac591b30f4bb43"
     },
     {
       "run_id": "RUN-2026-0716-0009",
       "file": "runs/RUN-2026-0716-0009.json",
-      "sha256": "sha256:0c53e59cdfc6d8a064997475e615a7bdc897e16fcfaa6c673ad71ab214aecacf"
+      "sha256": "sha256:2425922fb843ec1d73770bb31aebd80b9084809c125d130ecfdc407b78d48a7f"
     },
     {
       "run_id": "RUN-2026-0720-0010",
       "file": "runs/RUN-2026-0720-0010.json",
-      "sha256": "sha256:8eab3dbf32981f691d3ecd324a8fa4ccfb413210d6013f9e78e5aae652865a7e"
+      "sha256": "sha256:7deb5bc5976b4e04dcf407a877ef01a59b85bef6c68089f0ca678df03677a986"
     },
     {
       "run_id": "RUN-2026-0723-0011",
       "file": "runs/RUN-2026-0723-0011.json",
-      "sha256": "sha256:de196fdef91bac98b0f53950cac4325b658253c833e2db68888feaa18982a2a1"
+      "sha256": "sha256:9e0cf1d62891da6cce7c7dc7e590bdc6d2159bc10b4455a97da63a76fc6fbd20"
     },
     {
       "run_id": "RUN-2026-0727-0012",
       "file": "runs/RUN-2026-0727-0012.json",
-      "sha256": "sha256:bd66d2dd5f5b4e39ceda3cda06edb6408096fa405830d9ceb7e3e19f3a01daab"
+      "sha256": "sha256:3225cf2523076c4b360fab699d7d96f424c7ff71ad6cf5b1110d64d45d8b3ff0"
     },
     {
       "run_id": "RUN-2026-0730-0013",
       "file": "runs/RUN-2026-0730-0013.json",
-      "sha256": "sha256:37ee8e907d8e457e4865ee485b0be1ffccdca5a1aa742335dd07892f4343778f"
+      "sha256": "sha256:f620756a1f6335a5562cf048fc61b37b178d3b0325026176ddae0ee619dddc1d"
     },
     {
       "run_id": "RUN-2026-0804-0014",
       "file": "runs/RUN-2026-0804-0014.json",
-      "sha256": "sha256:093eec1f6b9db829aaaa1051cff42c1c392c009a40e58f56830d254ce1b27203"
+      "sha256": "sha256:336cd0d8babfc25548555ce61660fac447943551ef35ae24bedf6b3071b71392"
     },
     {
       "run_id": "RUN-2026-0813-0015",
       "file": "runs/RUN-2026-0813-0015.json",
-      "sha256": "sha256:27d481bba48683fec0a470126cde42658129229d9e8ca4b5beed3aac410b17b5"
+      "sha256": "sha256:028e5e3c6e5363cf769009846182d2187b4a486daf743e052c01d2e4e6cfbd36"
     },
     {
       "run_id": "RUN-2026-0817-0016",
       "file": "runs/RUN-2026-0817-0016.json",
-      "sha256": "sha256:3d35fb2d1b7b4d37aff3f1a3483f5f91a37db274d0bd7d4fe0d37c63dca50f8c"
+      "sha256": "sha256:3587d55e6dabf8b15bb9b434e853f596bddef5276f73efaecd97b2d61b011205"
     },
     {
       "run_id": "RUN-2026-0819-0017",
       "file": "runs/RUN-2026-0819-0017.json",
-      "sha256": "sha256:4795e59be33fa9c6349dec2a7268a4239520661cb1d0df750cd2809518497fa6"
+      "sha256": "sha256:0f5a1ca6120c7e7cc1f187dc35486400310f13fe797e3c151ca2a6b390392ba1"
     },
     {
       "run_id": "RUN-2026-0820-0018",
       "file": "runs/RUN-2026-0820-0018.json",
-      "sha256": "sha256:9d1b1d20288487ba339fd7b8b84b588a1dad6d9a9e1c08ae15f4468dbb7b2598"
+      "sha256": "sha256:a5b4a3e20c7e6de6ab4cb9b420c642cf17bd18953b0991c85529a2903dc815aa"
     },
     {
       "run_id": "RUN-2026-0821-0019",
       "file": "runs/RUN-2026-0821-0019.json",
-      "sha256": "sha256:0cdc7c04e9b56d12b65f56d66dd371947a1e8ddf5de6ad34dfc22f14c652fe63"
+      "sha256": "sha256:58b3c7818c1e3d307905f3a234237a586ab6bdb519831787364104961784388a"
     },
     {
       "run_id": "RUN-2026-0821-0020",
       "file": "runs/RUN-2026-0821-0020.json",
-      "sha256": "sha256:2a14baca453aa667f197b3c13f8d7a593006b33bfe97cf7c1ce3a34f2c2f4795"
+      "sha256": "sha256:35b1f49f7cce0c1544edb0e51d2bc0786b510d5ea0803777a9a6022247f47bae"
     }
   ]
 }

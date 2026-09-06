@@ -90,7 +90,7 @@ Mark items `[x]` as they're finished, and jot a one-line note (file paths, what'
 > Consent, Provenance, Injection, Counterparty, Log and Drift while preserving
 > each prompt's established domain fields. Control Assurance records peer
 > breach facts plus declared/executed controls; Systemic records bounded
-> portfolio evidence; Red Team records probe results and rulebook versions.
+> portfolio evidence.
 > Submitted text inside common facts is delimited before prompting, clean
 > results are compressed, and tests prohibit ground truth. Systemic's
 > F57/F67/F69 now project to typed portfolio occurrences without inventing a

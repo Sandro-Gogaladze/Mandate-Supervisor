@@ -4,19 +4,38 @@
     {
       "name": "api",
       "runtimeExecutable": "./.venv/bin/python",
-      "runtimeArgs": ["-m", "uvicorn", "api.main:app", "--host", "127.0.0.1", "--port", "8123"],
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "api.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8123",
+        "--reload"
+      ],
       "port": 8123
     },
     {
       "name": "copilot-runtime",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "dashboard", "run", "copilot-runtime"],
+      "runtimeArgs": [
+        "--prefix",
+        "dashboard",
+        "run",
+        "copilot-runtime"
+      ],
       "port": 4000
     },
     {
       "name": "dashboard",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "dashboard", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "dashboard",
+        "run",
+        "dev"
+      ],
       "port": 5173
     }
   ]

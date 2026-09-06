@@ -58,7 +58,6 @@ AGENT_TOOLS: dict[str, frozenset[str]] = {
     "drift": frozenset(),
     "control_assurance": frozenset(),
     "systemic": frozenset(),
-    "red_team": frozenset(),
     "drafting": frozenset(),
     "orchestrator": frozenset(),
     "synthesizer": frozenset(),

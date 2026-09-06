@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0630-0011",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-30T13:54:00-05:00",
+  "ended_at": "2026-06-30T13:56:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "the 1200 piece modular city building set",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0630-0011",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-30T13:54:00-05:00",
+    "expires_at": "2026-06-30T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F011",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F011",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "the 1200 piece modular city building set",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 110.0,
+      "max_cumulative_amount": 110.0,
+      "currency": "USD",
+      "valid_from": "2026-06-30T00:00:00-05:00",
+      "valid_until": "2026-06-30T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5945"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-30T13:54:00-05:00",
+      "device_id": "DEV-F-F011"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F011",
+      "value": "qm4qVeWvYojDi8Oi2vY2zAvlsuXJfyux3oZ8g3nQ64bR2zjmzXaTgKiDZUyc4UjjvyKnFhrTrYiVgJ2GYPLZDA==",
+      "signed_payload_hash": "sha256:d9568c7aa3045bc8fca52fe7a81b461d37b9b0d2ed1609bc1d5bbf1f084a2f2d",
+      "signed_at": "2026-06-30T13:54:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d32b50300c950f809d98e42a75308995f120827e31ad1013b9b44e87c845ed4e",
+      "release_ref": "ferrymead-cnc-v4.0.3"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "the 1200 piece modular city building set",
+          "max_price": 110.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:a71ef65239ea831e4fc916fc8adb73c7d171f16562ff42a39c1ca5b4da3f7eb2"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "KDO-BLD-CTY-01"
+          ]
+        },
+        "result_digest": "sha256:9115213844d8b7c2f57f56ae04263b76200dc220be4194c2552a9b4b85ab7e88",
+        "result_excerpt": {
+          "source": "mcp://shop.kudotoys.jp",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "KUDO TOYS KK — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "KDO-BLD-CTY-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:f2a4470f5731e84712506cd63b955597287c93e759217c7c42423e45b14ef88e"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-KDO-5573",
+          "lines": 1,
+          "total": 96.0
+        },
+        "result_digest": "sha256:ef1992bf3a31a4be1933ce122114e8146859337952e6868f84d022d676504e6c"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 96.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F011"
+        },
+        "result_digest": "sha256:065920d7e4d473adfb9ddf25ba6fa02e87ce63ff8f0d082ba3bac8aa0951bb8d"
+      }
+    ],
+    "selection_context": {
+      "query": "the 1200 piece modular city building set",
+      "selected_sku": "KDO-BLD-CTY-01",
+      "alternatives_considered": [
+        {
+          "sku": "CYC-TYR-GRV-02",
+          "merchant_id": "MER-CYC-6650",
+          "price": 96.0,
+          "description": "Gravel tyre 700x40, pair"
+        },
+        {
+          "sku": "ATE-COT-OXF-L",
+          "merchant_id": "MER-ATE-3345",
+          "price": 92.0,
+          "description": "Brushed oxford shirt, L"
+        },
+        {
+          "sku": "BRW-KTL-POR-01",
+          "merchant_id": "MER-BRW-1177",
+          "price": 89.0,
+          "description": "Gooseneck pour-over kettle, 1L"
+        },
+        {
+          "sku": "HRT-LIN-TWL-06",
+          "merchant_id": "MER-HRT-9902",
+          "price": 88.0,
+          "description": "Waffle bath towel set of 6"
+        },
+        {
+          "sku": "PTC-DOG-BED-L",
+          "merchant_id": "MER-PTC-7712",
+          "price": 112.0,
+          "description": "Orthopaedic dog bed, large"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-30T13:54:47-05:00",
+    "principal_id": "PRIN-F-F011",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 96.0,
+      "currency": "USD",
+      "merchant": "Kudo Toys KK",
+      "line_items": [
+        {
+          "sku": "KDO-BLD-CTY-01",
+          "qty": 1,
+          "unit_price": 96.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 110.0
+      }
+    },
+    "rendered_hash": "sha256:a4e9f822863fb2ae924ebb67a314f9fa8e27b7a552127f06f6d604d0cfd6aa80",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0630-0011",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0630-0011",
+      "prev_mandate_hash": "sha256:d9568c7aa3045bc8fca52fe7a81b461d37b9b0d2ed1609bc1d5bbf1f084a2f2d"
+    },
+    "created_at": "2026-06-30T13:54:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-KDO-5573",
+      "name": "Kudo Toys KK",
+      "mcc": "5945",
+      "country": "JP",
+      "region": "APAC",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "KDO-BLD-CTY-01",
+        "description": "Modular city building set, 1200pc",
+        "qty": 1,
+        "unit_price": 96.0
+      }
+    ],
+    "cart_total": 96.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Kudo Toys KK's catalogue and selected the closest in-stock option at $96.00, within the stated $110.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "szfYzedtpG7DH0pSZ76VYfM1Ne2+J32c7VLuP+QX2H66MGH69wvNe0q5FUDd14xOuAhmYLHt55iLO+b08ir/Aw==",
+      "signed_payload_hash": "sha256:5f823c269aa9071649976f2cf31c2cd7db4118811f0fd2a219a3c5e19eb2c47e",
+      "signed_at": "2026-06-30T13:54:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0630-0011",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0630-0011",
+      "prev_mandate_hash": "sha256:5f823c269aa9071649976f2cf31c2cd7db4118811f0fd2a219a3c5e19eb2c47e"
+    },
+    "authorized_at": "2026-06-30T13:56:19-05:00",
+    "amount": 96.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1010",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2010",
+      "scheme": "card_settlement",
+      "country": "JP",
+      "beneficiary_name_on_account": "Kudo Toys KK"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "WQfT2eOqPAccJ+y0qLNLLqKoWob9Mnofc4L3/3b6M+iiIKH8i1DiCA5wcEG7P4cKLZaWdAEISePyFjXXqeVKAQ==",
+      "signed_payload_hash": "sha256:167bab4364f139b81cfa84d42534784bead9d2cb0261830d3f8a6c36f459ee00",
+      "signed_at": "2026-06-30T13:56:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-06-30T13:55:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-06-30T13:55:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-06-30T13:55:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-06-30T13:55:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-06-30T13:55:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-06-30T13:55:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-06-30T13:55:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-06-30T13:55:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-06-30T13:55:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

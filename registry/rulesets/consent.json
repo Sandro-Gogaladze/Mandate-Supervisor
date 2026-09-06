@@ -1,7 +1,7 @@
 {
   "ruleset_id": "CNS-RULESET",
   "domain": "consent",
-  "version": "2026.2",
+  "version": "2026.3",
   "as_of": "2026-09-04",
   "description": "Consent & Harm (C2): was the human there, and is the consumer worse off? Everything here reads consent_ceremony — SCA evidence the institution already holds — against the signed chain, plus selection_context for the one judged rule. F28 (a consent screen designed to get a yes) is parked: it needs a picture of the screen, which the data contract deliberately does not ask for.",
   "rules": [
@@ -47,7 +47,11 @@
       "severity_weight": 0.7,
       "finding_type": "consent_principal_mismatch",
       "description": "The consent ceremony records the same principal who signed the Intent. For a consumer this is the assurance KYA-ACC-02 cannot give: the shopper who confirmed is the shopper who authorised.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F91"
+      ],
+      "notes": "Distinct from F7 on purpose. F7 (KYA-ACC-02) compares the delegation chain's TERMINUS against the Intent's principal — whether the agent's authority traces to the right human. This compares the CONSENT CEREMONY's principal against the same Intent — whether the human who actually confirmed the purchase is the one the mandate was issued to. An agent can pass F7 exactly and still have the wrong person click confirm, which is the assurance KYA cannot give."
     },
     {
       "rule_id": "CNS-MTH-01",
@@ -97,7 +101,9 @@
       "severity_weight": 0.6,
       "finding_type": "caps_shown_diverge_from_mandate",
       "description": "The caps the confirmation screen showed are the caps the Intent carries. A shopper who confirmed under one limit and signed another did not consent to the second.",
-      "failures": ["F29"],
+      "failures": [
+        "F29"
+      ],
       "params": {}
     },
     {

@@ -6,7 +6,6 @@ import os
 import secrets
 import uuid
 import zipfile
-from dataclasses import asdict
 from datetime import datetime, timezone
 
 # A specialist call is capped at 900 s (pipeline/graph.py), so a run that
@@ -18,7 +17,6 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 from agents.assess import current
 from agents.catalog import AGENTS, PEERS
-from agents.systemic import sweep
 from data.uploads import DossierUploadError, save_uploaded_dossier
 from ingestion.normalize import dossier_from_submission, normalize_dossier
 from ledger.projection import project_case, visible_events
@@ -56,9 +54,9 @@ def create_router(store, *, model=None):
         dossier = loaded(cid)
         events = store.events_for(cid)
         record = project_case(events)
-        invalid, portfolio = review_flags(events)
+        invalid = review_flags(events)
         recommendation = recommend(dossier, record.facts, record.assessments, correlations=record.correlations,
-                                   invalid_assessment_ids=invalid, portfolio_findings=portfolio) if record.facts else None
+                                   invalid_assessment_ids=invalid) if record.facts else None
         return dict(dossier=dossier.dossier.model_dump(), firm=record.firm,
                     integrity=normalize_dossier(dossier).integrity.model_dump(),
                     assessments=[a.model_dump() for a in current(record.assessments)],
@@ -68,7 +66,6 @@ def create_router(store, *, model=None):
                     decisions=[e.payload for e in events if e.event_type == 'authorisation_decided'],
                     control_postures=[e.payload for e in events if e.event_type == 'control_posture_recorded'],
                     correlations=[c.model_dump() for c in record.correlations],
-                    portfolio=[e.payload for e in events if e.event_type == 'portfolio_finding_recorded'],
                     failures=[e.payload for e in events if e.event_type == 'specialist_failed'],
                     last_seq=events[-1].seq)
 
@@ -77,9 +74,9 @@ def create_router(store, *, model=None):
         out = []
         for cid in store.all_case_ids():
             d = loaded(cid); record = project_case(store.events_for(cid))
-            invalid, portfolio = review_flags(store.events_for(cid))
+            invalid = review_flags(store.events_for(cid))
             recommendation = recommend(d, record.facts, record.assessments, correlations=record.correlations,
-                                       invalid_assessment_ids=invalid, portfolio_findings=portfolio) if record.facts else None
+                                       invalid_assessment_ids=invalid) if record.facts else None
             out.append(dict(dossier_id=cid, institution_id=d.dossier.institution_id,
                             agent_id=d.dossier.agent_id, operator_id=d.dossier.operator_id, firm=record.firm,
                             runs=len(d.runs), submitted_at=d.dossier.submission_context.submitted_at,
@@ -128,15 +125,22 @@ def create_router(store, *, model=None):
     @router.post('/cases/upload')
     @router.post('/dossiers')
     async def upload(file: UploadFile, authorization: str | None = Header(default=None)):
+        # Token -> institution_id. Configure MANDATE_INSTITUTION_TOKENS and every
+        # upload must present one, and may only submit for the institution its
+        # token names. Leave it unset — the local default — and intake is open:
+        # the dossier's own institution_id is taken at face value. The check is
+        # therefore a deployment decision, not something a caller can turn off.
         tokens = json.loads(os.environ.get('MANDATE_INSTITUTION_TOKENS', '{}'))
-        token = (authorization or '').removeprefix('Bearer ')
-        institution = next((v for k, v in tokens.items() if secrets.compare_digest(k, token)), None)
-        if not institution: raise HTTPException(401, 'A configured institution submission token is required.')
+        institution = None
+        if tokens:
+            token = (authorization or '').removeprefix('Bearer ')
+            institution = next((v for k, v in tokens.items() if secrets.compare_digest(k, token)), None)
+            if not institution: raise HTTPException(401, 'A configured institution submission token is required.')
         content = await file.read(16 * 1024 * 1024 + 1)
         if len(content) > 16 * 1024 * 1024: raise HTTPException(413, 'Compressed dossier exceeds 16 MB.')
         try:
             d = save_uploaded_dossier(content, existing_ids=store.all_case_ids(), institution_id=institution)
-            cid = submit_dossier(store, d, actor=f'human:institution:{institution}')
+            cid = submit_dossier(store, d, actor=f'human:institution:{institution or d.dossier.institution_id}')
         except DossierUploadError as exc: raise HTTPException(422, str(exc)) from exc
         return {'dossier_id': cid, 'verified': True}
 
@@ -242,33 +246,6 @@ def create_router(store, *, model=None):
             if decision.disposition == 'monitor':
                 store.append(case_id=cid, event_type='case_watched', payload={'decision_seq': event.seq}, actor=f'human:{decision.reviewer}')
             return payload
-
-    @router.get('/portfolio')
-    async def portfolio():
-        completed = [e for e in store.all_events() if e.event_type == 'portfolio_sweep_completed']
-        if not completed: return {'sweep_id': None, 'findings': []}
-        return completed[-1].payload
-
-    @router.post('/portfolio/sweep')
-    async def portfolio_sweep():
-        ds = [loaded(cid) for cid in store.all_case_ids()]
-        if not ds: raise HTTPException(409, 'No submitted dossiers')
-        sweep_id = 'portfolio-' + uuid.uuid4().hex[:12]
-        findings = [asdict(f) for f in sweep(ds)] if len(ds) > 1 else []
-        payload = {'sweep_id': sweep_id, 'dossiers': [d.dossier.dossier_id for d in ds],
-                   'findings': findings, 'completed_at': datetime.now(timezone.utc).isoformat()}
-        for d in ds:
-            cid = d.dossier.dossier_id
-            store.append(case_id=cid, run_id=sweep_id, event_type='run_started',
-                         payload={'run_id': sweep_id, 'kind': 'portfolio', 'prompts': {}}, actor='agent:systemic')
-            store.append(case_id=cid, run_id=sweep_id, event_type='portfolio_sweep_started', payload={'sweep_id': sweep_id}, actor='agent:systemic')
-            for finding in findings:
-                if cid in finding['subject_refs']:
-                    store.append(case_id=cid, run_id=sweep_id, event_type='portfolio_finding_recorded', payload=finding, actor='agent:systemic')
-            store.append(case_id=cid, run_id=sweep_id, event_type='portfolio_sweep_completed', payload=payload, actor='agent:systemic')
-            store.append(case_id=cid, run_id=sweep_id, event_type='run_completed',
-                         payload={'run_id': sweep_id, 'kind': 'portfolio'}, actor='agent:systemic')
-        return payload
 
     @router.get('/dossiers/{cid}/export')
     async def export(cid: str):

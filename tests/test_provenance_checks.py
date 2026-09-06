@@ -49,10 +49,17 @@ def facts(dossier, ruleset):
 
 def test_provenance_owns_exactly_what_kya_skips():
     assert PROVENANCE_OWNED_TYPES == PROVENANCE_RULE_TYPES
+    # Provenance may own rules KYA never had; those need no skip entry.
+    from agents.provenance_checks import _RUN_CHECKERS
+    assert PROVENANCE_RULE_TYPES <= set(_RUN_CHECKERS)
 
 
 def test_every_active_kya_rule_is_owned_by_someone(kya_ruleset):
-    owned = set(_POLICY_CHECKERS) | CRYPTO_HANDLED_TYPES
+    """Computable rules are owned by a checker; judged rules are owned by a
+    slot in the reasoning pass. Neither may be owned by nobody."""
+    from agents.kya_reasoning import JUDGED_SLOTS
+
+    owned = set(_POLICY_CHECKERS) | CRYPTO_HANDLED_TYPES | set(JUDGED_SLOTS)
     unowned = set(active_rules_by_type(kya_ruleset)) - owned
     assert not unowned, f"active rules with no owner: {sorted(unowned)}"
     # ...and none of Provenance's rules is left in the KYA book.
@@ -67,7 +74,10 @@ def test_every_active_provenance_rule_has_a_checker(ruleset):
 def test_one_fact_per_run_per_rule(facts, dossier):
     run_ids = {r.run_id for r in dossier.runs}
     grouped = by_rule(facts)
-    assert set(grouped) == {"KYA-TEC-02", "KYA-TEC-05", "KYA-TEC-06", "PRV-CRD-01", "PRV-REC-01"}
+    # PRV-CPT-01 is draft — it still produces a fact, absent/rule_draft, which
+    # is how F34 stays visibly named-but-undetectable rather than silent.
+    assert set(grouped) == {"KYA-TEC-02", "KYA-TEC-05", "KYA-TEC-06", "KYA-TEC-07", "PRV-CPT-01",
+                            "PRV-CRD-01", "PRV-REC-01"}
     for rule_id in ("KYA-TEC-02", "KYA-TEC-05", "KYA-TEC-06"):
         fs = grouped[rule_id]
         assert {f.run_ref for f in fs} == run_ids and len(fs) == len(run_ids)
@@ -104,8 +114,10 @@ def test_unauthorised_tool_server_is_found_not_the_tool_name(facts):
 
 
 def test_the_other_runs_are_satisfied_not_unmentioned(facts, dossier):
-    # 3 run-level rules minus the 3 breaches, plus the card rule on the dossier
-    assert sum(1 for f in facts if f.kind == "satisfied") == 3 * len(dossier.runs) - 3 + 1
+    # 4 run-level rules (TEC-02/05/06/07) over every run, minus the 4 breaches
+    # those rules found, plus the card rule on the dossier.
+    breached = sum(1 for f in facts if f.kind == "breach" and f.run_ref)
+    assert sum(1 for f in facts if f.kind == "satisfied") == 4 * len(dossier.runs) - breached + 1
 
 
 # --- the card against the credential ------------------------------------------
@@ -162,3 +174,26 @@ def test_no_agent_card_leaves_the_declared_half_absent(dossier, ruleset):
     # the unauthorised server is a breach with or without a card
     bad, = [f for f in fs if f.run_ref == "RUN-2026-0720-0028"]
     assert bad.kind == "breach"
+
+
+def test_a_barred_model_that_actually_ran_is_caught_even_when_the_declared_one_is_clean():
+    """F19 was unreachable in the shape that matters most: an approved model
+    pinned on the form, a blocklisted one doing the work. KYA-TEC-03 reads the
+    declared version and correctly passed; KYA-TEC-02 saw the mismatch but
+    establishes F37, and a mismatch rule must not also mint F19 or benign
+    version drift would become a barred-model finding."""
+    from data.dossier_loader import load_for_pipeline
+    from registry.loader import load_provenance_ruleset
+    from agents.provenance import ProvenanceAgent
+
+    dossier = load_for_pipeline('data/dossiers/DOSSIER-KST-2026-001')
+    facts = ProvenanceAgent().run(dossier, load_provenance_ruleset())
+    breaches = [f for f in facts if f.rule_id == 'KYA-TEC-07' and f.kind == 'breach']
+    assert [f.run_ref for f in breaches] == ['RUN-2026-0728-0034']
+    assert breaches[0].values['observed_blocklisted'] is True
+
+    rule = next(r for r in load_provenance_ruleset().rules if r.rule_id == 'KYA-TEC-07')
+    assert rule.failures == ['F19']
+    # The mismatch rule keeps owning only F37.
+    mismatch = next(r for r in load_provenance_ruleset().rules if r.rule_id == 'KYA-TEC-02')
+    assert 'F19' not in mismatch.failures

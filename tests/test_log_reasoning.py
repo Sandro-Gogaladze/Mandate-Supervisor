@@ -99,9 +99,9 @@ async def test_review_with_no_history_never_calls_the_model(kst) -> None:
 
     fake = FakeChatModel({"record_log_analysis": _CLEAN})
     review = await LogAgent().review(thin(kst, 0), load_log_ruleset(), model=fake)
-    assert fake.call_log == [] and len(review.facts) == 3
+    assert fake.call_log == [] and len(review.facts) == 6
     gap, = review.assessments  # the missing history is a data-gap concern, not a verdict
-    assert gap.verdict == "concern" and "3 rules" in gap.narrative
+    assert gap.verdict == "concern" and "5 rules" in gap.narrative
 
 
 async def test_model_that_does_not_call_the_tool_is_a_clear_error(kst) -> None:

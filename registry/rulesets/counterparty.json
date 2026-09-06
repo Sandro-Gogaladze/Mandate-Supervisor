@@ -1,7 +1,7 @@
 {
   "ruleset_id": "CPT-RULESET",
   "domain": "counterparty",
-  "version": "2026.1",
+  "version": "2026.2",
   "as_of": "2026-09-03",
   "description": "Counterparty (C1): who received this money? We verify the payer exhaustively and, until now, the payee not at all. Everything here reads payment.payee, cart.merchant and the regulator's merchant register, which holds what the paying firm cannot supply — ownership, first-seen, watchlist flags.",
   "rules": [
@@ -61,7 +61,10 @@
       "severity_weight": 0.4,
       "finding_type": "payee_country_mismatch",
       "description": "The country the money settled to is the merchant's country. Settlement elsewhere is not wrong by itself, but it is the shape of an intermediary nobody declared.",
-      "params": {}
+      "params": {},
+      "failures": [
+        "F102"
+      ]
     },
     {
       "rule_id": "CPT-LST-01",

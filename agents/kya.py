@@ -20,12 +20,37 @@ from ingestion.verify import RawSubmissionMissing, credential_facts_with_ruleset
 from schemas import Assessment, EvidencePack, Fact, FactBuilder, Ruleset
 from schemas.dossier import LoadedDossier
 
-from .base import SpecialistReview, floor
+from .base import SpecialistReview, floor, narrated
 from .kya_checks import run_policy_checks
-from .kya_reasoning import Observation, activity_summary, narrate_findings, reason_about_case
+from .kya_reasoning import (
+    Observation, activity_summary, capability_profile, reason_about_case,
+)
 from .prompts import effective_text
 
 KYAReview = SpecialistReview
+
+
+def _activity_measurement(fb: FactBuilder, rule, dossier: LoadedDossier) -> Fact:
+    """KYA-REG-03's evidence: does observed activity fit the registered class?"""
+    s = activity_summary(dossier)
+    return fb.measurement(
+        "activity_summary",
+        f"{s['transactions']} transactions ({s['in_window']} in window) totalling "
+        f"{s['settled_total']}, largest {s['largest_single']}, "
+        f"{s['distinct_counterparties']} counterparties.",
+        rule=rule, values=s)
+
+
+def _capability_measurement(fb: FactBuilder, rule, dossier: LoadedDossier) -> Fact:
+    """KYA-CAP-04's evidence: the grant against what the purpose needs."""
+    p = capability_profile(dossier)
+    unused = p["granted_but_not_on_card"]
+    return fb.measurement(
+        "capability_profile",
+        f"The credential grants {p['granted_count']} capability(ies) to a "
+        f"{p['registered_classification'] or 'unregistered'} agent"
+        + (f"; {len(unused)} appear on no agent card: {', '.join(unused)}." if unused else "."),
+        rule=rule, values=p)
 
 
 class KYAAgent:
@@ -42,18 +67,15 @@ class KYAAgent:
             # verified; intake's record is the next best thing.
             crypto = [f for f in (evidence.ingestion_facts if evidence else []) if f.domain == "kya"]
         facts = crypto + run_policy_checks(dossier, ruleset)
-        # REG-03 is judged: the floor records what the judgement rests on,
-        # active or draft, so the evidence is on the record either way.
-        reg_03 = next((r for r in ruleset.rules
-                       if r.type == "agent_activity_matches_classification"), None)
-        if reg_03 is not None:
-            summary = activity_summary(dossier)
-            facts.append(FactBuilder(dossier.dossier.dossier_id, self.name).measurement(
-                "activity_summary",
-                f"{summary['transactions']} transactions ({summary['in_window']} in window) "
-                f"totalling {summary['settled_total']}, largest {summary['largest_single']}, "
-                f"{summary['distinct_counterparties']} counterparties.",
-                rule=reg_03, values=summary))
+        # KYA's judged rules: the floor records what each judgement rests on,
+        # ACTIVE OR DRAFT, so the evidence is on the record either way and a
+        # rule promoted in the sandbox has its measurement waiting for it.
+        fb = FactBuilder(dossier.dossier.dossier_id, self.name)
+        for rule_type, build in (("agent_activity_matches_classification", _activity_measurement),
+                                 ("capabilities_least_privilege", _capability_measurement)):
+            rule = next((r for r in ruleset.rules if r.type == rule_type), None)
+            if rule is not None:
+                facts.append(build(fb, rule, dossier))
         return facts
 
     def assess(self, facts: list[Fact], ruleset: Ruleset | None,
@@ -81,7 +103,6 @@ class KYAAgent:
         # the same text recorded on run_started; `context` is the composed
         # evidence recorded on dispatch_recorded (agents/context.py).
         reasoning_prompt = effective_text(prompts, "SPECIALIST-KYA") if prompts else None
-        narration_prompt = effective_text(prompts, "KYA-NARRATION") if prompts else None
         observations: list[Observation] = []
         if reason:
             observations, judged = await reason_about_case(
@@ -90,10 +111,6 @@ class KYAAgent:
                 context=context, ruleset=ruleset, round=round,
             )
             assessments = assessments + judged
-        narration = (
-            await narrate_findings(dossier.dossier.dossier_id, assessments, model=model,
-                                   system_prompt=narration_prompt)
-            if narrate else None
-        )
-        return SpecialistReview(facts=facts, assessments=assessments,
-                                observations=observations, narration=narration)
+        return await narrated(
+            SpecialistReview(facts=facts, assessments=assessments, observations=observations),
+            self.name, dossier, model=model, prompts=prompts, narrate=narrate)

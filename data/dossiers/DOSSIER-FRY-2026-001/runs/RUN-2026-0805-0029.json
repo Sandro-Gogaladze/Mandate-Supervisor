@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0805-0029",
+  "dossier_id": "DOSSIER-FRY-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-05T16:41:00-05:00",
+  "ended_at": "2026-08-05T16:43:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "the handmade wool bear",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-FRY-0805-0029",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-05T16:41:00-05:00",
+    "expires_at": "2026-08-05T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper F029",
+      "role": "consumer",
+      "principal_id": "PRIN-F-F029",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-FRY-CNC-01",
+      "agent_name": "Ferrymead Concierge",
+      "operator_firm": "Ferrymead Retail Technologies, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "the handmade wool bear",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 60.0,
+      "max_cumulative_amount": 60.0,
+      "currency": "USD",
+      "valid_from": "2026-08-05T00:00:00-05:00",
+      "valid_until": "2026-08-05T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5945"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-05T16:41:00-05:00",
+      "device_id": "DEV-F-F029"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-F029",
+      "value": "9STEe6g0cyyScpddhqrtEIbzW6vh7fuL/2L62JFTziNQQ7nmLUht7r196evQnEx0y3GSND97aIRmdNePoTSVBQ==",
+      "signed_payload_hash": "sha256:9761bf36c80f97e7903781a3855e7d2afba0c6bcffc237401fb8948551ceac97",
+      "signed_at": "2026-08-05T16:41:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-005"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:a4090be262c74821602ac852a77de5cc9979a9c48a7e120a26d478aea9c37060",
+      "release_ref": "ferrymead-cnc-v4.1.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "the handmade wool bear",
+          "max_price": 60.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:c92b8872ed13dae74e413153607d9a5e296bae8e00bbd3e6e2700140ffc2a7de"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "KDO-PLU-BEA-01"
+          ]
+        },
+        "result_digest": "sha256:9115213844d8b7c2f57f56ae04263b76200dc220be4194c2552a9b4b85ab7e88",
+        "result_excerpt": {
+          "source": "mcp://shop.kudotoys.jp",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "KUDO TOYS KK — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "KDO-PLU-BEA-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:24798eb02a6e086e713807b67e16b2bd053dbcbbb33c1c885703351609c1c8ca"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.kudotoys.jp",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-KDO-5573",
+          "lines": 1,
+          "total": 54.0
+        },
+        "result_digest": "sha256:aba33035d66da3ca4a8a22414dcdc0997bce2e5167feeb27d64ffe6e8bad96b8"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.ferrymead.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 54.0,
+          "currency": "USD",
+          "principal_id": "PRIN-F-F029"
+        },
+        "result_digest": "sha256:44cb5ba938c3dd12cf6c59fbdffa62f913df43676211c12953d7a2c30643db10"
+      }
+    ],
+    "selection_context": {
+      "query": "the handmade wool bear",
+      "selected_sku": "KDO-PLU-BEA-01",
+      "alternatives_considered": [
+        {
+          "sku": "LUM-SKN-SER-30",
+          "merchant_id": "MER-LUM-6614",
+          "price": 48.0,
+          "description": "Vitamin C serum, 30ml"
+        },
+        {
+          "sku": "NOR-SND-EVR-11",
+          "merchant_id": "MER-NOR-1120",
+          "price": 62.0,
+          "description": "Everstrap sandal, men's 11"
+        },
+        {
+          "sku": "CYC-LGT-SET-01",
+          "merchant_id": "MER-CYC-6650",
+          "price": 62.0,
+          "description": "Front and rear light set"
+        },
+        {
+          "sku": "LUM-SKN-CRM-50",
+          "merchant_id": "MER-LUM-6614",
+          "price": 64.0,
+          "description": "Ceramide night cream, 50ml"
+        },
+        {
+          "sku": "DSK-NTB-A5-10",
+          "merchant_id": "MER-DSK-3390",
+          "price": 42.0,
+          "description": "A5 dotted notebook, 10-pack"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-05T16:41:47-05:00",
+    "principal_id": "PRIN-F-F029",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 54.0,
+      "currency": "USD",
+      "merchant": "Kudo Toys KK",
+      "line_items": [
+        {
+          "sku": "KDO-PLU-BEA-01",
+          "qty": 1,
+          "unit_price": 54.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 60.0
+      }
+    },
+    "rendered_hash": "sha256:e690203b6cbca1f51f9a882059608ace79c2afb2329687ad5bc87ed3f0fadcce",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-FRY-0805-0029",
+    "chain_link": {
+      "prev_mandate_id": "IM-FRY-0805-0029",
+      "prev_mandate_hash": "sha256:9761bf36c80f97e7903781a3855e7d2afba0c6bcffc237401fb8948551ceac97"
+    },
+    "created_at": "2026-08-05T16:41:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-KDO-5573",
+      "name": "Kudo Toys KK",
+      "mcc": "5945",
+      "country": "JP",
+      "region": "APAC",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "KDO-PLU-BEA-01",
+        "description": "Handmade wool bear",
+        "qty": 1,
+        "unit_price": 54.0
+      }
+    ],
+    "cart_total": 54.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Kudo Toys KK's catalogue and selected the closest in-stock option at $54.00, within the stated $60.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "2WDsB71JXFzmc3Bem6nEcpAb3SIwGqgtmNniBuYr/ve0z6Xs8XdSfZrIXFj36jwa18J5q/Re6E033pJB/IgaDA==",
+      "signed_payload_hash": "sha256:2f8073ea3718991b9d45db6eb8f6bd2e329fd71b774b2af5488a321024194c18",
+      "signed_at": "2026-08-05T16:41:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-FRY-0805-0029",
+    "chain_link": {
+      "prev_mandate_id": "CM-FRY-0805-0029",
+      "prev_mandate_hash": "sha256:2f8073ea3718991b9d45db6eb8f6bd2e329fd71b774b2af5488a321024194c18"
+    },
+    "authorized_at": "2026-08-05T16:43:19-05:00",
+    "amount": 54.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1028",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2028",
+      "scheme": "card_settlement",
+      "country": "JP",
+      "beneficiary_name_on_account": "Kudo Toys KK"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-FRY-AGT-01",
+      "value": "e09JEg7Prj9bZF7HWtESDGp1Lu3QFdEENjD85V8DakkPIqfG7z6t0D695B/rNqJ0TISLMheD1b9S31qXTKceCw==",
+      "signed_payload_hash": "sha256:a3e51f12d7d69203bb8f60d2d437e4f5e8edb488cb6aa535033e2377af1a2188",
+      "signed_at": "2026-08-05T16:43:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "FRY-CTL-001",
+      "evaluated_at": "2026-08-05T16:42:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-002",
+      "evaluated_at": "2026-08-05T16:42:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-003",
+      "evaluated_at": "2026-08-05T16:42:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-004",
+      "evaluated_at": "2026-08-05T16:42:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "FRY-CTL-005",
+      "evaluated_at": "2026-08-05T16:42:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-001",
+      "evaluated_at": "2026-08-05T16:42:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-002",
+      "evaluated_at": "2026-08-05T16:42:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-003",
+      "evaluated_at": "2026-08-05T16:42:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "RVM-CTL-004",
+      "evaluated_at": "2026-08-05T16:42:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

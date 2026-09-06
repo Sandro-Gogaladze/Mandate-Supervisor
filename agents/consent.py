@@ -11,7 +11,7 @@ from __future__ import annotations
 from schemas import Assessment, EvidencePack, Fact, Observation, Ruleset
 from schemas.dossier import LoadedDossier
 
-from .base import SpecialistReview, floor
+from .base import SpecialistReview, floor, narrated
 from .consent_checks import run_consent_checks
 from .consent_reasoning import analyze_consent
 from .prompts import effective_text
@@ -32,7 +32,8 @@ class ConsentAgent:
                      evidence: EvidencePack | None = None, model=None,
                      prior_observations: list[Observation] | None = None,
                      reviewer_directive: str | None = None, prompts: dict | None = None,
-                     context: dict | None = None, round: int = 1) -> SpecialistReview:
+                     context: dict | None = None, round: int = 1,
+                     narrate: bool = True) -> SpecialistReview:
         if ruleset is None:
             return SpecialistReview(facts=[], assessments=[])
         facts = self.run(dossier, ruleset, evidence=evidence)
@@ -47,4 +48,5 @@ class ConsentAgent:
                 system_prompt=effective_text(prompts, "SPECIALIST-CONSENT") if prompts else None,
                 context=context, round=round)
             assessments = assessments + judged
-        return SpecialistReview(facts=facts, assessments=assessments, observations=observations)
+        return await narrated(SpecialistReview(facts=facts, assessments=assessments, observations=observations), self.name, dossier,
+                              model=model, prompts=prompts, narrate=narrate)

@@ -53,7 +53,7 @@
     "signature": {
       "alg": "Ed25519",
       "signer_key_id": "KEY-SHOPPER-0032",
-      "value": "hRI7GtWAkPe5DhmamVVRbRwcGJGRkCDqV8Ck7qcnIeeR7ZDFaqXhTgqBTm5e7KkeOJgzd92u2O6HqBKCX05rCA==",
+      "value": "v4uvh5aPvz3SqNh07tAy7mhJDKuh6i68yITx9NWHpwH+0Cx8mUNEO1wgxk06+Kkj876gG0KA9EGNxWaipjuTCg==",
       "signed_payload_hash": "sha256:b6fa5dfe3584016b758062fd7c1a1919c57f3eec3a35efb41b687e571901bd5a",
       "signed_at": "2026-07-24T11:19:00-05:00"
     }

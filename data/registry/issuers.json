@@ -52,6 +52,18 @@
       "authorised_classifications": [
         "consumer_shopping"
       ]
+    },
+    {
+      "issuer_id": "ISS-005",
+      "issuer_name": "Northern Payments Credential Authority",
+      "trust_level": "recognized",
+      "status": "active",
+      "accredited_since": "2025-08-19",
+      "notes": "Bank-consortium issuer serving retail credit institutions that operate their own white-label agents; recognized via mutual-trust agreement, not NBG-operated.",
+      "authorised_classifications": [
+        "consumer_shopping",
+        "inventory_replenishment"
+      ]
     }
   ],
   "registry_notes": "Only issuers listed here are trusted for KYA purposes. An issuer_id referenced by a credential but absent from this file (e.g. 'ISS-099') has no standing whatsoever — this is distinct from an explicit revocation and should be treated as at least as severe a finding."

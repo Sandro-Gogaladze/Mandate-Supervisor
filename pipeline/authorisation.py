@@ -10,7 +10,7 @@ from schemas.authorisation import AuthorisationRecommendation
 POLICY_PATH = Path(__file__).resolve().parents[1] / "registry/authorisation.json"
 
 
-def recommend(dossier, facts, assessments, *, correlations=(), policy=None, invalid_assessment_ids=(), portfolio_findings=()):
+def recommend(dossier, facts, assessments, *, correlations=(), policy=None, invalid_assessment_ids=()):
     policy = policy or json.loads(POLICY_PATH.read_text())
     active = current(assessments)
     active = [a.model_copy(update={'verdict': 'inconclusive'}) if a.assessment_id in invalid_assessment_ids
@@ -110,7 +110,7 @@ def recommend(dossier, facts, assessments, *, correlations=(), policy=None, inva
     concerns = [a for a in active if a.verdict == 'concern']
     disposition = ('refuse' if gates else 'incomplete-submission' if adequacy
                    else 'refuse' if weight >= policy['refusal_weight_per_run']
-                   else 'monitor' if weight >= policy['monitor_weight_per_run'] or concerns or portfolio_findings else 'authorise')
+                   else 'monitor' if weight >= policy['monitor_weight_per_run'] or concerns else 'authorise')
     result = AuthorisationRecommendation(
         dossier_id=dossier.dossier.dossier_id, disposition=disposition, policy_version=policy['version'],
         evidence_digest=payload_hash({'dossier': dossier.dossier.model_dump(),
@@ -118,8 +118,8 @@ def recommend(dossier, facts, assessments, *, correlations=(), policy=None, inva
                                       'transactions': [t.model_dump() for t in dossier.transaction_history],
                                       'facts': [f.model_dump() for f in fs],
                                       'assessments': [a.model_dump() for a in active],
-                                      'rulebooks': {k: b.model_dump() for k, b in books.items()},
-                                      'portfolio': list(portfolio_findings)}, exclude_keys=()),
+                                      'rulebooks': {k: b.model_dump() for k, b in books.items()}},
+                                     exclude_keys=()),
         policy_status=policy['status'], policy_digest=payload_hash(policy, exclude_keys=()),
         hard_gates=gates, adequacy=adequacy, factors=factors, runs=run_results,
         rules_exercised=len(exercised), active_rules=len(rules), rule_coverage=round(coverage, 4),
@@ -133,9 +133,9 @@ def recommend(dossier, facts, assessments, *, correlations=(), policy=None, inva
 def record_recommendation(store, state):
     from ledger.projection import project_case
     record = project_case(store.events_for(state['case_id']))
-    invalid, portfolio = review_flags(store.events_for(state['case_id']))
+    invalid = review_flags(store.events_for(state['case_id']))
     result = recommend(state['dossier'], record.facts, record.assessments, correlations=record.correlations,
-                       invalid_assessment_ids=invalid, portfolio_findings=portfolio)
+                       invalid_assessment_ids=invalid)
     store.append(case_id=state['case_id'], run_id=state['run_id'], event_type='authorisation_computed',
                  payload=result.model_dump(), actor='system:authorisation')
     for run in result.runs:
@@ -145,13 +145,15 @@ def record_recommendation(store, state):
 
 
 def review_flags(events):
-    """Grounding flags and the latest portfolio sweep are decision inputs."""
+    """Assessments the critic could not ground. They are downgraded to
+    inconclusive before anything is recommended.
+
+    Portfolio findings used to arrive here from a separate sweep run. They no
+    longer do: Systemic reviews every case on its first pass, and its
+    portfolio-scoped `concern`s are already counted with every other concern.
+    One engine, one shape on the ledger."""
     invalid = set()
-    sweep_id = next((e.run_id for e in reversed(events) if e.event_type == 'portfolio_sweep_completed'), None)
-    portfolio = []
     for event in events:
         if event.event_type == 'critic_checked' and not event.payload.get('passed'):
             invalid.update(event.payload.get('sources', []))
-        if event.event_type == 'portfolio_finding_recorded' and event.run_id == sweep_id:
-            portfolio.append(event.payload)
-    return invalid, portfolio
+    return invalid

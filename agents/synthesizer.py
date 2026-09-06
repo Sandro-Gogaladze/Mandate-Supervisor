@@ -113,6 +113,16 @@ async def synthesize(
         except json.JSONDecodeError:
             logger.warning("Skipping malformed correlations payload for %s", case_id)
             raw_entries = []
+    if isinstance(raw_entries, dict):
+        # Same streamed-assembly failure the observation parser handles: the
+        # array arrives wrapped in an object. Unwrap the sole list inside
+        # rather than discarding work the model actually did.
+        inner = [v for v in raw_entries.values() if isinstance(v, list)]
+        if len(inner) == 1:
+            logger.warning("Unwrapped correlations from an object for %s", case_id)
+            raw_entries = inner[0]
+        elif {"finding_ids", "relationship"} <= set(raw_entries):
+            raw_entries = [raw_entries]  # a single correlation sent unwrapped
     if not isinstance(raw_entries, list):
         logger.warning("Skipping non-list correlations payload for %s: %r", case_id, type(raw_entries).__name__)
         raw_entries = []

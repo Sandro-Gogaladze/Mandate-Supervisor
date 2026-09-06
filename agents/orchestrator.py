@@ -267,3 +267,134 @@ async def route(
         )
     return OrchestratorDecision(reasoning=str(result.get("reasoning") or ""), intent=intent, raw=dict(result),
                                 message_to_officer=message, dispatches=clean if intent == "dispatch" else [])
+
+
+# ---------------------------------------------------------------------------
+# The closing brief — the orchestrator's own voice at the end of the turn
+# ---------------------------------------------------------------------------
+
+CLOSING_PROMPT_ID = "ORCHESTRATOR-CLOSING"
+CLOSING_SYSTEM_PROMPT = assemble(CLOSING_PROMPT_ID).effective
+
+_CLOSING_TOOL = with_reasoning({
+    "name": "record_closing_brief",
+    "description": "Tell the case officer what the review came back with, in at most three sentences.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "message_to_officer": {
+                "type": "string",
+                "description": "At most three sentences. Counts exactly as given; risks in plain language; "
+                               "point the officer at the findings list for the detail.",
+            },
+            "main_risks": {
+                "type": "array", "items": {"type": "string"},
+                "description": "At most three rule_id values, from the findings or hard gates you were shown, "
+                               "for the risks your message names. Ids only — never invented.",
+            },
+        },
+        "required": ["message_to_officer", "main_risks"],
+    },
+}, hint="What came back, what dominates it, and what the officer should look at first.")
+
+
+class ClosingBrief(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reasoning: str = ""
+    message: str
+    main_risks: list[str] = Field(default_factory=list)
+    # The counts are code's, not the model's: recorded beside the prose so a
+    # reader can check the sentence against the arithmetic it describes.
+    breach_count: int = 0
+    disposition: str = ""
+
+
+def closing_summary(recommendation, findings, score=None, correlations=()) -> dict:
+    """The structured close-out the orchestrator speaks from. Every number
+    here is already computed — by the pure authorisation policy and the pure
+    scorer — so the brief describes arithmetic rather than doing any."""
+    rec = recommendation.model_dump() if hasattr(recommendation, "model_dump") else dict(recommendation)
+    runs = rec.get("runs") or []
+    # Several breaching assessments of one gated rule are one risk to state,
+    # not three: gates are per-assessment on the record, deduplicated here.
+    gates: dict[str, dict] = {}
+    for gate in rec.get("hard_gates") or []:
+        entry = gates.setdefault(gate["rule_id"], {"rule_id": gate["rule_id"], "reason": gate["reason"], "run_refs": []})
+        entry["run_refs"] = sorted({*entry["run_refs"], *(gate.get("run_refs") or [])})
+    return {
+        "disposition": rec.get("disposition"),
+        "policy_version": rec.get("policy_version"),
+        "counts": {
+            "adverse_verdicts": len(rec.get("factors") or []),
+            "runs_with_a_breach": sum(r.get("verdict") == "breach" for r in runs),
+            "runs_filed": len(runs),
+            "clean_runs": rec.get("clean_runs"),
+            "unresolved_assessments": rec.get("unresolved_assessments"),
+            "rules_exercised": rec.get("rules_exercised"),
+            "active_rules": rec.get("active_rules"),
+        },
+        "hard_gates": list(gates.values()),
+        "blocked_on_evidence": rec.get("adequacy") or [],
+        "risk_score": ({"total": score.total, "tier": score.tier_label}
+                       if score is not None and hasattr(score, "total") else None),
+        "findings": [
+            {"finding_id": f.finding_id, "agent": f.agent, "type": f.type,
+             "rule_id": f.rule_id, "summary": f.summary, "run_refs": list(getattr(f, "run_refs", []) or [])}
+            for f in findings
+        ],
+        "correlations": [c.model_dump() if hasattr(c, "model_dump") else dict(c) for c in correlations],
+    }
+
+
+async def close_out(
+    recommendation,
+    findings,
+    *,
+    score=None,
+    correlations=(),
+    model=None,
+    thinking_effort: str = THINKING_EFFORT,
+    system_prompt: str | None = None,
+) -> ClosingBrief:
+    """Needs a live ANTHROPIC_API_KEY unless `model` is supplied.
+
+    Presentational only. It reads the finished record and says what is in
+    it; nothing downstream reads what it says.
+    """
+    payload = closing_summary(recommendation, findings, score=score, correlations=correlations)
+    model = model or get_model()
+    bound = model.bind(
+        output_config={"effort": thinking_effort},
+        tools=[_CLOSING_TOOL],
+        tool_choice={"type": "auto"},
+    )
+    response = await bound.ainvoke([
+        system_message(system_prompt or CLOSING_SYSTEM_PROMPT),
+        briefing_message(payload, cache=False),
+    ])
+    log_cache_usage(response, "orchestrator_closing")
+    result = get_tool_call(response, "record_closing_brief")
+
+    # The same "cannot invent" rule the synthesizer is held to: a rule id it
+    # names must belong to a real finding or a real gate on this case.
+    real = {f.rule_id for f in findings if f.rule_id} | {g["rule_id"] for g in payload["hard_gates"]}
+    named = [r for r in (result.get("main_risks") or []) if isinstance(r, str)]
+    invented = [r for r in named if r not in real]
+    if invented:
+        logger.warning("Dropping closing-brief risk(s) naming no finding on the record: %s", invented)
+    counts = payload["counts"]
+    message = str(result.get("message_to_officer") or "").strip()
+    if not message:
+        # A brief that says nothing would be worse than the arithmetic.
+        logger.warning("Closing brief came back empty; falling back to the computed counts")
+        message = (f"{counts['adverse_verdicts']} adverse verdicts across "
+                   f"{counts['runs_with_a_breach']} of {counts['runs_filed']} executions; "
+                   f"the policy reached {payload['disposition']}. Open the findings list for the detail.")
+    return ClosingBrief(
+        reasoning=str(result.get("reasoning") or ""),
+        message=message,
+        main_risks=[r for r in named if r in real][:3],
+        breach_count=counts["adverse_verdicts"],
+        disposition=str(payload["disposition"] or ""),
+    )

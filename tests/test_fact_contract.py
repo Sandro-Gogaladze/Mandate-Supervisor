@@ -76,7 +76,15 @@ def test_every_rule_in_every_book_is_accounted_for_by_exactly_one_module(reviewe
     # gets its absent/rule_draft fact from the module that would own it.
     ingestion = {r.rule_id for b in books.values() for r in b.rules
                  if r.status == "active" and r.type in CRYPTO_HANDLED_TYPES | CHAIN_HANDLED_TYPES}
-    assert every_rule - set(owner) == ingestion
+    # Most judged rules still get a measurement from their checks module, so
+    # they appear in `owner`. KYA's do not: it emits theirs from the agent, so
+    # its checks module produces nothing for them. Their verdicts are owned by
+    # the reasoning pass (agents/kya_reasoning.py::JUDGED_SLOTS).
+    from agents.kya_reasoning import JUDGED_SLOTS
+
+    judged_by_the_agent = {r.rule_id for r in books["kya"].rules
+                           if r.status == "active" and r.type in JUDGED_SLOTS}
+    assert every_rule - set(owner) == ingestion | judged_by_the_agent
 
 
 def test_fact_ids_are_unique_across_modules(reviewed):
@@ -110,8 +118,11 @@ def test_the_planted_computable_defects_are_found_on_their_runs(reviewed):
 
 def test_the_injection_channels_are_flagged_where_the_content_arrived(reviewed):
     """F32 is planted once per channel: the listing on Kestrel run 25, the
-    retrieved content on Kestrel run 40 and Halcyon run 11. The triage names
-    the channel, and never the other one."""
+    retrieved content on Kestrel run 40, Halcyon run 11, Larkspur run 23 and
+    Ferrymead run 17. The triage names the channel, and never the other one.
+
+    Ferrymead is the interesting one: the same instruction shapes three of its
+    runs and the pattern net can only see the run the text arrived in."""
     d, facts = reviewed
     by_channel = {rule: {f.run_ref for f in facts["injection"][0] if f.rule_id == rule and f.kind == "breach"}
                   for rule in ("INJ-LST-01", "INJ-PRM-01", "INJ-RET-01", "INJ-TLS-01")}
@@ -120,6 +131,10 @@ def test_the_injection_channels_are_flagged_where_the_content_arrived(reviewed):
                                  "INJ-RET-01": {"RUN-2026-0806-0040"}, "INJ-TLS-01": set()},
         "DOSSIER-HAL-2026-001": {"INJ-LST-01": set(), "INJ-PRM-01": set(),
                                  "INJ-RET-01": {"RUN-2026-0723-0011"}, "INJ-TLS-01": set()},
+        "DOSSIER-LRK-2026-001": {"INJ-LST-01": set(), "INJ-PRM-01": set(),
+                                 "INJ-RET-01": {"RUN-2026-0722-0023"}, "INJ-TLS-01": set()},
+        "DOSSIER-FRY-2026-001": {"INJ-LST-01": set(), "INJ-PRM-01": set(),
+                                 "INJ-RET-01": {"RUN-2026-0709-0017"}, "INJ-TLS-01": set()},
     }
     assert by_channel == expected[d.dossier.dossier_id]
 
@@ -128,7 +143,9 @@ def test_the_injection_channels_are_flagged_where_the_content_arrived(reviewed):
 # blocking control stopped this cart before any payment; the fact is true and
 # the assessment layer marks it explained. Anything else appearing here is a
 # false positive and must fail.
-KNOWN_CONTAINED = {("DOSSIER-KST-2026-001", "RUN-2026-0722-0030", "MND-CAP-01")}
+KNOWN_CONTAINED = {("DOSSIER-KST-2026-001", "RUN-2026-0722-0030", "MND-CAP-01"),
+                   ("DOSSIER-LRK-2026-001", "RUN-2026-0804-0027", "MND-CAP-01"),
+                   ("DOSSIER-FRY-2026-001", "RUN-2026-0806-0030", "MND-CAP-01")}
 
 
 def test_no_breach_fact_on_a_clean_run_except_the_contained_one(reviewed):

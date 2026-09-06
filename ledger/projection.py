@@ -52,7 +52,7 @@ CaseStatus = Literal[
     "closed_no_action",
 ]
 
-RunKind = Literal["triage", "investigation", "drafting", "portfolio"]
+RunKind = Literal["triage", "investigation", "drafting"]
 
 
 class RunRecord(BaseModel):

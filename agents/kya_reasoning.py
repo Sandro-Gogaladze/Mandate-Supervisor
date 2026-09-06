@@ -16,6 +16,7 @@ Assessment: nothing here traces to a rule, and nothing here scores.
 """
 from __future__ import annotations
 
+import logging
 
 
 from schemas import Assessment, Fact, KYAEvidenceBundle, KYAResultSummary, Observation, Ruleset
@@ -37,6 +38,8 @@ __all__ = [
     "activity_summary",
 ]
 
+
+logger = logging.getLogger(__name__)
 
 REASONING_PROMPT_ID = "SPECIALIST-KYA"
 REASONING_SYSTEM_PROMPT = assemble(REASONING_PROMPT_ID).effective
@@ -87,6 +90,38 @@ def activity_summary(dossier: LoadedDossier) -> dict:
         "runs": len(dossier.runs),
         "purpose_categories": sorted({r.intent_mandate.authorization_scope.purpose_category
                                       for r in dossier.runs}),
+    }
+
+
+def capability_profile(dossier: LoadedDossier) -> dict:
+    """What `CAP-04` compares: the capabilities the credential grants against
+    what the agent's registered purpose and its own observed activity show it
+    actually needed. Least privilege is a judgement — how much unused breadth
+    is too much depends on the agent — so the floor computes the comparison
+    and records it, and the verdict is the model's.
+
+    Everything here comes from evidence the submission already carries plus
+    the regulator's own register. No new firm data."""
+    from data.registries import load_agents
+
+    record = load_agents().get(dossier.dossier.agent_id) or {}
+    granted = list(dossier.dossier.kya_credential.capabilities)
+    card = dossier.dossier.agent_card
+    declared_on_card = sorted(card.declared_capabilities) if card else []
+    # A capability the card never declares is breadth nothing has claimed a
+    # use for — the cheapest signal of over-grant there is.
+    return {
+        "granted_capabilities": granted,
+        "granted_count": len(granted),
+        "declared_on_agent_card": declared_on_card,
+        "granted_but_not_on_card": sorted(set(granted) - set(declared_on_card)) if card else [],
+        "registered_classification": record.get("classification"),
+        "registered_risk_class": record.get("risk_class"),
+        "declared_purpose": record.get("declared_purpose"),
+        "purpose_categories_exercised": sorted({r.intent_mandate.authorization_scope.purpose_category
+                                                for r in dossier.runs}),
+        "channels_observed": sorted({t.channel for t in dossier.transaction_history}),
+        "runs": len(dossier.runs),
     }
 
 
@@ -194,6 +229,19 @@ def structured_view(
     return bundle.model_dump(mode="json")
 
 
+_LEAST_PRIVILEGE = {
+    "type": "object",
+    "description": "KYA-CAP-04: are the credential's capabilities materially broader than its purpose requires?",
+    "properties": {
+        "proportionate": {"type": "boolean",
+                          "description": "false when the grant is materially broader than the purpose needs."},
+        "explanation": {"type": "string", "description": "One sentence."},
+        "cited_evidence": {"type": "string",
+                           "description": "Quote the specific capabilities and the purpose text this rests on."},
+    },
+    "required": ["proportionate", "explanation", "cited_evidence"],
+}
+
 _CLASSIFICATION_FIT = {
     "type": "object",
     "description": "KYA-REG-03: does the observed activity (activity_summary) fit the registered classification and declared purpose?",
@@ -204,6 +252,24 @@ _CLASSIFICATION_FIT = {
     },
     "required": ["consistent", "explanation", "cited_evidence"],
 }
+
+
+# Every judged rule KYA owns, and the tool slot that carries its verdict. The
+# single source of truth for "which rules does this agent decide with a model"
+# — read by reason_about_case() to build the tool, and by the ownership test
+# that asserts no active rule is owned by nobody.
+JUDGED_SLOTS: dict[str, tuple[str, dict]] = {
+    "agent_activity_matches_classification": ("classification_fit", _CLASSIFICATION_FIT),
+    "capabilities_least_privilege": ("least_privilege", _LEAST_PRIVILEGE),
+}
+
+# The boolean each slot answers with: a judged rule is clear when its own
+# question comes back affirmative.
+_OK_KEY = {"classification_fit": "consistent", "least_privilege": "proportionate"}
+
+
+def _measurement_ids(facts: list[Fact], rule) -> list[str]:
+    return [f.fact_id for f in facts if f.kind == "measurement" and f.rule_id == rule.rule_id]
 
 
 def _judged_rule(ruleset, rule_type: str):
@@ -235,14 +301,19 @@ async def reason_about_case(
     only when it is active in `ruleset` — a draft rule is not judged — and
     its verdict cites the floor's `activity_summary` measurement.
     """
-    reg_03 = _judged_rule(ruleset, "agent_activity_matches_classification")
+    # One slot per ACTIVE judged rule this agent owns. Built from the ruleset
+    # rather than hardcoded, so promoting a judged rule in the sandbox starts
+    # producing its verdict with no code change — and retiring one stops it.
+    judged = [(rule, key, schema) for rule_type, (key, schema) in JUDGED_SLOTS.items()
+               if (rule := _judged_rule(ruleset, rule_type)) is not None]
     tool = _OBSERVATION_TOOL
-    if reg_03 is not None:
+    if judged:
         tool = {**_OBSERVATION_TOOL, "input_schema": {
             **_OBSERVATION_TOOL["input_schema"],
             "properties": {**_OBSERVATION_TOOL["input_schema"]["properties"],
-                           "classification_fit": _CLASSIFICATION_FIT},
-            "required": [*_OBSERVATION_TOOL["input_schema"]["required"], "classification_fit"],
+                           **{key: schema for _, key, schema in judged}},
+            "required": [*_OBSERVATION_TOOL["input_schema"]["required"],
+                         *[key for _, key, _ in judged]],
         }}
     model = model or get_model()
     bound = model.bind(
@@ -271,62 +342,37 @@ async def reason_about_case(
     observations = parse_observations(tool_input.get("observations", []), case_id=case_id,
                                       agent="kya", cited_key="cited_field")
     assessments: list[Assessment] = []
-    fit = tool_input.get("classification_fit") if reg_03 is not None else None
-    if isinstance(fit, dict) and "consistent" in fit:
-        measurement = next((f for f in floor_facts if f.kind == "measurement"
-                            and f.rule_id == reg_03.rule_id), None)
+    # `ok_key` is the boolean the model answers with: a judged rule is clear
+    # when its own question is answered in the affirmative.
+    ok_key = _OK_KEY
+    for rule, key, _schema in judged:
+        verdict = tool_input.get(key)
+        if not isinstance(verdict, dict) or ok_key[key] not in verdict:
+            # A judged rule whose verdict did not arrive is undecided, on the
+            # record — never silently clear.
+            logger.warning("KYA: no usable %s verdict on %s: %r", key, case_id, verdict)
+            assessments.append(Assessment(
+                assessment_id=f"{case_id}:kya:{rule.rule_id}:r{round}", case_id=case_id, round=round,
+                scope="case", agent="kya", rule_id=rule.rule_id,
+                fact_ids=_measurement_ids(floor_facts, rule),
+                verdict="inconclusive", confidence="possible",
+                severity_floor=rule.severity_weight, severity_assessed=rule.severity_weight,
+                narrative=f"The model returned no usable {key} verdict; the evidence stands unjudged."))
+            continue
         assessments.append(Assessment(
-            assessment_id=f"{case_id}:kya:{reg_03.rule_id}:r{round}", case_id=case_id, round=round,
-            scope="case", agent="kya", rule_id=reg_03.rule_id,
-            fact_ids=[measurement.fact_id] if measurement else [],
-            verdict="clear" if fit["consistent"] else "breach", confidence="probable",
-            severity_floor=reg_03.severity_weight, severity_assessed=reg_03.severity_weight,
-            narrative=fit.get("explanation", ""), subject=fit.get("cited_evidence") or None))
+            assessment_id=f"{case_id}:kya:{rule.rule_id}:r{round}", case_id=case_id, round=round,
+            scope="case", agent="kya", rule_id=rule.rule_id,
+            fact_ids=_measurement_ids(floor_facts, rule),
+            verdict="clear" if verdict[ok_key[key]] else "breach", confidence="probable",
+            severity_floor=rule.severity_weight, severity_assessed=rule.severity_weight,
+            narrative=verdict.get("explanation", ""), subject=verdict.get("cited_evidence") or None))
     return observations, assessments
 
 
-NARRATION_PROMPT_ID = "KYA-NARRATION"
-NARRATION_SYSTEM_PROMPT = assemble(NARRATION_PROMPT_ID).effective
-
-_NARRATION_TOOL = with_reasoning({
-    "name": "write_narration",
-    "description": "Write the plain-English KYA review summary.",
-    "input_schema": {
-        "type": "object",
-        "properties": {"narration": {"type": "string"}},
-        "required": ["narration"],
-    },
-})
+# Narration moved to agents/narration.py — one voice, one prompt, all eight
+# specialists. Re-exported so the KYA tests and any caller keep working.
+from .narration import narrate as _narrate  # noqa: E402
 
 
-async def narrate_findings(
-    case_id: str,
-    assessments: list[Assessment],
-    *,
-    model=None,
-    thinking_effort: str = THINKING_EFFORT,
-    system_prompt: str | None = None,
-) -> str:
-    """Grounded narration of `assessments` only — never raw case data. Needs
-    a live ANTHROPIC_API_KEY unless `model` is supplied."""
-    model = model or get_model()
-    bound = model.bind(
-        output_config={"effort": thinking_effort},
-        tools=[_NARRATION_TOOL],
-        tool_choice={"type": "auto"},
-    )
-
-    payload = {
-        "case_id": case_id,
-        "findings": [{"rule_id": a.rule_id, "verdict": a.verdict, "summary": a.narrative,
-                      "runs": a.run_refs} for a in assessments],
-    }
-
-    response = await bound.ainvoke([
-        system_message(system_prompt or NARRATION_SYSTEM_PROMPT),
-        briefing_message(payload),
-    ])
-    log_cache_usage(response, "kya-narration")
-
-    tool_input = get_tool_call(response, "write_narration")
-    return tool_input["narration"]
+async def narrate_findings(case_id: str, assessments, *, model=None, system_prompt=None, **_):
+    return await _narrate("kya", case_id, assessments, model=model, system_prompt=system_prompt)

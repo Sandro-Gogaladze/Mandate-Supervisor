@@ -33,7 +33,7 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 const EVENT_META: Record<string, { icon: LucideIcon; label: string; tone?: string }> = {
-  dossier_submitted: { icon: Inbox, label: 'Dossier submitted' },
+  dossier_submitted: { icon: Inbox, label: 'Submission received' },
   fact_recorded: { icon: ListChecks, label: 'Fact recorded' },
   assessment_recorded: { icon: ShieldCheck, label: 'Assessment recorded' },
   authorisation_computed: { icon: Gauge, label: 'Authorisation recommendation' },
@@ -42,9 +42,6 @@ const EVENT_META: Record<string, { icon: LucideIcon; label: string; tone?: strin
   run_evaluated: { icon: ListChecks, label: 'Execution evaluated' },
   specialist_failed: { icon: ShieldAlert, label: 'Judgment unavailable' },
   case_watched: { icon: BadgeCheck, label: 'Standing watch' },
-  portfolio_sweep_started: { icon: Waypoints, label: 'Portfolio sweep started' },
-  portfolio_sweep_completed: { icon: BadgeCheck, label: 'Portfolio sweep completed' },
-  portfolio_finding_recorded: { icon: GitMerge, label: 'Portfolio finding' },
   case_submitted: { icon: Inbox, label: 'Case submitted' },
   case_opened: { icon: UserRound, label: 'Case opened' },
   run_started: { icon: Waypoints, label: 'Run started' },
@@ -66,6 +63,7 @@ const EVENT_META: Record<string, { icon: LucideIcon; label: string; tone?: strin
   case_closed: { icon: BadgeCheck, label: 'Case closed' },
   failure_occurrence_recorded: { icon: ShieldAlert, label: 'Catalogue failure recorded', tone: 'text-red-700 dark:text-red-400' },
   orchestrator_replied: { icon: MessageCircleQuestion, label: 'Orchestrator replied' },
+  orchestrator_summarised: { icon: MessageCircleQuestion, label: 'Orchestrator closed the turn' },
   review_history_cleared: { icon: RotateCcw, label: 'Review history cleared', tone: 'text-muted-foreground' },
 }
 
@@ -147,7 +145,7 @@ function payloadGlance(event: LedgerEvent): string | null {
     case 'authorisation_decided': return `${p.disposition} · ${p.reviewer} · ${p.rationale}`
     case 'control_posture_recorded': return `${p.control_id ?? p.rule_id ?? ''} · ${p.posture ?? ''}`
     case 'specialist_failed': return String(p.message)
-    case 'portfolio_finding_recorded': return String(p.summary)
+    case 'orchestrator_summarised': return String(p.message)
     case 'run_started':
       return `${p.kind} run ${p.run_id}`
     case 'dispatch_recorded':

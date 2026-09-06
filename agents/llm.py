@@ -179,13 +179,63 @@ class ModelDidNotCallTool(RuntimeError):
     """The model responded without calling the required tool."""
 
 
+def repair_tool_args(args: dict) -> dict:
+    """Undo a streamed-JSON assembly failure before anything reads the args.
+
+    Tool arguments arrive as deltas and are assembled by a partial-JSON
+    parser. It can mis-split them, and the failure has a signature: the
+    WHOLE argument object collapses into the first key's value as a string,
+    so `{"drift": {...}, "reasoning": ..., "other_observations": [...]}`
+    comes back as `{"drift": '{...}, "reasoning": ..., "other_observations": [...]}'`.
+
+    That string is not valid JSON on its own, but putting the key back in
+    front of it makes it exactly the original object again. Observed live on
+    Drift (the verdict was rejected as malformed and the specialist recorded
+    inconclusive) and on KYA (observations discarded). Both lost real work
+    the model had already done, including — in one case — a correct catch
+    that another case's figures had leaked into the evidence.
+    """
+    for key, value in list(args.items()):
+        if not isinstance(value, str) or not value.lstrip().startswith(("{", "[")):
+            continue
+        for candidate in (value, f'{{"{key}": {value}'):
+            try:
+                parsed = json.loads(candidate)
+            except (json.JSONDecodeError, ValueError):
+                continue
+            if candidate is not value and isinstance(parsed, dict):
+                # The reconstruction recovered sibling keys too; prefer it
+                # whole rather than patching one field back in.
+                logger.warning("Recovered %d tool argument(s) from a collapsed "
+                               "%r value", len(parsed), key)
+                return {**args, **parsed}
+            logger.warning("Parsed tool argument %r from JSON text", key)
+            args[key] = parsed
+            break
+    return args
+
+
 def get_tool_call(response, tool_name: str) -> dict:
     """The args dict from the first tool call matching `tool_name` in
     `response.tool_calls` (LangChain's normalized list — no more manually
-    scanning raw content blocks for tool_use vs. thinking vs. text)."""
+    scanning raw content blocks for tool_use vs. thinking vs. text).
+
+    `invalid_tool_calls` is checked too: LangChain puts a call whose
+    arguments failed to parse there, with the raw string. Ignoring it meant a
+    recoverable response was reported as "the model did not call the tool"."""
     for call in response.tool_calls:
         if call["name"] == tool_name:
-            return call["args"]
+            return repair_tool_args(dict(call["args"]))
+    for call in getattr(response, "invalid_tool_calls", None) or []:
+        if call.get("name") != tool_name or not call.get("args"):
+            continue
+        try:
+            parsed = json.loads(call["args"])
+        except (json.JSONDecodeError, TypeError, ValueError):
+            continue
+        if isinstance(parsed, dict):
+            logger.warning("Recovered %r from an unparsed tool call", tool_name)
+            return repair_tool_args(parsed)
     raise ModelDidNotCallTool(
         f"Model response did not include a call to {tool_name!r}. "
         f"tool_calls received: {response.tool_calls}."
@@ -275,6 +325,17 @@ def parse_observations(
             logger.warning("Discarding %s's observations for case %s: the field arrived as text "
                            "that is not JSON (%d chars)", agent, case_id, len(raw))
             return []
+    if isinstance(raw, dict):
+        # The same streamed-assembly failure repair_tool_args() undoes, one
+        # level down: the array arrives wrapped in an object. Unwrap the sole
+        # list inside rather than discarding work the model actually did.
+        inner = [v for v in raw.values() if isinstance(v, list)]
+        if len(inner) == 1:
+            logger.warning("Unwrapped %s's observations from an object for case %s",
+                           agent, case_id)
+            raw = inner[0]
+        elif {"note", cited_key} <= set(raw):
+            raw = [raw]  # a single observation sent unwrapped
     if not isinstance(raw, list):
         logger.warning("Discarding %s's observations for case %s: expected a list, got %s",
                        agent, case_id, type(raw).__name__)

@@ -108,6 +108,7 @@ async def analyze_drift(
     reviewer_directive: str | None = None,
     system_prompt: str | None = None,
     context: dict | None = None,
+    ruleset=None,
     round: int = 1,
 ) -> tuple[list[Assessment], list[Observation]]:
     """Needs a live ANTHROPIC_API_KEY unless `model` is supplied. Caller
@@ -185,5 +186,26 @@ async def analyze_drift(
                                             f"{events[onset].at[:10]})." if onset else ""),
         subject=onset or (verdict.get("cited_evidence") or None),
     )
+    out = [assessment]
+    # DRIFT-UNX-01 — behaviour shifted and the operator's own change log
+    # accounts for none of it. Judged, because its first half IS the verdict
+    # above: with no model there is no drift to be unexplained. Recorded only
+    # when the rule is in force, so retiring it in the sandbox stops it.
+    unexplained = next((r for r in (ruleset.rules if ruleset else [])
+                        if r.type == "drift_has_no_logged_cause" and r.status == "active"), None)
+    if unexplained is not None and anomalous:
+        out.append(Assessment(
+            assessment_id=f"{case_id}:drift:{unexplained.rule_id}:r{round}", case_id=case_id,
+            round=round, scope="run" if run_refs else "case", run_refs=run_refs,
+            agent="drift", rule_id=unexplained.rule_id,
+            failure_ids=["F89"] if onset is None else [],
+            fact_ids=[measurement.fact_id] if measurement else [],
+            verdict="breach" if onset is None else "clear", confidence="probable",
+            severity_floor=unexplained.severity_weight, severity_assessed=unexplained.severity_weight,
+            narrative=("The change log offers no event that accounts for this shift."
+                       if onset is None else
+                       f"The shift is accounted for by {onset} ({events[onset].kind}, "
+                       f"{events[onset].at[:10]})."),
+            subject=onset))
     observations = parse_observations(result.get("other_observations", []), case_id=case_id, agent="drift")
-    return [assessment], observations
+    return out, observations

@@ -35,7 +35,10 @@ def test_the_floor_is_one_measurement_per_judged_rule_plus_shared_statistics(kst
     by_id = {f.fact_id.split(":", 1)[1]: f for f in facts}
     assert set(by_id) == {"LOG-STR-01#candidate_clusters", "LOG-CON-01#counterparty_breakdown",
                           "LOG-CON-01#new_payee_share", "LOG-VEL-01#velocity",
-                          "log#amount_stats", "log#hourly_distribution"}
+                          "LOG-RND-01#roundness", "LOG-LIM-01#cap_utilisation",
+                          "log#amount_stats", "log#hourly_distribution",
+                          # draft, and saying so rather than vanishing
+                          "LOG-HRS-01"}
     assert by_id["LOG-STR-01#candidate_clusters"].values["reporting_flag_threshold"] == 1000.0  # consumer_shopping dial
 
 
@@ -52,5 +55,56 @@ def test_the_new_payee_measurement_is_f55s_signal(kst, hal) -> None:
 
 
 def test_no_history_is_an_honest_absence(kst) -> None:
+    """One absence per judged rule, plus the drafted rule saying it is drafted.
+    A rule that cannot be evaluated says why; none of them goes quiet."""
     facts = LogAgent().run(thin(kst, 0), load_log_ruleset())
-    assert len(facts) == 3 and {f.absent_reason for f in facts} == {"insufficient_history"}
+    reasons = {f.rule_id: f.absent_reason for f in facts}
+    assert reasons == {"LOG-STR-01": "insufficient_history", "LOG-CON-01": "insufficient_history",
+                       "LOG-VEL-01": "insufficient_history", "LOG-RND-01": "insufficient_history",
+                       "LOG-LIM-01": "insufficient_history", "LOG-HRS-01": "rule_draft"}
+
+
+def test_the_new_measurements_show_the_baseline_before_any_verdict(kst, hal) -> None:
+    """Both rules added here would have been wrong as threshold checks, and
+    the corpus is what says so — so the measurement must carry the shape of
+    normal behaviour, not a flag.
+
+    Cap utilisation: the median draw is 0.92 with most payments in the top
+    decile, because a cap is a budget and spending it is the point. Roundness:
+    3 in 102 and 2 in 52 are multiples of 100, which is what retail looks like.
+    A model shown these can see what normal is; a dial could not.
+    """
+    for dossier, median in ((kst, 0.915), (hal, 0.915)):
+        facts = {f.fact_id.split("#")[-1]: f for f in LogAgent().run(dossier, load_log_ruleset())}
+        cap = facts["cap_utilisation"].values
+        assert cap["evaluable"] and cap["median_utilisation"] == median
+        assert cap["distribution"]["90_to_95pct"] >= cap["distribution"]["at_or_over_99pct"]
+        rnd = facts["roundness"].values
+        assert rnd["rate_multiples_of_100"] < 0.05
+
+
+async def test_a_retired_judged_rule_stops_being_asked(kst) -> None:
+    """The tool grows and shrinks with the book: retiring a rule in the sandbox
+    must stop both the measurement and the question, with no code change."""
+    import json
+
+    from agents.llm import message_text
+    from tests.fakes import FakeChatModel
+
+    book = load_log_ruleset()
+    without = book.model_copy(update={"rules": [
+        r.model_copy(update={"status": "retired"}) if r.rule_id == "LOG-LIM-01" else r
+        for r in book.rules]})
+    facts = LogAgent().run(kst, without)
+    assert not any(f.rule_id == "LOG-LIM-01" for f in facts)
+
+    verdict = {"anomalous": False, "explanation": "n", "cited_evidence": "e", "transaction_ids": []}
+    fake = FakeChatModel({"record_log_analysis": {k: verdict for k in
+                                                 ("structuring", "concentration", "velocity", "roundness")}
+                          | {"other_observations": []},
+                          "write_narration": {"narration": "n"}})
+    review = await LogAgent().review(kst, without, model=fake)
+    tools = json.dumps(fake.bind_kwargs_for("record_log_analysis")["tools"])
+    assert "roundness" in tools and "ceiling_probing" not in tools
+    assert not any(a.rule_id == "LOG-LIM-01" for a in review.assessments)
+    assert message_text(fake.last_messages_for("record_log_analysis")[1])

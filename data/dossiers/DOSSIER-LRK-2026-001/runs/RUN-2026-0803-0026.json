@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0803-0026",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-08-03T09:21:00-05:00",
+  "ended_at": "2026-08-03T09:23:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "ergonomic task chair, under $400",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0803-0026",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-08-03T09:21:00-05:00",
+    "expires_at": "2026-08-03T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L025",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L025",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "ergonomic task chair, under $400",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 400.0,
+      "max_cumulative_amount": 400.0,
+      "currency": "USD",
+      "valid_from": "2026-08-03T00:00:00-05:00",
+      "valid_until": "2026-08-03T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5943"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-08-03T09:21:00-05:00",
+      "device_id": "DEV-L-L025"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L025",
+      "value": "fjJPEohoSjjevoDE8kAsAdXxf6NRoIn0vVFp/sGpXVkeGi0u/dEzbi2IqzdSmJjqtvKL+FxmAwkUfYgcF7PVAQ==",
+      "signed_payload_hash": "sha256:f62215722bf09a0d52e61d9a5ecff5472de1485adcb523413f08f9671f487887",
+      "signed_at": "2026-08-03T09:21:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:d24ae8ff742aa9d649d43ddb55b9bf4b90e6b388b26bbf9e50444c5460495c41",
+      "release_ref": "larkspur-shop-v3.2.0"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.deskwell.com",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "ergonomic task chair, under $400",
+          "max_price": 400.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:4737b737b18741b48da39f7b5084a77ec1aa5301534bb3efd61ae45e13c296dd"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.deskwell.com",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "DSK-CHR-ERG-01"
+          ]
+        },
+        "result_digest": "sha256:cbbca1647a93d0c811bca97c105d453c04f350e1d4e9922d1c0701a5615b952e",
+        "result_excerpt": {
+          "source": "mcp://shop.deskwell.com",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "DESKWELL OFFICE SUPPLY — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.deskwell.com",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "DSK-CHR-ERG-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:cfd7d9cd939c335697594ed72a65d2b8d98316bb910fedb44b43323becaa1ab9"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.deskwell.com",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-DSK-3390",
+          "lines": 1,
+          "total": 385.0
+        },
+        "result_digest": "sha256:f62f36239468ce15e0496f92c71289a8645797875d3654e4bb83e6ce47108aea"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 385.0,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L025"
+        },
+        "result_digest": "sha256:73c214ab76709337a053661ec27a13147b0b58beda95e4f1b54a591f304e6843"
+      }
+    ],
+    "selection_context": {
+      "query": "ergonomic task chair, under $400",
+      "selected_sku": "DSK-CHR-ERG-01",
+      "alternatives_considered": [
+        {
+          "sku": "AUR-SPK-BKS-02",
+          "merchant_id": "MER-AUR-4471",
+          "price": 398.0,
+          "description": "Bookshelf speaker pair"
+        },
+        {
+          "sku": "STL-RUG-WOL-57",
+          "merchant_id": "MER-STL-1193",
+          "price": 420.0,
+          "description": "Hand-woven wool rug 5x7"
+        },
+        {
+          "sku": "VLT-MON-27U-01",
+          "merchant_id": "MER-VLT-7789",
+          "price": 429.0,
+          "description": "27in 4K monitor, USB-C"
+        },
+        {
+          "sku": "SLV-EAR-GLD-02",
+          "merchant_id": "MER-SLV-8830",
+          "price": 340.0,
+          "description": "14k gold hoop earrings"
+        },
+        {
+          "sku": "TRK-TNT-2PR-01",
+          "merchant_id": "MER-TRK-4408",
+          "price": 329.0,
+          "description": "Ridgeline 2-person tent"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-08-03T09:21:47-05:00",
+    "principal_id": "PRIN-L-L025",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 385.0,
+      "currency": "USD",
+      "merchant": "Deskwell Office Supply",
+      "line_items": [
+        {
+          "sku": "DSK-CHR-ERG-01",
+          "qty": 1,
+          "unit_price": 385.0
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 400.0
+      }
+    },
+    "rendered_hash": "sha256:6aa6f4b503ffe7e981cc358610ad6e9fc0f74f7a003c4820fbcbd504ee35ba94",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0803-0026",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0803-0026",
+      "prev_mandate_hash": "sha256:f62215722bf09a0d52e61d9a5ecff5472de1485adcb523413f08f9671f487887"
+    },
+    "created_at": "2026-08-03T09:21:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-DSK-3390",
+      "name": "Deskwell Office Supply",
+      "mcc": "5943",
+      "country": "US",
+      "region": "NA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "DSK-CHR-ERG-01",
+        "description": "Ergonomic task chair",
+        "qty": 1,
+        "unit_price": 385.0
+      }
+    ],
+    "cart_total": 385.0,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Deskwell Office Supply's catalogue and selected the closest in-stock option at $385.00, within the stated $400.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "o8q/qux7p9ROsK4eRSOUpG1H5YAlsDRDXmxCbvWUy0cfQJnfxy2w90A6C/WBJP4cAhghCieFQpRlpKR1wFJoCQ==",
+      "signed_payload_hash": "sha256:1719c85be762301f71e2005804ebd09c4e0dd1a9f56004154d2576467b59e7ec",
+      "signed_at": "2026-08-03T09:21:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0803-0026",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0803-0026",
+      "prev_mandate_hash": "sha256:1719c85be762301f71e2005804ebd09c4e0dd1a9f56004154d2576467b59e7ec"
+    },
+    "authorized_at": "2026-08-03T09:23:19-05:00",
+    "amount": 385.0,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1025",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2025",
+      "scheme": "card_settlement",
+      "country": "US",
+      "beneficiary_name_on_account": "Deskwell Office Supply"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "ufvENwqzjWheYSG/rx6NaPJNdsYo0CFiiUtarkhEzna2cDpaiuC6ezbp6n13k6k7HCSy2T1dQ6zEvYIpLuSGDQ==",
+      "signed_payload_hash": "sha256:04e4ee78a8613bb2ff6d12861f58c1903fcdf2691996c76eda463e659fa16a3f",
+      "signed_at": "2026-08-03T09:23:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-08-03T09:22:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-08-03T09:22:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-08-03T09:22:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-08-03T09:22:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-08-03T09:22:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-08-03T09:22:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-08-03T09:22:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-08-03T09:22:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-08-03T09:22:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

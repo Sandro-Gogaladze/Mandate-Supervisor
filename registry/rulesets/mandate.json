@@ -3,7 +3,7 @@
   "domain": "mandate",
   "version": "2026.6",
   "as_of": "2026-09-04",
-  "description": "Mandate ruleset. Chain-integrity (ingestion) plus the scope/cap deterministic core, checked per run against that run's own Intent Mandate — AP2 human-present, where the shopper's request is the mandate for one task. v2026.5 (migration Phase 4): the line-item injection heuristic MND-SEM-02 moved to injection.json as INJ-LST-01 — one of Injection's four channels, and one agent per question. 14 rules, 13 active, 1 draft (mandate signatures MND-SIG-01). v2026.4: MND-CAP-04 promoted, MND-USE-01 added. v2026.3: MND-SEM-01 declared judged; MND-CAP-05 read per mandate.",
+  "description": "Mandate ruleset. Chain-integrity (ingestion) plus the scope/cap deterministic core, checked per run against that run's own Intent Mandate \u2014 AP2 human-present, where the shopper's request is the mandate for one task. v2026.5 (migration Phase 4): the line-item injection heuristic MND-SEM-02 moved to injection.json as INJ-LST-01 \u2014 one of Injection's four channels, and one agent per question. 14 rules, 13 active, 1 draft (mandate signatures MND-SIG-01). v2026.4: MND-CAP-04 promoted, MND-USE-01 added. v2026.3: MND-SEM-01 declared judged; MND-CAP-05 read per mandate.",
   "rules": [
     {
       "rule_id": "MND-CHN-01",
@@ -27,7 +27,7 @@
       "effective_from": "2026-08-01",
       "severity_weight": 0.9,
       "finding_type": "payment_chain_hash_mismatch",
-      "description": "The Payment mandate's chain_link.prev_mandate_hash must equal the Cart mandate's actual signed_payload_hash. This is the check case-003-broken-chain.json is built to fail: the Payment authorizes an amount against a Cart whose content — and therefore whose real hash — no longer matches what the Payment declares it was built against. Distinct finding_type from MND-CHN-01: both are chain breaks, but one says the Cart does not descend from the Intent it names and the other says the Payment does not descend from its Cart. Sharing a finding_type made two different breaks indistinguishable downstream.",
+      "description": "The Payment mandate's chain_link.prev_mandate_hash must equal the Cart mandate's actual signed_payload_hash. This is the check case-003-broken-chain.json is built to fail: the Payment authorizes an amount against a Cart whose content \u2014 and therefore whose real hash \u2014 no longer matches what the Payment declares it was built against. Distinct finding_type from MND-CHN-01: both are chain breaks, but one says the Cart does not descend from the Intent it names and the other says the Payment does not descend from its Cart. Sharing a finding_type made two different breaks indistinguishable downstream.",
       "params": {},
       "failures": [
         "F40"
@@ -41,8 +41,8 @@
       "effective_from": "2026-09-03",
       "severity_weight": 0.9,
       "finding_type": "mandate_signature_invalid",
-      "description": "Every signed mandate in a run — Intent, Cart and Payment — verifies against a key the keystore knows, and its signed_payload_hash recomputes from its canonical content. MND-CHN-01/02 check that the chain links point at the right objects; this checks that the objects were signed by whom they claim.",
-      "notes": "Found during migration Phase 2: intake verifies every signature into EvidencePack.integrity, but no rule in this book turned a failure into a fact — a forged cart would have been invisible except in the integrity record. Draft rather than active because adding an active rule to a rulebook is a promotion, which is human-gated. The checker exists in ingestion/verify.py and runs the moment this is promoted.",
+      "description": "Every signed mandate in a run \u2014 Intent, Cart and Payment \u2014 verifies against a key the keystore knows, and its signed_payload_hash recomputes from its canonical content. MND-CHN-01/02 check that the chain links point at the right objects; this checks that the objects were signed by whom they claim.",
+      "notes": "Found during migration Phase 2: intake verifies every signature into EvidencePack.integrity, but no rule in this book turned a failure into a fact \u2014 a forged cart would have been invisible except in the integrity record. Draft rather than active because adding an active rule to a rulebook is a promotion, which is human-gated. The checker exists in ingestion/verify.py and runs the moment this is promoted.",
       "params": {}
     },
     {
@@ -81,7 +81,7 @@
       "effective_from": "2026-08-01",
       "severity_weight": 0.7,
       "finding_type": "counterparty_not_approved",
-      "description": "When authorization_scope.allowed_counterparties is non-empty, Cart.merchant.merchant_id must be in it. An empty list means category-governed eligibility, not deny-all (see counterparty_policy, case-006) — this rule does not apply when the list is empty.",
+      "description": "When authorization_scope.allowed_counterparties is non-empty, Cart.merchant.merchant_id must be in it. An empty list means category-governed eligibility, not deny-all (see counterparty_policy) \u2014 this rule does not apply when the list is empty.",
       "params": {},
       "failures": [
         "F45"
@@ -96,7 +96,7 @@
       "severity_weight": 0.5,
       "finding_type": "merchant_outside_geographic_scope",
       "description": "Cart.merchant.region must fall within the Intent's authorization_scope.geographic_scope: 'GLOBAL' admits any region, otherwise the scope names the region (or a comma-separated list) the merchant must be in. A cart whose merchant carries no region cannot be evaluated.",
-      "notes": "F48. Draft through v2026.3 because Merchant carried only `country`; the region field landed with the dossier corpus and every cart in it carries one, so the blocker is gone. Promoted in migration Phase 3. Every scope in the current corpus is GLOBAL, so the rule is satisfied everywhere and exercised nowhere — asserted-correct, not demonstrated-correct.",
+      "notes": "F48. Draft through v2026.3 because Merchant carried only `country`; the region field landed with the dossier corpus and every cart in it carries one, so the blocker is gone. Promoted in migration Phase 3. Every scope in the current corpus is GLOBAL, so the rule is satisfied everywhere and exercised nowhere \u2014 asserted-correct, not demonstrated-correct.",
       "params": {},
       "failures": [
         "F48"
@@ -111,7 +111,7 @@
       "severity_weight": 0.9,
       "finding_type": "single_use_mandate_reused",
       "description": "An Intent Mandate whose usage.mode is single_use may be drawn on once. A run is in breach when its mandate's uses_consumed exceeds max_uses, or when an earlier run in the dossier already executed under the same intent_mandate_id. A recurring mandate is in breach only when uses_consumed exceeds its max_uses.",
-      "notes": "F50 — the same authorisation used twice. In AP2's human-present flow a task mandate is single-use by nature: the shopper approved THIS basket. HANDOFF §6.2 lists this as a hard-gate refusal; the severity weight is provisional until Phase 6's rule-gated scoring. DOSSIER-KST-2026-001 RUN-2026-0818-0048 is the planted case: IM-KST-0817-0047 drawn on a second time, uses_consumed 2 against max_uses 1.",
+      "notes": "F50 \u2014 the same authorisation used twice. In AP2's human-present flow a task mandate is single-use by nature: the shopper approved THIS basket. HANDOFF \u00a76.2 lists this as a hard-gate refusal; the severity weight is provisional until Phase 6's rule-gated scoring. DOSSIER-KST-2026-001 RUN-2026-0818-0048 is the planted case: IM-KST-0817-0047 drawn on a second time, uses_consumed 2 against max_uses 1.",
       "params": {},
       "failures": [
         "F50"
@@ -125,8 +125,8 @@
       "effective_from": "2026-09-03",
       "severity_weight": 0.75,
       "finding_type": "cumulative_cap_exceeded",
-      "description": "Settled spend drawn on one Intent Mandate — every run executed under the same intent_mandate_id, up to and including this one — must not exceed that mandate's authorization_scope.max_cumulative_amount.",
-      "notes": "v1 summed the calendar month of Payment.authorized_at, a reading inherited from a standing corporate mandate with a monthly budget. It is structurally wrong for single-task consumer mandates: there the cumulative cap equals the per-transaction cap, and summing a month across unrelated tasks breached every run in the corpus. The cap is a property of the mandate, so what it bounds is the total drawn on that mandate. A second run drawing on a single-use mandate (F50) is exactly when the sum exceeds it — DOSSIER-KST-2026-001 RUN-2026-0818-0048. The rule type keeps its v1 name so checker registrations and existing findings still resolve.",
+      "description": "Settled spend drawn on one Intent Mandate \u2014 every run executed under the same intent_mandate_id, up to and including this one \u2014 must not exceed that mandate's authorization_scope.max_cumulative_amount.",
+      "notes": "v1 summed the calendar month of Payment.authorized_at, a reading inherited from a standing corporate mandate with a monthly budget. It is structurally wrong for single-task consumer mandates: there the cumulative cap equals the per-transaction cap, and summing a month across unrelated tasks breached every run in the corpus. The cap is a property of the mandate, so what it bounds is the total drawn on that mandate. A second run drawing on a single-use mandate (F50) is exactly when the sum exceeds it \u2014 DOSSIER-KST-2026-001 RUN-2026-0818-0048. The rule type keeps its v1 name so checker registrations and existing findings still resolve.",
       "params": {},
       "failures": [
         "F43"
@@ -140,8 +140,10 @@
       "effective_from": "2026-08-01",
       "severity_weight": 0.9,
       "finding_type": "payment_amount_inconsistent_with_cart",
-      "description": "Payment.amount must equal Cart.cart_total, within a small float-rounding tolerance. This is case-003's other expected finding (alongside chain_hash_mismatch) — deliberately left uncaught by ingestion (Phase 3), which only checked hash-chain integrity, not value consistency.",
-      "failures": ["F41"],
+      "description": "Payment.amount must equal Cart.cart_total, within a small float-rounding tolerance. This is case-003's other expected finding (alongside chain_hash_mismatch) \u2014 deliberately left uncaught by ingestion (Phase 3), which only checked hash-chain integrity, not value consistency.",
+      "failures": [
+        "F41"
+      ],
       "params": {
         "tolerance": 0.01
       }
@@ -154,8 +156,10 @@
       "effective_from": "2026-08-01",
       "severity_weight": 0.4,
       "finding_type": "cart_currency_mismatch",
-      "description": "Cart.currency must equal the Intent's authorization_scope.currency. No case in the current corpus (all GEL) exercises this — real check, no bite yet.",
-      "failures": ["F46"],
+      "description": "Cart.currency must equal the Intent's authorization_scope.currency. No case in the current corpus (all GEL) exercises this \u2014 real check, no bite yet.",
+      "failures": [
+        "F46"
+      ],
       "params": {}
     },
     {
@@ -166,8 +170,10 @@
       "effective_from": "2026-08-01",
       "severity_weight": 0.4,
       "finding_type": "payment_currency_mismatch",
-      "description": "Payment.currency must equal Cart.currency. No case in the current corpus exercises this — real check, no bite yet.",
-      "failures": ["F46"],
+      "description": "Payment.currency must equal Cart.currency. No case in the current corpus exercises this \u2014 real check, no bite yet.",
+      "failures": [
+        "F46"
+      ],
       "params": {}
     },
     {
@@ -178,7 +184,7 @@
       "effective_from": "2026-08-01",
       "severity_weight": 0.6,
       "finding_type": "mandate_validity_window_exceeded",
-      "description": "Payment.authorized_at must fall within the Intent's authorization_scope.valid_from/valid_until window. No case in the current corpus exercises this — real check, no bite yet.",
+      "description": "Payment.authorized_at must fall within the Intent's authorization_scope.valid_from/valid_until window. No case in the current corpus exercises this \u2014 real check, no bite yet.",
       "params": {},
       "failures": [
         "F47"
@@ -193,8 +199,8 @@
       "evaluation": "judged",
       "severity_weight": 0.85,
       "finding_type": "cart_reasoning_semantic_mismatch",
-      "description": "Cart.agent_attestation.reasoning (the agent's own justification for this cart, \"prompt playback\") should be semantically consistent with Intent.natural_language_intent — this is what catches case-007-prompt-injection.json, where a merchant's product description carried embedded instructions and the agent's own stated reasoning shows it partly complied.",
-      "notes": "Evaluated by agents/mandate_reasoning.py — an LLM call, the one deterministic-rules-can't-do check in the Mandate agent. Only reachable via MandateAgent.review(), not run() (agents/mandate.py) — the deterministic pipeline path never needs a live key. Cart.line_items.description is the one field in the whole schema allowed to carry adversarial content (docs/phases/01-synthetic-data.md §2.3), so the prompt delimits it explicitly and instructs the model to treat it as data, never an instruction.",
+      "description": "Cart.agent_attestation.reasoning (the agent's own justification for this cart, \"prompt playback\") should be semantically consistent with Intent.natural_language_intent \u2014 this is what catches case-007-prompt-injection.json, where a merchant's product description carried embedded instructions and the agent's own stated reasoning shows it partly complied.",
+      "notes": "Evaluated by agents/mandate_reasoning.py \u2014 an LLM call, the one deterministic-rules-can't-do check in the Mandate agent. Only reachable via MandateAgent.review(), not run() (agents/mandate.py) \u2014 the deterministic pipeline path never needs a live key. Cart.line_items.description is the one field in the whole schema allowed to carry adversarial content (docs/phases/01-synthetic-data.md \u00a72.3), so the prompt delimits it explicitly and instructs the model to treat it as data, never an instruction.",
       "params": {},
       "failures": [
         "F49"

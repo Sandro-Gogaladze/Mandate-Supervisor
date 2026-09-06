@@ -3,7 +3,7 @@
 What can go wrong in an agentic payment and why it isn't okay; which specialist catches each one; and
 what a firm must submit for detection to be possible at all.
 
-**Coverage key:** ● detected · ◐ partial · ○ none. Ids `F1`–`F73` are stable — Parts 2 and 3
+**Coverage key:** ● detected · ◐ partial · ○ none. Ids `F1`–`F87` are stable — Parts 2 and 3
 reference them.
 
 ## Revision note
@@ -554,7 +554,6 @@ the house pattern: a deterministic floor needing no model, plus at most one cont
 | D2 | **Drift** *exists* | What changed, and when did it start? | F65 |
 | E1 | **Control Assurance** *new* | Did the firm's own controls work? | F70–F73 |
 | E2 | **Systemic** *new* | What's true across the portfolio? | F67–F69, F57 at scale |
-| E3 | **Red Team** *new* | Does it hold up when pushed? | on-demand |
 
 **A1 Mandate** — receives the full scope, merchant record **and the floor's own findings** (currently
 withheld). LLM does per-line-item intent fidelity, not one boolean per cart. New: single-use
@@ -590,9 +589,6 @@ is what makes the product a supervision tool rather than a detection tool.
 
 **E2 Systemic** — a scheduled portfolio sweep, new run kind, `PortfolioFinding` scoped to a set of
 cases. **Needs nothing new from firms.**
-
-**E3 Red Team** — deterministic case generation from the mandate's own parameters, run against the
-firm's declared controls. Generates test cases only; never touches a live rail.
 
 Support agents unchanged: Investigator · Critic · Synthesizer · Drafting · Orchestrator.
 
@@ -768,7 +764,7 @@ them loses the ability to say *which* party a finding attaches to.
 | Merchant fields + registry | F48, F51–F54 | 5 |
 | *Parked — no feasible source today* | F28, F34 | 2 |
 
-**42 of 73 failures become addressable** on data that either already exists in a bank or is a
+**42 of 87 failures become addressable** on data that either already exists in a bank or is a
 days-long build — and 12 of those need nothing new from firms at all. Two are parked honestly. The
 rest are already covered.
 
@@ -805,7 +801,12 @@ a state it lacks (`case_watched`) and the Systemic agent its consumer.
 | 4 | **B1 Provenance** — rendered-vs-signed first | 1.5 | Closes the largest gap; answers the AP2 paper's central criticism |
 | 5 | **E2 Systemic** | 1 | Needs no new data; the only capability a vendor cannot build |
 
-*Cut line.* Then C1 Counterparty · B2 Injection split · E3 Red Team · remaining P2 checks.
+*Cut line.* Then C1 Counterparty · B2 Injection split · remaining P2 checks.
+
+> **E3 Red Team was built and then removed (2026-09-05).** Mutating a run's JSON and checking
+> whether the firm declared a matching control label is a completeness check on a declaration
+> form, not adversarial testing — it never reaches the operator's runtime. Real red teaming needs
+> a target to push against; this had none.
 
 **If only two land: E1 and E2.** One proves supervision of the *firm* rather than the transaction; the
 other proves a capability that structurally belongs to a central bank.

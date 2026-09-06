@@ -51,7 +51,6 @@ def canonical_context(
     peer_facts: list[Fact] | None = None,
     peer_assessments: list | None = None,
     portfolio: list[LoadedDossier] | None = None,
-    rulebooks: dict[str, Ruleset] | None = None,
 ) -> dict:
     """The evidence floor for one skill — the same structured view the
     reasoning module would build for itself, produced here so the dispatcher
@@ -74,7 +73,7 @@ def canonical_context(
             specialist=specialist, skill_id=skill_id, dossier=dossier,
             facts=floor_facts or [], ruleset=ruleset,
         )
-    if skill_id in ("control_assurance.review", "systemic.review", "red_team.review"):
+    if skill_id in ("control_assurance.review", "systemic.review"):
         # No model reads this briefing; it is recorded for the audit trail.
         # A summary by rule and kind, plus the breaches in full, says what
         # the pass established without copying hundreds of facts into the
@@ -116,14 +115,6 @@ def canonical_context(
                 "counterparties": sorted({t.counterparty_id for t in item.transaction_history}),
                 "transactions": len(item.transaction_history),
             } for item in (portfolio or [dossier])]
-        else:
-            domain_evidence.update({
-                "declared_controls": dossier.dossier.controls.model_dump(mode="json"),
-                "probe_results": [f.model_dump(mode="json") for f in (floor_facts or [])
-                                  if f.kind == "measurement"],
-                "rulebooks": {name: {"ruleset_id": book.ruleset_id, "version": book.version}
-                              for name, book in (rulebooks or {}).items()},
-            })
         specialist = skill_id.split(".", 1)[0]
         return with_evidence_contract(
             domain_evidence, specialist=specialist, skill_id=skill_id,

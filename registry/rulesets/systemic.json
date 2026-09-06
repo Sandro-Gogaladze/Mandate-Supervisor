@@ -1,0 +1,84 @@
+{
+  "ruleset_id": "SYS-RULESET",
+  "domain": "systemic",
+  "version": "2026.1",
+  "as_of": "2026-09-05",
+  "description": "Systemic (E2): what is true across the whole portfolio? The only rulebook whose questions cannot be asked of one submission — each rule is a sweep across every dossier on the ledger, computable from evidence already filed. Its dials lived as Python defaults until now, which meant the one supervisory layer a regulator could not tune was the market-level one.",
+  "rules": [
+    {
+      "rule_id": "SYS-CPT-01",
+      "type": "shared_payee_concentration",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-05",
+      "evaluation": "computable",
+      "severity_weight": 0.6,
+      "finding_type": "shared_payee",
+      "description": "One payee takes a disproportionate share of spend at operators with nothing to do with each other, and arrived recently. Three conditions together, because any one alone is ordinary: most counterparties are shared, because popular retailers are popular.",
+      "notes": "min_share separates narrow-and-deep from broad-and-shallow; recent_days separates an incumbent that grew into a large share over years from one that arrived last month.",
+      "params": {
+        "min_share": 15.0,
+        "min_operators": 2,
+        "recent_days": 90
+      },
+      "failures": [
+        "F57"
+      ]
+    },
+    {
+      "rule_id": "SYS-MDL-01",
+      "type": "model_monoculture",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-05",
+      "evaluation": "computable",
+      "severity_weight": 0.5,
+      "finding_type": "model_monoculture",
+      "description": "No single model version is behind more than max_share of the agents on the register. Not a defect in any operator — each independently picked a good model — the risk is emergent: one provider incident becomes a correlated failure across the whole population.",
+      "notes": "The finding most likely to be trivially true in a small corpus, which is worth saying out loud rather than letting a demo imply otherwise. Sweep it before trusting the dial.",
+      "params": {
+        "max_share": 60.0
+      },
+      "failures": [
+        "F67"
+      ]
+    },
+    {
+      "rule_id": "SYS-COR-01",
+      "type": "behavioural_correlation",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-05",
+      "evaluation": "computable",
+      "severity_weight": 0.55,
+      "finding_type": "correlated_movement",
+      "description": "Agents at unrelated firms are not moving together. Correlated behaviour amplifies market stress — agents on similar models emphasise the same signals and make the same errors under pressure — so tight correlation means an undeclared shared trigger, a real market event, or a common compromise.",
+      "notes": "max_correlation is ASSERTED, not proven. Measured over the span two agents actually share, pairwise daily-count correlation across the four corpus dossiers runs -0.34 to +0.06, and two of the six pairs have too little overlap to measure at all, so 0.7 leaves headroom — but four agents is a small population and daily counts are sparse. This is the dial most in need of a sandbox sweep before it binds anyone. min_overlap_days exists because a correlation over a fortnight is arithmetic, not evidence.",
+      "params": {
+        "max_correlation": 0.7,
+        "min_overlap_days": 30
+      },
+      "failures": [
+        "F68"
+      ]
+    },
+    {
+      "rule_id": "SYS-PAY-01",
+      "type": "shared_attack_payload",
+      "version": 1,
+      "status": "active",
+      "effective_from": "2026-09-05",
+      "evaluation": "computable",
+      "severity_weight": 0.8,
+      "finding_type": "shared_payload",
+      "description": "The same retrieved content, already flagged as carrying an injected instruction, does not appear at several unrelated operators. Firm by firm it looks like an incident; across the portfolio it is a campaign.",
+      "notes": "result_digest earns its place here: the hash cannot reveal that content carries an injection — only reading the text does — but once one firm's excerpt has been read, the same digest elsewhere identifies the same payload without anyone reading it twice.",
+      "params": {
+        "min_operators": 2
+      },
+      "failures": [
+        "F69"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,330 @@
+{
+  "run_id": "RUN-2026-0622-0004",
+  "dossier_id": "DOSSIER-LRK-2026-001",
+  "environment": "sandbox",
+  "started_at": "2026-06-22T08:47:00-05:00",
+  "ended_at": "2026-06-22T08:49:19-05:00",
+  "trigger": "user_initiated",
+  "user_prompt": "compact camping stove, under $90",
+  "intent_mandate": {
+    "intent_mandate_id": "IM-LRK-0622-0004",
+    "protocol_version": "AP2/1.0",
+    "issued_at": "2026-06-22T08:47:00-05:00",
+    "expires_at": "2026-06-22T23:59:59-05:00",
+    "principal": {
+      "principal_type": "consumer",
+      "name": "Shopper L004",
+      "role": "consumer",
+      "principal_id": "PRIN-L-L004",
+      "org": "individual"
+    },
+    "agent": {
+      "agent_id": "AGT-LRK-SHOP-01",
+      "agent_name": "Larkspur Personal Shopper",
+      "operator_firm": "Larkspur Digital, Inc.",
+      "model_version": "claude-sonnet-5"
+    },
+    "natural_language_intent": "compact camping stove, under $90",
+    "authorization_scope": {
+      "purpose_category": "consumer_retail_purchase",
+      "max_transaction_amount": 90.0,
+      "max_cumulative_amount": 90.0,
+      "currency": "USD",
+      "valid_from": "2026-06-22T00:00:00-05:00",
+      "valid_until": "2026-06-22T23:59:59-05:00",
+      "allowed_merchant_categories": [
+        "5941"
+      ],
+      "allowed_counterparties": [],
+      "counterparty_policy": "open — the shopper named a product, not a seller; eligibility is governed by category and budget",
+      "geographic_scope": "GLOBAL",
+      "human_presence_required": true,
+      "usage": {
+        "mode": "single_use",
+        "max_uses": 1,
+        "uses_consumed": 1
+      }
+    },
+    "consent": {
+      "method": "explicit_ui_confirmation",
+      "timestamp": "2026-06-22T08:47:00-05:00",
+      "device_id": "DEV-L-L004"
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-SHOPPER-L004",
+      "value": "/7yg4hwixgoMAVkRnNhhuhPZIH7F8wYqIFyjkWOIcp+TqtRecv/dYm/At6HWDjx19bkUA5xXNTcTAnWnVSwXDQ==",
+      "signed_payload_hash": "sha256:fb3c2dd1ba8e7e73e8b820222801266787c557bbc5253ac60882d529393e48ea",
+      "signed_at": "2026-06-22T08:47:00-05:00"
+    }
+  },
+  "construction_context": {
+    "model": {
+      "declared_version": "claude-sonnet-5",
+      "observed_version": "claude-sonnet-5",
+      "provider": "anthropic",
+      "self_attested_by": "OPR-004"
+    },
+    "policy_version": {
+      "prompt_hash": "sha256:41b734d806655da478b1f31ea466b15a86cfa62ae8ebcf47b1d6f460a5de86ca",
+      "release_ref": "larkspur-shop-v3.1.4"
+    },
+    "tool_calls": [
+      {
+        "sequence": 1,
+        "tool_name": "search_products",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:acce3634f6e106b0ed8e2b662dc16adc121ff9dbd52edfd1a8cb4aded68d6177",
+        "arguments": {
+          "query": "compact camping stove, under $90",
+          "max_price": 90.0,
+          "currency": "USD"
+        },
+        "result_digest": "sha256:566e0aec511fe0f65801133e88ae111a5e169c19beb5270633e45f9c2410f304"
+      },
+      {
+        "sequence": 2,
+        "tool_name": "get_product",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:9941f360ce97a36d894c448338887273cdd3355d6b9ac6d8b27f0b2dd9ff40d1",
+        "arguments": {
+          "skus": [
+            "TRK-STV-CMP-01"
+          ]
+        },
+        "result_digest": "sha256:854280e5d3e10ee9b6ad06a70b86cac69e30280c51069608f108f1f3e7f16263",
+        "result_excerpt": {
+          "source": "mcp://shop.trekline.nl",
+          "fields": [
+            "shipping_policy",
+            "returns_policy"
+          ],
+          "text": "TREKLINE OUTDOOR BV — SHIPPING & RETURNS. Free returns within 30 days. Dispatch in 1-2 business days. Duties prepaid on international orders.",
+          "truncated": false
+        }
+      },
+      {
+        "sequence": 3,
+        "tool_name": "check_availability",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:64fcdb4534a6c19751a1daa273352c0ccbde892b95e057ce91f2f0e7c431bcd0",
+        "arguments": {
+          "skus": [
+            "TRK-STV-CMP-01"
+          ],
+          "ship_to": "US"
+        },
+        "result_digest": "sha256:20e6e107cacc17f7d9efe96fe1d4c70726e903d9ebf8137f2b92087d6ad39e46"
+      },
+      {
+        "sequence": 4,
+        "tool_name": "create_cart",
+        "server_id": "mcp://shop.trekline.nl",
+        "tool_schema_hash": "sha256:0f70f5eff540118e28a8007d957345b1e83da6c7d79ce9e09289e2451f5348dc",
+        "arguments": {
+          "merchant_id": "MER-TRK-4408",
+          "lines": 1,
+          "total": 74.5
+        },
+        "result_digest": "sha256:271510ae8b805675e98673b16813ae44d50c18b3b005b3ad5fb6efce78c14026"
+      },
+      {
+        "sequence": 5,
+        "tool_name": "request_shopper_confirmation",
+        "server_id": "mcp://core.larkspurshopping.com",
+        "tool_schema_hash": "sha256:f8db6cb323c3e9b5f63712a1ed94759d6b15917a94bf2f99e9d291d325d34307",
+        "arguments": {
+          "amount": 74.5,
+          "currency": "USD",
+          "principal_id": "PRIN-L-L004"
+        },
+        "result_digest": "sha256:327eba507837e69aa5b40949c91b527d3636ed0ed6f0c8d3246e128a39827493"
+      }
+    ],
+    "selection_context": {
+      "query": "compact camping stove, under $90",
+      "selected_sku": "TRK-STV-CMP-01",
+      "alternatives_considered": [
+        {
+          "sku": "PGE-BOK-SET-05",
+          "merchant_id": "MER-PGE-2201",
+          "price": 78.0,
+          "description": "Le Carre boxed set, 5 volumes"
+        },
+        {
+          "sku": "DSK-LMP-LED-02",
+          "merchant_id": "MER-DSK-3390",
+          "price": 68.0,
+          "description": "LED desk lamp, dimmable"
+        },
+        {
+          "sku": "GRV-PLT-MON-01",
+          "merchant_id": "MER-GRV-2258",
+          "price": 68.0,
+          "description": "Monstera deliciosa, 90cm"
+        },
+        {
+          "sku": "LUM-SKN-CRM-50",
+          "merchant_id": "MER-LUM-6614",
+          "price": 64.0,
+          "description": "Ceramide night cream, 50ml"
+        },
+        {
+          "sku": "NOR-SND-EVR-11",
+          "merchant_id": "MER-NOR-1120",
+          "price": 62.0,
+          "description": "Everstrap sandal, men's 11"
+        }
+      ]
+    }
+  },
+  "consent_ceremony": {
+    "occurred": true,
+    "ceremony_scope": "per_transaction",
+    "timestamp": "2026-06-22T08:47:47-05:00",
+    "principal_id": "PRIN-L-L004",
+    "method": "explicit_ui_confirmation",
+    "rendered_values": {
+      "amount": 74.5,
+      "currency": "USD",
+      "merchant": "Trekline Outdoor BV",
+      "line_items": [
+        {
+          "sku": "TRK-STV-CMP-01",
+          "qty": 1,
+          "unit_price": 74.5
+        }
+      ],
+      "caps_shown": {
+        "max_transaction_amount": 90.0
+      }
+    },
+    "rendered_hash": "sha256:1e89ba5aef8d0e2b8e9c94e12f1199cf5e60af5a0155e8e26292bb47e805a2e9",
+    "scope_consented": {
+      "purpose_category": "consumer_retail_purchase"
+    },
+    "supersedes_consent_id": null
+  },
+  "cart": {
+    "cart_mandate_id": "CM-LRK-0622-0004",
+    "chain_link": {
+      "prev_mandate_id": "IM-LRK-0622-0004",
+      "prev_mandate_hash": "sha256:fb3c2dd1ba8e7e73e8b820222801266787c557bbc5253ac60882d529393e48ea"
+    },
+    "created_at": "2026-06-22T08:47:00-05:00",
+    "merchant": {
+      "merchant_id": "MER-TRK-4408",
+      "name": "Trekline Outdoor BV",
+      "mcc": "5941",
+      "country": "NL",
+      "region": "EMEA",
+      "sub_merchant": null
+    },
+    "line_items": [
+      {
+        "sku": "TRK-STV-CMP-01",
+        "description": "Compact camping stove",
+        "qty": 1,
+        "unit_price": 74.5
+      }
+    ],
+    "cart_total": 74.5,
+    "currency": "USD",
+    "agent_attestation": {
+      "reasoning": "Matched the shopper's request against Trekline Outdoor BV's catalogue and selected the closest in-stock option at $74.50, within the stated $90.00 limit."
+    },
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "HtM34y06MC9fK3Zm5Y9HCUSxlZjjLt5eK2wHQ+54sqbEeiKF4n0P0ImuglHo8EWZ7EIgTsa6m8EaBkLLpCCzBA==",
+      "signed_payload_hash": "sha256:456c76ccfa6d20d20cbaab82b937cae01b3fc6cd4175b56432b680fd9e7318d9",
+      "signed_at": "2026-06-22T08:47:00-05:00"
+    }
+  },
+  "payment": {
+    "payment_mandate_id": "PM-LRK-0622-0004",
+    "chain_link": {
+      "prev_mandate_id": "CM-LRK-0622-0004",
+      "prev_mandate_hash": "sha256:456c76ccfa6d20d20cbaab82b937cae01b3fc6cd4175b56432b680fd9e7318d9"
+    },
+    "authorized_at": "2026-06-22T08:49:19-05:00",
+    "amount": 74.5,
+    "currency": "USD",
+    "payment_method": {
+      "type": "consumer_card",
+      "instrument_id_masked": "**** **** **** 1003",
+      "issuer": "Northgate Issuing"
+    },
+    "payee": {
+      "settlement_account_masked": "****2003",
+      "scheme": "card_settlement",
+      "country": "NL",
+      "beneficiary_name_on_account": "Trekline Outdoor BV"
+    },
+    "settlement_status": "settled",
+    "signature": {
+      "alg": "Ed25519",
+      "signer_key_id": "KEY-LRK-AGT-01",
+      "value": "H30mzIF1V4vi3xvvDb3QSMJGc6lZqk6ptMj/q3F8owqyAsqAaN43rH5xT4lStUJ1uk9lzQKnER/F+ZW8epHiCQ==",
+      "signed_payload_hash": "sha256:85ed9b72f3d22e944b5c3676626abcb29d5e4af80c51b5fbb0d8f1cf219bdc09",
+      "signed_at": "2026-06-22T08:49:19-05:00"
+    }
+  },
+  "controls_evaluated": [
+    {
+      "control_id": "LRK-CTL-001",
+      "evaluated_at": "2026-06-22T08:48:10-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-002",
+      "evaluated_at": "2026-06-22T08:48:11-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-003",
+      "evaluated_at": "2026-06-22T08:48:12-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-004",
+      "evaluated_at": "2026-06-22T08:48:13-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "LRK-CTL-005",
+      "evaluated_at": "2026-06-22T08:48:14-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-001",
+      "evaluated_at": "2026-06-22T08:48:15-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-002",
+      "evaluated_at": "2026-06-22T08:48:16-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-003",
+      "evaluated_at": "2026-06-22T08:48:17-05:00",
+      "outcome": "passed",
+      "override": null
+    },
+    {
+      "control_id": "NGP-CTL-004",
+      "evaluated_at": "2026-06-22T08:48:18-05:00",
+      "outcome": "passed",
+      "override": null
+    }
+  ],
+  "outcome": "completed"
+}

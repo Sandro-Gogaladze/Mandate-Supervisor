@@ -222,7 +222,20 @@ class LedgerStore:
         return [_row_to_event(r) for r in rows]
 
     def all_case_ids(self) -> list[str]:
-        """In first-seen order, so the queue is stable across calls."""
+        """Dossier case ids, in first-seen order so the queue is stable.
+
+        Not every stream on this ledger is a case. Registry governance shares
+        it on purpose — a ruleset promotion is written under `registry:<domain>`
+        (sandbox/service.py) precisely so it is hash-chained and auditable like
+        everything else. Those ids are not dossiers, and projecting them as
+        cases put a phantom "unknown" firm in the queue and in every
+        cross-dossier sweep. A dossier id never contains ':'; a namespaced one
+        always does. `all_stream_ids()` still returns everything, and `verify()`
+        walks all_events(), so the chain itself is untouched by this filter."""
+        return [cid for cid in self.all_stream_ids() if ":" not in cid]
+
+    def all_stream_ids(self) -> list[str]:
+        """Every stream on the ledger, cases and non-case namespaces alike."""
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT case_id, MIN(seq) AS first_seq FROM events"
