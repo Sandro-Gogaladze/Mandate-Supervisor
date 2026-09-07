@@ -30,3 +30,46 @@ data/ledger-backup-*.jsonl
 
 # Offline image bundles produced by `make save`
 mandate-supervisor-*.tar.gz
+
+# ── Local tooling ────────────────────────────────────────────────────────────
+# Vendored agent skills and critique output. Development aids, not the product.
+.agents/
+.claude/skills/
+.impeccable/
+.pytest_cache/
+skills-lock.json
+
+# ── Working documents ────────────────────────────────────────────────────────
+# The repo ships six markdown files on purpose:
+#   README.md, CLAUDE.md, and docs/{supervision-model,architecture,guardrails,
+#   development}.md, plus the frozen docs/concept-note.md.
+# Everything below is build-time scaffolding — the running plan, per-phase
+# specs, superseded architecture drafts, explainers whose numbers have drifted,
+# and pitch drafts. Kept on disk, kept out of the repo, because a reader cannot
+# tell which of fifty documents is the one that is still true.
+PLAN.md
+DESIGN.md
+docs/HANDOFF.md
+docs/phases/
+docs/explainer/
+docs/pitch/
+docs/design-references/
+docs/agent-design-v3.md
+docs/agentic-payment-lifecycle-failures.md
+docs/architecture-v2.md
+docs/architecture-v3.md
+docs/coverage-model.md
+docs/data-and-agents.md
+docs/failure-occurrences-and-kya-evidence.md
+docs/how-agentic-payment-failures-are-detected.md
+docs/kya-and-the-sandbox.md
+docs/kya-ruleset.md
+docs/mandate-supervisor-plain-language-guide.md
+docs/mandate-supervisor-presentation-speech.md
+docs/migration-plan.md
+docs/synthetic-data-spec.md
+docs/payment-lifecycle-explainer.html
+
+# Claude Code project instructions and IDE config — local development aids.
+CLAUDE.md
+.claude/
