@@ -27,6 +27,26 @@
       rel="stylesheet"
     />
     <title>Mandate Supervisor</title>
+    <!-- crypto.randomUUID is exposed only in a secure context: HTTPS, or
+         localhost (which browsers treat as secure by definition). A console
+         served over plain HTTP from a public address is neither, so the case
+         room crashed on the first thread id it generated — a failure that
+         cannot reproduce in development, because development is always
+         localhost. crypto.getRandomValues has no such restriction, so this
+         builds the same RFC 4122 v4 value from real randomness rather than
+         Math.random. Defined before the app's module script so it covers
+         vendor code too, not only our own call site. -->
+    <script>
+      if (!('randomUUID' in crypto)) {
+        crypto.randomUUID = function randomUUID() {
+          const b = crypto.getRandomValues(new Uint8Array(16))
+          b[6] = (b[6] & 0x0f) | 0x40
+          b[8] = (b[8] & 0x3f) | 0x80
+          const h = Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('')
+          return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
