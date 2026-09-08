@@ -231,7 +231,7 @@ All three build for **linux/amd64 and linux/arm64**, so they run natively on
 Apple Silicon rather than crawling under emulation.
 
 ```bash
-git tag v0.1.0 && git push origin v0.1.0    # → CI builds and publishes
+git tag v1.1.0 && git push origin v1.1.0    # → CI builds and publishes
 ```
 
 <details>
@@ -243,7 +243,7 @@ git tag v0.1.0 && git push origin v0.1.0    # → CI builds and publishes
   tag publish nothing. Auth uses the workflow's own `GITHUB_TOKEN` — no secret to
   create.
 - `compose.yml` is served from `main`, so a fix to it reaches downloaders without
-  cutting a release. Pin `TAG=0.1.0` for a demo that will not move.
+  cutting a release. Pin `TAG=1.0.0` for a demo that will not move.
 - **State** lives in three Docker volumes — `state` (ledger + sandbox databases),
   `uploads`, `drafts`. They survive `docker compose down`, erased by `down -v`.
 - **Offline:** `make save` writes all three images to one tarball, `make load`
