@@ -25,8 +25,11 @@ data/ledger.db
 registry/drafts/
 data/sandbox.db
 
-# One-off ledger backup taken before a reseed. Large, local, and not the record.
-data/ledger-backup-*.jsonl
+# One-off ledger snapshots taken before a reseed or rebuild — backups,
+# previous copies, JSONL exports. Large (247 MB and counting), local, and not
+# the record: the ledger of consequence is data/ledger.db, rebuilt by seeding.
+data/ledger-*.db
+data/ledger-*.jsonl
 
 # Offline image bundles produced by `make save`
 mandate-supervisor-*.tar.gz

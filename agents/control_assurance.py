@@ -142,4 +142,5 @@ class ControlAssuranceAgent:
         return await narrated(
             SpecialistReview(facts=facts, assessments=assessments,
                              postures=classify_postures(facts, assessments)),
-            self.name, dossier, model=model, prompts=prompts, narrate=narrate)
+            self.name, dossier, model=model, prompts=prompts,
+            narrate=narrate and model is not None)

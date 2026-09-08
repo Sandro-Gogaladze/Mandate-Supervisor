@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from data.dossier_loader import load as load_dossier  # noqa: E402
+from data.dossier_loader import list_dossiers, load as load_dossier  # noqa: E402
 
 REG = ROOT / "data" / "registry"
 # Failures no deterministic check can reproduce, by construction. F49 is
@@ -233,6 +233,15 @@ def recompute(ld) -> set[tuple[str, str]]:
         if set(child.granted_capabilities) - set(parent.granted_capabilities):
             found.add((None, "F11"))
 
+    # F2 / KYA-ISS-02 — an issuer that had already been shut down. A revoked
+    # accreditation does not make the signature stop verifying; that is exactly
+    # why it has to be checked separately from the cryptography.
+    issuers = {i["issuer_id"]: i for i in load("issuers")["issuers"]}
+    for cred in [d.kya_credential, *d.credential_history]:
+        issuer = issuers.get(cred.issuer.issuer_id)
+        if issuer and issuer.get("revoked_at") and cred.issued_at[:10] >= issuer["revoked_at"]:
+            found.add((None, "F2"))
+
     # F6 / KYA-ACC-01 — the chain must reach a natural person. An authority
     # chain ending in a company ends nowhere a regulator can call.
     if not any(e.holder_type == "human" for e in d.kya_credential.delegation_chain):
@@ -248,7 +257,21 @@ def recompute(ld) -> set[tuple[str, str]]:
 
 
 def main() -> int:
-    directory = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "data/dossiers/DOSSIER-BRL-2026-001"
+    """Verify the dossiers named on the command line, or — the form
+    docs/development.md documents — every dossier in the corpus.
+
+    It used to default to a single hard-coded id, which outlived the dossier
+    it named: the documented no-argument invocation crashed with a traceback
+    on a missing file. The corpus is what a reader means by "verify the
+    corpus", and it is the loader that knows what is in it."""
+    directories = [Path(a) for a in sys.argv[1:]] or sorted(list_dossiers())
+    if not directories:
+        print("no dossiers found under data/dossiers/")
+        return 1
+    return max(verify(d) for d in directories)
+
+
+def verify(directory: Path) -> int:
     # load() verifies the run index against the digests of the files on disk, so
     # a run edited, added or removed after filing fails here before any rule runs.
     ld = load_dossier(directory)

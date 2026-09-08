@@ -287,16 +287,28 @@ def project_case(events: list[LedgerEvent]) -> CaseRecord:
             answered.add(answer.question_id)
         elif kind == "report_drafted":
             draft_report = DraftReport.model_validate(payload)
-            draft_pending = False  # pending only once grounding passes
+            draft_pending = False  # pending once the check has run over it
         elif kind == "grounding_checked":
+            # The check is advisory (pipeline/graph.py::_grounding_node): the
+            # draft goes to the reviewer either way, so the case is pending a
+            # decision either way. What the validator found stays on the
+            # record next to the report it looked at.
             grounding_problems = payload.get("problems", [])
-            if payload.get("passed"):
-                draft_pending = True
-                report_blocked = False
+            draft_pending = True
+            report_blocked = False
         elif kind == "report_blocked":
-            report_blocked = True
+            # Retired as a grounding outcome: the validator no longer withholds
+            # a draft (pipeline/graph.py::_grounding_node), and the event now
+            # means only that a drafting run produced no report at all — the
+            # model returned nothing usable. Cases drafted before that change
+            # carry the old event next to a perfectly readable report, so it
+            # withholds nothing where a draft exists: the officer reads it and
+            # the case is pending their decision, not stuck behind a verdict
+            # the console no longer shows anywhere.
             grounding_problems = payload.get("problems", grounding_problems)
-            draft_pending = False
+            if draft_report is None:
+                report_blocked = True
+                draft_pending = False
         elif kind == "decision_recorded":
             decisions.append(ReviewerDecision.model_validate(payload))
             draft_pending = False

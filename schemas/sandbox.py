@@ -13,7 +13,8 @@ Three types carry the discipline that makes those numbers mean something:
   silently the moment someone tunes a parameter.
 - `SweepPins` says what a sweep is comparable to. Two sweeps can be diffed
   exactly when everything except the rulebook matches — same corpus, same
-  code, same mode. Same discipline as `context_digest` on a dispatch.
+  policy, same engine, same mode, each of them content-addressed. Same
+  discipline as `context_digest` on a dispatch.
 - `RuleScore` carries counts, never bare rates. The corpus holds 26 planted
   defects; most per-rule numbers rest on one or two. A rule at "100% recall"
   over n=1 has told you nothing, and a bare `1.0` on screen invites exactly
@@ -55,13 +56,54 @@ class RulesetDraft(BaseModel):
 
 
 class SweepPins(BaseModel):
-    """Everything except the rulebook. Two sweeps compare iff these match."""
+    """Everything except the rulebook. Two sweeps compare iff these match.
+
+    Every field here is content-addressed, because the thing being pinned is
+    *what the sweep depended on*, not when it was taken. `code_revision` — a
+    git HEAD hash — was the original gate and was wrong in both directions at
+    once. It changed when nothing that matters had (a commit touching only the
+    dashboard marked every stored scorecard incomparable, and a live sweep
+    costs six minutes; DEMO-RUNBOOK.md still carries the workaround, "do not
+    git commit between takes"). And it stayed the same when something did: an
+    uncommitted edit to a specialist, to the failure catalogue, or to the
+    regulator's own keystore left two sweeps declaring themselves comparable
+    over different evidence. Two sweeps in this store, identical on every pin
+    and on the rulebook digest, disagreed by two false positives for exactly
+    that reason.
+
+    So `code_revision` stays — a sweep should be able to say which commit it
+    was taken at — but it no longer gates anything. These three do:
+
+    - `corpus_digest`  the dossiers and their labels: the evidence and the
+      answer key.
+    - `policy_digest`  every policy input on disk at sweep time — all ten
+      rulebooks, the scoring weights, the failure catalogue (which decides
+      how a detection is *keyed*), the authorisation policy, and the
+      regulator-held registries the specialists check identity against.
+      The rulebook under test is not excluded from it: a draft reaches the
+      graph as an argument and never touches disk, so the override is
+      described entirely by `Sweep.ruleset_digest` and the two are
+      independent. Promoting a book moves this digest, which is correct —
+      the baseline every other sweep was measured against has moved.
+    - `engine_digest`  the source that turns a dossier into facts: the
+      specialists, the graph, ingestion, the loaders, and the scorer in
+      `sandbox/sweep.py` itself.
+
+    Model prompts are deliberately NOT pinned. They cannot affect a
+    mechanical sweep at all, and a live one already carries model variance
+    far larger than a prompt edit — which is what `SweepResult.
+    model_judged_failures` and the `judged` flag on a flip exist to say.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     corpus_digest: str
     code_revision: str
     mode: SweepMode
+    # Empty on a sweep taken before these existed. Such a sweep refuses to be
+    # compared rather than guessing it was taken over the same policy.
+    policy_digest: str = ""
+    engine_digest: str = ""
 
 
 class Metrics(BaseModel):
@@ -136,6 +178,15 @@ class DossierOutcome(BaseModel):
     # move what fires, severity moves this.
     weight_per_run: float | None = None
     hard_gates: int = 0
+    # Adequacy gaps the authorisation policy raised. A mechanical sweep never
+    # runs a judged rule, so rule coverage falls under the policy floor on
+    # every submission and the disposition lands on `incomplete-submission`
+    # whatever the rulebook caught. `correct` counts that as caught — the
+    # corpus only labels "should not have been authorised" — so on a
+    # mechanical sweep this line reads 4 of 4 no matter what was edited.
+    # Recording the gap count is what lets the scorecard say so instead of
+    # presenting a constant as a result.
+    adequacy_gaps: int = 0
 
 
 class Label(BaseModel):
@@ -177,6 +228,15 @@ class SweepResult(BaseModel):
     # Transaction Patterns is 0/3 computable, Behavioural Drift 0/1, so a
     # mechanical total that ignored them would imply coverage it does not have.
     unevaluated_domains: list[str] = Field(default_factory=list)
+    # Failures no rule can establish without the model. On a live sweep these
+    # are scored, and they are the ones that do NOT reproduce: three live
+    # sweeps of the identical in-force rulebook in this store returned 33, 35
+    # and 40 true positives against 58, 64 and 115 false positives. A draft
+    # measured live sat inside that band, so a verdict computed over every
+    # flip would have reported model variance as a policy effect. Carrying the
+    # set lets a comparison mark those flips and keep them out of the
+    # headline.
+    model_judged_failures: list[str] = Field(default_factory=list)
 
 
 class Sweep(BaseModel):
@@ -213,6 +273,9 @@ class Flip(BaseModel):
     run_ref: str | None
     failure: str
     direction: Literal["caught", "lost", "new_false_positive", "fixed_false_positive"]
+    # Established only by a model-judged rule, so it moves between two runs of
+    # the SAME rulebook. Reported, never counted in the verdict.
+    judged: bool = False
 
 
 class SweepComparison(BaseModel):
@@ -225,3 +288,8 @@ class SweepComparison(BaseModel):
     flips: list[Flip] = Field(default_factory=list)
     rule_deltas: list[RuleDelta] = Field(default_factory=list)
     dossier_changes: list[dict] = Field(default_factory=list)
+
+    @property
+    def decisive_flips(self) -> list[Flip]:
+        """The flips a rulebook edit can be held responsible for."""
+        return [f for f in self.flips if not f.judged]

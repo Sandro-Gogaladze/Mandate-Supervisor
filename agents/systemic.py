@@ -373,4 +373,5 @@ class SystemicAgent:
         # call only puts that in the officer's language.
         return await narrated(
             SpecialistReview(facts=facts, assessments=self.assess(facts, ruleset, dossier, round=round)),
-            self.name, dossier, model=model, prompts=prompts, narrate=narrate)
+            self.name, dossier, model=model, prompts=prompts,
+            narrate=narrate and model is not None)

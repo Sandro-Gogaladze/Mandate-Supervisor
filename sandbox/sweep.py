@@ -18,6 +18,7 @@ The isolation that makes the numbers honest is structural, not conventional:
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import tempfile
@@ -43,6 +44,9 @@ from schemas import (
     SweepPins,
     SweepResult,
 )
+
+ROOT = Path(__file__).resolve().parent.parent
+
 
 def judged_only_failures(books: dict) -> set[str]:
     """Failures no mechanical sweep can establish, derived from the rulebook.
@@ -90,17 +94,94 @@ def corpus_digest() -> str:
 
 
 def code_revision() -> str:
+    """Which commit this was taken at. Provenance only — `SweepPins` explains
+    why a git hash is the wrong thing to gate comparability on."""
     try:
         out = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
                              capture_output=True, text=True, timeout=5,
-                             cwd=Path(__file__).resolve().parent.parent)
+                             cwd=ROOT)
         return out.stdout.strip() or "unknown"
     except Exception:
         return "unknown"
 
 
+def _digest_files(paths: list[Path]) -> str:
+    """Content hash over a set of files, keyed by path relative to the repo.
+
+    Missing files are recorded as missing rather than skipped, so deleting an
+    input is as visible as editing one.
+    """
+    return payload_hash({
+        str(path.relative_to(ROOT)): (
+            hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None)
+        for path in sorted(set(paths))
+    }, exclude_keys=())
+
+
+# Every policy input a sweep reads off disk. Not "the rulebook under test" —
+# that reaches the graph as an argument and is pinned separately as
+# `Sweep.ruleset_digest`; this is the ground the sweep stands on while it
+# measures one book against it.
+POLICY_PATHS: tuple[Path, ...] = (
+    ROOT / "registry" / "rulesets",       # all ten books: a sweep's headline
+                                          # counts breaches from every domain
+    ROOT / "registry" / "scoring.json",
+    ROOT / "registry" / "failures.json",  # default_scope decides how a
+                                          # detection is keyed, so this file
+                                          # moves the numbers on its own
+    ROOT / "registry" / "authorisation.json",
+    ROOT / "data" / "registry",           # operators, agents, keystore, tools:
+                                          # what KYA checks identity against
+)
+
+# The source that turns a dossier into facts. `data/authored/` is excluded on
+# purpose — those scripts generate the corpus, and their output is already
+# pinned by `corpus_digest()`.
+ENGINE_PATHS: tuple[Path, ...] = (
+    ROOT / "agents",
+    ROOT / "pipeline",
+    ROOT / "ingestion",
+    ROOT / "ledger",
+    ROOT / "schemas",
+    ROOT / "registry" / "loader.py",
+    ROOT / "data" / "canonical.py",
+    ROOT / "data" / "dossier_loader.py",
+    ROOT / "data" / "registries.py",
+    ROOT / "data" / "keystore.py",
+    Path(__file__).resolve(),             # the scorer itself
+)
+
+
+def _expand(roots: tuple[Path, ...], suffix: str | None = None) -> list[Path]:
+    out: list[Path] = []
+    for root in roots:
+        if root.is_dir():
+            out += [p for p in root.rglob(f"*{suffix}" if suffix else "*")
+                    if p.is_file() and "__pycache__" not in p.parts]
+        else:
+            out.append(root)
+    return out
+
+
+def policy_digest() -> str:
+    """Every rulebook, weight and registry on disk. Moves when a book is
+    promoted, when the failure catalogue is re-scoped, or when the regulator's
+    own keystore gains an operator — each of which changes what a sweep
+    measures without touching the rulebook under test."""
+    return _digest_files(_expand(POLICY_PATHS, ".json"))
+
+
+def engine_digest() -> str:
+    """The detection code. Content-addressed, so an unrelated commit leaves
+    every stored scorecard comparable and an uncommitted edit to a specialist
+    does not."""
+    return _digest_files(_expand(ENGINE_PATHS, ".py"))
+
+
 def pins(*, mode: str = "mechanical") -> SweepPins:
-    return SweepPins(corpus_digest=corpus_digest(), code_revision=code_revision(), mode=mode)
+    return SweepPins(corpus_digest=corpus_digest(), code_revision=code_revision(),
+                     policy_digest=policy_digest(), engine_digest=engine_digest(),
+                     mode=mode)
 
 
 def _scoped_key(cid: str, run_ref: str | None, failure: str, scopes: dict[str, str]) -> tuple:
@@ -232,13 +313,13 @@ async def run_sweep(
 
     return _assemble(books, rules, domain_of, expected, detected, clean, fired,
                      by_rule, clean_hits, label_text, detection_rule, outcomes, live,
-                     excluded)
+                     excluded, judged_only)
 
 
 def _dossier_outcome(dossier, record, cid, planted, clean_runs) -> DossierOutcome:
     """Question 5: with this rulebook, does the submission get the right
     disposition? A dossier carrying planted defects must not be authorised."""
-    weight, gates = None, 0
+    weight, gates, adequacy = None, 0, 0
     try:
         rec = recommend(dossier, record.facts, record.assessments,
                         correlations=record.correlations)
@@ -246,18 +327,21 @@ def _dossier_outcome(dossier, record, cid, planted, clean_runs) -> DossierOutcom
         # Recorded so a severity edit is visible even when the disposition
         # holds: the tier is a step function over this.
         weight, gates = rec.weight_per_run, len(rec.hard_gates)
+        # …and this is what says when the disposition is NOT a detection
+        # result. See `DossierOutcome.adequacy_gaps`.
+        adequacy = len(rec.adequacy)
     except Exception:
         actual = "unavailable"
     expected = "authorise" if not planted else "not-authorise"
     correct = (actual in ADVERSE_DISPOSITIONS) if planted else (actual == "authorise")
     return DossierOutcome(dossier_id=cid, expected=expected, actual=actual, correct=correct,
                           planted_defects=len(planted), clean_runs=len(clean_runs),
-                          weight_per_run=weight, hard_gates=gates)
+                          weight_per_run=weight, hard_gates=gates, adequacy_gaps=adequacy)
 
 
 def _assemble(books, rules, domain_of, expected, detected, clean, fired, by_rule,
               clean_hits, label_text, detection_rule, outcomes, live,
-              excluded) -> SweepResult:
+              excluded, judged_only) -> SweepResult:
     per_rule = {}
     for rule_id, rule in rules.items():
         per_rule[rule_id] = RuleScore(
@@ -309,6 +393,7 @@ def _assemble(books, rules, domain_of, expected, detected, clean, fired, by_rule
         dead_rules=sorted(rid for rid, score in per_rule.items() if score.dead),
         unevaluated_domains=sorted(unevaluated),
         not_scoreable=excluded,
+        model_judged_failures=sorted(judged_only),
     )
 
 

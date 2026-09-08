@@ -63,19 +63,19 @@ first pass or directed re-analysis, `investigation` for a question.
 load_record → draft_report ⇄ grounding_check → human_gate (interrupt) → END
 ```
 
-Only reachable by explicit request. The score is recomputed from the ledger's
-current findings first, so a report can never be drafted against a stale number.
+Only reachable by explicit request. It reads the score already recorded by the
+completed review; reporting never re-evaluates the case.
 
-Two loops, both capped:
+One loop is capped:
 
-- **Grounding retry**, capped at `_MAX_GROUNDING_RETRIES = 2`. The drafting
-  agent writes; `agents/grounding.py` — pure Python, no model — checks that every
-  claim cites a real finding, that every finding is cited by some section, that
-  observations stay quarantined in their labelled note, and that a section's
-  declared character matches the verdicts it cites. Failures are fed back
-  verbatim into the retry prompt.
 - **Reviewer rounds**, capped at `_MAX_REVIEWER_ROUNDS = 3`. A human can send a
   report back for re-analysis; past the cap they must approve or reject.
+
+The drafter makes one non-thinking reporting call over the completed record.
+`agents/grounding.py` checks it once afterward: citations must be real, every
+confirmed failure must be cited, observations remain quarantined, and a
+section's declared character must match the verdicts it cites. Routine
+satisfied checks are summarized by area rather than listed individually.
 
 The single `interrupt()` in the whole system sits at `human_gate`, and the
 decision it records is **bound by hash to the exact recommendation reviewed** —
@@ -242,6 +242,6 @@ imposing a chat shell.
 |---|---|
 | Orchestrator-worker, no agent-to-agent messaging | Everything reads and writes typed records to a shared ledger, so any conclusion is traceable to inputs. Direct messaging makes the trail a transcript |
 | Bounded graphs, not one long-running process | A case is open for weeks; a process is not. Case state belongs in the ledger, and only the minutes-long artifact gate belongs in a checkpointer |
-| Loops capped in code | An uncapped retry against a model is an unbounded bill and an unbounded wait. Two retries and three reviewer rounds are enough to be useful and small enough to reason about |
+| Reviewer loop capped in code | A human-directed re-analysis is bounded at three rounds, so it remains useful without becoming an unbounded workflow. Drafting itself is one reporting call. |
 | Control Assurance runs last, by topology | It needs its peers' breach facts to know which risk materialised. Making that a graph edge rather than a prompt instruction means it cannot be skipped |
 | Ledger built after the detection pipeline worked | Deliberately sequenced late. A hash chain needs single-writer serialization regardless of database, so Postgres's concurrency advantage does not apply — and building the audit trail before there was anything worth auditing would have frozen the wrong vocabulary |

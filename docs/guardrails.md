@@ -112,6 +112,21 @@ would have added, removed or altered across all 143 runs *before* it becomes
 policy. Drafts and sweeps are gitignored on purpose — a draft is a candidate and
 a sweep is an experiment; neither should arrive in a checkout looking like law.
 
+What makes the diff mean anything is that each sweep records what it stood on,
+content-addressed (`schemas/sandbox.py::SweepPins`): the corpus and its labels,
+every policy input on disk — the other nine rulebooks, the scoring weights, the
+failure catalogue, the regulator's own registries — and the detection code
+itself. Two sweeps are diffed exactly when all of that matches and only the
+rulebook differs, so a difference cannot be attributed to a draft that some
+other input produced. A mechanical sweep is reproducible to the byte, which is
+what makes a flip evidence; a live sweep is not, so flips on model-judged rules
+are marked and excluded from the verdict rather than being read as policy.
+
+Nothing in that store is ever deleted, and a version whose rulebook, corpus,
+policy and engine are all unchanged is not swept twice — it is handed the
+scorecard it already has, which is the same answer at no cost. Promotion is
+refused on any scorecard that no longer describes today's conditions.
+
 ### The decision cannot be influenced by a model
 
 `pipeline/scoring.py` is a pure function. Same findings in, same score out. When
@@ -143,11 +158,11 @@ in the critic must not be allowed to delete a real finding — the officer sees 
 flag and judges.
 
 **The grounding validator** (`agents/grounding.py`) is pure Python and checks the
-drafted report: every cited finding id must exist, every finding must be cited by
-some section, observations may appear only in their labelled note (required when
+drafted report: every cited finding id must exist, every confirmed failure must
+be cited by some section, observations may appear only in their labelled note (required when
 observations exist, forbidden when none do), and a section's declared character
-must match the verdicts it cites. Problems feed back verbatim into the retry
-prompt, capped at two retries.
+must match the verdicts it cites. Problems are surfaced directly; drafting does
+not regenerate the report.
 
 Neither check is a model reviewing a model. That was the alternative, and it was
 rejected: a second model can hallucinate in agreement with the first.

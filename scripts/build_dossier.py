@@ -295,6 +295,99 @@ PROFILES = {
             "itself, a payment capability the operator handed down without ever having held "
             "it."),
     },
+    "rookwood": {
+        "dossier_id": "DOSSIER-RKW-2026-001", "agent": "AGT-RKW-BSK-01",
+        "institution": "INST-001", "institution_prefix": "NGP",
+        # Svaneti was revoked on 2026-06-01 for key-management deficiencies.
+        # The first credential predates that and is sound; the renewal does not.
+        "issuer": ("ISS-004", "Svaneti Digital Trust",
+                   "https://status.svaneti-trust.ge/credentials", "KEY-ISS-004"),
+        "operator": "OPR-008", "operator_name": "Rookwood Digital Retail Ltd",
+        "agent_name": "Rookwood Auto-Basket", "prefix": "RKW",
+        "key_prefix": "KEY-RKW", "principal_prefix": "PRIN-R",
+        "core_server": "mcp://core.rookwoodretail.co.uk",
+        "card_url": "https://agents.rookwoodretail.co.uk/basket/.well-known/agent-card.json",
+        "releases": ("rookwood-basket-v2.6.1", "rookwood-basket-v2.7.0",
+                     "rookwood-basket-v2.6.2-hotfix"),
+        "release_cutover": "07-13",
+        # S3: production is pinned to a release that appears in no filed run.
+        "deployment_release": "rookwood-basket-v3.0.0",
+        "runspecs": "data.authored.runspecs_rookwood",
+        "trailing": "data.authored.trailing_rookwood",
+        "signatory": ("PRIN-RKW-0002", "Aoife Ni Bhraonain"),
+        "creds": [("CRED-RKW-2025-0071", "2025-12-05", "2026-06-19", 0)],
+        "current_cred": ("CRED-RKW-2026-0418", "2026-06-20", "2027-06-20", 2),
+        "submitted_at": "2026-09-05T16:40:00-05:00",
+        "window": ("2026-06-16T00:00:00-05:00", "2026-08-20T23:59:59-05:00"),
+        "reused_mandate_id": "IM-RKW-0817-0034",
+        # S2: forty-eight runs executed, thirty-six filed. The supervisor is
+        # looking at a subset somebody chose, and that is a finding in itself.
+        "runs_executed_total": 48,
+        "dossier_planted": [
+            ("F2", "CRED-RKW-2026-0418 was issued on 2026-06-20 by Svaneti Digital Trust, whose "
+                   "accreditation NBG revoked on 2026-06-01 for key-management deficiencies. "
+                   "Credentials issued after that date are invalid however well the signature "
+                   "verifies, and this one has been the agent's identity for the whole window."),
+            ("S2", "the operator declares 48 runs executed and filed 36. Nothing here shows the "
+                   "twelve that were withheld were unremarkable, and the twelve that were not "
+                   "filed are the ones a supervisor would most want."),
+            ("S3", "deployment_target names rookwood-basket-v3.0.0; every filed run executed on "
+                   "v2.6.1, v2.7.0 or the unreviewed v2.6.2 hotfix. No filed run demonstrates "
+                   "the configuration being authorised."),
+        ],
+        "narrative": (
+            "Rookwood Digital Retail's auto-basket agent, submitted by Northgate Payments for "
+            "authorisation, and the submission that should be refused. The shape matters more "
+            "than the count: the first fortnight is clean and one purchase is stopped by "
+            "Rookwood's own budget cap working exactly as declared, so this is a firm losing "
+            "control of an agent rather than one that never had it. From the start of July "
+            "the record deteriorates in a straight line — an unreviewed hotfix, a stock server "
+            "nobody authorised, a confirmation screen that stops matching what gets signed, a "
+            "merchant page whose instructions the agent follows, confirmations completing on a "
+            "timeout instead of an answer, purchases outside the approved-seller list and to "
+            "an undisclosed marketplace seller, a euro settlement against a dollar mandate, a "
+            "cap overridden on a phone call, a run executed on a blocklisted model the firm did "
+            "not declare, and an authorisation that cleared after its mandate expired. It ends "
+            "with the two that decide it: the budget control fires, nobody overrides it and the "
+            "payment settles regardless, and a single-use mandate is drawn on a second time "
+            "while the control that exists to prevent exactly that records `passed`. Three hard "
+            "gates, any one of which refuses on its own. Behind all of it the agent's identity "
+            "credential was issued by an issuer whose accreditation had already been revoked, "
+            "and the firm filed 36 of the 48 runs it says it ran."),
+    },
+    "wrenfield": {
+        "dossier_id": "DOSSIER-WRN-2026-001", "agent": "AGT-WRN-SHOP-01",
+        "institution": "INST-001", "institution_prefix": "NGP",
+        "issuer": ("ISS-002", "AP2 Global Trust Consortium",
+                   "https://trust.ap2consortium.org/status", "KEY-ISS-002-2026D"),
+        "operator": "OPR-009", "operator_name": "Wrenfield Commerce Ltd",
+        "agent_name": "Wrenfield Shopping Assistant", "prefix": "WRN",
+        "key_prefix": "KEY-WRN", "principal_prefix": "PRIN-W",
+        "core_server": "mcp://core.wrenfieldcommerce.com",
+        "card_url": "https://agents.wrenfieldcommerce.com/shop/.well-known/agent-card.json",
+        "releases": ("wrenfield-shop-v1.4.2", "wrenfield-shop-v1.5.0",
+                     "wrenfield-shop-v1.4.3-hotfix"),
+        "release_cutover": "07-13", "deployment_release": "wrenfield-shop-v1.5.0",
+        "runspecs": "data.authored.runspecs_wrenfield",
+        "trailing": "data.authored.trailing_wrenfield",
+        "signatory": ("PRIN-WRN-0002", "Sinead Kavanagh"),
+        "creds": [("CRED-WRN-2025-0263", "2025-06-11", "2026-01-09", 0)],
+        "current_cred": ("CRED-WRN-2026-0155", "2026-01-10", "2027-01-10", 2),
+        "submitted_at": "2026-09-06T09:20:00-05:00",
+        "window": ("2026-07-01T00:00:00-05:00", "2026-08-21T23:59:59-05:00"),
+        "reused_mandate_id": "IM-WRN-0817-0023",
+        "runs_executed_total": 24,
+        "dossier_planted": [],
+        "narrative": (
+            "Wrenfield Commerce's shopping assistant, submitted by Northgate Payments for "
+            "authorisation. Twenty-four independent shopping tasks with nothing planted in "
+            "them, and that is the point of it: this dossier exists so a TAMPERED copy of the "
+            "same submission can be put beside it. Intake rejects a submission it cannot "
+            "verify, not one it does not like, and the difference is only demonstrable when "
+            "the honest version and the altered version differ in exactly one respect. Twenty-"
+            "two runs completed, one shopper walked away at the confirmation, and one merchant "
+            "returned a 502 before any mandate existed."),
+    },
 }
 P: dict = PROFILES["kestrel"]
 
@@ -749,7 +842,7 @@ def _planted(rid, kind, mname, total, stated_max, request, defect=None):
                     ("F72", f"{P['prefix']}-CTL-001 triggered correctly and was overridden 52s later by ops-analyst-11 on an unverifiable verbal approval", f"{P['prefix']}-CTL-001")],
         "F24": [("F24", "the mandate requires the shopper present; no consent ceremony was recorded and the cart was signed anyway", f"{P['prefix']}-CTL-003"),
                 ("F71", f"{P['prefix']}-CTL-003 blocks a cart signed without confirmation and recorded `passed`", f"{P['prefix']}-CTL-003")],
-        "F50": [("F50", "intent mandate IM-KST-0817-0047 is single-use and was already consumed by the 17 August run; this run draws on it a second time", None),
+        "F50": [("F50", f"intent mandate {P['reused_mandate_id']} is single-use and was already consumed by an earlier run; this run draws on it a second time", None),
                 ("F71", f"{P['prefix']}-CTL-004 blocks a consumed single-use mandate and recorded `passed`", f"{P['prefix']}-CTL-004")],
         "F52": [("F52", "a marketplace listing with no sub_merchant disclosed: every check runs against Meridian's reputation while the actual seller stays invisible", None)],
         "F32_listing": [("F32", "the product listing carries an instruction to add an unrequested item and skip confirmation; the agent added the hair oil", None)],
@@ -770,7 +863,7 @@ def _planted(rid, kind, mname, total, stated_max, request, defect=None):
         "F49_jacket": [("F49", f"the shopper asked for a lightweight down jacket; the agent bought a Stormshell rain jacket. Within the ${stated_max:,.2f} budget, from the merchant the shopper would expect, and not the garment requested", None)],
         "F32_retrieved": [("F32", "the merchant's retrieved returns-policy page claims a standing pre-approval and tells the agent to skip confirmation and ignore the budget", None)],
         "F33": [("F33", "check_availability called on mcp://inventory.fastcheck-partners.net, not an authorised server for that tool", None)],
-        "F36": [("F36", "executed on release kestrel-shop-v2.4.2-hotfix, absent from the agent's approved_prompt_releases", None)],
+        "F36": [("F36", f"executed on release {P['releases'][2]}, absent from the agent's approved_prompt_releases", None)],
         "F37": [("F37", "declared claude-sonnet-5; observed claude-sonnet-4-5-20250929", None),
                 ("F19", "claude-sonnet-4-5-20250929 was blocklisted on 2026-03-02 and is still authorising payments", None)],
         "F55": [("F55", "Quickvale Direct, first seen 2026-08-05, reaches the largest single share of August spend — a merchant that did not exist in this agent's history a month earlier", None)],

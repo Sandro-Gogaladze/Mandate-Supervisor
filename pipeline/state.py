@@ -142,7 +142,7 @@ class SupervisionState(MessagesState, total=False):
     critic_results: list[dict]
     correlations: list[Correlation]
     # The drafting/grounding tail. Plain overwrites: exactly one draft is
-    # current at a time (a grounding retry *replaces* the failed draft).
+    # current at a time.
     draft_report: DraftReport
     draft_attempts: int
     grounding_problems: list[str]

@@ -231,6 +231,84 @@
         "role": "Head of Risk"
       },
       "notes": "Rivermont's second sponsored operator. Builds baskets for cardholders on the shared catalogue federation; some cardholders are on a domestic-sellers profile the bank sets, which the mandate carries as a geographic scope rather than a merchant list."
+    },
+    {
+      "operator_id": "OPR-008",
+      "legal_name": "Rookwood Digital Retail Ltd",
+      "trading_name": "Rookwood",
+      "is_institution": false,
+      "sponsoring_institution_id": "INST-001",
+      "sector": "agentic_commerce_platform",
+      "hq": "London, GB",
+      "timezone": "Europe/London",
+      "incorporated": "2024-01-30",
+      "standing": "good",
+      "licence_status": "not_licensed",
+      "authority_basis": "sponsored",
+      "sponsorship": {
+        "institution_id": "INST-001",
+        "status": "active",
+        "granted_at": "2025-12-05",
+        "expires_at": "2027-06-20",
+        "scope": "agent-initiated consumer card payments"
+      },
+      "ownership_changes": [],
+      "authorised_signatories": [
+        {
+          "principal_id": "PRIN-RKW-0001",
+          "name": "Gethin Morris",
+          "role": "Managing Director"
+        },
+        {
+          "principal_id": "PRIN-RKW-0002",
+          "name": "Aoife Ni Bhraonain",
+          "role": "Head of Risk"
+        }
+      ],
+      "compliance_contact": {
+        "name": "Aoife Ni Bhraonain",
+        "role": "Head of Risk"
+      },
+      "notes": "Runs a consumer auto-basket agent on the shared catalogue federation. Change control is handled by the engineering team rather than a separate release function, which is visible in the submitted runs."
+    },
+    {
+      "operator_id": "OPR-009",
+      "legal_name": "Wrenfield Commerce Ltd",
+      "trading_name": "Wrenfield",
+      "is_institution": false,
+      "sponsoring_institution_id": "INST-001",
+      "sector": "agentic_commerce_platform",
+      "hq": "Bristol, GB",
+      "timezone": "Europe/London",
+      "incorporated": "2023-03-21",
+      "standing": "good",
+      "licence_status": "not_licensed",
+      "authority_basis": "sponsored",
+      "sponsorship": {
+        "institution_id": "INST-001",
+        "status": "active",
+        "granted_at": "2025-06-11",
+        "expires_at": "2027-01-10",
+        "scope": "agent-initiated consumer card payments"
+      },
+      "ownership_changes": [],
+      "authorised_signatories": [
+        {
+          "principal_id": "PRIN-WRN-0001",
+          "name": "Oliver Hartnell",
+          "role": "Managing Director"
+        },
+        {
+          "principal_id": "PRIN-WRN-0002",
+          "name": "Sinead Kavanagh",
+          "role": "Head of Risk"
+        }
+      ],
+      "compliance_contact": {
+        "name": "Sinead Kavanagh",
+        "role": "Head of Risk"
+      },
+      "notes": "Operates a consumer shopping assistant on the shared catalogue federation under Northgate sponsorship."
     }
   ]
 }

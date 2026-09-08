@@ -133,7 +133,7 @@ export const resetReviewHistory = (id: string) => postJSON<DossierDetail>(`${dos
 export const dossierExportURL = (id: string) => `${API_BASE}${dossierPath(id)}/export`
 // --- policy sandbox -------------------------------------------------------
 import type {
-  RulebookView, RulesetDraft, SandboxDomain, Sweep, SweepComparison, VersionGraph,
+  RulebookView, RulesetDraft, SandboxDomain, Sweep, SweepComparison, SweepMode, VersionGraph,
 } from './sandbox-types'
 export const getSandboxDomains = () => getJSON<SandboxDomain[]>('/sandbox/domains')
 
@@ -150,7 +150,11 @@ export interface FailureEntry {
 }
 export const getFailureCatalogue = () =>
   getJSON<{ version: string; as_of: string; failures: FailureEntry[] }>('/failures')
-export const getVersionGraph = (domain: string) => getJSON<VersionGraph>(`/sandbox/graph/${domain}`)
+/** `mode` shows each version the scorecard it has in that mode. The two never
+ *  compare with each other, so a live scorecard is of no use to someone about
+ *  to sweep mechanically. */
+export const getVersionGraph = (domain: string, mode?: SweepMode) =>
+  getJSON<VersionGraph>(`/sandbox/graph/${domain}${mode ? `?mode=${mode}` : ''}`)
 export const getRulebook = (ref: string) => getJSON<RulebookView>(`/sandbox/rulebook/${encodeURIComponent(ref)}`)
 export const createDraft = (body: { domain: string; label: string; created_by: string }) =>
   postJSON<RulesetDraft>('/sandbox/drafts', body)
@@ -158,8 +162,12 @@ export const editDraftRule = (draftId: string, body: { rule_id: string; status?:
   patchJSON<RulesetDraft>(`/sandbox/drafts/${encodeURIComponent(draftId)}`, body)
 export const deleteDraft = (draftId: string) =>
   deleteJSON<{ deleted: string }>(`/sandbox/drafts/${encodeURIComponent(draftId)}`)
-export const runSweep = (body: { ruleset_ref: string; live?: boolean }) =>
-  postJSON<Sweep>('/sandbox/sweeps', body)
+/** `force` measures again even though this exact rulebook already has a
+ *  scorecard taken under today's conditions. Without it the API returns the
+ *  stored one and says so — `reused` — instead of spending six minutes
+ *  reproducing an answer. */
+export const runSweep = (body: { ruleset_ref: string; live?: boolean; force?: boolean }) =>
+  postJSON<Sweep & { reused: boolean }>('/sandbox/sweeps', body)
 export const getSweep = (id: string) => getJSON<Sweep>(`/sandbox/sweeps/${id}`)
 export const compareSweeps = (base: string, candidate: string) =>
   getJSON<SweepComparison>(`/sandbox/compare?base=${base}&candidate=${candidate}`)

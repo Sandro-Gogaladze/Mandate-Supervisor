@@ -114,7 +114,14 @@ async def test_injection_judges_every_flagged_run_and_validates_the_channel(kst,
     assert any(a.verdict == "inconclusive" and "RUN-2026-0806-0040" in a.run_refs for a in rv.assessments)
     assert "RUN-2026-9999-9999" not in by_run
     objective = next(a for a in rv.assessments if a.subject == "objective")
-    assert objective.verdict == "breach" and set(objective.run_refs) == {r.run_id for r in kst.runs}
+    # A redirected objective cites the runs it can defend — the ones judged
+    # acted-upon — not every run the regex floor happened to flag. Citing all
+    # of them made one dossier-wide F35 mark ALL of Ferrymead's 37 runs a
+    # breach, a $34 hardback included, while its own narrative named three,
+    # and drove `clean_runs` to zero on a case that is mostly clean. Here run
+    # 40's channel was never flagged and run 9999 does not exist, so run 25 is
+    # the only one the claim rests on.
+    assert objective.verdict == "breach" and set(objective.run_refs) == {"RUN-2026-0715-0025"}
 
 
 async def test_injection_with_nothing_flagged_still_requires_judgment(hal, books):

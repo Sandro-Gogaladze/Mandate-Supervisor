@@ -74,7 +74,7 @@ from agents.critic import check_evidence_grounding
 from agents.drafting import draft_case_report
 from agents.grounding import check_grounding
 from agents.investigator import investigate
-from agents.orchestrator import (FIRST_PASS_REQUEST, Dispatch, OrchestratorDecision, close_out,
+from agents.orchestrator import (FIRST_PASS_REQUEST, Dispatch, OrchestratorDecision, close_follow_up, close_out,
                                  first_pass_decision, route)
 from agents.prompts import assemble_run_prompts, effective_text
 from agents.skills import REVIEW_SKILLS, SKILLS, SPECIALIST_SKILLS_BY_AGENT
@@ -126,8 +126,6 @@ def _model_slot() -> asyncio.Semaphore:
     if _model_slots is None:
         _model_slots = asyncio.Semaphore(_MODEL_CONCURRENCY)
     return _model_slots
-# 1 initial draft + at most 2 regenerations, then blocked (CLAUDE.md).
-_MAX_GROUNDING_RETRIES = 2
 # The human-directed loop is bounded by the human — every iteration costs an
 # explicit named decision. This cap is belt-and-braces, not the real control.
 _MAX_REVIEWER_ROUNDS = 3
@@ -299,9 +297,14 @@ async def _dispatch_specialist(
         # `prompts` reaches these three for the same reason it reaches the
         # peers: they narrate too, and a supervisor's per-run prompt override
         # must apply to every line the console shows them.
-        review = await agent.review(dossier, ruleset, evidence=evidence,
-                                    prompts=state.get("prompts"),
-                                    round=state.get("review_round", 1), **kwargs)
+        review = await agent.review(
+            dossier, ruleset, evidence=evidence, model=model,
+            prompts=state.get("prompts"), round=state.get("review_round", 1),
+            # Deterministic-only runs must remain genuinely offline. These
+            # agents' calculations are local; their only model use is the
+            # optional officer-facing narration.
+            narrate=not state.get("deterministic_only", False), **kwargs,
+        )
         context = canonical_context(
             skill, dossier, evidence=evidence, ruleset=ruleset, floor_facts=review.facts,
             peer_facts=kwargs.get("peer_facts"), portfolio=kwargs.get("portfolio"),
@@ -588,6 +591,11 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
         return any(SKILLS[s].agent in PEERS for s in state.get("selected_skills", []) if s in SKILLS)
 
     def _route_after_specialists(state: SupervisionState) -> str:
+        # A follow-up can be investigator-only. It still takes the same
+        # hand-off through synthesis and a final orchestrator reply as a
+        # specialist investigation; otherwise it ends at the routing note.
+        if not state.get("first_pass"):
+            return "control_assurance" if _peers_ran(state) else "synthesizer"
         return "control_assurance" if _peers_ran(state) else "record"
 
     async def _control_node(state: SupervisionState) -> dict:
@@ -617,14 +625,14 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
                          run_id=state["run_id"], payload=correlation.model_dump(), actor="agent:synthesizer")
         return {"correlations": correlations}
 
-    async def _close_out(state, recommendation, findings, score) -> None:
+    async def _close_out(state, recommendation, findings, score) -> str | None:
         """The orchestrator's last word on the turn: what came back, in three
         sentences, over a record that is already final. It reads the finished
         recommendation and cannot change it — a brief that fails to arrive
         costs the officer a sentence, never a verdict, so a failure here is
         logged and the turn completes."""
         if state.get("deterministic_only"):
-            return
+            return None
         try:
             brief = await close_out(
                 recommendation, findings, score=score,
@@ -633,11 +641,12 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
             )
         except Exception:
             logging.getLogger(__name__).exception("closing brief failed on %s", state["case_id"])
-            return
+            return None
         store.append(
             case_id=state["case_id"], event_type="orchestrator_summarised", run_id=state["run_id"],
             payload=brief.model_dump(), actor="agent:orchestrator",
         )
+        return brief.message
 
     async def _record_node(state: SupervisionState) -> dict:
         case_id = state["case_id"]
@@ -669,7 +678,38 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
             from pipeline.authorisation import record_recommendation
             recommendation = record_recommendation(store, state)
             updates["risk_score"] = score
-            await _close_out(state, recommendation, findings, score)
+            # A request to run the full review again has already received its
+            # useful answer ("Starting a full pass now"). Keep that routing
+            # acknowledgement rather than overwriting it with a generic
+            # close-out after the work completes.
+            if (decision.get("raw") or {}).get("intent") != "run_triage":
+                closing_message = await _close_out(state, recommendation, findings, score)
+                if closing_message:
+                    updates["orchestrator_reply"] = closing_message
+        elif kind == "investigation" and decision.get("intent") == "dispatch":
+            # Investigator answers are observations, not assessments, so
+            # they never enter the scoring/authorisation close-out above.
+            # They still deserve a final answer after the synthesizer has
+            # seen the completed run, rather than leaving the officer with
+            # only the initial "I'll look into it" routing acknowledgement.
+            results: list[dict] = []
+            for event in run_events:
+                if event.event_type == "investigation_completed":
+                    payload = event.payload
+                    results.append({"source": "investigator", "answer": payload.get("answer", ""),
+                                    "cited_evidence": payload.get("cited_evidence", [])})
+            try:
+                message = await close_follow_up(
+                    state.get("officer_message", ""), results, model=model,
+                    system_prompt=effective_text(state["prompts"], "ORCHESTRATOR-CLOSING") if state.get("prompts") else None,
+                )
+            except Exception:  # A close-out cannot invalidate the recorded result.
+                logging.getLogger(__name__).exception("follow-up closing brief failed on %s", case_id)
+                message = next((str(result["answer"]) for result in results if result.get("answer")),
+                               "The requested follow-up completed, but produced no new answer on the record.")
+            store.append(case_id=case_id, event_type="orchestrator_summarised", run_id=state["run_id"],
+                         payload={"message": message, "follow_up": True}, actor="agent:orchestrator")
+            updates["orchestrator_reply"] = message
         store.append(
             case_id=case_id, event_type="run_completed", run_id=state["run_id"],
             payload={
@@ -701,7 +741,8 @@ def build_review_graph(*, model=None, store: LedgerStore | None = None, checkpoi
                                 [*_SPECIALIST_NODES, "investigator", "control_assurance", "record"])
     for node in (*_SPECIALIST_NODES, "investigator"):
         graph.add_edge(node, "specialists_done")
-    graph.add_conditional_edges("specialists_done", _route_after_specialists, ["control_assurance", "record"])
+    graph.add_conditional_edges("specialists_done", _route_after_specialists,
+                                ["control_assurance", "synthesizer", "record"])
     graph.add_edge("control_assurance", "critic")
     graph.add_edge("critic", "synthesizer")
     graph.add_edge("synthesizer", "record")
@@ -755,7 +796,16 @@ def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkp
     store = store or get_default_store()
 
     async def _load_record_node(state: SupervisionState) -> dict:
-        case_id = state["case_id"]
+        # A resume whose checkpoint is gone arrives here as a FRESH run with
+        # no case on it, and `state["case_id"]` then raised KeyError out of
+        # the node, the graph and the ASGI stream — the console showed
+        # "terminated" at the exact moment a supervisor signed. There is
+        # nothing to draft without a case; say so and end the run.
+        case_id = state.get("case_id")
+        if not case_id:
+            logging.getLogger(__name__).warning(
+                "drafting run started with no case_id — ending it rather than raising")
+            return {"draft_report": None, "report_blocked": True}
         record = project_case(store.events_for(case_id))
 
         run_id = _new_run_id("drafting")
@@ -766,14 +816,6 @@ def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkp
             actor="system:drafting",
         )
 
-        # The report states the tier as of when it was written — recompute
-        # from the ledger's *current* findings, not the last triage's score.
-        score = score_findings(case_id, record.findings, load_scoring_config())
-        store.append(
-            case_id=case_id, event_type="score_computed", run_id=run_id,
-            payload=score.model_dump(), actor="system:scoring",
-        )
-
         last_triage = next((r for r in reversed(record.runs) if r.kind == "triage"), None)
         return {
             "run_id": run_id,
@@ -781,7 +823,9 @@ def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkp
             "firm_name": record.firm,
             "findings": record.findings,
             "observations": record.observations,
-            "risk_score": score,
+            # Scoring belongs to the completed review.  Drafting reads the
+            # recorded result; it never re-evaluates a case merely to report.
+            "risk_score": record.risk_score,
             "dispatch_plan": last_triage.plan if last_triage else None,
             "escalation_round": record.escalation_rounds,
             "draft_attempts": 0,
@@ -790,18 +834,45 @@ def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkp
         }
 
     async def _draft_node(state: SupervisionState) -> dict:
-        report = await draft_case_report(
-            case_id=state["case_id"],
-            firm_name=state.get("firm_name", "unknown"),
-            findings=state.get("findings", []),
-            observations=state.get("observations", []),
-            dispatch_plan=state.get("dispatch_plan"),
-            escalation_round=state.get("escalation_round", 0),
-            risk_score=state.get("risk_score"),
-            prior_problems=state.get("grounding_problems") or None,
-            model=model,
-            system_prompt=effective_text(state["prompts"], "DRAFTING"),
-        )
+        try:
+            report = await draft_case_report(
+                case_id=state["case_id"],
+                firm_name=state.get("firm_name", "unknown"),
+                findings=state.get("findings", []),
+                observations=state.get("observations", []),
+                dispatch_plan=state.get("dispatch_plan"),
+                escalation_round=state.get("escalation_round", 0),
+                risk_score=state.get("risk_score"),
+                model=model,
+                system_prompt=effective_text(state["prompts"], "DRAFTING"),
+            )
+        except Exception as exc:  # noqa: BLE001 — the model, the network, the account
+            # Same containment as every specialist: an unusable model reply
+            # ends the run on the record, saying so. Raised here it escaped the
+            # node, the graph, and the ASGI stream, and the officer saw a
+            # console that said "terminated" and nothing else.
+            logging.getLogger(__name__).exception("drafting failed on %s", state["case_id"])
+            detail = str(exc).split("\n")[0][:300]
+            store.append(
+                case_id=state["case_id"], event_type="specialist_failed", run_id=state["run_id"],
+                payload={"agent": "drafting", "error": type(exc).__name__,
+                         "message": f"The report could not be drafted: {detail}"},
+                actor="agent:drafting",
+            )
+            store.append(
+                case_id=state["case_id"], event_type="report_blocked", run_id=state["run_id"],
+                payload={"problems": [f"The drafting model returned no usable report ({type(exc).__name__})."]},
+                actor="system:drafting",
+            )
+            store.append(
+                case_id=state["case_id"], event_type="run_completed", run_id=state["run_id"],
+                payload={"run_id": state["run_id"], "kind": "drafting",
+                         "finding_count": len(state.get("findings", [])),
+                         "observation_count": len(state.get("observations", []))},
+                actor="system:drafting",
+            )
+            return {"draft_report": None, "report_blocked": True,
+                    "draft_attempts": state.get("draft_attempts", 0) + 1}
         store.append(
             case_id=state["case_id"], event_type="report_drafted", run_id=state["run_id"],
             payload=report.model_dump(), actor="agent:drafting",
@@ -812,6 +883,11 @@ def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkp
         problems = check_grounding(
             state["draft_report"], state.get("findings", []), state.get("observations", []),
             risk_score=state.get("risk_score"),
+            # A concise report must cover every established failure, while a
+            # completed/satisfied-check count can be summarized rather than
+            # forcing the model to cite dozens of routine passes.
+            required_finding_ids={f.finding_id for f in state.get("findings", [])
+                                  if (f.severity_weight or 0) > 0},
         )
         attempt = state.get("draft_attempts", 0)
         store.append(
@@ -819,29 +895,32 @@ def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkp
             payload={"passed": not problems, "problems": problems, "attempt": attempt},
             actor="system:grounding",
         )
-        if not problems:
-            return {"grounding_problems": [], "report_blocked": False}
-        out_of_retries = attempt > _MAX_GROUNDING_RETRIES
-        if out_of_retries:
-            store.append(
-                case_id=state["case_id"], event_type="report_blocked", run_id=state["run_id"],
-                payload={"problems": problems}, actor="system:grounding",
-            )
-            store.append(
-                case_id=state["case_id"], event_type="run_completed", run_id=state["run_id"],
-                payload={"run_id": state["run_id"], "kind": "drafting",
-                         "finding_count": len(state.get("findings", [])),
-                         "observation_count": len(state.get("observations", []))},
-                actor="system:drafting",
-            )
-        return {"grounding_problems": problems, "report_blocked": out_of_retries}
+        # ADVISORY, not a gate. The check runs, and what it found is on the
+        # ledger either way — but it no longer withholds the document. A
+        # withheld draft left the officer who asked for a report with nothing
+        # to read and nothing to sign, over complaints that are usually
+        # presentational (a section's declared character) rather than an
+        # invented citation. The guarantee that a report never issues
+        # unexamined is the human gate below, which every draft still passes
+        # through.
+        return {"grounding_problems": problems, "report_blocked": False}
+
+    def _route_after_load(state: SupervisionState) -> str:
+        # Nothing was loaded because nothing was asked for. Raising instead
+        # took the exception out through the graph and the ASGI stream, and
+        # the console showed "terminated" — at the moment of signing, since
+        # a lost checkpoint turns the gate's resume into a caseless run.
+        return END if not state.get("run_id") else "draft_report"
+
+    def _route_after_draft(state: SupervisionState) -> str:
+        # Nothing to ground when the model never produced a report; the draft
+        # node has already said so on the ledger and completed the run.
+        return END if state.get("draft_report") is None else "grounding_check"
 
     def _route_after_grounding(state: SupervisionState) -> str:
-        if not state.get("grounding_problems"):
-            return "human_gate"
-        if state.get("report_blocked"):
-            return END  # blocked — nothing approvable to gate
-        return "draft_report"
+        # One way out: the reviewer. Drafting never regenerates (see
+        # agents/drafting.py) and never ends the run on the validator's word.
+        return "human_gate"
 
     async def _human_gate_node(state: SupervisionState) -> dict:
         """The graph pauses here (interrupt(); the checkpointer holds the
@@ -852,7 +931,10 @@ def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkp
         rerun_allowed = rounds < _MAX_REVIEWER_ROUNDS
         context = {
             "reason": "report_approval",
-            "message": "Grounded report awaiting a named reviewer's decision.",
+            # Not "grounded report": the validator's findings are advisory
+            # now, so a flagged draft arrives here too. What is always true is
+            # that nothing issues without the name below.
+            "message": "Drafted report awaiting a named reviewer's decision.",
             "case_id": state["case_id"],
             "rerun_allowed": rerun_allowed,
             "reviewer_rounds": rounds,
@@ -916,8 +998,8 @@ def build_drafting_graph(*, model=None, store: LedgerStore | None = None, checkp
     graph.add_node("human_gate", _human_gate_node)
 
     graph.add_edge(START, "load_record")
-    graph.add_edge("load_record", "draft_report")
-    graph.add_edge("draft_report", "grounding_check")
+    graph.add_conditional_edges("load_record", _route_after_load, ["draft_report", END])
+    graph.add_conditional_edges("draft_report", _route_after_draft, ["grounding_check", END])
     graph.add_conditional_edges("grounding_check", _route_after_grounding, ["draft_report", "human_gate", END])
     graph.add_edge("human_gate", END)
 

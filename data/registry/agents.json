@@ -332,6 +332,116 @@
         "mcp://shop.voltic.de"
       ],
       "registered_purpose_category": "consumer_retail_purchase"
+    },
+    {
+      "agent_id": "AGT-RKW-BSK-01",
+      "agent_name": "Rookwood Auto-Basket",
+      "operator_id": "OPR-008",
+      "registered_at": "2025-12-05",
+      "classification": "consumer_shopping",
+      "risk_class": "medium",
+      "declared_purpose": "Assembles a basket for a consumer from their stated request and budget and presents it for approval before any payment is authorised.",
+      "authorisation_status": "provisional",
+      "authorisation_expires": "2027-06-20",
+      "pinned_model_versions": [
+        "claude-sonnet-5"
+      ],
+      "approved_prompt_releases": [
+        {
+          "release_ref": "rookwood-basket-v2.6.1",
+          "approved_at": "2025-12-05",
+          "prompt_hash": "sha256:8f67dc1e9adc74bf4251a74296136f0d196ed0d6c60f655d800d2d79d849d915"
+        },
+        {
+          "release_ref": "rookwood-basket-v2.7.0",
+          "approved_at": "2026-07-13",
+          "prompt_hash": "sha256:e9ab3b37074e260f253d8019ae4fefa08d8ddcd4cb196a022f8617f23b411862"
+        }
+      ],
+      "validation_evidence": [
+        {
+          "model_version": "claude-sonnet-5",
+          "validated_at": "2025-11-28",
+          "method": "operator_self_assessment"
+        }
+      ],
+      "declared_tool_servers": [
+        "mcp://core.rookwoodretail.co.uk",
+        "mcp://shop.ateliernord.se",
+        "mcp://shop.auroraaudio.kr",
+        "mcp://shop.brewhouse.com",
+        "mcp://shop.cyclora.fr",
+        "mcp://shop.deskwell.com",
+        "mcp://shop.groveline.com",
+        "mcp://shop.hearthandgrain.com",
+        "mcp://shop.kudotoys.jp",
+        "mcp://shop.lumenbeauty.com",
+        "mcp://shop.meridianmkt.sg",
+        "mcp://shop.northsole.com",
+        "mcp://shop.pagegrove.co.uk",
+        "mcp://shop.petcove.ca",
+        "mcp://shop.quickvale.cy",
+        "mcp://shop.silvara.it",
+        "mcp://shop.stillwaterhome.com",
+        "mcp://shop.trekline.nl",
+        "mcp://shop.voltic.de"
+      ],
+      "registered_purpose_category": "consumer_retail_purchase"
+    },
+    {
+      "agent_id": "AGT-WRN-SHOP-01",
+      "agent_name": "Wrenfield Shopping Assistant",
+      "operator_id": "OPR-009",
+      "registered_at": "2025-06-11",
+      "classification": "consumer_shopping",
+      "risk_class": "medium",
+      "declared_purpose": "Searches merchant catalogues on a consumer's behalf, assembles a cart matching their stated request and budget, and presents it for the consumer to approve before any payment is authorised.",
+      "authorisation_status": "provisional",
+      "authorisation_expires": "2027-01-10",
+      "pinned_model_versions": [
+        "claude-sonnet-5"
+      ],
+      "approved_prompt_releases": [
+        {
+          "release_ref": "wrenfield-shop-v1.4.2",
+          "approved_at": "2025-06-11",
+          "prompt_hash": "sha256:c2457f06f7a153579d7721ca3eb05f960de8b5d3cec067a872290034d4d7d157"
+        },
+        {
+          "release_ref": "wrenfield-shop-v1.5.0",
+          "approved_at": "2026-07-13",
+          "prompt_hash": "sha256:a925a651b7622ce3ccbf66a7389f10e812b792ba4e7a2a4b365d621443747673"
+        }
+      ],
+      "validation_evidence": [
+        {
+          "model_version": "claude-sonnet-5",
+          "validated_at": "2025-06-04",
+          "method": "operator_self_assessment"
+        }
+      ],
+      "declared_tool_servers": [
+        "mcp://core.wrenfieldcommerce.com",
+        "mcp://shop.ateliernord.se",
+        "mcp://shop.auroraaudio.kr",
+        "mcp://shop.brewhouse.com",
+        "mcp://shop.cyclora.fr",
+        "mcp://shop.deskwell.com",
+        "mcp://shop.groveline.com",
+        "mcp://shop.hearthandgrain.com",
+        "mcp://shop.kudotoys.jp",
+        "mcp://shop.lumenbeauty.com",
+        "mcp://shop.meridianmkt.sg",
+        "mcp://shop.northsole.com",
+        "mcp://shop.pagegrove.co.uk",
+        "mcp://shop.petcove.ca",
+        "mcp://shop.quickvale.cy",
+        "mcp://shop.silvara.it",
+        "mcp://shop.stillwaterhome.com",
+        "mcp://shop.trekline.nl",
+        "mcp://shop.voltic.de"
+      ],
+      "registered_purpose_category": "consumer_retail_purchase"
     }
   ]
 }

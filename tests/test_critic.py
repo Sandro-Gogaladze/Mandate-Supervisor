@@ -49,13 +49,81 @@ def test_mandates_semantic_judgement_is_checked() -> None:
 
 
 def test_observations_are_checked_against_their_agents_context() -> None:
+    """An observation is checked against ITS OWN agent's context, so a figure
+    only another agent was given is ungrounded here.
+
+    This used to assert that 88.5 was ungrounded against a context holding
+    0.885. That is the same number written the way a supervisor reads it,
+    and calling it a fabrication is the false positive `_grounded` now
+    rules out — so the case is made with a figure nobody was given."""
     obs = Observation(case_id="C", agent="drift", note="New counterparty took 88.5 percent of spend.",
                       cited_evidence="share 0.885")
     (result,) = check_evidence_grounding([], [obs], {"drift": {"share": 0.885}})
-    assert result.passed is False  # 88.5 is not in the evidence (0.885 is)
-    assert "88.5" in result.unquoted_values
+    assert result.passed is True, result.unquoted_values
+
+    invented = Observation(case_id="C", agent="drift", note="Spend concentrated at 62.5 percent.",
+                           cited_evidence="share 0.885")
+    (result,) = check_evidence_grounding([], [invented], {"drift": {"share": 0.885}})
+    assert result.passed is False
+    assert "62.5" in result.unquoted_values
 
 
 def test_agent_without_recorded_context_is_skipped_not_judged() -> None:
     a = _assessment(narrative="Cluster of 9999.99.")
     assert check_evidence_grounding([a], [], {}) == []
+
+
+_PROPORTIONS = {"cap_utilisation_median": 0.915, "settled_share": 0.995,
+                "new_payee_share": 0.17396358, "decline_rate": 0.06317}
+
+
+def test_a_proportion_written_as_a_percentage_is_grounded() -> None:
+    """The context holds proportions; a specialist writes percentages, because
+    that is how a supervisor reads them. Measured live on Ashgrove, comparing
+    the digits alone reported four correct Log claims as fabrications, which
+    downgraded them to inconclusive and blocked the case on a judgment gap."""
+    a = _assessment(narrative="Median cap utilisation 91.5%, 99.5% settled, "
+                              "17.4% new payees, 6.3% declines.")
+    (result,) = check_evidence_grounding([a], [], {"log": _PROPORTIONS})
+    assert result.passed is True, result.unquoted_values
+
+
+def test_rounding_to_the_precision_written_is_grounded() -> None:
+    a = _assessment(narrative="Cap utilisation ran at 92% of the ceiling.")
+    (result,) = check_evidence_grounding([a], [], {"log": _PROPORTIONS})
+    assert result.passed is True, result.unquoted_values
+
+
+def test_a_percentage_the_context_does_not_support_is_still_caught() -> None:
+    """The point of the unit tolerance is to stop punishing a correct
+    conversion — not to stop checking. 93% is nobody's rounding of 0.915."""
+    a = _assessment(narrative="Cap utilisation ran at 93.0% of the ceiling.")
+    (result,) = check_evidence_grounding([a], [], {"log": _PROPORTIONS})
+    assert result.passed is False
+    assert result.unquoted_values == ["93.0"]
+
+
+def test_precision_beyond_the_context_is_still_caught() -> None:
+    a = _assessment(narrative="Median cap utilisation was exactly 91.53%.")
+    (result,) = check_evidence_grounding([a], [], {"log": _PROPORTIONS})
+    assert result.passed is False
+    assert result.unquoted_values == ["91.53"]
+
+
+def test_a_comma_separated_list_is_not_one_grouped_number() -> None:
+    """`5261,5499,5651` is four MCC codes, not 526,154,995,651.
+
+    The old pattern treated any comma between digits as a thousands
+    separator, so KYA writing `retail codes (5261,5499,5651)` was reported as
+    quoting a twelve-digit figure that appears nowhere in its evidence — a
+    correct assessment failed for punctuation."""
+    a = _assessment(agent="kya", rule_id="KYA-REG-03",
+                    narrative="Activity fits: retail codes (5261,5499,5651) and nothing else.")
+    (result,) = check_evidence_grounding([a], [], {"kya": {"mccs": [5261, 5499, 5651]}})
+    assert result.passed is True, result.unquoted_values
+
+
+def test_real_grouped_thousands_still_read_as_one_number() -> None:
+    a = _assessment(narrative="Settled 1,748.10 against the threshold 3000.0.")
+    (result,) = check_evidence_grounding([a], [], {"log": {"settled": 1748.10, "threshold": 3000.0}})
+    assert result.passed is True, result.unquoted_values

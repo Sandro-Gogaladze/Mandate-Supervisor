@@ -1,5 +1,4 @@
-"""agents/grounding.py — the deterministic validator behind the
-drafting agent's regenerate-then-block loop (PLAN item 12)."""
+"""agents/grounding.py — the deterministic post-draft validator (PLAN item 12)."""
 from __future__ import annotations
 
 from agents.grounding import check_grounding
@@ -47,6 +46,12 @@ def test_omitted_finding_flagged():
     report = _report([_section("Partial", ["F-1"])])
     problems = check_grounding(report, findings, [])
     assert any("'F-2'" in p and "not cited" in p for p in problems)
+
+
+def test_selected_coverage_allows_routine_satisfied_checks_to_be_summarized():
+    findings = [_finding("F-1"), _finding("F-2", None)]
+    report = _report([_section("Confirmed failure", ["F-1"])])
+    assert check_grounding(report, findings, [], required_finding_ids={"F-1"}) == []
 
 
 def test_uncited_section_flagged_when_findings_exist():
@@ -105,11 +110,15 @@ def test_clear_section_over_satisfied_checks_passes():
     assert check_grounding(report, findings, []) == []
 
 
-def test_mixed_section_must_be_declared_mixed():
+def test_adverse_section_may_cite_satisfied_context():
     findings = [_finding("F-1"), _finding("F-2", None)]
     assert check_grounding(_report([_section("Both", ["F-1", "F-2"], "mixed")]), findings, []) == []
-    problems = check_grounding(_report([_section("Both", ["F-1", "F-2"], "adverse")]), findings, [])
-    assert any("is 'mixed'" in p for p in problems)
+    assert check_grounding(_report([_section("Failure with context", ["F-1", "F-2"], "adverse")]), findings, []) == []
+
+
+def test_mixed_section_needs_both_kinds_of_finding():
+    problems = check_grounding(_report([_section("Failure", ["F-1"], "mixed")]), [_finding("F-1")], [])
+    assert any("is 'adverse'" in p for p in problems)
 
 
 def test_undeclared_character_flagged():

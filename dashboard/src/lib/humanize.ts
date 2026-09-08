@@ -90,7 +90,6 @@ export function specialistSummary(counts: SpecialistProgress['fact_counts'] | nu
   if (!verdictCounts) {
     const tail: string[] = []
     if (counts?.satisfied) tail.push(`${counts.satisfied} rules satisfied`)
-    if (counts?.absent) tail.push(`${counts.absent} could not be evaluated`)
     return tail.join(' · ')
   }
   const breaches = assessments.filter((a) => a.verdict === 'breach').length
@@ -103,7 +102,6 @@ export function specialistSummary(counts: SpecialistProgress['fact_counts'] | nu
   if (inconclusive) parts.push(`${inconclusive} not decided`)
   if (counts) {
     if (counts.satisfied) parts.push(`${counts.satisfied} rules satisfied`)
-    if (counts.absent) parts.push(`${counts.absent} could not be evaluated`)
   }
   if (status === 'working') return parts.length ? `${parts.join(' · ')} so far` : 'Rules checked, now reasoning over the evidence'
   if (status === 'failed') return 'Judgement unavailable; the rule results are kept'

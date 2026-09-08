@@ -148,10 +148,17 @@ class LedgerStore:
         actor: str,
         run_id: str | None = None,
         run_ref: str | None = None,
+        recorded_at: str | None = None,
     ) -> LedgerEvent:
+        """`recorded_at` defaults to now and should stay that way for anything
+        actually happening. It is settable for ONE purpose: replaying an
+        exported ledger into a fresh store. An export that cannot be restored
+        without rewriting every timestamp is not a backup of an audit trail,
+        it is a summary of one — and a rebuild that silently redates history
+        is worse than no rebuild at all."""
         if event_type not in EVENT_TYPES:
             raise ValueError(f"unknown event_type {event_type!r}")
-        recorded_at = datetime.now(timezone.utc).isoformat()
+        recorded_at = recorded_at or datetime.now(timezone.utc).isoformat()
         with self._lock:
             conn = self._connect()
             try:

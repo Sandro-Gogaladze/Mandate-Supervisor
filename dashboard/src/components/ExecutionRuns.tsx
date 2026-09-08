@@ -51,10 +51,24 @@ function SubmissionSummary({ dossier }: { dossier: DossierDetail }) {
 export function ExecutionRuns({ caseId, dossier, refreshKey, onOpenRun }: { caseId: string; dossier: DossierDetail | null; refreshKey: number; onOpenRun: (run: string) => void }) {
   const [runs, setRuns] = useState<ExecutionSummary[]>([])
   const [error, setError] = useState('')
+  // Without this the empty INITIAL state is indistinguishable from a loaded
+  // empty one, and the tab reads "All 0 · No runs match this filter" while the
+  // request is still in flight. On a busy machine that window is seconds long
+  // — the endpoint recomputes the recommendation over the whole ledger — and
+  // it was reported as the run list being broken.
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState(false)
-  useEffect(() => { let active = true; getExecutions(caseId).then(r => { if (active) { setRuns(r); setError('') } }).catch(e => active && setError(String(e))); return () => { active = false } }, [caseId, refreshKey])
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    getExecutions(caseId)
+      .then(r => { if (active) { setRuns(r); setError('') } })
+      .catch(e => active && setError(String(e)))
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [caseId, refreshKey])
   const counts = (verdict: string) => runs.filter(r => (r.review?.verdict ?? 'awaiting') === verdict).length
   const rank = { breach: 0, unresolved: 1, clean: 2 }
   const visible = runs.filter(r => (filter === 'all' || (r.review?.verdict ?? 'awaiting') === filter) && `${r.run_id} ${r.merchant} ${r.request}`.toLowerCase().includes(search.toLowerCase()))
@@ -65,7 +79,7 @@ export function ExecutionRuns({ caseId, dossier, refreshKey, onOpenRun }: { case
         <Button asChild variant="outline" size="sm"><a href={dossierExportURL(caseId)}><Download /> Export dossier</a></Button>
       </div>
       {dossier && <SubmissionSummary dossier={dossier} />}
-      <div className="flex flex-wrap gap-2">{['all', 'clean', 'breach', 'unresolved', 'awaiting'].map(v => <Button key={v} variant={v === filter ? 'secondary' : 'outline'} size="sm" onClick={() => setFilter(v)}>{v === 'all' ? `All ${runs.length}` : `${v} ${counts(v)}`}</Button>)}</div>
+      <div className="flex flex-wrap gap-2">{['all', 'clean', 'breach', 'unresolved', 'awaiting'].map(v => <Button key={v} variant={v === filter ? 'secondary' : 'outline'} size="sm" onClick={() => setFilter(v)}>{v === 'all' ? (loading ? 'All —' : `All ${runs.length}`) : `${v} ${loading ? '—' : counts(v)}`}</Button>)}</div>
       <div className="flex items-center gap-2"><Search className="size-4 text-muted-foreground" /><Input aria-label="Search execution runs" placeholder="Run, merchant or shopper request" value={search} onChange={e => setSearch(e.target.value)} /><Button variant="outline" onClick={() => setSort(v => !v)}><ArrowUpDown />{sort ? 'By verdict' : 'By date'}</Button></div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="rounded-lg border bg-card"><Table><TableHeader><TableRow><TableHead>Run / shopper request</TableHead><TableHead>Merchant</TableHead><TableHead>Amount</TableHead><TableHead>Execution</TableHead><TableHead>Assessment</TableHead></TableRow></TableHeader>
@@ -74,7 +88,8 @@ export function ExecutionRuns({ caseId, dossier, refreshKey, onOpenRun }: { case
           <TableCell className="text-xs">{r.merchant ?? 'No cart'}</TableCell><TableCell className="whitespace-nowrap font-mono text-xs">{money(r.amount, r.currency)}</TableCell><TableCell className="text-xs">{r.outcome}</TableCell>
           <TableCell><Badge variant="outline" className={r.review?.verdict === 'clean' ? 'text-emerald-700' : r.review?.verdict === 'breach' ? 'text-amber-700' : ''}>{r.review?.verdict ?? 'Awaiting review'}</Badge></TableCell>
         </TableRow>)}</TableBody></Table></div>
-      {!visible.length && !error && <p className="text-sm text-muted-foreground">No runs match this filter.</p>}
+      {loading && <p className="text-sm text-muted-foreground">Loading the filed runs…</p>}
+      {!loading && !visible.length && !error && <p className="text-sm text-muted-foreground">No runs match this filter.</p>}
     </div>
   </div>
 }

@@ -136,8 +136,10 @@ class DriftAgent:
         facts = self.run(dossier, ruleset, evidence=evidence)
         assessments = self.assess(facts, ruleset, dossier, round=round)
         if any(f.kind == "absent" for f in facts):
-            return await narrated(SpecialistReview(facts=facts, assessments=assessments, insufficient_baseline=True), self.name, dossier,
-                              model=model, prompts=prompts, narrate=narrate)
+            # There is no drift judgement to narrate when the baseline is too
+            # small. Returning the deterministic data-gap assessment keeps
+            # this path offline as promised.
+            return SpecialistReview(facts=facts, assessments=assessments, insufficient_baseline=True)
 
         judged, observations = await analyze_drift(
             dossier, facts, rule, model=model, prior_observations=prior_observations,

@@ -67,4 +67,5 @@ class MandateAgent:
             )
             assessments = assessments + judged
         return await narrated(SpecialistReview(facts=facts, assessments=assessments, observations=observations), self.name, dossier,
-                              model=model, prompts=prompts, narrate=narrate)
+                              model=model, prompts=prompts,
+                              narrate=narrate and semantic_check and rule is not None)

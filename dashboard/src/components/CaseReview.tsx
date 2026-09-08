@@ -373,6 +373,10 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
       // decision page is not, so hand the reviewer back to the room to see it.
       setTab('room')
     }
+    // Resume on the SAME thread, but make sure the case travels with it:
+    // the state streamed back after the gate does not always carry case_id,
+    // and a resume without it is indistinguishable from a brand-new run.
+    drafterAgent.setState({ ...(drafterAgent.state ?? EMPTY_AGENT_STATE), case_id: caseId })
     drafterAgent.runAgent({ resume: [{ interruptId: gate.id, status: 'resolved', payload: decision }] })
   }
 
@@ -488,6 +492,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
         .join(' · ')
     : null
 
+  const report = record?.draft_report ?? null
   const hasTriage = (record?.runs ?? []).some((r) => r.kind === 'triage')
   const closable = !!record && !['issued', 'closed_rejected', 'closed_no_action'].includes(record.status)
   const findingsBadge = view.findings.length + view.observations.length
@@ -574,6 +579,7 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
                 focusedStep={focusedStep}
                 onOpenRun={setSelectedRun}
                 onDecision={() => setTab('decision')}
+                onOpenReport={() => setTab('findings')}
                 onSend={handleSend}
                 onRun={handleRun}
                 onDraft={handleDraft}
@@ -656,21 +662,44 @@ function CaseReviewInner({ caseSummary, onBack }: { caseSummary: CaseSummary; on
         />
       </TabsContent>
       <ExecutionInspector caseId={caseId} runId={selectedRun} onClose={() => setSelectedRun(null)} dossier={dossier} onOpenRun={setSelectedRun} onInvestigate={run => { setSelectedRun(null); setTab('room'); handleSend(`Review ${run} in depth. Re-dispatch only the relevant specialists, scoped to this execution, and explain its findings.`) }} />
+      {/* One page, one scroll: the drafted document first, then the record it
+          cites. The two used to be separate scrollers stacked on each other,
+          which read as two unrelated panels and hid whichever one you were
+          not in. */}
       <TabsContent value="findings" className="min-h-0 flex-1">
-        <div className="mx-auto h-full max-w-3xl overflow-y-auto">
-          {record?.draft_report && (
-            <div className="px-4 pt-4">
-              <ReportCard
-                report={record.draft_report}
-                firm={record.firm}
-                blocked={record.report_blocked}
-                groundingProblems={record.grounding_problems}
-                signed={(record.decisions ?? []).length > 0}
-                onSign={() => setTab('decision')}
-              />
-            </div>
-          )}
-          <ResultsPanel view={view} answers={record?.answers ?? []} />
+        <div className="h-full overflow-y-auto">
+          <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-5">
+            {report && record && (
+              <>
+                {/* Two different records can end a draft, and `signed` used to read
+                    only the first: `record.decisions` are the drafting gate's
+                    reviewer decisions, while the Decision tab writes an
+                    `authorisation_decided` event that lands in `dossier.decisions`.
+                    Signing a disposition there left the report still captioned
+                    "draft" and still offering a Sign button. */}
+                <ReportCard
+                  report={report}
+                  firm={record.firm}
+                  findings={record.findings}
+                  signed={(record.decisions ?? []).length > 0 || (dossier?.decisions ?? []).length > 0}
+                  disposition={dossier?.decisions?.at(-1)?.disposition}
+                  onSign={() => setTab('decision')}
+                  onOpenRun={setSelectedRun}
+                />
+                {/* Names the boundary the draft depends on: everything below is
+                    recorded by the specialists and scored deterministically,
+                    whether or not a report was ever drafted from it. */}
+                <div className="border-t pt-5">
+                  <h2 className="font-heading text-sm font-semibold">The record the draft cites</h2>
+                  <p className="mt-0.5 text-[12px] leading-5 text-muted-foreground">
+                    Findings, catalogue failures and the risk score, established by the specialists and scored by
+                    rule — independent of the prose above, and authoritative if the two ever disagree.
+                  </p>
+                </div>
+              </>
+            )}
+            <ResultsPanel view={view} answers={record?.answers ?? []} />
+          </div>
         </div>
       </TabsContent>
 

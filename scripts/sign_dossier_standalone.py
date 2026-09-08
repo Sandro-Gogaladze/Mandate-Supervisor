@@ -72,18 +72,66 @@ class AdditiveKeyRing:
 
 
 def ids_used_elsewhere(directory: Path) -> set[str]:
-    """Signer ids any OTHER dossier depends on.
+    """Signer ids something OTHER than this working copy still depends on.
 
     A key already in the keystore is not automatically off limits: re-signing
-    this same dossier after an edit is routine, and its own ids are its own to
-    re-mint. What must never be re-minted is an id another dossier's signatures
-    — or the copy of them already filed in the ledger — still verify against.
+    this dossier after an edit is routine, and its own ids are its own to
+    re-mint. What must never be re-minted is an id that some ALREADY-FILED
+    copy still verifies against.
+
+    "Filed" is the word that had to be widened. This first looked only at the
+    sibling dossier directories, and that was not enough: a dossier can be
+    edited and re-signed here after a copy of it has been uploaded or seeded
+    into the ledger, and re-minting its keys then leaves that filed copy
+    unverifiable with nothing on disk to show why. It happened twice. So the
+    ledger and the upload store are consulted too, and a dossier that has been
+    filed anywhere is frozen until the caller says otherwise.
     """
-    others = set()
+    others: set[str] = set()
     for sibling in sorted(directory.parent.iterdir()):
         if sibling.is_dir() and sibling != directory and (sibling / "dossier.json").exists():
             others |= signer_ids(sibling)
+
+    uploads = ROOT / "data" / "uploads"
+    for filed in sorted(uploads.iterdir()) if uploads.exists() else []:
+        if filed.is_dir() and (filed / "dossier.json").exists():
+            others |= signer_ids(filed)
+
+    others |= signer_ids_in_ledger(directory.name)
     return others
+
+
+def signer_ids_in_ledger(dossier_id: str) -> set[str]:
+    """Signer ids the ledger's own copies still verify against — including
+    this dossier's, if a copy of it has already been filed."""
+    try:
+        from ledger import LedgerStore
+        from ledger.seed import latest_submission
+    except ImportError:                      # signing must not require the ledger
+        return set()
+    path = ROOT / "data" / "ledger.db"
+    if not path.exists():
+        return set()
+    store = LedgerStore(path)
+    found: set[str] = set()
+
+    def walk(node) -> None:
+        if isinstance(node, dict):
+            if "signer_key_id" in node:
+                found.add(node["signer_key_id"])
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    for case_id in store.all_case_ids():
+        try:
+            payload = latest_submission(store, case_id)
+        except (ValueError, KeyError):
+            continue
+        walk(payload)
+    return found
 
 
 def main(directory: Path) -> None:
@@ -93,8 +141,12 @@ def main(directory: Path) -> None:
     shared = ids_used_elsewhere(directory)
     if clash := signer_ids(directory) & shared:
         raise SystemExit(
-            f"these signer ids are also used by another dossier: {sorted(clash)}. "
-            f"Re-minting them would break its signatures. Give this dossier its own.")
+            f"{len(clash)} signer id(s) here are still depended on by a copy that has already "
+            f"been filed — another dossier on disk, an upload, or a submission in the ledger: "
+            f"{sorted(clash)[:4]}{'...' if len(clash) > 4 else ''}\n"
+            f"Re-minting them would leave that copy unverifiable. Either give this dossier its "
+            f"own signer identities, or re-file the filed copy from the freshly signed "
+            f"artifacts afterwards (ledger.seed.submit_dossier appends a corrected submission).")
 
     # Its own ids may be reissued; everyone else's are frozen.
     existing = set(store["keys"]) - signer_ids(directory)

@@ -120,13 +120,16 @@ def grounded_draft(messages) -> dict:
     model instead of a fixture that would sail past a rule it never met."""
     payload = _json.loads(message_text(messages[-1]))
     findings = payload["findings"]
-    ids = [f["finding_id"] for f in findings]
+    # The drafter cites REF NUMBERS now, not ids — the briefing numbers the
+    # findings and agents/drafting.py maps them back. A fake that still sent
+    # ids would be testing a contract the model is no longer given.
+    refs = [f["ref"] for f in findings]
     breaches = sum(1 for f in findings if f.get("verdict") == "breach")
     character = ("mixed" if breaches and breaches < len(findings)
                  else "adverse" if breaches else "clear")
     sections = (
-        [{"title": "Findings", "body": "See cited findings.", "cited_finding_ids": ids,
-          "character": character}] if ids else []
+        [{"title": "Findings", "body": "See cited findings.", "cited_findings": refs,
+          "character": character}] if refs else []
     )
     note = "Unverified items for officer review." if payload["unverified_observations"] else None
     risk = payload.get("risk")
@@ -172,6 +175,13 @@ def closing_brief(messages) -> dict:
             "main_risks": [g["rule_id"] for g in payload["hard_gates"]][:3]}
 
 
+def follow_up_brief(messages) -> dict:
+    """Return the completed investigation answer as the supervisor's reply."""
+    payload = _json.loads(message_text(messages[-1]))
+    answer = next((result.get("answer") for result in payload["completed_results"] if result.get("answer")), None)
+    return {"reasoning": "Reporting the completed follow-up.", "message_to_officer": answer or "No new answer was recorded."}
+
+
 def nothing_acted(messages) -> dict:
     """Payload-aware fake Injection: the agent ignored every flagged item."""
     payload = _json.loads(message_text(messages[-1]))
@@ -211,6 +221,7 @@ DEFAULT_GRAPH_RESPONSES = {
                                          "other_observations": []},
     "record_correlations": {"correlations": []},
     "record_closing_brief": closing_brief,
+    "record_follow_up_brief": follow_up_brief,
     "draft_case_report": grounded_draft,
 }
 

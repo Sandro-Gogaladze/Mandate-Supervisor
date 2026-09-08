@@ -11,6 +11,8 @@ import { CataloguePage } from '@/components/CataloguePage'
 import { RulebookPage } from '@/components/RulebookPage'
 import { nodeMeta } from '@/lib/node-meta'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { HowToUseDialog } from '@/components/HowToUse'
+import { OfficerField } from '@/components/OfficerField'
 import { listCases } from '@/lib/api'
 import type { CaseSummary } from '@/lib/types'
 
@@ -63,8 +65,14 @@ function App() {
           <Separator orientation="vertical" className="mr-1 !h-4" />
           <span className="text-sm font-medium">{crumb}</span>
           <div className="ml-auto flex items-center gap-3">
-            <span className="font-mono text-[11px] text-muted-foreground">{today}</span>
+            {/* Sits in the header rather than on the Overview page: a reader
+                who needs it is most often already deep in a case, and that is
+                exactly where the Overview's own explanation is out of reach. */}
+            <HowToUseDialog onOpenRulebook={() => navigate('rulebook')} />
+            <span className="hidden font-mono text-[11px] text-muted-foreground lg:inline">{today}</span>
             <ThemeToggle />
+            <Separator orientation="vertical" className="!h-4" />
+            <OfficerField />
           </div>
         </header>
         <div className="min-h-0 flex-1">

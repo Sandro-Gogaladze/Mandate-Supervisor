@@ -91,13 +91,23 @@ def recommend(dossier, facts, assessments, *, correlations=(), policy=None, inva
                         'confidence': a.confidence, 'dedup_factor': sum(discounts[k] for k in keys) / len(keys),
                         'weight': round(sum(weights[k] * discounts[k] for k in keys), 4), 'run_refs': a.run_refs})
     run_results = []
+    # A doubt about the whole dossier is not a doubt about each of its runs.
+    # An inconclusive assessment naming no run, or an absent fact carrying no
+    # run_ref, is already an `adequacy` gap above, and an adequacy gap already
+    # blocks authorise and monitor on its own. Counting it a SECOND time, per
+    # run, marked every run unresolved and left `clean_runs` at zero on every
+    # case in the corpus — one unjudged Drift verdict cost Ashgrove 30 clean
+    # runs, one inconclusive KYA-REG-03 cost Kestrel 32. That defeats §6.1:
+    # a sum of severities cannot tell fifty demonstrated runs from three, and
+    # the clean-run count is what is supposed to.
+    dossier_level_doubt = coverage < policy['minimum_rule_coverage']
     for run in dossier.runs:
         related = [a for a in active if run.run_id in a.run_refs]
         problems = [a for a in related if a.verdict == 'breach']
-        relevant_facts = [f for f in fs if f.run_ref in (None, run.run_id)]
-        unknown = (any(a.verdict == 'inconclusive' and (not a.run_refs or run.run_id in a.run_refs) for a in active)
-                   or not any(f.run_ref == run.run_id for f in fs)
-                   or coverage < policy['minimum_rule_coverage']
+        relevant_facts = [f for f in fs if f.run_ref == run.run_id]
+        unknown = (any(a.verdict == 'inconclusive' for a in related)
+                   or not relevant_facts
+                   or dossier_level_doubt
                    or any(f.kind == 'absent' and f.absent_reason not in ('out_of_scope', 'rule_draft') for f in relevant_facts))
         verdict = 'breach' if problems else 'unresolved' if unknown else 'clean'
         run_results.append({"run_id": run.run_id, "verdict": verdict, "target_configuration": run.run_id in target_ids,

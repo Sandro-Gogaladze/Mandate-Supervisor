@@ -9,35 +9,55 @@ descriptions, prompt playback) can reach it, so there is nothing here for
 an injected instruction to ride in on. The firm's name and the case id
 are the only submission-derived strings included, as identifiers.
 
-Output is a typed `DraftReport` via a forced-shape tool call, same
-pattern as every other agent. Grounding is NOT enforced here — the
-deterministic validator (agents/grounding.py) does that from the graph,
-with a bounded regenerate loop (pipeline/graph.py); on a retry the
-validator's exact complaints are appended to the system prompt so the
-model fixes the actual problems rather than re-rolling blind.
+Output is a typed `DraftReport` via one forced-shape tool call. Grounding is
+not enforced here: the graph runs a deterministic validator afterward. It
+never regenerates the report, because the findings were already established
+by the specialist pipeline.
 """
 from __future__ import annotations
-
-
 
 from schemas import DispatchPlan, DraftReport, Finding, Observation, RiskScore
 
 from .llm import (
-    briefing_message, get_model, get_tool_call, log_cache_usage, system_message,
-    THINKING_EFFORT, with_reasoning, without_reasoning,
+    briefing_message, get_model, get_tool_call, log_cache_usage,
+    system_message, without_reasoning,
 )
 from .prompts import assemble
 
 PROMPT_ID = "DRAFTING"
 SYSTEM_PROMPT = assemble(PROMPT_ID).effective
 
-RETRY_ADDENDUM = """
+def _resolve_refs(tool_input: dict, findings: list[Finding]) -> None:
+    """Turn the `cited_findings` ref numbers back into real `finding_id`s.
 
-Your previous draft FAILED grounding validation with these exact problems — fix every one of \
-them; change nothing else about your approach:
-{problems}"""
+    The model cites numbers; every consumer downstream — the grounding
+    validator, the schema, the console — still sees real ids, so nothing but
+    this call knows the difference. A ref outside the range is dropped rather
+    than invented: grounding then reports the finding it stands for as
+    uncited, which is exactly the complaint a reviewer should see.
+    """
+    ids = [f.finding_id for f in findings]
+    sections = tool_input.get("sections")
+    if not isinstance(sections, list):
+        return
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
+        refs = section.pop("cited_findings", None)
+        if section.get("cited_finding_ids") is not None:
+            continue                      # already real ids; leave them alone
+        resolved = []
+        for ref in refs if isinstance(refs, list) else []:
+            try:
+                index = int(ref)
+            except (TypeError, ValueError):
+                continue
+            if 1 <= index <= len(ids):
+                resolved.append(ids[index - 1])
+        section["cited_finding_ids"] = resolved
 
-_REPORT_TOOL = with_reasoning({
+
+_REPORT_TOOL = {
     "name": "draft_case_report",
     "description": "Submit the drafted supervisory report for this case.",
     "input_schema": {
@@ -54,10 +74,13 @@ _REPORT_TOOL = with_reasoning({
                     "properties": {
                         "title": {"type": "string"},
                         "body": {"type": "string"},
-                        "cited_finding_ids": {
+                        "cited_findings": {
                             "type": "array",
-                            "items": {"type": "string"},
-                            "description": "finding_id values from the input that this section's claims rest on.",
+                            "items": {"type": "integer"},
+                            "description": (
+                                "The `ref` NUMBERS of the findings this section's claims rest on — "
+                                "e.g. [3, 7, 12]. Numbers only, never the finding text or a rule id."
+                            ),
                         },
                         "character": {
                             "type": "string",
@@ -65,12 +88,13 @@ _REPORT_TOOL = with_reasoning({
                             "description": (
                                 "What this section asserts, checked against the findings it cites: "
                                 "'adverse' if it reports something the agent got wrong, 'clear' if it "
-                                "reports checks that were satisfied, 'mixed' if both. Every input "
-                                "finding carries a `verdict` — use it."
+                                "reports checks that were satisfied, 'mixed' when it presents both "
+                                "sides as the conclusion. An adverse section may cite a satisfied check "
+                                "as context. Every input finding carries a `verdict` — use it."
                             ),
                         },
                     },
-                    "required": ["title", "body", "cited_finding_ids", "character"],
+                    "required": ["title", "body", "cited_findings", "character"],
                 },
             },
             "open_observations_note": {
@@ -80,7 +104,7 @@ _REPORT_TOOL = with_reasoning({
         },
         "required": ["overall_assessment", "sections", "open_observations_note"],
     },
-})
+}
 
 
 def _structured_view(
@@ -113,16 +137,28 @@ def _structured_view(
         # severity is how a clean check gets written up as a breach.
         "findings": [
             {
-                "finding_id": f.finding_id,
+                # A SHORT REFERENCE, not the identifier. The drafter used to
+                # cite findings by their real ids, which meant transcribing
+                # ~900 tokens of opaque strings like
+                # `DOSSIER-LRK-2026-001:systemic:F57:Quickvale Direct Ltd:r1`
+                # verbatim across the report — 64 of them on one case, none
+                # of which grounding lets it omit. That is the longest purely
+                # mechanical stretch of any tool call in the pipeline, and it
+                # is where the malformed replies clustered. The model now
+                # cites `[3, 7, 12]` and the code puts the ids back.
+                "ref": n,
                 "agent": f.agent,
                 "type": f.type,
                 "rule_id": f.rule_id,
                 "verdict": "breach" if (f.severity_weight or 0) > 0 else "satisfied",
                 "severity_weight": f.severity_weight,
                 "summary": f.summary,
-                "details": f.details,
+                # A report needs the supporting detail for failures.  Passing
+                # it again for every satisfied check made drafting reread the
+                # specialist work instead of reporting its conclusion.
+                "details": f.details if (f.severity_weight or 0) > 0 else None,
             }
-            for f in findings
+            for n, f in enumerate(findings, start=1)
         ],
         "unverified_observations": [
             {"agent": o.agent, "note": o.note, "cited_evidence": o.cited_evidence}
@@ -149,30 +185,28 @@ async def draft_case_report(
     dispatch_plan: DispatchPlan | None,
     escalation_round: int,
     risk_score: RiskScore | None = None,
-    prior_problems: list[str] | None = None,
     model=None,
-    thinking_effort: str = THINKING_EFFORT,
     system_prompt: str | None = None,
 ) -> DraftReport:
-    """Draft (or, with `prior_problems`, re-draft) the case report. Needs a
-    live ANTHROPIC_API_KEY unless `model` is supplied (tests inject a fake)."""
-    model = model or get_model()
+    """Turn the completed findings record into one concise report.
+
+    This is deliberately a non-thinking, non-streaming, forced-tool call.
+    The specialist pipeline has already evaluated the evidence; drafting is
+    presentation, so it must not enter a regenerate-until-valid loop.
+    """
+    model = model or get_model(thinking=False, max_tokens=4000, streaming=False)
     bound = model.bind(
-        output_config={"effort": thinking_effort},
         tools=[_REPORT_TOOL],
-        tool_choice={"type": "auto"},
+        tool_choice={"type": "any"},
     )
 
     system = system_prompt or SYSTEM_PROMPT
-    if prior_problems:
-        system += RETRY_ADDENDUM.format(problems="\n".join(f"- {p}" for p in prior_problems))
 
     payload = _structured_view(firm_name, findings, observations, dispatch_plan, escalation_round, risk_score)
-    response = await bound.ainvoke([
-        system_message(system),
-        briefing_message(payload),
-    ])
-    log_cache_usage(response, "drafting")
+    messages = [system_message(system), briefing_message(payload)]
 
-    tool_input = get_tool_call(response, "draft_case_report")
-    return DraftReport.model_validate({"case_id": case_id, **without_reasoning(tool_input)})
+    response = await bound.ainvoke(messages)
+    log_cache_usage(response, "drafting")
+    tool_input = without_reasoning(get_tool_call(response, "draft_case_report"))
+    _resolve_refs(tool_input, findings)
+    return DraftReport.model_validate({"case_id": case_id, **tool_input})

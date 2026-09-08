@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { AlertTriangle, ChevronRight, CircleSlash, Eye, Gauge, GitMerge, ListChecks, Route, SearchCheck } from 'lucide-react'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { FailureList } from '@/components/FailureList'
@@ -144,153 +143,154 @@ export function ResultsPanel({ view, answers }: { view: ResultsView; answers: In
 
   if (!hasAnything) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
         <ListChecks className="size-6 text-muted-foreground/40" />
         <p>Findings and observations will appear here as agents report in.</p>
       </div>
     )
   }
 
+  // No scroll container of its own: the Findings tab is one page — the drafted
+  // report and then the record it cites — and a second scroller inside it
+  // trapped the wheel and pinned the report half off-screen.
   return (
-    <ScrollArea className="h-full">
-      <div className="flex flex-col gap-5 p-4">
-        {risk_score && <ScoreCard score={risk_score} />}
+    <div className="flex flex-col gap-5">
+      {risk_score && <ScoreCard score={risk_score} />}
 
-        {plan && (
-          <Drawer icon={Route} title="Dispatch plan">
-            <div className="flex flex-wrap gap-1.5">
-              {(plan.skills ?? []).map((skill) => {
-                const agent = skill.split('.')[0] as FindingAgent
-                const meta = nodeMeta(agent)
-                const Icon = meta.icon
-                return (
-                  <Badge key={skill} variant="default" className="gap-1">
-                    <Icon className="size-3" />
-                    {meta.label}
-                  </Badge>
-                )
-              })}
-              {(plan.not_dispatched ?? []).map((skill) => {
-                const meta = nodeMeta(skill.split('.')[0])
-                return (
-                  <Badge key={skill} variant="outline" className={cn('gap-1 text-muted-foreground/60 line-through')}>
-                    {meta.label}
-                  </Badge>
-                )
-              })}
-              {(view.escalation_round ?? 0) > 0 && (
-                <Badge variant="secondary" className="gap-1">
-                  escalation round {view.escalation_round}
+      {plan && (
+        <Drawer icon={Route} title="Dispatch plan">
+          <div className="flex flex-wrap gap-1.5">
+            {(plan.skills ?? []).map((skill) => {
+              const agent = skill.split('.')[0] as FindingAgent
+              const meta = nodeMeta(agent)
+              const Icon = meta.icon
+              return (
+                <Badge key={skill} variant="default" className="gap-1">
+                  <Icon className="size-3" />
+                  {meta.label}
                 </Badge>
-              )}
-            </div>
-            <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{plan.reasoning}</p>
-          </Drawer>
-        )}
-
-        {failure_occurrences.length > 0 && (
-          <div>
-            <Separator className="mb-4" />
-            <SectionTitle icon={AlertTriangle}>Detected failures ({failure_occurrences.length})</SectionTitle>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Exact catalogue failures, projected from rule assessments and linked to their supporting facts and runs.
-            </p>
-            <div className="mt-2 flex flex-col gap-3">
-              {byDomain.map(([domain, group]) => (
-                <div key={domain}>
-                  <AgentChip agent={domain as ObservationAgent} />
-                  <div className="mt-1.5"><FailureList occurrences={group} /></div>
-                </div>
-              ))}
-            </div>
+              )
+            })}
+            {(plan.not_dispatched ?? []).map((skill) => {
+              const meta = nodeMeta(skill.split('.')[0])
+              return (
+                <Badge key={skill} variant="outline" className={cn('gap-1 text-muted-foreground/60 line-through')}>
+                  {meta.label}
+                </Badge>
+              )
+            })}
+            {(view.escalation_round ?? 0) > 0 && (
+              <Badge variant="secondary" className="gap-1">
+                escalation round {view.escalation_round}
+              </Badge>
+            )}
           </div>
-        )}
+          <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{plan.reasoning}</p>
+        </Drawer>
+      )}
 
-        {findings.length > 0 && (
-          <Drawer icon={AlertTriangle} title={`All findings (${findings.length}) — including those mapping to no catalogue failure`}>
-            <div className="flex flex-col gap-2">
-              {findings.map((f) => (
-                <div key={f.finding_id} className="rounded-lg border p-3 text-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    <AgentChip agent={f.agent} />
-                    <span className="font-mono text-[10px] text-muted-foreground">{f.type}</span>
-                  </div>
-                  <p className="mt-2 leading-relaxed">{f.summary}</p>
-                  <div className="mt-1.5 flex items-center gap-1.5">
-                    {f.rule_id && (
-                      <span className="inline-block rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-                        {f.rule_id}
-                      </span>
-                    )}
-                    <span className="font-mono text-[10px] text-muted-foreground/60">{f.finding_id}</span>
-                  </div>
+      {failure_occurrences.length > 0 && (
+        <div>
+          <Separator className="mb-4" />
+          <SectionTitle icon={AlertTriangle}>Detected failures ({failure_occurrences.length})</SectionTitle>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Exact catalogue failures, projected from rule assessments and linked to their supporting facts and runs.
+          </p>
+          <div className="mt-2 flex flex-col gap-3">
+            {byDomain.map(([domain, group]) => (
+              <div key={domain}>
+                <AgentChip agent={domain as ObservationAgent} />
+                <div className="mt-1.5"><FailureList occurrences={group} /></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {findings.length > 0 && (
+        <Drawer icon={AlertTriangle} title={`All findings (${findings.length}) — including those mapping to no catalogue failure`}>
+          <div className="flex flex-col gap-2">
+            {findings.map((f) => (
+              <div key={f.finding_id} className="rounded-lg border p-3 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <AgentChip agent={f.agent} />
+                  <span className="font-mono text-[10px] text-muted-foreground">{f.type}</span>
                 </div>
-              ))}
-            </div>
-          </Drawer>
-        )}
-
-        {correlations.length > 0 && (
-          <Drawer icon={GitMerge} title={`Correlations (${correlations.length})`}>
-            <p className="text-[11px] text-muted-foreground">
-              Relationships between findings — validated against real finding ids, never scored.
-            </p>
-            <div className="mt-2 flex flex-col gap-2">
-              {correlations.map((c, i) => (
-                <div key={i} className="rounded-lg border border-indigo-500/25 bg-indigo-500/[0.04] p-3 text-sm">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant="outline" className="gap-1 border-indigo-500/30 text-[10px] uppercase text-indigo-700 dark:text-indigo-400">
-                      {RELATIONSHIP_LABEL[c.relationship]}
-                    </Badge>
-                    {c.finding_ids.map((fid) => (
-                      <span key={fid} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-                        {fid}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="mt-2 leading-relaxed">{c.explanation}</p>
-                </div>
-              ))}
-            </div>
-          </Drawer>
-        )}
-
-        {answers.length > 0 && (
-          <Drawer icon={SearchCheck} title={`Investigation answers (${answers.length})`}>
-            <div className="flex flex-col gap-2">
-              {answers.map((a) => (
-                <div key={a.question_id} className="rounded-lg border border-teal-500/25 bg-teal-500/[0.04] p-3 text-sm">
-                  <p className="text-[13px] font-medium">“{a.question}”</p>
-                  <p className="mt-1.5 leading-relaxed">{a.answer}</p>
-                  {a.tool_calls.length > 0 && (
-                    <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">
-                      trail: {a.tool_calls.map((t) => t.tool).join(' → ')}
-                    </p>
+                <p className="mt-2 leading-relaxed">{f.summary}</p>
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  {f.rule_id && (
+                    <span className="inline-block rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                      {f.rule_id}
+                    </span>
                   )}
+                  <span className="font-mono text-[10px] text-muted-foreground/60">{f.finding_id}</span>
                 </div>
-              ))}
-            </div>
-          </Drawer>
-        )}
+              </div>
+            ))}
+          </div>
+        </Drawer>
+      )}
 
-        {observations.length > 0 && (
-          <Drawer icon={Eye} title={`Unverified observations (${observations.length})`}>
-            <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-              <CircleSlash className="size-3" />
-              Unverified model hunches — surfaced for a human reviewer, never scored.
-            </p>
-            <div className="mt-2 flex flex-col gap-2">
-              {observations.map((o, i) => (
-                <div key={i} className="rounded-lg border border-dashed p-3 text-sm">
-                  <AgentChip agent={o.agent} />
-                  <p className="mt-2 leading-relaxed">{o.note}</p>
-                  <p className="mt-1.5 text-[11px] italic text-muted-foreground">{o.cited_evidence}</p>
+      {correlations.length > 0 && (
+        <Drawer icon={GitMerge} title={`Correlations (${correlations.length})`}>
+          <p className="text-[11px] text-muted-foreground">
+            Relationships between findings — validated against real finding ids, never scored.
+          </p>
+          <div className="mt-2 flex flex-col gap-2">
+            {correlations.map((c, i) => (
+              <div key={i} className="rounded-lg border border-indigo-500/25 bg-indigo-500/[0.04] p-3 text-sm">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Badge variant="outline" className="gap-1 border-indigo-500/30 text-[10px] uppercase text-indigo-700 dark:text-indigo-400">
+                    {RELATIONSHIP_LABEL[c.relationship]}
+                  </Badge>
+                  {c.finding_ids.map((fid) => (
+                    <span key={fid} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                      {fid}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </Drawer>
-        )}
-      </div>
-    </ScrollArea>
+                <p className="mt-2 leading-relaxed">{c.explanation}</p>
+              </div>
+            ))}
+          </div>
+        </Drawer>
+      )}
+
+      {answers.length > 0 && (
+        <Drawer icon={SearchCheck} title={`Investigation answers (${answers.length})`}>
+          <div className="flex flex-col gap-2">
+            {answers.map((a) => (
+              <div key={a.question_id} className="rounded-lg border border-teal-500/25 bg-teal-500/[0.04] p-3 text-sm">
+                <p className="text-[13px] font-medium">“{a.question}”</p>
+                <p className="mt-1.5 leading-relaxed">{a.answer}</p>
+                {a.tool_calls.length > 0 && (
+                  <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">
+                    trail: {a.tool_calls.map((t) => t.tool).join(' → ')}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </Drawer>
+      )}
+
+      {observations.length > 0 && (
+        <Drawer icon={Eye} title={`Unverified observations (${observations.length})`}>
+          <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <CircleSlash className="size-3" />
+            Unverified model hunches — surfaced for a human reviewer, never scored.
+          </p>
+          <div className="mt-2 flex flex-col gap-2">
+            {observations.map((o, i) => (
+              <div key={i} className="rounded-lg border border-dashed p-3 text-sm">
+                <AgentChip agent={o.agent} />
+                <p className="mt-2 leading-relaxed">{o.note}</p>
+                <p className="mt-1.5 text-[11px] italic text-muted-foreground">{o.cited_evidence}</p>
+              </div>
+            ))}
+          </div>
+        </Drawer>
+      )}
+    </div>
   )
 }

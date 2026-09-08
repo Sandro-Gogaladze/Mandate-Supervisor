@@ -76,7 +76,7 @@ async def test_the_full_supervision_story(tmp_path) -> None:
         case_id, "who is the counterparty that appeared in August?", officer="Ana Dvaladze",
         model=model, store=store,
     )
-    assert "investigator" in reply.lower() and len(record.answers) == 1
+    assert "Quickvale Direct" in reply and len(record.answers) == 1
     assert record.status == "under_review"
 
     # 5 · a directed pass — Log re-examines and this time judges concentration reportable

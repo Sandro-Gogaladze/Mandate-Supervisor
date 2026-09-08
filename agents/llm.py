@@ -56,7 +56,13 @@ class LLMUnavailable(RuntimeError):
     """Raised when a live call is attempted with no API key configured."""
 
 
-def get_model(*, model: str = DEFAULT_MODEL) -> ChatAnthropic:
+def get_model(
+    *,
+    model: str = DEFAULT_MODEL,
+    thinking: bool = True,
+    max_tokens: int = 16000,
+    streaming: bool = True,
+) -> ChatAnthropic:
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise LLMUnavailable(
             "ANTHROPIC_API_KEY is not set. Every agent's deterministic floor "
@@ -69,12 +75,10 @@ def get_model(*, model: str = DEFAULT_MODEL) -> ChatAnthropic:
     # ChatAnthropic defaults to a buffered response, which made the console
     # receive a complete tool call at the end even though every layer after
     # this one supports streaming.
-    return ChatAnthropic(
-        model=model,
-        thinking={"type": "adaptive"},
-        max_tokens=16000,
-        streaming=True,
-    )
+    options = {"model": model, "max_tokens": max_tokens, "streaming": streaming}
+    if thinking:
+        options["thinking"] = {"type": "adaptive"}
+    return ChatAnthropic(**options)
 
 
 # ---------------------------------------------------------------- caching

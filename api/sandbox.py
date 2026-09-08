@@ -15,7 +15,9 @@ from pydantic import BaseModel
 from ledger import LedgerStore
 from agents.catalog import RULESET_LOADERS
 from sandbox.drafts import DraftError, create_draft, delete_draft, edit_rule, get_draft, list_drafts
-from sandbox.service import compare_sweeps, promote, start_sweep, version_graph
+from sandbox.service import (
+    compare_sweeps, existing_sweep, promote, start_sweep, version_graph,
+)
 from sandbox.store import SweepStore
 
 # One sweep at a time, process-wide.
@@ -51,12 +53,21 @@ class EditRequest(BaseModel):
 
 class SweepRequest(BaseModel):
     ruleset_ref: str
-    # A sweep runs the real pipeline, model calls included. Anything less
-    # cannot measure a judged rule, and a scorecard that silently omits a
-    # third of the book is worse than no scorecard. The library default stays
-    # mechanical for tests and offline use; a sweep asked for through the API
-    # is the one an officer will read, so it measures everything.
-    live: bool = True
+    # Mechanical unless asked otherwise, matching the console and the library.
+    # This defaulted to True on the argument that an officer reading a
+    # scorecard wants the judged rules scored too — true, but it made the
+    # cheapest possible request (`{"ruleset_ref": "kya"}`) the one that costs
+    # six minutes and real model spend. A default nobody can regret pressing
+    # is worth more than a default that is right when it is deliberate, and
+    # the console now names the mode on every call either way.
+    live: bool = False
+    # Measure again even though this exact rulebook already has a scorecard
+    # taken over the same corpus, policy and pipeline. The default returns
+    # that one instead: nothing that could move the numbers has moved, and a
+    # live sweep costs six minutes and real spend. In live mode a second
+    # reading is still worth asking for — it is the only way to see how much
+    # of a comparison is model variance.
+    force: bool = False
 
 
 class PromoteRequest(BaseModel):
@@ -89,9 +100,12 @@ def create_sandbox_router(ledger: LedgerStore, *, store: SweepStore | None = Non
         return sorted(out, key=lambda d: -d["rules"])
 
     @router.get("/graph/{domain}")
-    async def graph(domain: str):
+    async def graph(domain: str, mode: str | None = None):
+        """`mode` shows each version the scorecard it has IN THAT MODE. The
+        console passes the mode its Sweep button is set to, so the numbers on
+        screen are always ones the next sweep can be compared against."""
         try:
-            return version_graph(domain, store=sweeps)
+            return version_graph(domain, store=sweeps, mode=mode)
         except DraftError as exc:
             raise HTTPException(404, str(exc))
 
@@ -163,12 +177,21 @@ def create_sandbox_router(ledger: LedgerStore, *, store: SweepStore | None = Non
     @router.post("/sweeps")
     async def run(body: SweepRequest):
         try:
+            # Checked before the lock: a reused scorecard is a SQL lookup and
+            # has no business queueing behind somebody else's six-minute sweep.
+            stored = None if body.force else existing_sweep(
+                ruleset_ref=body.ruleset_ref, store=sweeps, live=body.live)
+            if stored is not None:
+                # The console says so. A Sweep button that returns in a second
+                # where it usually takes six minutes has to explain itself, or
+                # the reader concludes it did not run.
+                return {**stored.model_dump(mode="json"), "reused": True}
             async with _sweep_lock:
                 sweep = await start_sweep(ruleset_ref=body.ruleset_ref, store=sweeps,
-                                          live=body.live, model=model)
+                                          live=body.live, model=model, reuse=False)
         except DraftError as exc:
             raise HTTPException(404, str(exc))
-        return sweep.model_dump(mode="json")
+        return {**sweep.model_dump(mode="json"), "reused": False}
 
     @router.get("/compare")
     async def comparison(base: str, candidate: str):

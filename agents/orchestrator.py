@@ -297,6 +297,21 @@ _CLOSING_TOOL = with_reasoning({
     },
 }, hint="What came back, what dominates it, and what the officer should look at first.")
 
+_FOLLOW_UP_TOOL = with_reasoning({
+    "name": "record_follow_up_brief",
+    "description": "Answer the officer's follow-up from the completed investigation results.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "message_to_officer": {
+                "type": "string",
+                "description": "At most three plain-language sentences answering the officer's question. Use only the supplied results; say when the result is inconclusive.",
+            },
+        },
+        "required": ["message_to_officer"],
+    },
+}, hint="Read the completed follow-up results, then answer the officer's question directly without adding any new claim.")
+
 
 class ClosingBrief(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -308,6 +323,40 @@ class ClosingBrief(BaseModel):
     # reader can check the sentence against the arithmetic it describes.
     breach_count: int = 0
     disposition: str = ""
+
+
+async def close_follow_up(
+    question: str,
+    results: list[dict],
+    *,
+    model=None,
+    thinking_effort: str = THINKING_EFFORT,
+    system_prompt: str | None = None,
+) -> str:
+    """Turn a completed follow-up into the supervisor's final answer.
+
+    Unlike the review closing brief, this is not a risk recommendation: an
+    investigator answer is deliberately unscored.  The model receives only
+    this run's recorded outputs, after synthesis, so it cannot turn a lookup
+    into an unsupported new finding.
+    """
+    model = model or get_model()
+    bound = model.bind(
+        output_config={"effort": thinking_effort},
+        tools=[_FOLLOW_UP_TOOL],
+        tool_choice={"type": "auto"},
+    )
+    response = await bound.ainvoke([
+        system_message(system_prompt or CLOSING_SYSTEM_PROMPT),
+        briefing_message({"question": question, "completed_results": results}, cache=False),
+    ])
+    log_cache_usage(response, "orchestrator_follow_up")
+    message = str(get_tool_call(response, "record_follow_up_brief").get("message_to_officer") or "").strip()
+    if message:
+        return message
+
+    answer = next((str(result["answer"]) for result in results if result.get("answer")), None)
+    return answer or "The requested follow-up completed, but it produced no answer or assessment on the record."
 
 
 def closing_summary(recommendation, findings, score=None, correlations=()) -> dict:

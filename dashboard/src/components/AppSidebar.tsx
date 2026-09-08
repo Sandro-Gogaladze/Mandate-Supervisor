@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, ClipboardList, FlaskConical, LayoutDashboard, ShieldAlert, UserRound } from 'lucide-react'
+import { BookOpen, ClipboardList, FlaskConical, LayoutDashboard, ShieldAlert } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/sidebar'
 import { nodeMeta, SPECIALISTS } from '@/lib/node-meta'
 import { cn } from '@/lib/utils'
-import { DEFAULT_OFFICER, useOfficer } from '@/lib/officer'
 import { BrandMark } from '@/components/BrandMark'
 
 /** Working surfaces, plus one reference page per specialist. `agent:<id>`
@@ -33,7 +32,6 @@ export function AppSidebar({
   onNavigate: (section: SectionName) => void
   queueCount: number | null
 }) {
-  const [officer, setOfficer] = useOfficer()
   // A real, cheap health signal — pings the FastAPI backend once on mount
   // rather than showing a decorative always-green dot.
   const [healthy, setHealthy] = useState<boolean | null>(null)
@@ -139,35 +137,38 @@ export function AppSidebar({
 
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="flex items-center gap-2 rounded-md px-2 py-1.5 group-data-[collapsible=icon]:justify-center">
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sidebar-accent">
-                <UserRound className="size-3.5 text-sidebar-foreground/70" />
-              </div>
-              <div className="grid leading-tight group-data-[collapsible=icon]:hidden">
-                <input
-                  value={officer}
-                  onChange={(e) => setOfficer(e.target.value)}
-                  onBlur={(e) => !e.target.value.trim() && setOfficer(DEFAULT_OFFICER)}
-                  placeholder={DEFAULT_OFFICER}
-                  aria-label="Acting as — recorded on everything you do"
-                  className="w-full bg-transparent text-xs font-medium outline-none placeholder:text-sidebar-foreground/50 focus:underline"
-                />
-                <span className="flex items-center gap-1.5 text-[10px] text-sidebar-foreground/60">
-                  <span
-                    className={cn(
-                      'size-1.5 rounded-full',
-                      healthy == null ? 'bg-sidebar-foreground/30' : healthy ? 'bg-emerald-400' : 'bg-red-400',
-                    )}
-                  />
-                  {healthy == null ? 'connecting…' : healthy ? 'pipeline online' : 'pipeline offline'}
-                </span>
-              </div>
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      {/* Just the health signal now — who is acting moved to the top bar,
+          where an app shell puts identity and where it is read before a case
+          is signed rather than after.
+
+          A ruled strip across the foot of the rail, centred: it is a property
+          of the whole console, not an item in the navigation, and the rule
+          above it says so without a box drawn around the words. Offline is
+          the only state that takes colour — everything else stays quiet. */}
+      <SidebarFooter className="border-t border-sidebar-border/60 p-0">
+        <div
+          className="flex items-center justify-center gap-2 py-2.5"
+          title={healthy == null ? 'Connecting to the pipeline' : healthy ? 'Pipeline online' : 'Pipeline offline'}
+        >
+          <span
+            className={cn(
+              'size-1.5 shrink-0 rounded-full ring-2',
+              healthy == null
+                ? 'bg-sidebar-foreground/30 ring-transparent'
+                : healthy
+                  ? 'bg-emerald-500 ring-emerald-500/20'
+                  : 'bg-red-500 ring-red-500/25',
+            )}
+          />
+          <span
+            className={cn(
+              'text-[11px] group-data-[collapsible=icon]:hidden',
+              healthy === false ? 'font-medium text-red-600 dark:text-red-400' : 'text-sidebar-foreground/55',
+            )}
+          >
+            {healthy == null ? 'Connecting…' : healthy ? 'Pipeline online' : 'Pipeline offline'}
+          </span>
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -28,7 +28,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from schemas import Assessment, Observation
 
 # 1,748.10 · 2900 · 5.86 — grouped thousands allowed, sign ignored.
-_NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+#
+# A comma only separates thousands when it sits between groups of exactly
+# three digits. `\d[\d,]*` did not check that, so a COMMA-SEPARATED LIST was
+# swallowed as one number: KYA wrote `retail codes (5261,5499,5651)` and the
+# critic looked for 526154995651, found it nowhere, and reported a correct
+# assessment as quoting an unsupported figure. Matching the grouped form
+# first and a plain number otherwise reads that list as the four codes it is.
+_NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?")
 
 _CHECKED_AGENTS = frozenset({"log", "drift"})
 _CHECKED_RULES = frozenset({"MND-SEM-01"})
@@ -57,6 +64,33 @@ def _numbers_in(text: str) -> set[float]:
         if "." in token or value >= 100:
             values.add(round(value, 4))
     return values
+
+
+def _grounded(value: float, context: set[float]) -> bool:
+    """Is `value` a figure the context actually carries?
+
+    Exactly, or as the same figure written the other way round. The context
+    holds proportions (0.915, 0.17396358…); a specialist writes them as
+    percentages (91.5%, 17.4%) because that is how a supervisor reads them.
+    Comparing the digits alone called every one of those a fabrication:
+    measured live, Log was flagged on 91.5 / 99.5 / 17.4 / 6.3 while the
+    context held 0.915, 0.995, 0.17396358 and 0.06317 — four correct claims
+    reported as ungrounded, which downgraded Log's assessments to
+    inconclusive and blocked the case on a `judgment` gap.
+
+    Tolerance is half a unit in the last place the model actually wrote,
+    measured on the scale it wrote in — so a claim of 91.5 is met by 0.9153
+    and a claim of 92 by 0.915, while 93 is met by neither. Comparing on the
+    claimed scale is what keeps this honest: rounding both sides down to the
+    claim's precision on the FRACTION scale collapses 0.915 and 0.995 onto
+    the same value, and any two-digit percentage would then match anything.
+    """
+    if value in context:
+        return True
+    places = len(f"{value:f}".rstrip('0').partition('.')[2])
+    tolerance = 0.5 * 10 ** -places
+    return any(abs(known - value) <= tolerance or abs(known * 100 - value) <= tolerance
+               for known in context)
 
 
 def _claimed_text(a: Assessment) -> str:
@@ -88,7 +122,7 @@ def check_evidence_grounding(
             if agent not in _CHECKED_AGENTS and a.rule_id not in judged_rules:
                 continue
             checked += 1
-            for value in sorted(_numbers_in(_claimed_text(a)) - context_numbers):
+            for value in sorted(v for v in _numbers_in(_claimed_text(a)) if not _grounded(v, context_numbers)):
                 unquoted.append(str(value))
                 sources.append(a.assessment_id)
 
@@ -97,7 +131,7 @@ def check_evidence_grounding(
                 continue
             checked += 1
             claimed = f"{observation.note} {observation.cited_evidence}"
-            for value in sorted(_numbers_in(claimed) - context_numbers):
+            for value in sorted(v for v in _numbers_in(claimed) if not _grounded(v, context_numbers)):
                 unquoted.append(str(value))
                 sources.append(f"observation:{observation.note[:60]}")
 

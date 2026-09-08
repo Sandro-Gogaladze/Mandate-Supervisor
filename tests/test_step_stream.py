@@ -116,7 +116,7 @@ async def test_investigation_stream_dispatches_investigator(store) -> None:
 
     seq = await node_transitions(build_investigation_graph(model=Hybrid(), store=store),
                                  _question_initial(cid, "who is MER-QVC-8801?"))
-    assert seq == ["ingest", "orchestrate", "investigator", "specialists_done", "record"]
+    assert seq == ["ingest", "orchestrate", "investigator", "specialists_done", "synthesizer", "record"]
     assert_all_steps_light_something(seq)
 
 
@@ -146,7 +146,9 @@ async def test_drafting_stream_holds_at_gate_then_resumes(store) -> None:
     assert resumed == ["human_gate"]
 
 
-async def test_drafting_stream_blocked_never_reaches_the_gate(store) -> None:
+async def test_drafting_stream_reaches_the_gate_even_when_grounding_complains(store) -> None:
+    """Grounding is advisory: the run walks the same path either way, and the
+    officer who asked for a report always gets one to decide on."""
     cid = seed(store, HAL)
     await build_triage_graph(model=make_graph_fake(), store=store).ainvoke(_triage_initial(cid))
     fake = make_graph_fake({"draft_case_report": {
@@ -155,6 +157,6 @@ async def test_drafting_stream_blocked_never_reaches_the_gate(store) -> None:
         "open_observations_note": None}})
     graph = build_drafting_graph(model=fake, store=store, checkpointer=MemorySaver())
     seq = await node_transitions(graph, {"case_id": cid, "messages": []},
-                                 {"configurable": {"thread_id": "stream-blocked"}})
-    assert seq == ["load_record"] + ["draft_report", "grounding_check"] * 3
-    assert "human_gate" not in seq
+                                 {"configurable": {"thread_id": "stream-flagged"}})
+    assert seq == ["load_record", "draft_report", "grounding_check", "human_gate"]
+    assert_all_steps_light_something(seq)

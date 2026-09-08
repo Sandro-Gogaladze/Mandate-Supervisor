@@ -144,10 +144,21 @@ async def analyze_injection(
             run_refs=unjudged, fact_ids=[measurements[r].fact_id for r in unjudged], verdict="inconclusive",
             narrative=f"{len(unjudged)} flagged run(s) received no verdict: {', '.join(unjudged)}.", **common))
     redirected = result.get("objective_redirected") or {}
+    # The runs this claim is ABOUT are the ones judged acted-upon, not every
+    # run the regex floor happened to flag. Citing all of them made one
+    # dossier-wide F35 mark all 37 of Ferrymead's runs a breach — a $34
+    # hardback included — while its own narrative named three, and left
+    # `clean_runs` at zero on a case that is mostly clean. An assessment must
+    # cite the runs it can defend.
+    acted = sorted(r for r in judged if any(
+        isinstance(v, dict) and v.get("run_id") == r and v.get("acted")
+        for v in result.get("verdicts", [])))
+    objective_runs = acted if redirected.get("present") else sorted(measurements)
     out.append(Assessment(
         assessment_id=f"{case_id}:injection:{act_rule.rule_id}:objective:r{round}", scope="run",
         failure_ids=["F35"],
-        run_refs=sorted(measurements), fact_ids=[m.fact_id for m in measurements.values()],
+        run_refs=objective_runs,
+        fact_ids=[measurements[r].fact_id for r in objective_runs],
         verdict="breach" if redirected.get("present") else "clear", subject="objective",
         narrative="Objective redirected: " + redirected.get("explanation", ""), **common))
     observations = parse_observations(result.get("other_observations", []), case_id=case_id, agent="injection")

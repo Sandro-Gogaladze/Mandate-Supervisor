@@ -6,7 +6,7 @@
 // verdicts in plain language, and — one level down — what it was briefed
 // with. No function names, no raw payloads: the machine names stay on the
 // ledger, which is what the timeline tab is for.
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   ArrowUp,
   BadgeCheck,
@@ -136,7 +136,8 @@ function buildTranscript(events: LedgerEvent[]): Item[] {
 function UserBubble({ text, by, at }: { text: string; by: string; at?: string }) {
   return (
     <div className="flex flex-col items-end gap-1">
-      <div className="max-w-[80%] rounded-2xl bg-muted px-4 py-2.5 text-[15px] leading-6 text-foreground">{text}</div>
+      <span className="pr-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">You asked</span>
+      <div className="max-w-[80%] rounded-2xl border border-primary/15 bg-muted px-4 py-2.5 text-[15px] leading-6 text-foreground">{text}</div>
       <span className="pr-1 text-[11px] text-muted-foreground">
         {by}
         {at && <> · {fmtTime(at)}</>}
@@ -479,10 +480,11 @@ function SpecialistStep({ agent, group, running, live, progress, facts, factsLoa
 // One run = one assistant turn
 // ---------------------------------------------------------------------------
 
-function RunTurn({ group, running, live, liveReply, progress, facts, officer, focusedStep, onOpenRun, onDecision, gate }: {
+function RunTurn({ group, running, live, liveReply, pendingQuestion, progress, facts, officer, focusedStep, onOpenRun, onDecision, onOpenReport, gate }: {
   group: RunGroup; running: boolean; live: FeedEvent[]; liveReply?: string | null; progress: Record<string, SpecialistProgress>
+  pendingQuestion?: string | null
   facts: Map<string, Fact>; officer: string; focusedStep: string | null
-  onOpenRun: (run: string) => void; onDecision: () => void
+  onOpenRun: (run: string) => void; onDecision: () => void; onOpenReport: () => void
   gate: { context: GateContext } | null
 }) {
   const ev = group.events
@@ -502,6 +504,7 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
   const agents = orderAgents(unique([...dispatched, ...liveWorkers]).filter((a) => a !== 'investigator'), selected)
 
   const userText = question ? String(pay(question).question)
+    : group.kind === 'investigation' && pendingQuestion ? pendingQuestion
     : group.kind === 'triage' ? (sp.directive ? `Look again — ${sp.directive.instructions}` : sp.deterministic_only ? 'Run the review with the rules only, no model judgement' : String(sp.request || 'Run the full review'))
     : group.kind === 'drafting' ? 'Draft the supervisory report' : null
   const by = question ? question.actor.replace('human:', '') : officer
@@ -514,9 +517,7 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
   const closingThinking = live.filter((e): e is ReasoningEvent => e.kind === 'reasoning' && e.node === 'record').filter(spoken)
   const closingTools = live.filter((e): e is ToolCallEvent => e.kind === 'tool' && e.node === 'record')
   const synthTools = live.filter((e): e is ToolCallEvent => e.kind === 'tool' && e.node === 'synthesizer')
-  const draftTools = live.filter((e): e is ToolCallEvent => e.kind === 'tool' && e.node === 'draft_report')
   const synthThinking = live.filter((e): e is ReasoningEvent => e.kind === 'reasoning' && e.node === 'synthesizer').filter(spoken)
-  const draftThinking = live.filter((e): e is ReasoningEvent => e.kind === 'reasoning' && e.node === 'draft_report').filter(spoken)
   const investigatorThinking = live.filter((e): e is ReasoningEvent => e.kind === 'reasoning' && e.node === 'investigator').filter(spoken)
   const investigatorTools = live.filter((e): e is ToolCallEvent => e.kind === 'tool' && e.node === 'investigator')
 
@@ -529,7 +530,10 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
   const investigatorDispatched = dispatched.includes('investigator') || liveWorkers.includes('investigator')
   const reports = all('report_drafted')
   const groundings = all('grounding_checked')
-  const blocked = find('report_blocked')
+  // Not a block, and never rendered as one: the drafting model returning
+  // nothing usable is the only way a requested report fails to exist, and the
+  // officer who pressed the button has to be told.
+  const draftingFailed = all('specialist_failed').map(pay).find((f) => f.agent === 'drafting')
   const decisions = all('decision_recorded')
   const score = all('score_computed').at(-1)
   const recommendation = all('authorisation_computed').at(-1)
@@ -675,32 +679,47 @@ function RunTurn({ group, running, live, liveReply, progress, facts, officer, fo
 
           {reports.map((r, i) => (
             <div key={r.seq} className="space-y-3">
-              {i === reports.length - 1 && draftThinking.map((t) => <Thinking key={t.key} text={t.text} working={!t.done} startedAt={t.at} endedAt={t.endedAt} />)}
-              {i === reports.length - 1 && draftTools.map((t) => <ToolReasoning key={t.key} tool={t} />)}
+              {/* No thinking drawer on the drafter either, for the reason given
+                  at the specialist step: its working reaches the reader as the
+                  report. One drawer per internal attempt — and the drafter
+                  retries a malformed reply — stacked seven of them above the
+                  report, most reading "n/a" because there was no text to show. */}
               <div className="rounded-xl border bg-card px-4 py-3.5">
                 <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"><FileText className="size-3.5" />Supervisory report · draft {reports.length > 1 ? i + 1 : ''}</p>
                 <p className="mt-2 text-[14px] leading-6">{pay(r).overall_assessment}</p>
                 <p className="mt-1.5 text-[13px] text-muted-foreground">
-                  {(pay(r).sections ?? []).length} section{((pay(r).sections ?? []).length) === 1 ? '' : 's'}, each citing the findings it rests on. The full report is on the Findings tab.
+                  {(pay(r).sections ?? []).length} section{((pay(r).sections ?? []).length) === 1 ? '' : 's'}, each citing the findings it rests on.
                 </p>
                 {i === reports.length - 1 && (
-                  <div className="mt-3 border-t pt-3">
-                    <p className="text-[13px] text-muted-foreground">
+                  <div className="mt-3 flex flex-wrap items-center gap-3 border-t pt-3">
+                    <p className="flex-1 text-[13px] text-muted-foreground">
                       {decisions.length
                         ? 'A named decision is on the record.'
-                        : 'Read the draft on the Findings tab, then sign it on the Decision tab: a report cannot issue until a named supervisor records the decision it rests on.'}
+                        : 'Read the draft in full, then sign it on the Decision tab: a report cannot issue until a named supervisor records the decision it rests on.'}
                     </p>
+                    {/* The transcript used to name the tab and leave the reader
+                        to find it. The draft is the case's principal artefact —
+                        it gets a door, not a direction. */}
+                    <Button size="sm" variant="outline" onClick={onOpenReport}>
+                      <FileText data-icon="inline-start" />
+                      Open the draft
+                    </Button>
                   </div>
                 )}
               </div>
             </div>
           ))}
-          {running && group.kind === 'drafting' && !reports.length && draftThinking.map((t) => <Thinking key={t.key} text={t.text} working={!t.done} startedAt={t.at} endedAt={t.endedAt} />)}
-          {running && group.kind === 'drafting' && !reports.length && draftTools.map((t) => <ToolReasoning key={t.key} tool={t} />)}
+          {running && group.kind === 'drafting' && !reports.length && (
+            <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground"><Loader2 className="size-3 animate-spin" />Writing the report from the findings on the record.</p>
+          )}
           {groundings.map((g) => (
-            <p key={g.seq} className="flex items-center gap-2 text-[13px] text-muted-foreground"><ShieldCheck className={cn('size-3.5', pay(g).passed ? 'text-emerald-600' : 'text-amber-600')} />{pay(g).passed ? 'Grounding passed — every claim cites a real finding.' : `Grounding failed on attempt ${pay(g).attempt} — regenerating with the validator's complaints.`}</p>
+            <p key={g.seq} className="flex items-center gap-2 text-[13px] text-muted-foreground"><ShieldCheck className={cn('size-3.5', pay(g).passed ? 'text-emerald-600' : 'text-amber-600')} />{pay(g).passed ? 'Grounding passed — every claim cites a real finding.' : `Grounding flagged ${(pay(g).problems as string[]).length} point(s) on this draft — recorded for the reviewer.`}</p>
           ))}
-          {blocked && <p className="rounded-lg border border-red-500/30 bg-red-500/[0.04] px-3 py-2 text-[13px] text-red-700 dark:text-red-400">Draft blocked after the retry cap: {(pay(blocked).problems as string[]).join('; ')}</p>}
+          {draftingFailed && (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/[0.05] px-3 py-2 text-[13px] text-amber-700 dark:text-amber-400">
+              {String(draftingFailed.message)} Ask again when you are ready.
+            </p>
+          )}
           {decisions.map((d) => (
             <p key={d.seq} className="flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-[13px]">
               {pay(d).action === 'approve' ? <BadgeCheck className="size-4 text-emerald-600" /> : pay(d).action === 'reject' ? <XCircle className="size-4 text-muted-foreground" /> : <RotateCw className="size-4 text-muted-foreground" />}
@@ -806,6 +825,7 @@ export interface CaseChatProps {
   focusedStep: string | null
   onOpenRun: (run: string) => void
   onDecision: () => void
+  onOpenReport: () => void
   onSend: (text: string) => void
   onRun: () => void
   onDraft: () => void
@@ -819,10 +839,11 @@ const LIVE_KIND: Record<NonNullable<CaseChatProps['running']>, RunGroup['kind']>
 
 export function CaseChat({
   events, factsSource, hiddenCount, onShowEarlier, live, running, progress, pendingQuestion, pendingReply, gate,
-  officer, focusedStep, onOpenRun, onDecision, onSend, onRun, onDraft, onCloseCase, busy, hasTriage, closable,
+  officer, focusedStep, onOpenRun, onDecision, onOpenReport, onSend, onRun, onDraft, onCloseCase, busy, hasTriage, closable,
 }: CaseChatProps) {
   const [draft, setDraft] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
+  const viewportRef = useRef<HTMLElement | null>(null)
   const followRef = useRef(true)
 
   const items = useMemo(() => buildTranscript(events ?? []), [events])
@@ -845,12 +866,39 @@ export function CaseChat({
   useEffect(() => {
     const viewport = bottomRef.current?.closest('[data-slot="scroll-area-viewport"]') as HTMLElement | null
     if (!viewport) return
-    const onScroll = () => { followRef.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 120 }
+    viewportRef.current = viewport
+
+    const isAtBottom = () => viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 120
+    const onScroll = () => { followRef.current = isAtBottom() }
+    // A streamed update can render before the browser has dispatched the
+    // corresponding scroll event.  Mark an upward gesture immediately, so
+    // that update cannot pull someone reading earlier activity back down.
+    const onWheel = (event: WheelEvent) => {
+      if (event.deltaY < 0) followRef.current = false
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (['ArrowUp', 'PageUp', 'Home'].includes(event.key) || (event.key === ' ' && event.shiftKey)) {
+        followRef.current = false
+      }
+    }
+
+    // The room is remounted whenever the officer returns from another case
+    // page. A fresh viewport starts at its top, so deliberately reopen at
+    // the latest turn instead.
+    followRef.current = true
+    viewport.scrollTop = viewport.scrollHeight
     viewport.addEventListener('scroll', onScroll, { passive: true })
-    return () => viewport.removeEventListener('scroll', onScroll)
+    viewport.addEventListener('wheel', onWheel, { passive: true })
+    viewport.addEventListener('keydown', onKeyDown)
+    return () => {
+      viewport.removeEventListener('scroll', onScroll)
+      viewport.removeEventListener('wheel', onWheel)
+      viewport.removeEventListener('keydown', onKeyDown)
+      if (viewportRef.current === viewport) viewportRef.current = null
+    }
   }, [])
-  useEffect(() => {
-    const viewport = bottomRef.current?.closest('[data-slot="scroll-area-viewport"]') as HTMLElement | null
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current
     if (viewport && followRef.current) viewport.scrollTop = viewport.scrollHeight
   }, [items, live, pendingQuestion, pendingReply, gate, progress])
 
@@ -861,7 +909,7 @@ export function CaseChat({
     onSend(text)
   }
 
-  const turnProps = { progress, facts, officer, focusedStep, onOpenRun, onDecision, gate }
+  const turnProps = { progress, facts, officer, focusedStep, onOpenRun, onDecision, onOpenReport, gate }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -891,12 +939,12 @@ export function CaseChat({
               )
             }
             const isLive = liveGroup?.runId === item.group.runId
-            return <RunTurn key={item.group.runId} group={item.group} running={isLive && !!running} live={isLive ? live : []} liveReply={isLive ? pendingReply : null} {...turnProps} />
+            return <RunTurn key={item.group.runId} group={item.group} running={isLive && !!running} live={isLive ? live : []} liveReply={isLive ? pendingReply : null} pendingQuestion={isLive ? pendingQuestion : null} {...turnProps} />
           })}
           {liveGroup?.runId === 'live' && (
             <>
               {pendingQuestion && <UserBubble text={pendingQuestion} by={officer} />}
-              <RunTurn group={liveGroup} running live={live} liveReply={pendingReply} {...turnProps} />
+              <RunTurn group={liveGroup} running live={live} liveReply={pendingReply} pendingQuestion={pendingQuestion} {...turnProps} />
             </>
           )}
           {gate && !runs.some((r) => r.group.kind === 'drafting' && !r.group.events.some((e) => e.event_type === 'run_completed')) && (
@@ -952,9 +1000,9 @@ export function CaseChat({
                 </Button>
               )}
               <span className="ml-auto flex items-center gap-2">
-                {/* Read-only here: the name is set once in the sidebar, because
-                    it is recorded on everything and two edit points can
-                    disagree between a review and the signature on it. */}
+                {/* Read-only here: the name is set once in the top bar,
+                    because it is recorded on everything and two edit points
+                    can disagree between a review and the signature on it. */}
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <UserRound className="size-3.5" />
                   {officer}

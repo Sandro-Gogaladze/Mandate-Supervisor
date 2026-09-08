@@ -18,9 +18,9 @@ import {
 } from '@/lib/api'
 import { useOfficer } from '@/lib/officer'
 import {
-  labelled, trustworthy,
+  decisive, labelled, trustworthy,
   type DossierOutcome, type RulebookView, type Rule, type RuleScore, type SandboxDomain,
-  type Sweep, type SweepComparison, type VersionGraph,
+  type Sweep, type SweepComparison, type SweepMode, type VersionGraph,
 } from '@/lib/sandbox-types'
 import { BlueprintGrid } from '@/components/BlueprintGrid'
 import { cn } from '@/lib/utils'
@@ -54,12 +54,23 @@ export function PolicySandbox() {
   const [sweep, setSweep] = useState<Sweep | null>(null)
   const [compare, setCompare] = useState<SweepComparison | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
+  /** Which mode the Sweep buttons take, and which mode's scorecards the page
+   *  shows.
+   *
+   *  Deterministic by default, because the default must be the one nobody can
+   *  regret pressing: 25 seconds, no model calls, no spend, and the same
+   *  rulebook returns the same scorecard byte for byte. Full costs six
+   *  minutes and real money, so it is something a person chooses, never
+   *  something they arrive in. The trade is that Deterministic is silent on
+   *  the model-judged rules — which the scorecard says on its own face, in
+   *  the unevaluated-domains note and on the decision line. */
+  const [mode, setMode] = useState<SweepMode>('mechanical')
 
   useEffect(() => { getSandboxDomains().then(setDomains).catch(() => setDomains([])) }, [])
 
   const refresh = useCallback(async (ref?: string) => {
     const target = ref ?? selected
-    const [g, b] = await Promise.all([getVersionGraph(domain), getRulebook(target)])
+    const [g, b] = await Promise.all([getVersionGraph(domain, mode), getRulebook(target)])
     setGraph(g); setBook(b)
     // Every sweep is stored, and a live one costs six minutes — so selecting a
     // version shows the scorecard it already has rather than an empty panel
@@ -73,18 +84,34 @@ export function PolicySandbox() {
     } else {
       setSweep(null)
     }
-  }, [domain, selected])
+  }, [domain, selected, mode])
 
   useEffect(() => { setSelected(domain); setCompare(null) }, [domain])
+  // Switching mode invalidates any open comparison: the two never compare.
+  useEffect(() => { setCompare(null) }, [mode])
   useEffect(() => { refresh().catch((e) => toast(String(e))) }, [refresh])
 
-  const sweepFor = async (ref: string) => {
-    setBusy(`Sweeping ${ref} over every labelled submission — the full pipeline, so this takes minutes…`)
+  /** `force` measures again where a stored scorecard would otherwise be
+   *  returned. The default is not to: a sweep this version already has, taken
+   *  over the same corpus, the same rest-of-policy and the same pipeline, can
+   *  only be reproduced (mechanical) or made noisier (live), and a live one
+   *  costs six minutes. */
+  const sweepFor = async (ref: string, force = false) => {
+    setBusy(force
+      ? `Re-measuring ${ref} over every labelled submission — the full pipeline, so this takes minutes…`
+      : `Sweeping ${ref} over every labelled submission — the full pipeline, so this takes minutes…`)
     setCompare(null)
     try {
-      const result = await runSweep({ ruleset_ref: ref })
+      const result = await runSweep({ ruleset_ref: ref, force, live: mode === 'live' })
       setSweep(result)
       if (result.error) toast(`Sweep failed: ${result.error}`)
+      else if (result.reused) {
+        toast('This rulebook already has a scorecard', {
+          description: `Taken ${new Date(result.started_at).toLocaleString('en-GB', {
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}. Nothing that could move it — the rules, the corpus, the rest of the policy, the pipeline — has changed since.`,
+          action: { label: 'Measure again', onClick: () => { void sweepFor(ref, true) } },
+        })
+      }
       await refresh(ref)
     } catch (e) { toast(String(e)) } finally { setBusy(null) }
   }
@@ -118,23 +145,39 @@ export function PolicySandbox() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <Header domains={domains} domain={domain} onDomain={setDomain} />
+      <Header domains={domains} domain={domain} onDomain={setDomain}
+        mode={mode} onMode={setMode} />
       {busy && (
         <p className="flex items-center gap-2 border-b bg-blue-500/[0.06] px-4 py-1.5 text-[13px] text-blue-700 dark:text-blue-400">
           <Loader2 className="size-3.5 animate-spin" />{busy}
         </p>
       )}
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[204px_minmax(0,1fr)_296px]">
-        <VersionPane graph={graph} selected={selected}
-          onSelect={(ref) => { setSelected(ref); setCompare(null); refresh(ref).catch((e) => toast(String(e))) }}
-          onFork={fork} onSweep={sweepFor} onDelete={async (id) => {
-            await deleteDraft(id); setSelected(domain); await refresh(domain)
-          }} busy={!!busy} />
-        <RulebookPane book={book} sweep={sweep} onEdit={edit} />
-        <ScorecardPane sweep={sweep} compare={compare} book={book} graph={graph}
-          onCompare={compareWithBase}
-          onPromoted={async () => { setSweep(null); setCompare(null); setSelected(domain); await refresh(domain) }}
-          busy={!!busy} officer={officer} />
+      {/* This is a workbench, not a reading layout: version choice and sweep
+          results need room for their controls and labels. The rule editor is
+          deliberately bounded between them instead of taking every spare
+          pixel and squeezing the two decision rails.
+
+          The three rails only appear once all three minimums actually fit —
+          a container query on this row, not a viewport breakpoint, because
+          the sidebar collapses and a viewport breakpoint cannot see that.
+          Keyed to `lg` the columns overflowed a 1024–1260px window and the
+          scorecard was cut off the right edge with no scrollbar to get it
+          back. Below the threshold the panes stack and the page scrolls —
+          each keeps a fixed height so it scrolls internally rather than
+          being squeezed to a two-row slit with cards sliced in half. */}
+      <div className="@container min-h-0 flex-1">
+        <div className="grid h-full grid-cols-1 overflow-y-auto @min-[1000px]:grid-cols-[minmax(240px,0.85fr)_minmax(430px,1.7fr)_minmax(300px,1fr)] @min-[1000px]:overflow-hidden">
+          <VersionPane graph={graph} selected={selected}
+            onSelect={(ref) => { setSelected(ref); setCompare(null); refresh(ref).catch((e) => toast(String(e))) }}
+            onFork={fork} onSweep={sweepFor} onDelete={async (id) => {
+              await deleteDraft(id); setSelected(domain); await refresh(domain)
+            }} busy={!!busy} />
+          <RulebookPane book={book} sweep={sweep} onEdit={edit} />
+          <ScorecardPane sweep={sweep} compare={compare} book={book} graph={graph}
+            onCompare={compareWithBase}
+            onPromoted={async () => { setSweep(null); setCompare(null); setSelected(domain); await refresh(domain) }}
+            busy={!!busy} officer={officer} />
+        </div>
       </div>
     </div>
   )
@@ -142,8 +185,9 @@ export function PolicySandbox() {
 
 // ---------------------------------------------------------------------------
 
-function Header({ domains, domain, onDomain }: {
+function Header({ domains, domain, onDomain, mode, onMode }: {
   domains: SandboxDomain[]; domain: string; onDomain: (d: string) => void
+  mode: SweepMode; onMode: (m: SweepMode) => void
 }) {
   return (
     <header className="relative border-b">
@@ -166,7 +210,7 @@ function Header({ domains, domain, onDomain }: {
           behind a scroll edge — a reader needs the whole rulebook's shape
           to know what the sandbox covers. Short labels are what make the
           row fit; it still wraps rather than clips on a narrow window. */}
-      <div className="relative mt-3 flex flex-wrap gap-1 px-5 pb-4">
+      <div className="relative mt-3 flex flex-wrap items-center gap-1 px-5 pb-4">
         {domains.map((d) => {
           const on = d.domain === domain
           return (
@@ -187,8 +231,53 @@ function Header({ domains, domain, onDomain }: {
             </button>
           )
         })}
+        <ModeSwitch mode={mode} onMode={onMode} />
       </div>
     </header>
+  )
+}
+
+// Deterministic first: it is the default, and the order should say which one
+// you are in without reading the highlight.
+const MODES: { value: SweepMode; label: string; cost: string; title: string }[] = [
+  {
+    value: 'mechanical', label: 'Deterministic', cost: '~25 s',
+    title: 'Runs the code-decided rules only — no model, no spend, and the same rulebook returns the same scorecard byte for byte. Silent on every model-judged rule, so read it for thresholds, not for coverage.',
+  },
+  {
+    value: 'live', label: 'Full', cost: '~6 min',
+    title: 'Runs the whole pipeline, model calls included, so the model-judged rules are scored too. Costs about six minutes and real model spend per sweep, and does not reproduce exactly — flips on judged rules are marked and kept out of the verdict.',
+  },
+]
+
+/** Which mode Sweep takes, and which mode's stored scorecards the page shows.
+ *  Both, because they answer different questions and refuse to be compared
+ *  with each other — so the page has to commit to one at a time. */
+function ModeSwitch({ mode, onMode }: { mode: SweepMode; onMode: (m: SweepMode) => void }) {
+  return (
+    <div className="ml-auto flex items-center gap-1.5">
+      <span className="text-[11px] text-muted-foreground">Sweep</span>
+      <div className="flex rounded-md border p-0.5">
+        {MODES.map((m) => (
+          <button
+            key={m.value}
+            type="button"
+            onClick={() => onMode(m.value)}
+            title={m.title}
+            aria-pressed={mode === m.value}
+            className={cn(
+              'rounded px-2 py-0.5 text-[11.5px] font-medium outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50',
+              mode === m.value
+                ? 'bg-brand-blue/10 text-brand-blue'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {m.label}
+            <span className="ml-1 font-mono text-[10px] opacity-70">{m.cost}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -200,7 +289,7 @@ function VersionPane({ graph, selected, onSelect, onFork, onSweep, onDelete, bus
 }) {
   if (!graph) return <div className="border-r p-4"><Skeleton className="h-40" /></div>
   return (
-    <div className="flex min-h-0 flex-col border-r">
+    <div className="relative z-10 flex h-72 min-h-0 min-w-0 flex-col overflow-hidden border-b bg-background @min-[1000px]:h-auto @min-[1000px]:border-r @min-[1000px]:border-b-0">
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
         <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           <GitBranch className="size-3.5" />Versions
@@ -212,14 +301,14 @@ function VersionPane({ graph, selected, onSelect, onFork, onSweep, onDelete, bus
           <VersionNode active label={`v${graph.active.version}`} sub={`in force · ${graph.active.rules} rules`}
             selected={selected === graph.domain} onClick={() => onSelect(graph.domain)}
             onSweep={() => onSweep(graph.domain)} busy={busy} swept={!!graph.active.sweep_id}
-            stale={!!graph.active.sweep_id && graph.active.mode === 'mechanical'} />
-          {graph.drafts.map(({ draft, swept, mode }) => (
+            outdated={graph.active.stale_reason ?? null} />
+          {graph.drafts.map(({ draft, swept, stale_reason }) => (
             <VersionNode key={draft.draft_id} label={draft.label}
               sub={draft.edits.length ? draft.edits[0] : 'no edits yet'}
               extra={draft.edits.length > 1 ? `+${draft.edits.length - 1} more` : undefined}
               selected={selected === draft.draft_id} onClick={() => onSelect(draft.draft_id)}
               onSweep={() => onSweep(draft.draft_id)} onDelete={() => onDelete(draft.draft_id)}
-              busy={busy} swept={swept} stale={swept && mode === 'mechanical'} />
+              busy={busy} swept={swept} outdated={stale_reason ?? null} />
           ))}
           {graph.superseded.map((v) => (
             <div key={v} className="px-2 py-1.5 text-[12px] text-muted-foreground">
@@ -232,25 +321,36 @@ function VersionPane({ graph, selected, onSelect, onFork, onSweep, onDelete, bus
   )
 }
 
-function VersionNode({ label, sub, extra, active, selected, swept, stale, busy, onClick, onSweep, onDelete }: {
+function VersionNode({ label, sub, extra, active, selected, swept, outdated, busy, onClick, onSweep, onDelete }: {
   label: string; sub: string; extra?: string; active?: boolean; selected: boolean; swept: boolean
-  stale?: boolean; busy: boolean; onClick: () => void; onSweep: () => void; onDelete?: () => void
+  /** Why the stored scorecard no longer describes this version — the rules
+   *  moved under it, or the corpus, the rest of the policy or the pipeline
+   *  did. The second case used to be invisible in both directions: a
+   *  promotion leaves the ref unchanged, so the outgoing version's numbers
+   *  went on showing under the incoming version's name. */
+  outdated?: string | null
+  busy: boolean; onClick: () => void; onSweep: () => void; onDelete?: () => void
 }) {
+  // No "mechanical only" state here any more: the version graph is fetched
+  // for the mode the page is set to, so every node in it shares that mode and
+  // the switch in the header already says which.
+  const sweepState = !swept
+    ? <span className="text-[10px] uppercase text-muted-foreground">never swept</span>
+    : outdated
+      ? <span className="text-[10px] uppercase text-amber-700 dark:text-amber-400" title={`Out of date — ${outdated}. Sweep again before reading it.`}>scorecard out of date</span>
+      : null
+
   return (
     <div className={cn('rounded-lg border px-2.5 py-2', selected ? 'border-primary bg-primary/[0.06]' : 'bg-card')}>
       <button type="button" onClick={onClick} className="w-full text-left">
-        <div className="flex items-center gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5">
           <span className={cn('size-2 rounded-full', active ? 'bg-emerald-500' : 'bg-muted-foreground/40')} />
-          <span className="text-[13px] font-medium">{label}</span>
-          {!swept ? (
-            <span className="ml-auto text-[10px] uppercase text-muted-foreground">never swept</span>
-          ) : stale ? (
-            /* Its scorecard was taken a different way, and comparing across
-               modes is refused — say so here rather than at the moment someone
-               presses Compare and gets a refusal they cannot act on. */
-            <span className="ml-auto text-[10px] uppercase text-amber-700 dark:text-amber-400" title="Swept before model judgement was included — re-sweep to compare against it">re-sweep</span>
-          ) : null}
+          <span className="min-w-0 break-words text-[13px] font-medium">{label}</span>
         </div>
+        {/* The sweep state is a separate fact about a version, not part of
+            its name. Giving it its own line prevents the status from being
+            clipped by the rule editor beside this rail. */}
+        {sweepState && <div className="mt-0.5 pl-3.5">{sweepState}</div>}
         <p className="mt-0.5 truncate pl-3.5 font-mono text-[10px] text-muted-foreground">{sub}</p>
         {extra && <p className="pl-3.5 text-[10px] text-muted-foreground">{extra}</p>}
       </button>
@@ -281,7 +381,7 @@ function RulebookPane({ book, sweep, onEdit }: {
     !filter || `${r.rule_id} ${r.description}`.toLowerCase().includes(filter.toLowerCase()))
 
   return (
-    <div className="flex min-h-0 flex-col">
+    <div className="flex h-[28rem] min-h-0 min-w-0 flex-col overflow-hidden border-b @min-[1000px]:h-auto @min-[1000px]:border-b-0">
       <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
         <span className="text-[13px] font-medium">{book.label}</span>
         {book.editable
@@ -422,7 +522,7 @@ function ScorecardPane({ sweep, compare, book, graph, onCompare, onPromoted, bus
 }) {
   const result = sweep?.result
   return (
-    <div className="flex min-h-0 flex-col border-l">
+    <div className="relative z-10 flex h-[28rem] min-h-0 min-w-0 flex-col overflow-hidden bg-background @min-[1000px]:h-auto @min-[1000px]:border-l">
       <div className="flex items-center gap-2 border-b px-3 py-2">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Scorecard</span>
         {/* When this was measured. A stored scorecard is the normal case —
@@ -444,11 +544,16 @@ function ScorecardPane({ sweep, compare, book, graph, onCompare, onPromoted, bus
       </div>
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 p-3">
-          {result && book?.editable && sweep?.ruleset_digest !== book.ruleset_digest && (
+          {/* Gated on `editable` this only ever fired for drafts, and the
+              case it missed is the worse one: a promotion leaves the ref
+              unchanged, so the book in force went on showing the outgoing
+              version's numbers under the incoming version's name, with
+              nothing on screen to say so. */}
+          {result && book && sweep?.ruleset_digest !== book.ruleset_digest && (
             <p className="rounded-lg border border-amber-500/40 bg-amber-500/[0.06] px-3 py-2 text-[12px] leading-5 text-amber-700 dark:text-amber-400">
-              This scorecard measured an earlier version of this draft — it has been edited since.
-              Sweep again before reading anything from it, and before promoting: a promotion is
-              refused on a sweep that did not measure the draft as it now stands.
+              {book.editable
+                ? 'This scorecard measured an earlier version of this draft — it has been edited since. Sweep again before reading anything from it, and before promoting: a promotion is refused on a sweep that did not measure the draft as it now stands.'
+                : 'This scorecard measured an earlier version of the book in force — it has been republished since. Sweep again before reading anything from it.'}
             </p>
           )}
           {!result && (
@@ -461,7 +566,8 @@ function ScorecardPane({ sweep, compare, book, graph, onCompare, onPromoted, bus
           {sweep?.error && (
             <p className="rounded-lg border border-red-500/30 bg-red-500/[0.05] p-2.5 text-[12.5px] text-red-700 dark:text-red-400">{sweep.error}</p>
           )}
-          {result && <Scorecard result={result} compare={compare} edits={book?.edits ?? []} />}
+          {result && <Scorecard result={result} compare={compare} edits={book?.edits ?? []}
+            mode={sweep?.pins.mode} />}
           {result && book?.editable && sweep && (
             <Promote draftId={book.ref} sweepId={sweep.sweep_id} officer={officer}
               onDone={onPromoted} busy={busy} />
@@ -503,10 +609,19 @@ function Verdict({ compare }: { compare: SweepComparison }) {
       </p>
     )
   }
-  const gained = compare.flips.filter((f) => f.direction === 'caught').length
-  const lost = compare.flips.filter((f) => f.direction === 'lost').length
-  const newFp = compare.flips.filter((f) => f.direction === 'new_false_positive').length
-  const fixedFp = compare.flips.filter((f) => f.direction === 'fixed_false_positive').length
+  // Only the flips a rulebook edit can be held responsible for. The rest sit
+  // on failures no rule can establish without the model, and those move
+  // between two runs of the SAME rulebook: three live sweeps of one unchanged
+  // book in this store returned 33, 35 and 40 true positives against 58, 64
+  // and 115 false positives. Counting them here read model variance as a
+  // policy effect, and on a live comparison there are more of them than of
+  // anything real.
+  const flips = decisive(compare.flips)
+  const judged = compare.flips.length - flips.length
+  const gained = flips.filter((f) => f.direction === 'caught').length
+  const lost = flips.filter((f) => f.direction === 'lost').length
+  const newFp = flips.filter((f) => f.direction === 'new_false_positive').length
+  const fixedFp = flips.filter((f) => f.direction === 'fixed_false_positive').length
   const decisions = compare.dossier_changes.length
 
   const parts: string[] = []
@@ -537,6 +652,13 @@ function Verdict({ compare }: { compare: SweepComparison }) {
           ? `Against the version in force, this draft ${parts.join(', ')}.`
           : 'Against the version in force, this draft changes no outcome on the labelled evidence.'}
       </p>
+      {judged > 0 && (
+        <p className="mt-1.5 text-[11.5px] leading-4 text-muted-foreground">
+          {judged} further outcome{judged === 1 ? '' : 's'} moved on rules only the model can
+          decide. Those differ between two sweeps of the same rulebook, so they are listed below
+          but not counted here — to tell variance from effect, sweep one version twice.
+        </p>
+      )}
     </div>
   )
 }
@@ -642,8 +764,9 @@ function weightLabel(now: DossierOutcome, before?: DossierOutcome): string {
   return b != null && b !== now.weight_per_run ? `${b.toFixed(3)} → ${w}` : w
 }
 
-function Scorecard({ result, compare, edits }: {
+function Scorecard({ result, compare, edits, mode }: {
   result: NonNullable<Sweep['result']>; compare: SweepComparison | null; edits: string[]
+  mode?: 'mechanical' | 'live'
 }) {
   const base = compare?.comparable ? compare.base.result : null
   const m = result.overall
@@ -736,11 +859,21 @@ function Scorecard({ result, compare, edits }: {
               ))}
             </div>
           </Measure>
+          {/* On a mechanical sweep this line is a constant, and said so
+              nowhere: no judged rule runs, so rule coverage sits under the
+              authorisation policy's floor on every submission, every case
+              lands on "incomplete submission", and the corpus's coarse label
+              — "should not have been authorised" — counts that as right
+              whatever the rulebook caught. A number that cannot move is not a
+              result, and presenting it as one invites an edit to be judged by
+              it. */}
           <Measure
             question="Cases decided correctly"
             now={`${correct} of ${result.dossiers.length}`}
             before={baseCorrect !== undefined ? `${baseCorrect} of ${base!.dossiers.length}` : undefined}
-            detail="The question a regulator actually asks — the disposition each submission comes out with"
+            detail={mode === 'mechanical' && result.dossiers.every((d) => d.adequacy_gaps > 0)
+              ? 'The question a regulator actually asks — but not one a mechanical sweep can answer. With the judged rules unrun, rule coverage falls under the authorisation floor on every submission, so each one lands on “incomplete submission” however this rulebook performed. Sweep live to read this line.'
+              : 'The question a regulator actually asks — the disposition each submission comes out with'}
           />
           <Measure
             question="Weight the evidence carries"
@@ -820,15 +953,23 @@ function Flips({ compare }: { compare: SweepComparison }) {
   return (
     <section>
       <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        Every outcome this edit moved · {compare.flips.length}
+        Every outcome this edit moved · {decisive(compare.flips).length}
+        {compare.flips.length > decisive(compare.flips).length &&
+          ` (+${compare.flips.length - decisive(compare.flips).length} model-judged)`}
       </h4>
       <div className="mt-1.5 flex flex-col gap-1">
         {compare.flips.map((f, i) => (
-          <div key={i} className="flex items-baseline gap-2 text-[12px]">
-            <span className={cn('w-44 shrink-0', LABEL[f.direction]?.tone)}>
+          <div key={i} className={cn('flex items-baseline gap-2 text-[12px]', f.judged && 'opacity-60')}>
+            <span className={cn('w-44 shrink-0', f.judged ? 'text-muted-foreground' : LABEL[f.direction]?.tone)}>
               {LABEL[f.direction]?.text ?? f.direction.replaceAll('_', ' ')}
             </span>
             <span className="font-mono text-[10.5px] text-muted-foreground">{f.run_ref ?? f.dossier_id}</span>
+            {f.judged && (
+              <span className="rounded bg-muted px-1.5 text-[10px] text-muted-foreground"
+                title="Only a model-judged rule can establish this failure, so it moves between two sweeps of the same rulebook">
+                model-judged
+              </span>
+            )}
             <span className="ml-auto font-mono text-[10.5px]">{f.failure}</span>
           </div>
         ))}

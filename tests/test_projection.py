@@ -150,19 +150,37 @@ def test_rederived_finding_dedups_but_new_one_lands(store) -> None:
     assert [f.finding_id for f in record.runs[1].findings] == ["F-1", "F-2"]
 
 
-def test_report_blocked_is_not_pending_decision(store) -> None:
+def test_a_flagged_draft_is_still_pending_a_decision(store) -> None:
+    """Grounding is advisory. What it flagged stays on the record, and the
+    report it flagged still goes to the officer for a decision."""
     _submit(store)
     _triage(store, findings=[_finding("F-1")])
     store.append(case_id=CASE, event_type="report_drafted",
                  payload={"case_id": CASE, "overall_assessment": "x", "sections": [],
                           "open_observations_note": None},
                  actor="agent:drafting", run_id="run-d-1")
-    store.append(case_id=CASE, event_type="report_blocked",
-                 payload={"problems": ["Finding 'F-1' is not cited by any section"]},
+    store.append(case_id=CASE, event_type="grounding_checked",
+                 payload={"passed": False, "attempt": 1,
+                          "problems": ["Finding 'F-1' is not cited by any section"]},
                  actor="system:grounding", run_id="run-d-1")
+    record = project_case(store.events_for(CASE))
+    assert record.status == "pending_decision"
+    assert record.report_blocked is False
+    assert record.draft_report is not None
+    assert record.grounding_problems
+
+
+def test_a_drafting_run_that_produced_nothing_is_not_pending_decision(store) -> None:
+    """The one thing that still withholds a report: the model returned none."""
+    _submit(store)
+    _triage(store, findings=[_finding("F-1")])
+    store.append(case_id=CASE, event_type="report_blocked",
+                 payload={"problems": ["The drafting model returned no usable report."]},
+                 actor="system:drafting", run_id="run-d-1")
     record = project_case(store.events_for(CASE))
     assert record.status == "triaged"
     assert record.report_blocked is True
+    assert record.draft_report is None
     assert record.grounding_problems
 
 
