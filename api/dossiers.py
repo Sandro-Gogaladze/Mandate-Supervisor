@@ -130,7 +130,11 @@ def create_router(store, *, model=None):
         # token names. Leave it unset — the local default — and intake is open:
         # the dossier's own institution_id is taken at face value. The check is
         # therefore a deployment decision, not something a caller can turn off.
-        tokens = json.loads(os.environ.get('MANDATE_INSTITUTION_TOKENS', '{}'))
+        # Docker Compose expands an unset optional environment variable to an
+        # empty string, rather than removing it.  Treat that exactly like an
+        # unset token map so an open-intake deployment does not turn every
+        # multipart submission into an unhandled JSONDecodeError (500).
+        tokens = json.loads(os.environ.get('MANDATE_INSTITUTION_TOKENS', '').strip() or '{}')
         institution = None
         if tokens:
             token = (authorization or '').removeprefix('Bearer ')

@@ -9,9 +9,9 @@
 // and a card that looks like every other card cannot say so. The status band
 // and the dashed edge carry that; the body stays calm.
 //
-// There are only two states here, because a draft that failed grounding is
-// not rendered at all — its prose could not be traced to the findings, so it
-// is not shown anywhere in the console rather than shown under a warning.
+// Two states, and no third: grounding is advisory (pipeline/graph.py), so a
+// draft the validator complained about is a draft like any other and reaches
+// the officer the same way. Nothing here is ever withheld.
 import { useState } from 'react'
 import { CheckCircle2, FileSignature } from 'lucide-react'
 import { RunCitation } from '@/components/AgentTurn'

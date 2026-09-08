@@ -183,6 +183,16 @@ async def test_upload_is_open_when_no_submission_tokens_are_configured(store, tm
     assert submitted and submitted[0].actor == 'human:institution:INST-001'
 
 
+async def test_upload_is_open_when_submission_tokens_are_configured_empty(store, tmp_path, monkeypatch):
+    """Compose supplies an empty string for an unset optional token map."""
+    from data import uploads
+    monkeypatch.setattr(uploads, 'UPLOADS_DIR', tmp_path / 'uploads')
+    monkeypatch.setenv('MANDATE_INSTITUTION_TOKENS', '')
+    async with api_client(store) as client:
+        accepted = await client.post('/dossiers', files={'file': ('dossier.zip', _zip_of(HAL))})
+    assert accepted.status_code == 200
+
+
 async def test_zip_export_replays_the_signed_submission_and_decision_requires_current_basis(store, tmp_path):
     cid = seed(store, HAL)
     await run_triage(cid, store=store, deterministic_only=True)
@@ -205,5 +215,4 @@ async def test_zip_export_replays_the_signed_submission_and_decision_requires_cu
         rows = [json.loads(line) for line in (tmp_path / 'export/review/ledger.jsonl').read_text().splitlines()]
         from ledger.events import LedgerEvent
         assert len(project_case([LedgerEvent.model_validate(row) for row in rows]).assessments) == len(project_case(store.events_for(cid)).assessments)
-
 
